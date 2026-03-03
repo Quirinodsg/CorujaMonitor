@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Fragment>
+    <!-- Custom Actions para configuração do sistema -->
+    
+    <!-- Criar usuário MonitorUser -->
+    <CustomAction Id="SetCreateUserCmd"
+                  Property="CreateUserCmd"
+                  Value="&quot;[System64Folder]cmd.exe&quot; /c &quot;net user MonitorUser [MONITOR_PASSWORD] /add /comment:\&quot;Usuario para monitoramento Coruja\&quot; /passwordchg:no /expires:never /active:yes &amp;&amp; wmic useraccount where \&quot;name='MonitorUser'\&quot; set PasswordExpires=FALSE&quot;"
+                  Execute="immediate" />
+    
+    <CustomAction Id="CreateUserCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Adicionar usuário aos grupos -->
+    <CustomAction Id="SetAddToGroupsCmd"
+                  Property="AddToGroupsCmd"
+                  Value="&quot;[System64Folder]cmd.exe&quot; /c &quot;net localgroup Administradores MonitorUser /add &amp;&amp; net localgroup \&quot;Remote Management Users\&quot; MonitorUser /add &amp;&amp; net localgroup \&quot;Performance Monitor Users\&quot; MonitorUser /add &amp;&amp; net localgroup \&quot;Distributed COM Users\&quot; MonitorUser /add&quot;"
+                  Execute="immediate" />
+    
+    <CustomAction Id="AddToGroupsCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Configurar Firewall -->
+    <CustomAction Id="SetConfigFirewallCmd"
+                  Property="ConfigFirewallCmd"
+                  Value="&quot;[System64Folder]netsh.exe&quot; advfirewall firewall set rule group=\&quot;Windows Management Instrumentation (WMI)\&quot; new enable=yes"
+                  Execute="immediate" />
+    
+    <CustomAction Id="ConfigFirewallCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Configurar DCOM -->
+    <CustomAction Id="SetConfigDCOMCmd"
+                  Property="ConfigDCOMCmd"
+                  Value="&quot;[System64Folder]reg.exe&quot; add \&quot;HKLM\Software\Microsoft\Ole\&quot; /v EnableDCOM /t REG_SZ /d Y /f"
+                  Execute="immediate" />
+    
+    <CustomAction Id="ConfigDCOMCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Instalar dependências Python -->
+    <CustomAction Id="SetInstallPythonDepsCmd"
+                  Property="InstallPythonDepsCmd"
+                  Value="&quot;[System64Folder]cmd.exe&quot; /c &quot;cd /d \&quot;[INSTALLFOLDER]\&quot; &amp;&amp; pip install -r requirements.txt&quot;"
+                  Execute="immediate" />
+    
+    <CustomAction Id="InstallPythonDepsCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Gerar senha aleatória -->
+    <CustomAction Id="GeneratePassword"
+                  Script="vbscript"
+                  Execute="immediate">
+      <![CDATA[
+        Randomize
+        Dim password
+        password = "Monitor@" & Int((99999 - 10000 + 1) * Rnd + 10000) & Int((99999 - 10000 + 1) * Rnd + 10000)
+        Session.Property("MONITOR_PASSWORD") = password
+      ]]>
+    </CustomAction>
+    
+    <!-- Criar arquivo de credenciais -->
+    <CustomAction Id="CreateCredentialsFile"
+                  Script="vbscript"
+                  Execute="deferred"
+                  Impersonate="no">
+      <![CDATA[
+        Dim fso, file, hostname
+        Set fso = CreateObject("Scripting.FileSystemObject")
+        Set wshShell = CreateObject("WScript.Shell")
+        
+        hostname = wshShell.ExpandEnvironmentStrings("%COMPUTERNAME%")
+        
+        Set file = fso.CreateTextFile(Session.Property("INSTALLFOLDER") & "wmi_credentials.json", True)
+        file.WriteLine "{"
+        file.WriteLine "  """ & hostname & """: {"
+        file.WriteLine "    ""username"": ""MonitorUser"","
+        file.WriteLine "    ""password"": """ & Session.Property("MONITOR_PASSWORD") & ""","
+        file.WriteLine "    ""domain"": """ & hostname & """"
+        file.WriteLine "  }"
+        file.WriteLine "}"
+        file.Close
+      ]]>
+    </CustomAction>
+    
+    <!-- Criar serviço Windows -->
+    <CustomAction Id="SetCreateServiceCmd"
+                  Property="CreateServiceCmd"
+                  Value="&quot;[System64Folder]sc.exe&quot; create CorujaProbe binPath= \&quot;[System64Folder]cmd.exe /c cd /d [INSTALLFOLDER] &amp;&amp; python probe_core.py\&quot; start= auto DisplayName= \&quot;Coruja Monitor Probe\&quot;"
+                  Execute="immediate" />
+    
+    <CustomAction Id="CreateServiceCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Iniciar serviço -->
+    <CustomAction Id="SetStartServiceCmd"
+                  Property="StartServiceCmd"
+                  Value="&quot;[System64Folder]sc.exe&quot; start CorujaProbe"
+                  Execute="immediate" />
+    
+    <CustomAction Id="StartServiceCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Parar serviço na desinstalação -->
+    <CustomAction Id="SetStopServiceCmd"
+                  Property="StopServiceCmd"
+                  Value="&quot;[System64Folder]sc.exe&quot; stop CorujaProbe"
+                  Execute="immediate" />
+    
+    <CustomAction Id="StopServiceCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Remover serviço na desinstalação -->
+    <CustomAction Id="SetDeleteServiceCmd"
+                  Property="DeleteServiceCmd"
+                  Value="&quot;[System64Folder]sc.exe&quot; delete CorujaProbe"
+                  Execute="immediate" />
+    
+    <CustomAction Id="DeleteServiceCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+  </Fragment>
+</Wix>

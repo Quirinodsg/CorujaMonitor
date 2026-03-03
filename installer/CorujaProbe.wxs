@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Coruja Monitor Probe" 
+           Language="1046" 
+           Version="1.0.0.0" 
+           Manufacturer="Coruja Monitor" 
+           UpgradeCode="12345678-1234-1234-1234-123456789012">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="Agente de monitoramento Coruja Monitor"
+             Comments="Sistema de monitoramento agentless para Windows" />
+
+    <MajorUpgrade DowngradeErrorMessage="Uma versão mais recente já está instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Ícone do instalador -->
+    <Icon Id="CorujaIcon.ico" SourceFile="assets\coruja-icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="CorujaIcon.ico" />
+
+    <!-- Propriedades customizadas -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="API_IP" Value="192.168.0.9" />
+    <Property Id="PROBE_TOKEN" Value="" />
+    <Property Id="INSTALL_TYPE" Value="WORKGROUP" />
+    <Property Id="DOMAIN_USER" Value="" />
+    <Property Id="DOMAIN_PASS" Value="" />
+
+    <!-- Verificar privilégios de administrador -->
+    <Condition Message="Este instalador requer privilégios de administrador.">
+      Privileged
+    </Condition>
+
+    <!-- Estrutura de diretórios -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="CorujaMonitor">
+          <Directory Id="ProbeFolder" Name="Probe" />
+          <Directory Id="CollectorsFolder" Name="collectors" />
+          <Directory Id="LogsFolder" Name="logs" />
+        </Directory>
+      </Directory>
+      
+      <!-- Menu Iniciar -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Coruja Monitor" />
+      </Directory>
+      
+      <!-- Desktop -->
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+
+    <!-- Componentes principais -->
+    <DirectoryRef Id="ProbeFolder">
+      <Component Id="ProbeCore" Guid="*">
+        <File Id="probe_core.py" Source="..\probe\probe_core.py" KeyPath="yes" />
+        <File Id="config.py" Source="..\probe\config.py" />
+        <File Id="requirements.txt" Source="..\probe\requirements.txt" />
+      </Component>
+      
+      <Component Id="ProbeConfig" Guid="*">
+        <File Id="probe_config.json" Source="templates\probe_config.json" KeyPath="yes" />
+        <util:XmlFile Id="UpdateApiUrl" 
+                      Action="setValue" 
+                      File="[ProbeFolder]probe_config.json" 
+                      ElementPath="/api_url" 
+                      Value="http://[API_IP]:8000" />
+        <util:XmlFile Id="UpdateToken" 
+                      Action="setValue" 
+                      File="[ProbeFolder]probe_config.json" 
+                      ElementPath="/probe_token" 
+                      Value="[PROBE_TOKEN]" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="CollectorsFolder">
+      <Component Id="Collectors" Guid="*">
+        <File Id="system_collector.py" Source="..\probe\collectors\system_collector.py" KeyPath="yes" />
+        <File Id="ping_collector.py" Source="..\probe\collectors\ping_collector.py" />
+        <File Id="docker_collector.py" Source="..\probe\collectors\docker_collector.py" />
+        <File Id="snmp_collector.py" Source="..\probe\collectors\snmp_collector.py" />
+        <File Id="kubernetes_collector.py" Source="..\probe\collectors\kubernetes_collector.py" />
+        <File Id="wmi_remote_collector.py" Source="..\probe\collectors\wmi_remote_collector.py" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalhos -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcuts" Guid="*">
+        <Shortcut Id="StartProbeShortcut"
+                  Name="Iniciar Coruja Probe"
+                  Description="Inicia o agente de monitoramento"
+                  Target="[System64Folder]cmd.exe"
+                  Arguments='/k cd /d "[ProbeFolder]" &amp;&amp; python probe_core.py'
+                  WorkingDirectory="ProbeFolder"
+                  Icon="CorujaIcon.ico" />
+        
+        <Shortcut Id="ConfigProbeShortcut"
+                  Name="Configurar Probe"
+                  Description="Abre o arquivo de configuração"
+                  Target="[System64Folder]notepad.exe"
+                  Arguments='"[ProbeFolder]probe_config.json"'
+                  WorkingDirectory="ProbeFolder" />
+        
+        <Shortcut Id="UninstallShortcut"
+                  Name="Desinstalar Coruja Probe"
+                  Description="Remove o Coruja Monitor Probe"
+                  Target="[System64Folder]msiexec.exe"
+                  Arguments="/x [ProductCode]" />
+        
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalho Desktop (opcional) -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="*">
+        <Shortcut Id="DesktopStartProbe"
+                  Name="Coruja Probe"
+                  Description="Iniciar Coruja Monitor Probe"
+                  Target="[System64Folder]cmd.exe"
+                  Arguments='/k cd /d "[ProbeFolder]" &amp;&amp; python probe_core.py'
+                  WorkingDirectory="ProbeFolder"
+                  Icon="CorujaIcon.ico" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="desktop" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Custom Actions -->
+    <CustomAction Id="CreateMonitorUser" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="ConfigureWMI" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="ConfigureFirewall" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="InstallPythonDeps" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
+
+    <!-- Sequência de instalação -->
+    <InstallExecuteSequence>
+      <Custom Action="CreateMonitorUser" After="InstallFiles">NOT Installed</Custom>
+      <Custom Action="ConfigureWMI" After="CreateMonitorUser">NOT Installed</Custom>
+      <Custom Action="ConfigureFirewall" After="ConfigureWMI">NOT Installed</Custom>
+      <Custom Action="InstallPythonDeps" After="ConfigureFirewall">NOT Installed</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="Coruja Monitor Probe" Level="1">
+      <ComponentRef Id="ProbeCore" />
+      <ComponentRef Id="ProbeConfig" />
+      <ComponentRef Id="Collectors" />
+      <ComponentRef Id="ApplicationShortcuts" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+
+    <!-- Interface do instalador -->
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+      
+      <!-- Diálogo customizado para configuração -->
+      <Dialog Id="ConfigDialog" Width="370" Height="270" Title="Configuração da Probe">
+        <Control Id="Title" Type="Text" X="15" Y="6" Width="200" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Configuração" />
+        
+        <Control Id="ApiIpLabel" Type="Text" X="20" Y="60" Width="290" Height="15" NoPrefix="yes" Text="IP do Servidor Coruja Monitor:" />
+        <Control Id="ApiIpEdit" Type="Edit" X="20" Y="75" Width="290" Height="18" Property="API_IP" />
+        
+        <Control Id="TokenLabel" Type="Text" X="20" Y="100" Width="290" Height="15" NoPrefix="yes" Text="Token da Probe:" />
+        <Control Id="TokenEdit" Type="Edit" X="20" Y="115" Width="290" Height="18" Property="PROBE_TOKEN" Password="yes" />
+        
+        <Control Id="InstallTypeLabel" Type="Text" X="20" Y="140" Width="290" Height="15" NoPrefix="yes" Text="Tipo de Instalação:" />
+        <Control Id="InstallTypeCombo" Type="ComboBox" X="20" Y="155" Width="290" Height="18" Property="INSTALL_TYPE">
+          <ComboBox Property="INSTALL_TYPE">
+            <ListItem Text="Workgroup (Sem domínio)" Value="WORKGROUP" />
+            <ListItem Text="Entra ID (Azure AD)" Value="ENTRAID" />
+            <ListItem Text="Active Directory" Value="DOMAIN" />
+            <ListItem Text="WMI Remoto (Sem probe)" Value="REMOTE" />
+          </ComboBox>
+        </Control>
+        
+        <Control Id="Back" Type="PushButton" X="180" Y="243" Width="56" Height="17" Text="&amp;Voltar">
+          <Publish Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+        </Control>
+        <Control Id="Next" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="&amp;Avançar">
+          <Publish Event="NewDialog" Value="VerifyReadyDlg">1</Publish>
+        </Control>
+        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancelar">
+          <Publish Event="SpawnDialog" Value="CancelDlg">1</Publish>
+        </Control>
+      </Dialog>
+      
+      <!-- Adicionar diálogo customizado à sequência -->
+      <Publish Dialog="LicenseAgreementDlg" Control="Next" Event="NewDialog" Value="ConfigDialog" Order="2">LicenseAccepted = "1"</Publish>
+      <Publish Dialog="ConfigDialog" Control="Back" Event="NewDialog" Value="LicenseAgreementDlg">1</Publish>
+    </UI>
+
+    <!-- Licença -->
+    <WixVariable Id="WixUILicenseRtf" Value="assets\License.rtf" />
+    
+    <!-- Imagens do instalador -->
+    <WixVariable Id="WixUIBannerBmp" Value="assets\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="assets\dialog.bmp" />
+  </Product>
+</Wix>

@@ -1,0 +1,30 @@
+# Lista de computadores para instalação em massa
+# Formato: um computador por linha
+# Linhas começando com # são ignoradas
+
+# Servidores
+SERVER01
+SERVER02
+SERVER03
+
+# Workstations - TI
+WS-TI-001
+WS-TI-002
+WS-TI-003
+
+# Workstations - Financeiro
+WS-FIN-001
+WS-FIN-002
+
+# Workstations - RH
+WS-RH-001
+WS-RH-002
+
+# Você também pode usar IPs
+192.168.1.100
+192.168.1.101
+192.168.1.102
+
+# Ou FQDNs
+server01.empresa.local
+server02.empresa.local
