@@ -1,0 +1,96 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║          📚 BIBLIOTECA DE SENSORES - INSTALAÇÃO             ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────┐
+│  ⚡ PASSO 1: INSTALAR                                        │
+└──────────────────────────────────────────────────────────────┘
+
+   Abra o PowerShell e execute:
+
+   .\instalar_biblioteca_sensores.ps1
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  🔄 PASSO 2: REINICIAR SERVIÇOS                             │
+└──────────────────────────────────────────────────────────────┘
+
+   API:
+   cd api
+   uvicorn main:app --reload
+
+   Frontend (outro terminal):
+   cd frontend
+   npm start
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  ✅ PASSO 3: TESTAR                                          │
+└──────────────────────────────────────────────────────────────┘
+
+   1. Acesse: http://localhost:3000
+   2. Login: admin@coruja.com / admin123
+   3. Clique em "📚 Biblioteca de Sensores"
+   4. Adicione seu primeiro sensor!
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  📖 DOCUMENTAÇÃO                                             ║
+╚══════════════════════════════════════════════════════════════╝
+
+   ⭐ LEIA_ISTO_PRIMEIRO.md       - Comece aqui
+   ⭐ EXECUTAR_AGORA.md            - 3 passos simples
+   📘 INSTALAR_BIBLIOTECA_AGORA.md - Guia detalhado
+   📗 BIBLIOTECA_SENSORES_IMPLEMENTADA.md - Doc completa
+   📙 INDICE_BIBLIOTECA_SENSORES.md - Índice de arquivos
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  🎯 O QUE VOCÊ PODE MONITORAR                                ║
+╚══════════════════════════════════════════════════════════════╝
+
+   📡 Access Points WiFi
+   ❄️  Ar-Condicionado do Datacenter
+   🔋 Nobreaks e UPS
+   🖨️  Impressoras de Rede
+   ☁️  Serviços Azure (VMs, Web Apps, SQL, etc.)
+   🌐 URLs HTTP/HTTPS
+   💾 Storage (SAN/NAS)
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  🔌 TESTE DE CONEXÃO                                         ║
+╚══════════════════════════════════════════════════════════════╝
+
+   ✅ Valida credenciais ANTES de salvar
+   ✅ Suporte para Azure, SNMP e HTTP
+   ✅ Feedback visual imediato
+   ✅ Detalhes técnicos da conexão
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  ❌ SE DER ERRO                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+   Python não encontrado:
+   → Instale Python 3.8+ e adicione ao PATH
+
+   Banco não está rodando:
+   → docker ps
+   → docker-compose up -d db
+
+   Dependências não instalaram:
+   → cd api
+   → python -m pip install sqlalchemy psycopg2-binary
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  🎉 PRONTO!                                                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+   Execute agora:
+   .\instalar_biblioteca_sensores.ps1
+
+   Tudo pronto para começar! 🚀

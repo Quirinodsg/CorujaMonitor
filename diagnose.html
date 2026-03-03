@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Coruja Monitor</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        .section {
+            background: #252526;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        .success { color: #4ec9b0; }
+        .error { color: #f48771; }
+        .warning { color: #dcdcaa; }
+        pre {
+            background: #1e1e1e;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🦉 Diagnóstico Coruja Monitor</h1>
+    
+    <div class="section">
+        <h2>1. Testar API Health</h2>
+        <button onclick="testHealth()">Testar Health</button>
+        <pre id="health-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>2. Fazer Login</h2>
+        <input type="email" id="email" value="admin@coruja.com" style="padding: 8px; width: 250px;">
+        <input type="password" id="password" value="admin123" style="padding: 8px; width: 150px;">
+        <button onclick="testLogin()">Login</button>
+        <pre id="login-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>3. Testar Dashboard (com token)</h2>
+        <button onclick="testDashboard()">Testar Dashboard</button>
+        <pre id="dashboard-result"></pre>
+    </div>
+
+    <div class="section">
+        <h2>4. LocalStorage</h2>
+        <button onclick="showLocalStorage()">Ver LocalStorage</button>
+        <button onclick="clearLocalStorage()">Limpar LocalStorage</button>
+        <pre id="storage-result"></pre>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+        let currentToken = null;
+
+        async function testHealth() {
+            const result = document.getElementById('health-result');
+            result.innerHTML = 'Testando...';
+            
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                const data = await response.json();
+                result.innerHTML = `<span class="success">✓ API está rodando</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ Erro: ${error.message}</span>`;
+            }
+        }
+
+        async function testLogin() {
+            const result = document.getElementById('login-result');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            result.innerHTML = 'Fazendo login...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/v1/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    currentToken = data.access_token;
+                    localStorage.setItem('token', currentToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    result.innerHTML = `<span class="success">✓ Login bem-sucedido!</span>\n\n` +
+                        `Token: ${currentToken.substring(0, 50)}...\n\n` +
+                        `Usuário: ${JSON.stringify(data.user, null, 2)}`;
+                } else {
+                    result.innerHTML = `<span class="error">✗ Erro ${response.status}</span>\n${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ Erro: ${error.message}</span>`;
+            }
+        }
+
+        async function testDashboard() {
+            const result = document.getElementById('dashboard-result');
+            const token = currentToken || localStorage.getItem('token');
+            
+            if (!token) {
+                result.innerHTML = '<span class="error">✗ Nenhum token encontrado. Faça login primeiro.</span>';
+                return;
+            }
+            
+            result.innerHTML = 'Testando dashboard...';
+            
+            try {
+                const response = await fetch(`${API_URL}/api/v1/dashboard/overview`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<span class="success">✓ Dashboard funcionando!</span>\n\n${JSON.stringify(data, null, 2)}`;
+                } else {
+                    result.innerHTML = `<span class="error">✗ Erro ${response.status}</span>\n` +
+                        `Token usado: ${token.substring(0, 50)}...\n\n` +
+                        `Resposta: ${JSON.stringify(data, null, 2)}`;
+                }
+            } catch (error) {
+                result.innerHTML = `<span class="error">✗ Erro: ${error.message}</span>`;
+            }
+        }
+
+        function showLocalStorage() {
+            const result = document.getElementById('storage-result');
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            result.innerHTML = `Token: ${token ? token.substring(0, 50) + '...' : 'Nenhum'}\n\n` +
+                `User: ${user || 'Nenhum'}`;
+        }
+
+        function clearLocalStorage() {
+            localStorage.clear();
+            currentToken = null;
+            document.getElementById('storage-result').innerHTML = '<span class="success">✓ LocalStorage limpo</span>';
+        }
+
+        // Auto-test on load
+        window.onload = () => {
+            testHealth();
+            showLocalStorage();
+        };
+    </script>
+</body>
+</html>

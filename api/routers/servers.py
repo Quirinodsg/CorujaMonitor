@@ -1,0 +1,392 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from pydantic import BaseModel
+from typing import List, Optional
+from cryptography.fernet import Fernet
+import os
+
+from database import get_db
+from models import Server, User, Probe
+from auth import get_current_active_user
+
+router = APIRouter()
+
+# WMI password encryption
+def get_cipher():
+    """Get Fernet cipher for password encryption"""
+    key = os.getenv('WMI_ENCRYPTION_KEY')
+    if not key:
+        # Generate a default key for development (NOT for production!)
+        key = Fernet.generate_key().decode()
+        print(f"⚠️ WARNING: Using auto-generated encryption key. Set WMI_ENCRYPTION_KEY in .env for production!")
+    if isinstance(key, str):
+        key = key.encode()
+    return Fernet(key)
+
+def encrypt_password(password: str) -> str:
+    """Encrypt WMI password"""
+    if not password:
+        return None
+    cipher = get_cipher()
+    return cipher.encrypt(password.encode()).decode()
+
+def decrypt_password(encrypted: str) -> str:
+    """Decrypt WMI password"""
+    if not encrypted:
+        return None
+    cipher = get_cipher()
+    return cipher.decrypt(encrypted.encode()).decode()
+
+class ServerCreate(BaseModel):
+    probe_id: int
+    hostname: str
+    ip_address: Optional[str] = None
+    os_type: Optional[str] = None
+    os_version: Optional[str] = None
+    device_type: Optional[str] = 'server'  # server, switch, router, firewall, printer, storage, etc
+    monitoring_protocol: Optional[str] = 'wmi'  # wmi, snmp
+    snmp_version: Optional[str] = None  # v1, v2c, v3
+    snmp_community: Optional[str] = None
+    snmp_port: Optional[int] = 161
+    environment: Optional[str] = 'production'  # production, staging, development, custom
+    monitoring_schedule: Optional[dict] = None  # Custom schedule for 'custom' environment
+    # WMI Remote credentials (optional)
+    wmi_username: Optional[str] = None
+    wmi_password: Optional[str] = None
+    wmi_domain: Optional[str] = None
+    wmi_enabled: Optional[bool] = False
+
+class ServerResponse(BaseModel):
+    id: int
+    probe_id: int
+    hostname: str
+    ip_address: Optional[str]
+    public_ip: Optional[str]
+    os_type: Optional[str]
+    os_version: Optional[str]
+    group_name: Optional[str]
+    tags: Optional[List[str]]
+    device_type: Optional[str]
+    monitoring_protocol: Optional[str]
+    snmp_version: Optional[str]
+    snmp_community: Optional[str]
+    snmp_port: Optional[int]
+    environment: Optional[str]
+    monitoring_schedule: Optional[dict]
+    wmi_username: Optional[str] = None
+    wmi_domain: Optional[str] = None
+    wmi_enabled: Optional[bool] = False
+    is_active: bool
+    
+    class Config:
+        from_attributes = True
+
+@router.post("/", response_model=ServerResponse)
+async def create_server(
+    server: ServerCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    probe = db.query(Probe).filter(
+        Probe.id == server.probe_id,
+        Probe.tenant_id == current_user.tenant_id
+    ).first()
+    
+    if not probe:
+        raise HTTPException(status_code=404, detail="Probe not found")
+    
+    # Check for duplicate IP address
+    if server.ip_address:
+        existing_server = db.query(Server).filter(
+            Server.ip_address == server.ip_address,
+            Server.tenant_id == current_user.tenant_id,
+            Server.is_active == True
+        ).first()
+        
+        if existing_server:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Servidor com IP {server.ip_address} já existe: {existing_server.hostname} (ID: {existing_server.id})"
+            )
+    
+    # Encrypt WMI password if provided
+    wmi_password_encrypted = None
+    if server.wmi_password:
+        wmi_password_encrypted = encrypt_password(server.wmi_password)
+    
+    new_server = Server(
+        tenant_id=current_user.tenant_id,
+        probe_id=server.probe_id,
+        hostname=server.hostname,
+        ip_address=server.ip_address,
+        os_type=server.os_type,
+        os_version=server.os_version,
+        device_type=server.device_type,
+        monitoring_protocol=server.monitoring_protocol,
+        snmp_version=server.snmp_version,
+        snmp_community=server.snmp_community,
+        snmp_port=server.snmp_port,
+        environment=server.environment,
+        monitoring_schedule=server.monitoring_schedule,
+        wmi_username=server.wmi_username,
+        wmi_password_encrypted=wmi_password_encrypted,
+        wmi_domain=server.wmi_domain,
+        wmi_enabled=server.wmi_enabled
+    )
+    db.add(new_server)
+    db.commit()
+    db.refresh(new_server)
+    
+    # Auto-create default sensors for Windows servers
+    if server.device_type == 'server' and server.monitoring_protocol == 'wmi':
+        from models import Sensor
+        
+        default_sensors = [
+            {
+                "name": "PING",
+                "sensor_type": "ping",
+                "threshold_warning": 100,
+                "threshold_critical": 200
+            },
+            {
+                "name": "cpu_usage",
+                "sensor_type": "cpu",
+                "threshold_warning": 80,
+                "threshold_critical": 95
+            },
+            {
+                "name": "memory_usage",
+                "sensor_type": "memory",
+                "threshold_warning": 80,
+                "threshold_critical": 95
+            },
+            {
+                "name": "disk_C_",
+                "sensor_type": "disk",
+                "threshold_warning": 80,
+                "threshold_critical": 95
+            },
+            {
+                "name": "uptime",
+                "sensor_type": "system",
+                "threshold_warning": 80,
+                "threshold_critical": 95
+            },
+            {
+                "name": "network_in",
+                "sensor_type": "network",
+                "threshold_warning": 80,
+                "threshold_critical": 95
+            },
+            {
+                "name": "network_out",
+                "sensor_type": "network",
+                "threshold_warning": 80,
+                "threshold_critical": 95
+            }
+        ]
+        
+        for sensor_data in default_sensors:
+            sensor = Sensor(
+                server_id=new_server.id,
+                name=sensor_data["name"],
+                sensor_type=sensor_data["sensor_type"],
+                threshold_warning=sensor_data["threshold_warning"],
+                threshold_critical=sensor_data["threshold_critical"],
+                is_active=True
+            )
+            db.add(sensor)
+        
+        db.commit()
+    
+    # Auto-create default sensors for SNMP devices (routers, switches, etc)
+    elif server.monitoring_protocol == 'snmp':
+        from models import Sensor
+        
+        # SNMP OIDs padrão baseados em PRTG e Zabbix
+        snmp_sensors = [
+            {
+                "name": "PING",
+                "sensor_type": "ping",
+                "threshold_warning": 100,
+                "threshold_critical": 200,
+                "snmp_oid": None  # ICMP ping, não usa SNMP
+            },
+            {
+                "name": "SNMP_Uptime",
+                "sensor_type": "snmp_uptime",
+                "threshold_warning": None,
+                "threshold_critical": None,
+                "snmp_oid": "1.3.6.1.2.1.1.3.0"  # sysUpTime
+            },
+            {
+                "name": "SNMP_CPU_Load",
+                "sensor_type": "snmp_cpu",
+                "threshold_warning": 80,
+                "threshold_critical": 95,
+                "snmp_oid": "1.3.6.1.4.1.2021.10.1.3.1"  # laLoad.1 (1 min avg)
+            },
+            {
+                "name": "SNMP_Memory_Usage",
+                "sensor_type": "snmp_memory",
+                "threshold_warning": 80,
+                "threshold_critical": 95,
+                "snmp_oid": "1.3.6.1.4.1.2021.4.6.0"  # memTotalFree
+            },
+            {
+                "name": "SNMP_Traffic_In",
+                "sensor_type": "snmp_traffic",
+                "threshold_warning": 80,
+                "threshold_critical": 95,
+                "snmp_oid": "1.3.6.1.2.1.2.2.1.10.1"  # ifInOctets (interface 1)
+            },
+            {
+                "name": "SNMP_Traffic_Out",
+                "sensor_type": "snmp_traffic",
+                "threshold_warning": 80,
+                "threshold_critical": 95,
+                "snmp_oid": "1.3.6.1.2.1.2.2.1.16.1"  # ifOutOctets (interface 1)
+            },
+            {
+                "name": "SNMP_Interface_Status",
+                "sensor_type": "snmp_interface",
+                "threshold_warning": None,
+                "threshold_critical": None,
+                "snmp_oid": "1.3.6.1.2.1.2.2.1.8.1"  # ifOperStatus (interface 1)
+            }
+        ]
+        
+        for sensor_data in snmp_sensors:
+            sensor = Sensor(
+                server_id=new_server.id,
+                name=sensor_data["name"],
+                sensor_type=sensor_data["sensor_type"],
+                threshold_warning=sensor_data["threshold_warning"],
+                threshold_critical=sensor_data["threshold_critical"],
+                collection_protocol='snmp' if sensor_data["snmp_oid"] else 'icmp',
+                snmp_oid=sensor_data["snmp_oid"],
+                is_active=True
+            )
+            db.add(sensor)
+        
+        db.commit()
+    
+    return new_server
+
+@router.get("/", response_model=List[ServerResponse])
+async def list_servers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    # Admin vê todos os servidores, usuário normal vê apenas do seu tenant
+    if current_user.role == 'admin':
+        servers = db.query(Server).all()
+    else:
+        servers = db.query(Server).filter(Server.tenant_id == current_user.tenant_id).all()
+    return servers
+
+
+class ServerUpdate(BaseModel):
+    group_name: Optional[str] = None
+    tags: Optional[List[str]] = None
+    device_type: Optional[str] = None
+    monitoring_protocol: Optional[str] = None
+    snmp_version: Optional[str] = None
+    snmp_community: Optional[str] = None
+    snmp_port: Optional[int] = None
+    environment: Optional[str] = None
+    monitoring_schedule: Optional[dict] = None
+
+
+@router.put("/{server_id}", response_model=ServerResponse)
+async def update_server(
+    server_id: int,
+    server_update: ServerUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    server = db.query(Server).filter(
+        Server.id == server_id,
+        Server.tenant_id == current_user.tenant_id
+    ).first()
+    
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    if server_update.group_name is not None:
+        server.group_name = server_update.group_name
+    if server_update.tags is not None:
+        server.tags = server_update.tags
+    if server_update.device_type is not None:
+        server.device_type = server_update.device_type
+    if server_update.monitoring_protocol is not None:
+        server.monitoring_protocol = server_update.monitoring_protocol
+    if server_update.snmp_version is not None:
+        server.snmp_version = server_update.snmp_version
+    if server_update.snmp_community is not None:
+        server.snmp_community = server_update.snmp_community
+    if server_update.snmp_port is not None:
+        server.snmp_port = server_update.snmp_port
+    if server_update.environment is not None:
+        server.environment = server_update.environment
+    if server_update.monitoring_schedule is not None:
+        server.monitoring_schedule = server_update.monitoring_schedule
+    
+    db.commit()
+    db.refresh(server)
+    return server
+
+
+@router.delete("/{server_id}")
+async def delete_server(
+    server_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Delete a server and all its associated data (sensors, metrics, incidents)
+    """
+    server = db.query(Server).filter(
+        Server.id == server_id,
+        Server.tenant_id == current_user.tenant_id
+    ).first()
+    
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    # Delete associated data in order
+    from models import Sensor, Metric, Incident, RemediationLog, SensorNote, AIAnalysisLog
+    
+    # Get all sensors for this server
+    sensors = db.query(Sensor).filter(Sensor.server_id == server_id).all()
+    sensor_ids = [s.id for s in sensors]
+    
+    if sensor_ids:
+        # Get all incidents for these sensors
+        incidents = db.query(Incident).filter(Incident.sensor_id.in_(sensor_ids)).all()
+        incident_ids = [i.id for i in incidents]
+        
+        if incident_ids:
+            # Delete AI analysis logs (they reference incidents)
+            db.query(AIAnalysisLog).filter(AIAnalysisLog.incident_id.in_(incident_ids)).delete(synchronize_session=False)
+            
+            # Delete remediation logs (they reference incidents)
+            db.query(RemediationLog).filter(RemediationLog.incident_id.in_(incident_ids)).delete(synchronize_session=False)
+        
+        # Delete incidents for these sensors
+        db.query(Incident).filter(Incident.sensor_id.in_(sensor_ids)).delete(synchronize_session=False)
+        
+        # Delete sensor notes (they reference sensors)
+        db.query(SensorNote).filter(SensorNote.sensor_id.in_(sensor_ids)).delete(synchronize_session=False)
+        
+        # Delete metrics for these sensors
+        db.query(Metric).filter(Metric.sensor_id.in_(sensor_ids)).delete(synchronize_session=False)
+        
+        # Delete sensors
+        db.query(Sensor).filter(Sensor.server_id == server_id).delete(synchronize_session=False)
+    
+    # Delete server
+    db.delete(server)
+    db.commit()
+    
+    return {"message": f"Server '{server.hostname}' and all associated data deleted successfully"}

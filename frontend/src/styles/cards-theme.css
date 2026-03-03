@@ -1,0 +1,1161 @@
+/* ===================================
+   TEMA GLOBAL DE CARDS - CORUJA MONITOR
+   Aplicado em: Servidores, Sensores, Incidentes
+   =================================== */
+
+/* Cards de Sensores - Tamanho Reduzido VERTICALMENTE */
+.sensor-card,
+.server-card,
+.incident-card {
+  max-width: 180px !important;
+  min-width: 150px !important;
+  padding: 8px !important;  /* Reduzido ainda mais para diminuir verticalmente */
+  border-radius: 12px !important;
+  transition: all 0.3s ease !important;
+  min-height: auto !important;  /* Remove altura mínima */
+  height: auto !important;
+}
+
+/* Cores para Cards de Sensores por Status - ROXO CLARO */
+.sensor-card[data-status="ok"],
+.sensor-card[data-status="healthy"] {
+  background: linear-gradient(135deg, #10b98115 0%, #05966910 100%) !important;
+  border: 1px solid #10b98130 !important;
+  border-left: 4px solid #10b981 !important;
+}
+
+.sensor-card[data-status="warning"] {
+  background: linear-gradient(135deg, #f59e0b15 0%, #d9770610 100%) !important;
+  border: 1px solid #f59e0b30 !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+.sensor-card[data-status="critical"],
+.sensor-card[data-status="error"] {
+  background: linear-gradient(135deg, #ef444415 0%, #dc262610 100%) !important;
+  border: 1px solid #ef444430 !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.sensor-card[data-status="unknown"],
+.sensor-card[data-status="pending"] {
+  background: linear-gradient(135deg, #a78bfa15 0%, #8b5cf610 100%) !important;  /* ROXO CLARO */
+  border: 1px solid #a78bfa30 !important;
+  border-left: 4px solid #a78bfa !important;
+}
+
+.sensor-card[data-status="acknowledged"] {
+  background: linear-gradient(135deg, #3b82f615 0%, #2563eb10 100%) !important;
+  border: 1px solid #3b82f630 !important;
+  border-left: 4px solid #3b82f6 !important;
+}
+
+/* Cards de Servidores - ROXO CLARO ao invés de cinza */
+.server-card {
+  background: linear-gradient(135deg, #a78bfa15 0%, #8b5cf610 100%) !important;  /* ROXO CLARO */
+  border: 1px solid #a78bfa30 !important;
+  border-left: 4px solid #a78bfa !important;
+}
+
+.server-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 8px 24px rgba(167, 139, 250, 0.2) !important;  /* Sombra roxa */
+}
+
+/* Cards de Incidentes - Tamanho Reduzido VERTICALMENTE */
+.incident-card {
+  max-width: 100% !important;
+  padding: 12px !important;  /* Reduzido ainda mais */
+  margin-bottom: 8px !important;  /* Reduzido ainda mais */
+  min-height: auto !important;
+}
+
+.incident-card[data-severity="critical"] {
+  background: linear-gradient(135deg, #ef444415 0%, #dc262610 100%) !important;
+  border: 1px solid #ef444430 !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.incident-card[data-severity="warning"] {
+  background: linear-gradient(135deg, #f59e0b15 0%, #d9770610 100%) !important;
+  border: 1px solid #f59e0b30 !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+/* Limitar descrição a 1 linha */
+.incident-card p,
+.incident-description {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  max-width: 100% !important;
+  margin: 4px 0 !important;  /* Reduzido espaçamento */
+}
+
+/* Título do Card - Tamanho Reduzido VERTICALMENTE */
+.sensor-card h3,
+.server-card h3 {
+  font-size: 20px !important;  /* Reduzido ainda mais */
+  margin-bottom: 1px !important;  /* Reduzido ainda mais */
+  line-height: 1.1 !important;
+}
+
+.sensor-card p,
+.server-card p {
+  font-size: 11px !important;  /* Reduzido ainda mais */
+  margin: 0 !important;
+  line-height: 1.2 !important;
+}
+
+/* Ícones dos Cards - MENOR */
+.sensor-card .status-icon,
+.server-card .status-icon,
+.sensor-icon,
+.status-icon {
+  font-size: 24px !important;  /* Reduzido ainda mais */
+  margin-bottom: 2px !important;  /* Reduzido ainda mais */
+}
+
+/* Grid de Cards - Mais Compacto VERTICALMENTE */
+.sensors-grid,
+.servers-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)) !important;
+  gap: 10px !important;  /* Reduzido ainda mais */
+  padding: 10px !important;  /* Reduzido ainda mais */
+}
+
+/* Hover Effect */
+.sensor-card:hover,
+.incident-card:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(167, 139, 250, 0.2) !important;  /* Sombra roxa */
+  cursor: pointer !important;
+}
+
+/* Badge de Status - Menor VERTICALMENTE */
+.status-badge {
+  padding: 1px 6px !important;  /* Reduzido ainda mais */
+  font-size: 9px !important;  /* Reduzido ainda mais */
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  display: inline-block !important;
+  line-height: 1.3 !important;
+}
+
+.status-badge.ok {
+  background-color: #10b98120 !important;
+  color: #10b981 !important;
+}
+
+.status-badge.warning {
+  background-color: #f59e0b20 !important;
+  color: #f59e0b !important;
+}
+
+.status-badge.critical {
+  background-color: #ef444420 !important;
+  color: #ef4444 !important;
+}
+
+.status-badge.unknown {
+  background-color: #a78bfa20 !important;  /* ROXO CLARO */
+  color: #a78bfa !important;
+}
+
+/* Métricas do Card - Compacto VERTICALMENTE */
+.card-metrics {
+  display: flex !important;
+  gap: 4px !important;  /* Reduzido ainda mais */
+  margin-top: 4px !important;  /* Reduzido ainda mais */
+  flex-wrap: wrap !important;
+}
+
+.card-metric {
+  font-size: 9px !important;  /* Reduzido ainda mais */
+  padding: 1px 4px !important;  /* Reduzido ainda mais */
+  background: rgba(167, 139, 250, 0.1) !important;  /* ROXO CLARO */
+  border-radius: 4px !important;
+  line-height: 1.2 !important;
+}
+
+/* Remover CINZA de todos os cards padrão */
+.card,
+.sensor-item,
+.server-item,
+.summary-card,
+.health-item,
+div[style*="background: #6b7280"],
+div[style*="background-color: #6b7280"],
+div[style*="background: rgb(107, 114, 128)"] {
+  background: linear-gradient(135deg, #a78bfa15 0%, #8b5cf610 100%) !important;  /* ROXO CLARO */
+  border-color: #a78bfa30 !important;
+}
+
+/* Cards de resumo - ROXO CLARO e compactos */
+.summary-card,
+.health-item {
+  padding: 12px !important;  /* Reduzido verticalmente */
+  background: linear-gradient(135deg, #a78bfa15 0%, #8b5cf610 100%) !important;  /* ROXO CLARO */
+  border: 1px solid #a78bfa30 !important;
+  border-left: 4px solid #a78bfa !important;
+}
+
+.summary-card h3,
+.health-count {
+  font-size: 24px !important;  /* Reduzido */
+  margin-bottom: 2px !important;
+}
+
+.summary-card p,
+.health-label {
+  font-size: 11px !important;  /* Reduzido */
+}
+
+/* Ícones de resumo menores */
+.summary-icon {
+  font-size: 24px !important;  /* Reduzido */
+}
+
+/* Status overview do Dashboard - AUMENTADO */
+.status-overview {
+  gap: 16px !important;
+}
+
+.status-card {
+  padding: 20px 24px !important;  /* AUMENTADO */
+}
+
+.status-card .status-icon {
+  font-size: 36px !important;  /* AUMENTADO */
+}
+
+.status-card .status-info h3 {
+  font-size: 32px !important;  /* AUMENTADO */
+  margin-bottom: 4px !important;
+}
+
+.status-card .status-info p {
+  font-size: 13px !important;  /* AUMENTADO */
+}
+
+/* Incidents list - compacto */
+.incidents-list {
+  gap: 10px !important;  /* Reduzido */
+}
+
+.incidents-section {
+  padding: 20px !important;  /* Reduzido */
+}
+
+.health-summary {
+  padding: 20px !important;  /* Reduzido */
+}
+
+.health-grid {
+  gap: 12px !important;  /* Reduzido */
+}
+
+/* Responsividade */
+@media (max-width: 1400px) {
+  .sensors-grid,
+  .servers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)) !important;
+  }
+  
+  .sensor-card,
+  .server-card {
+    max-width: 160px !important;
+    min-width: 130px !important;
+    padding: 10px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sensors-grid,
+  .servers-grid {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)) !important;
+    gap: 10px !important;
+  }
+  
+  .sensor-card,
+  .server-card {
+    max-width: 140px !important;
+    min-width: 110px !important;
+    padding: 8px !important;
+  }
+}
+
+/* Animações Suaves */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sensor-card,
+.server-card,
+.incident-card {
+  animation: fadeIn 0.3s ease-out !important;
+}
+
+/* Evitar overflow e corte de texto */
+.sensor-card *,
+.server-card *,
+.incident-card * {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+}
+
+/* Garantir que números grandes não quebrem layout */
+.sensor-card h3,
+.server-card h3 {
+  overflow: visible !important;
+  text-overflow: clip !important;
+}
+
+/* ===================================
+   CORREÇÕES ESPECÍFICAS POR PÁGINA
+   =================================== */
+
+/* DASHBOARD - Cards de status overview - AUMENTADOS */
+.dashboard .status-card {
+  padding: 20px 24px !important;
+  min-height: auto !important;
+}
+
+.dashboard .status-icon {
+  font-size: 36px !important;  /* AUMENTADO */
+}
+
+.dashboard .status-info h3 {
+  font-size: 32px !important;  /* AUMENTADO */
+  line-height: 1.1 !important;
+  margin: 0 !important;
+}
+
+.dashboard .status-info p {
+  font-size: 13px !important;  /* AUMENTADO */
+  margin: 4px 0 0 0 !important;
+}
+
+/* DASHBOARD - Health summary */
+.dashboard .health-item {
+  padding: 10px !important;
+}
+
+.dashboard .health-count {
+  font-size: 28px !important;
+  margin-bottom: 4px !important;
+}
+
+.dashboard .health-label {
+  font-size: 10px !important;
+}
+
+/* DASHBOARD - Incident cards */
+.dashboard .incident-card {
+  padding: 12px !important;
+  margin-bottom: 8px !important;
+}
+
+.dashboard .incident-card h3 {
+  font-size: 14px !important;
+  margin: 4px 0 !important;
+  line-height: 1.3 !important;
+}
+
+.dashboard .incident-card p {
+  font-size: 12px !important;
+  margin: 4px 0 !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+.dashboard .incident-header {
+  margin-bottom: 6px !important;
+}
+
+.dashboard .incident-time {
+  font-size: 10px !important;
+}
+
+/* SERVIDORES - Sidebar compacta */
+.servers-sidebar {
+  max-width: 280px !important;
+}
+
+.server-item {
+  padding: 8px 12px !important;
+  margin-bottom: 6px !important;
+  background: linear-gradient(135deg, #a78bfa15 0%, #8b5cf610 100%) !important;
+  border: 1px solid #a78bfa30 !important;
+  border-left: 3px solid #a78bfa !important;
+}
+
+.server-item h4 {
+  font-size: 13px !important;
+  margin: 0 0 2px 0 !important;
+}
+
+.server-item p {
+  font-size: 10px !important;
+  margin: 0 !important;
+}
+
+/* SENSORES - Cards grid */
+.sensors-grid .sensor-card {
+  padding: 8px !important;
+}
+
+.sensors-grid .sensor-header h3 {
+  font-size: 18px !important;
+}
+
+.sensors-grid .sensor-value {
+  font-size: 20px !important;
+  margin: 4px 0 !important;
+}
+
+.sensors-grid .sensor-status-bar {
+  padding: 3px 6px !important;
+  font-size: 9px !important;
+  margin: 4px 0 !important;
+}
+
+.sensors-grid .sensor-timestamp {
+  font-size: 9px !important;
+  margin-top: 4px !important;
+}
+
+.sensors-grid .sensor-thresholds {
+  font-size: 9px !important;
+  margin-top: 4px !important;
+}
+
+/* INCIDENTES - Tabela compacta */
+.incidents-table {
+  font-size: 12px !important;
+}
+
+.incidents-table th {
+  padding: 8px !important;
+  font-size: 11px !important;
+}
+
+.incidents-table td {
+  padding: 8px !important;
+  font-size: 11px !important;
+}
+
+.incident-description {
+  max-width: 400px !important;
+}
+
+.incident-description p {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  margin: 2px 0 !important;
+}
+
+.severity-badge {
+  padding: 2px 8px !important;
+  font-size: 9px !important;
+}
+
+.duration-badge {
+  font-size: 10px !important;
+  padding: 2px 6px !important;
+}
+
+/* Summary cards em todas as páginas */
+.sensors-summary,
+.incidents-summary {
+  gap: 12px !important;
+  margin-bottom: 16px !important;
+}
+
+.sensors-summary .summary-card,
+.incidents-summary .summary-card {
+  padding: 10px 14px !important;
+  min-height: auto !important;
+}
+
+.sensors-summary .summary-icon,
+.incidents-summary .summary-icon {
+  font-size: 24px !important;
+}
+
+.sensors-summary .summary-info h3,
+.incidents-summary .summary-info h3 {
+  font-size: 22px !important;
+  margin: 0 !important;
+}
+
+.sensors-summary .summary-info p,
+.incidents-summary .summary-info p {
+  font-size: 10px !important;
+  margin: 2px 0 0 0 !important;
+}
+
+/* Grupos de sensores - headers compactos */
+.sensor-group-header {
+  padding: 8px 12px !important;
+  font-size: 13px !important;
+}
+
+.group-icon {
+  font-size: 18px !important;
+}
+
+.group-name {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+}
+
+.group-count {
+  font-size: 11px !important;
+}
+
+.group-status .status-badge {
+  padding: 1px 6px !important;
+  font-size: 9px !important;
+  margin: 0 2px !important;
+}
+
+/* Docker summary - compacto */
+.docker-summary {
+  gap: 8px !important;
+  padding: 8px !important;
+  margin-bottom: 8px !important;
+}
+
+.docker-summary .summary-card {
+  padding: 8px !important;
+  min-width: 70px !important;
+}
+
+.docker-summary .summary-icon {
+  font-size: 20px !important;
+}
+
+.docker-summary .summary-value {
+  font-size: 20px !important;
+  margin: 2px 0 !important;
+}
+
+.docker-summary .summary-label {
+  font-size: 9px !important;
+}
+
+/* Evitar corte de texto - garantir que não corta */
+.sensor-card *:not(.sensor-last-note):not(.note-preview),
+.server-card *,
+.incident-card * {
+  overflow: visible !important;
+  text-overflow: clip !important;
+  white-space: normal !important;
+}
+
+/* Exceção: descrições de incidentes devem ter 1 linha */
+.incident-description,
+.incident-description p,
+.incident-card p.incident-description {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: block !important;
+}
+
+/* Sensor notes - 1 linha */
+.sensor-last-note .note-preview {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+}
+
+/* Garantir que valores grandes não quebrem */
+.sensor-value,
+.summary-value,
+.health-count {
+  overflow: visible !important;
+  white-space: nowrap !important;
+}
+
+/* ===================================
+   CORES DE INCIDENTES POR STATUS
+   =================================== */
+
+/* INCIDENTES ABERTOS - Vermelho/Laranja (mantém severidade) */
+.incident-card[data-status="open"][data-severity="critical"],
+.incidents-table .incident-row[data-status="open"].severity-critical td {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  border: 1px solid #fca5a5 !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.incident-card[data-status="open"][data-severity="warning"],
+.incidents-table .incident-row[data-status="open"].severity-warning td {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%) !important;
+  border: 1px solid #fb923c !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+/* INCIDENTES RECONHECIDOS - Azul */
+.incident-card[data-status="acknowledged"],
+.incidents-table .incident-row[data-status="acknowledged"] td {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  border: 1px solid #93c5fd !important;
+  border-left: 4px solid #2196f3 !important;
+}
+
+/* INCIDENTES RESOLVIDOS - Verde */
+.incident-card[data-status="resolved"],
+.incident-card[data-status="auto_resolved"],
+.incidents-table .incident-row[data-status="resolved"] td,
+.incidents-table .incident-row[data-status="auto_resolved"] td {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+  border: 1px solid #6ee7b7 !important;
+  border-left: 4px solid #10b981 !important;
+}
+
+/* Dashboard - Cards de incidentes com cores por status */
+.dashboard .incident-card[data-status="open"][data-severity="critical"] {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+  border: 1px solid #fca5a5 !important;
+  border-left: 4px solid #ef4444 !important;
+}
+
+.dashboard .incident-card[data-status="open"][data-severity="warning"] {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%) !important;
+  border: 1px solid #fb923c !important;
+  border-left: 4px solid #f59e0b !important;
+}
+
+.dashboard .incident-card[data-status="acknowledged"] {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+  border: 1px solid #93c5fd !important;
+  border-left: 4px solid #2196f3 !important;
+}
+
+.dashboard .incident-card[data-status="resolved"],
+.dashboard .incident-card[data-status="auto_resolved"] {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+  border: 1px solid #6ee7b7 !important;
+  border-left: 4px solid #10b981 !important;
+}
+
+/* Descrições de incidentes - transparente para herdar cor do card */
+.incident-description,
+.incident-card .incident-description {
+  background: transparent !important;
+  padding: 8px 0 !important;
+  border: none !important;
+}
+
+/* Remover cinza de TODOS os elementos de incidentes */
+.incidents-section *,
+.incidents-table *,
+.incident-card *,
+.incident-description * {
+  background-color: transparent !important;
+}
+
+/* Reaplica backgrounds corretos */
+.incidents-section {
+  background: var(--bg-elevated) !important;
+}
+
+.incidents-table {
+  background: var(--bg-elevated) !important;
+}
+
+/* Linhas da tabela - cores por status */
+.incidents-table tbody tr[data-status="open"].severity-critical {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%) !important;
+}
+
+.incidents-table tbody tr[data-status="open"].severity-warning {
+  background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%) !important;
+}
+
+.incidents-table tbody tr[data-status="acknowledged"] {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%) !important;
+}
+
+.incidents-table tbody tr[data-status="resolved"],
+.incidents-table tbody tr[data-status="auto_resolved"] {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%) !important;
+}
+
+/* Hover nas linhas - mantém cor base mas escurece levemente */
+.incidents-table tbody tr:hover {
+  filter: brightness(0.95) !important;
+}
+
+/* ===================================
+   CORREÇÃO LAYOUT CARDS AGREGADORES
+   =================================== */
+
+/* Forçar layout horizontal dos cards agregadores - AMPLIADO */
+.sensor-group-content > div:first-child {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 16px !important;  /* Gap maior */
+  margin-bottom: 20px !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+/* Cards agregadores - MÁXIMO AMPLIADO horizontalmente */
+.aggregator-card {
+  flex: 1 1 calc(50% - 16px) !important;  /* 2 cards por linha com gap maior */
+  min-width: 350px !important;  /* Largura mínima MUITO maior */
+  max-width: 100% !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+  border-radius: 12px !important;
+  overflow: visible !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  transition: all 0.2s ease !important;
+}
+
+.aggregator-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Conteúdo do card agregador - MÁXIMO AMPLIADO */
+.aggregator-card-content {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 20px 24px !important;  /* Padding MUITO maior */
+  gap: 14px !important;  /* Gap MUITO maior */
+  width: 100% !important;
+  background: white !important;
+  border-left: 5px solid var(--card-color, #667eea) !important;  /* Borda mais grossa */
+  min-height: 120px !important;  /* Altura mínima */
+}
+
+/* Info do card - AMPLIADO */
+.aggregator-card-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 14px !important;  /* Gap maior */
+  width: 100% !important;
+  min-height: 56px !important;  /* Altura mínima */
+}
+
+.aggregator-card-info .sensor-icon {
+  font-size: 32px !important;  /* Ícone MUITO maior */
+  width: 56px !important;  /* Largura MUITO maior */
+  height: 56px !important;  /* Altura MUITO maior */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--card-color, #667eea) !important;
+  border-radius: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.aggregator-card-info h3 {
+  font-size: 18px !important;  /* Fonte MUITO maior */
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: #1a1a1a !important;
+  flex: 1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  letter-spacing: -0.02em !important;
+}
+
+.aggregator-card-info .count-badge {
+  font-size: 16px !important;  /* Fonte MUITO maior */
+  color: #666 !important;
+  background: #f5f5f5 !important;
+  padding: 6px 14px !important;  /* Padding MUITO maior */
+  border-radius: 14px !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Stats do card - AMPLIADO */
+.aggregator-card-stats {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;  /* Gap maior */
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  min-height: 36px !important;  /* Altura mínima */
+}
+
+.aggregator-card-stats .stat-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;  /* Gap maior */
+  padding: 6px 14px !important;  /* Padding MUITO maior */
+  background: #f8f9fa !important;
+  border-radius: 16px !important;
+  font-size: 14px !important;  /* Fonte MUITO maior */
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+  white-space: nowrap !important;
+  min-height: 32px !important;  /* Altura mínima */
+}
+
+.aggregator-card-stats .stat-item.ok {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+}
+
+.aggregator-card-stats .stat-item.warning {
+  background: #fed7aa !important;
+  color: #92400e !important;
+}
+
+.aggregator-card-stats .stat-item.critical {
+  background: #fecaca !important;
+  color: #991b1b !important;
+}
+
+/* Toggle do card */
+.aggregator-card-toggle {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  font-size: 12px !important;
+  color: #9ca3af !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  background: #f5f5f5 !important;
+  transition: all 0.2s ease !important;
+}
+
+.aggregator-card:hover .aggregator-card-toggle {
+  color: #6b7280 !important;
+  background: #e5e7eb !important;
+  transform: scale(1.1) !important;
+}
+
+/* Docker summary - AMPLIADO horizontalmente */
+.docker-summary {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 16px !important;  /* Gap maior */
+  padding: 16px 20px !important;  /* Padding maior */
+  background: rgba(0, 0, 0, 0.03) !important;
+  border-radius: 8px !important;
+  margin-bottom: 12px !important;
+  width: 100% !important;
+}
+
+.docker-summary .summary-card {
+  flex: 1 !important;
+  min-width: 120px !important;  /* Largura mínima MAIOR */
+  background: white !important;
+  padding: 14px 16px !important;  /* Padding MAIOR */
+  border-radius: 8px !important;
+  text-align: center !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  gap: 6px !important;  /* Gap maior */
+}
+
+.docker-summary .summary-icon {
+  font-size: 24px !important;  /* Ícone maior */
+}
+
+.docker-summary .summary-value {
+  font-size: 28px !important;  /* Valor MAIOR */
+  font-weight: 700 !important;
+  color: #111827 !important;
+  margin: 4px 0 !important;
+}
+
+.docker-summary .summary-label {
+  font-size: 12px !important;  /* Label MAIOR */
+  text-transform: uppercase !important;
+  font-weight: 600 !important;
+  color: #6b7280 !important;
+  white-space: nowrap !important;  /* Não quebra linha */
+}
+
+/* Responsividade dos cards agregadores - AMPLIADOS */
+@media (min-width: 1400px) {
+  .aggregator-card {
+    flex: 1 1 calc(50% - 12px) !important;  /* 2 por linha em telas grandes */
+  }
+}
+
+@media (max-width: 1399px) and (min-width: 900px) {
+  .aggregator-card {
+    flex: 1 1 calc(50% - 12px) !important;  /* 2 por linha em telas médias */
+  }
+}
+
+@media (max-width: 899px) and (min-width: 600px) {
+  .aggregator-card {
+    flex: 1 1 100% !important;  /* 1 por linha em tablets */
+  }
+}
+
+@media (max-width: 599px) {
+  .aggregator-card {
+    flex: 1 1 100% !important;  /* 1 por linha em mobile */
+  }
+  
+  .docker-summary {
+    flex-direction: column !important;
+  }
+}
+
+/* Garantir que não há sobreposição */
+.sensor-group-content {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.aggregator-card {
+  z-index: 2 !important;
+}
+
+/* Limpar floats e posicionamentos absolutos problemáticos */
+.sensor-group-content * {
+  float: none !important;
+}
+
+.aggregator-card * {
+  position: relative !important;
+}
+
+.aggregator-card-toggle {
+  position: absolute !important;
+}
+
+/* ===================================
+   CORREÇÃO LAYOUT CARDS AGREGADORES - SEPARADOS
+   =================================== */
+
+/* Container dos cards agregadores */
+.sensor-group-content > div:first-child {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: wrap !important;
+  gap: 20px !important;  /* Gap maior para separar bem */
+  margin-bottom: 20px !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+/* Cards agregadores - SEPARADOS e bem espaçados */
+.aggregator-card {
+  flex: 0 0 auto !important;  /* Não cresce nem encolhe */
+  width: calc(20% - 16px) !important;  /* 5 cards por linha com gap de 20px */
+  min-width: 200px !important;
+  max-width: 280px !important;
+  position: relative !important;
+  display: flex !important;
+  flex-direction: column !important;
+  background: white !important;
+  border-radius: 12px !important;
+  overflow: visible !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  border: 1px solid rgba(0,0,0,0.1) !important;
+  transition: all 0.2s ease !important;
+  margin: 0 !important;  /* Remove qualquer margin que possa causar sobreposição */
+  padding: 0 !important;  /* Remove padding do card principal */
+}
+
+.aggregator-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Conteúdo do card agregador */
+.aggregator-card-content {
+  display: flex !important;
+  flex-direction: column !important;
+  padding: 16px !important;
+  gap: 12px !important;
+  width: 100% !important;
+  background: white !important;
+  border-left: 4px solid var(--card-color, #667eea) !important;
+  min-height: 100px !important;
+}
+
+/* Info do card */
+.aggregator-card-info {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-height: 48px !important;
+}
+
+.aggregator-card-info .sensor-icon {
+  font-size: 28px !important;
+  width: 48px !important;
+  height: 48px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--card-color, #667eea) !important;
+  border-radius: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.aggregator-card-info h3 {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+  color: #1a1a1a !important;
+  flex: 1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  letter-spacing: -0.02em !important;
+}
+
+.aggregator-card-info .count-badge {
+  font-size: 14px !important;
+  color: #666 !important;
+  background: #f5f5f5 !important;
+  padding: 4px 10px !important;
+  border-radius: 12px !important;
+  font-weight: 700 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Stats do card */
+.aggregator-card-stats {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  width: 100% !important;
+  min-height: 32px !important;
+}
+
+.aggregator-card-stats .stat-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 5px !important;
+  padding: 4px 10px !important;
+  background: #f8f9fa !important;
+  border-radius: 14px !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  color: #1a1a1a !important;
+  white-space: nowrap !important;
+  min-height: 28px !important;
+}
+
+.aggregator-card-stats .stat-item.ok {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+}
+
+.aggregator-card-stats .stat-item.warning {
+  background: #fed7aa !important;
+  color: #92400e !important;
+}
+
+.aggregator-card-stats .stat-item.critical {
+  background: #fecaca !important;
+  color: #991b1b !important;
+}
+
+/* Toggle do card */
+.aggregator-card-toggle {
+  position: absolute !important;
+  top: 8px !important;
+  right: 8px !important;
+  font-size: 12px !important;
+  color: #9ca3af !important;
+  width: 20px !important;
+  height: 20px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+  background: #f5f5f5 !important;
+  transition: all 0.2s ease !important;
+}
+
+.aggregator-card:hover .aggregator-card-toggle {
+  color: #6b7280 !important;
+  background: #e5e7eb !important;
+  transform: scale(1.1) !important;
+}
+
+/* Responsividade dos cards agregadores */
+@media (min-width: 1600px) {
+  .aggregator-card {
+    width: calc(20% - 16px) !important;  /* 5 por linha */
+  }
+}
+
+@media (max-width: 1599px) and (min-width: 1200px) {
+  .aggregator-card {
+    width: calc(25% - 15px) !important;  /* 4 por linha */
+  }
+}
+
+@media (max-width: 1199px) and (min-width: 900px) {
+  .aggregator-card {
+    width: calc(33.333% - 14px) !important;  /* 3 por linha */
+  }
+}
+
+@media (max-width: 899px) and (min-width: 600px) {
+  .aggregator-card {
+    width: calc(50% - 10px) !important;  /* 2 por linha */
+  }
+}
+
+@media (max-width: 599px) {
+  .aggregator-card {
+    width: 100% !important;  /* 1 por linha */
+  }
+}
+
+/* Garantir que não há sobreposição */
+.sensor-group-content {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.aggregator-card {
+  z-index: 2 !important;
+}
+
+/* Limpar floats e posicionamentos absolutos problemáticos */
+.sensor-group-content * {
+  float: none !important;
+}
+
+.aggregator-card * {
+  position: relative !important;
+}
+
+.aggregator-card-toggle {
+  position: absolute !important;
+}

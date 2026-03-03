@@ -1,0 +1,5 @@
+psutil==5.9.8
+httpx==0.26.0
+pywin32>=307
+pysnmp==4.4.12
+pyyaml==6.0.1

@@ -1,0 +1,7 @@
+{
+  "api_url": "http://localhost:8000",
+  "probe_token": "TvQ8v6wdYAIhbtSdciuwbb8CP74LilEOMFSYL-4qWXk",
+  "collection_interval": 60,
+  "monitored_services": [],
+  "udm_targets": []
+}

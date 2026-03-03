@@ -1,0 +1,141 @@
+/* OVERRIDE URGENTE - Correção cards de categorias sobrepostos */
+/* Data: 03/03/2026 */
+
+.sensors-summary {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 20px !important;
+  margin-bottom: 30px !important;
+  grid-template-columns: none !important;
+}
+
+.sensors-summary .summary-card {
+  flex: 1 1 calc(33.333% - 14px) !important;
+  min-width: 220px !important;
+  max-width: calc(33.333% - 14px) !important;
+  box-sizing: border-box !important;
+}
+
+@media (max-width: 1200px) {
+  .sensors-summary .summary-card {
+    flex: 1 1 calc(50% - 10px) !important;
+    max-width: calc(50% - 10px) !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .sensors-summary .summary-card {
+    flex: 1 1 100% !important;
+    max-width: 100% !important;
+  }
+}
+
+/* AUTO-AJUSTE DE FONTE PARA NOMES DE SENSORES LONGOS */
+/* Ajusta o tamanho da fonte baseado no comprimento do texto */
+
+.sensor-header h3 {
+  font-size: 12px !important;
+  line-height: 1.3 !important;
+  max-height: 2.6em !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: -webkit-box !important;
+  -webkit-line-clamp: 2 !important;
+  -webkit-box-orient: vertical !important;
+  word-break: break-word !important;
+  hyphens: auto !important;
+}
+
+/* Nomes médios (30-50 caracteres) */
+.sensor-card[data-sensor-name-length="30"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="31"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="32"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="33"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="34"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="35"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="36"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="37"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="38"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="39"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="40"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="41"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="42"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="43"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="44"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="45"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="46"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="47"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="48"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="49"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="50"] .sensor-header h3 {
+  font-size: 11px !important;
+}
+
+/* Nomes longos (>50 caracteres) */
+.sensor-card[data-sensor-name-length="51"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="52"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="53"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="54"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="55"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="56"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="57"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="58"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="59"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="60"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="61"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="62"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="63"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="64"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="65"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="66"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="67"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="68"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="69"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="70"] .sensor-header h3 {
+  font-size: 10px !important;
+  line-height: 1.4 !important;
+  max-height: 2.8em !important;
+}
+
+/* Nomes muito longos (>70 caracteres) */
+.sensor-card[data-sensor-name-length="71"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="72"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="73"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="74"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="75"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="76"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="77"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="78"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="79"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="80"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="81"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="82"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="83"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="84"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="85"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="86"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="87"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="88"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="89"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="90"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="91"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="92"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="93"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="94"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="95"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="96"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="97"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="98"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="99"] .sensor-header h3,
+.sensor-card[data-sensor-name-length="100"] .sensor-header h3 {
+  font-size: 9px !important;
+  line-height: 1.5 !important;
+  max-height: 3em !important;
+}
+
+/* Ajuste específico para sensores Docker (geralmente têm nomes longos) */
+.sensor-card[data-sensor-type="docker"] .sensor-header h3 {
+  font-size: 10px !important;
+  line-height: 1.4 !important;
+  max-height: 2.8em !important;
+}
