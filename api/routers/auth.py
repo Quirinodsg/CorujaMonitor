@@ -10,15 +10,13 @@ from auth import verify_password, create_access_token, get_password_hash
 router = APIRouter()
 
 class LoginRequest(BaseModel):
-    email: str  # Changed from EmailStr to allow .local domains
+    username: str  # Can be email or username
     password: str
     
-    @field_validator('email')
+    @field_validator('username')
     @classmethod
-    def validate_email(cls, v: str) -> str:
-        if '@' not in v:
-            raise ValueError('Invalid email format')
-        return v.lower()
+    def validate_username(cls, v: str) -> str:
+        return v.lower().strip()
 
 class LoginResponse(BaseModel):
     access_token: str
@@ -27,12 +25,13 @@ class LoginResponse(BaseModel):
 
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == request.email).first()
+    # Try to find user by email (username field can contain email)
+    user = db.query(User).filter(User.email == request.username).first()
     
     if not user or not verify_password(request.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password"
+            detail="Incorrect username or password"
         )
     
     if not user.is_active:
