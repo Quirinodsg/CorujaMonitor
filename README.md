@@ -88,12 +88,25 @@ O **Coruja Monitor** é uma plataforma enterprise de monitoramento de infraestru
 #### Service Desk
 - 🎫 **TOPdesk** - Criação automática de tickets
 - 🎫 **GLPI** - Integração completa de incidentes
+- 🎫 **Zammad** - Sistema moderno de Help Desk
+- 🏢 **Microsoft Dynamics 365** - CRM e Service Management
 - 📋 **Customizável** - API para outras plataformas
 
 #### Notificações
 - 💬 **Microsoft Teams** - Alertas em canais
 - 📧 **Email** - SMTP configurável
+- 📱 **Twilio SMS** - Alertas via SMS
+- 💬 **WhatsApp** - Notificações via WhatsApp Business
 - 🔔 **Webhooks** - Integrações customizadas
+
+#### Autenticação e Segurança Enterprise
+- 🔐 **LDAP/Active Directory** - Autenticação corporativa
+- 🔐 **SAML 2.0** - Single Sign-On enterprise
+- 🔐 **Azure AD/Entra ID** - Integração Microsoft
+- 🔐 **OAuth 2.0** - Autenticação moderna
+- 🔐 **MFA** - Autenticação multifator
+- 🔐 **Políticas de Senha** - Conformidade e segurança
+- 🔐 **Gestão de Sessões** - Controle de acesso avançado
 
 ### Interface e Dashboards
 
@@ -101,6 +114,11 @@ O **Coruja Monitor** é uma plataforma enterprise de monitoramento de infraestru
 - 📊 **Dashboard Executivo** - Visão geral do ambiente
 - 🖥️ **NOC em Tempo Real** - Monitoramento operacional
 - 📈 **Métricas Grafana-Style** - Gráficos interativos
+  - Servidores (CPU, Memória, Disco)
+  - Rede (APs, Switches, Tráfego)
+  - WebApps (Tempo de resposta, SSL, Status HTTP)
+  - Kubernetes (Pods, CPU, Memória, Clusters)
+  - Dashboard Personalizado (Widgets customizáveis)
 - 📋 **Relatórios Personalizados** - Exportação PDF/Excel
 - 🔔 **Sistema de Incidentes** - Gestão completa
 - ⏰ **Janelas de Manutenção** - Agendamento de paradas
@@ -499,9 +517,11 @@ gpupdate /force
 - 🤖 [Auto-Remediação](AUTO_REMEDIACAO_COMPLETA_26FEV.md)
 
 ### Integrações
-- 🔌 [TOPdesk e GLPI](INTEGRACOES_TOPDESK_GLPI.md)
+- 🔌 [TOPdesk, GLPI e Zammad](docs/integracoes-service-desk.md)
+- 🔌 [Dynamics 365, Twilio e WhatsApp](docs/integracoes-dynamics365-twilio-whatsapp.md)
 - 🔌 [Microsoft Teams](GUIA_CONFIGURAR_TEAMS.md)
 - 🔌 [Kubernetes](GUIA_COMPLETO_KUBERNETES_27FEV.md)
+- 🔌 [Autenticação Enterprise (LDAP, SAML, Azure AD)](COMECE_AQUI_SEGURANCA.txt)
 
 ### Arquitetura e Design
 - 🏗️ [Arquitetura do Sistema](ARQUITETURA_SENSORES_PROBE.md)
@@ -587,8 +607,22 @@ gpupdate /force
 #### Integrações
 - ✅ TOPdesk
 - ✅ GLPI
+- ✅ Zammad
+- ✅ Microsoft Dynamics 365
 - ✅ Microsoft Teams
 - ✅ Email (SMTP)
+- ✅ Twilio SMS
+- ✅ WhatsApp Business
+
+#### Segurança e Autenticação
+- ✅ LDAP/Active Directory
+- ✅ SAML 2.0 SSO
+- ✅ Azure AD/Entra ID
+- ✅ OAuth 2.0
+- ✅ MFA (Multi-Factor Authentication)
+- ✅ Políticas de senha avançadas
+- ✅ Gestão de sessões
+- ✅ Conformidade LGPD e ISO 27001
 
 #### Interface
 - ✅ Dashboard executivo
@@ -622,6 +656,18 @@ gpupdate /force
 - 🔄 PagerDuty
 - 🔄 Grafana (export de métricas)
 - 🔄 Prometheus (export de métricas)
+- 🔄 Telegram
+- 🔄 Discord
+
+#### Dashboards e Visualização
+- 🔄 Séries temporais para Rede, WebApps e Kubernetes
+- 🔄 Drag & drop no dashboard personalizado
+- 🔄 Salvamento de layouts customizados
+- 🔄 Exportação de dashboards em PDF/PNG
+- 🔄 Alertas visuais em tempo real
+- 🔄 Filtros avançados por grupo/tenant
+- 🔄 Telegram
+- 🔄 Discord
 
 ### 🎯 Versão 1.2 (Q3 2026)
 
@@ -689,7 +735,8 @@ gpupdate /force
 - 🤖 **Soluções KB**: 80+
 - 🎯 **Endpoints API**: 100+
 - 📊 **Componentes React**: 40+
-- 🔌 **Integrações**: 6+
+- 🔌 **Integrações**: 10+
+- 🔐 **Métodos de Autenticação**: 5+
 
 ### Testes
 - ✅ **Cobertura**: 75%+
@@ -796,15 +843,18 @@ Para licenciamento comercial, suporte enterprise ou customizações:
 
 ## 📅 Histórico de Versões
 
-### v1.0.0 (03/03/2026) - Release Inicial
+### v1.0.0 (04/03/2026) - Release Inicial
 - ✅ Sistema completo de monitoramento
 - ✅ AIOps com IA híbrida
 - ✅ Dashboard NOC em tempo real
+- ✅ Métricas Grafana-style completas (Servidores, Rede, WebApps, Kubernetes, Personalizado)
 - ✅ Instaladores MSI profissionais
 - ✅ Documentação completa (300+ páginas)
 - ✅ 50+ sensores implementados
 - ✅ 80+ soluções na base de conhecimento
-- ✅ Integrações: TOPdesk, GLPI, Teams, Email
+- ✅ Integrações: TOPdesk, GLPI, Zammad, Dynamics 365, Teams, Email, Twilio, WhatsApp
+- ✅ Autenticação Enterprise: LDAP, SAML, Azure AD, OAuth 2.0, MFA
+- ✅ Conformidade: LGPD e ISO 27001
 - ✅ Suporte: Windows, Docker, Kubernetes, SNMP
 
 ---
@@ -876,4 +926,4 @@ Para licenciamento comercial, suporte enterprise ou customizações:
 
 ---
 
-*Última atualização: 03 de Março de 2026*
+*Última atualização: 04 de Março de 2026*

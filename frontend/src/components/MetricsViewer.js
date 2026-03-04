@@ -327,48 +327,356 @@ const ServersDashboard = ({ data }) => {
   );
 };
 
-// Network Dashboard (placeholder)
+// Network Dashboard
 const NetworkDashboard = ({ data }) => {
   if (!data) return <div className="loading">Carregando dados de rede...</div>;
   
+  const { summary, devices } = data;
+
   return (
     <div className="dashboard-content">
-      <h2>Dashboard de Rede (APs/Switches)</h2>
-      <p>Em desenvolvimento...</p>
+      {/* Summary Cards */}
+      <div className="summary-cards">
+        <div className="status-card">
+          <div className="status-label">Dispositivos</div>
+          <div className="status-value">
+            <span className="status-online">{summary.devices_online}</span>
+            <span className="status-separator">/</span>
+            <span className="status-total">{summary.devices_total}</span>
+          </div>
+          <div className="status-subtitle">Online</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Clientes</div>
+          <div className="status-value">
+            <span className="status-online">{summary.total_clients}</span>
+          </div>
+          <div className="status-subtitle">Conectados</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Tráfego IN</div>
+          <div className="status-value">
+            <span className="status-online">{summary.traffic_in}</span>
+          </div>
+          <div className="status-subtitle">MB</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Tráfego OUT</div>
+          <div className="status-value">
+            <span className="status-online">{summary.traffic_out}</span>
+          </div>
+          <div className="status-subtitle">MB</div>
+        </div>
+      </div>
+
+      {/* Device Cards */}
+      <div className="server-cards">
+        {devices.map(device => (
+          <div key={device.id} className={`server-card status-${device.status}`}>
+            <div className="server-header">
+              <h4>
+                {device.type === 'snmp' ? '📡' : device.type === 'network' ? '🔌' : '📶'} {device.name}
+              </h4>
+              <span className={`status-badge ${device.status}`}>
+                {device.status === 'ok' ? '● Online' : 
+                 device.status === 'warning' ? '⚠ Warning' : 
+                 '● Offline'}
+              </span>
+            </div>
+            <div className="server-metrics">
+              <div className="metric">
+                <span className="metric-label">Tipo</span>
+                <span className="metric-value">{device.type.toUpperCase()}</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Clientes</span>
+                <span className="metric-value">{device.clients}</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Tráfego IN</span>
+                <span className="metric-value">{(device.traffic_in / 1024 / 1024).toFixed(2)} MB</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Tráfego OUT</span>
+                <span className="metric-value">{(device.traffic_out / 1024 / 1024).toFixed(2)} MB</span>
+              </div>
+              {device.signal > 0 && (
+                <div className="metric">
+                  <span className="metric-label">Sinal</span>
+                  <span className="metric-value">{device.signal} dBm</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {devices.length === 0 && (
+        <div className="empty-state">
+          <p>📡 Nenhum dispositivo de rede encontrado</p>
+          <p className="empty-subtitle">Configure sensores SNMP para monitorar APs e Switches</p>
+        </div>
+      )}
     </div>
   );
 };
 
-// WebApps Dashboard (placeholder)
+// WebApps Dashboard
 const WebAppsDashboard = ({ data }) => {
   if (!data) return <div className="loading">Carregando dados de WebApps...</div>;
   
+  const { summary, apps } = data;
+
   return (
     <div className="dashboard-content">
-      <h2>Dashboard de WebApps</h2>
-      <p>Em desenvolvimento...</p>
+      {/* Summary Cards */}
+      <div className="summary-cards">
+        <div className="status-card">
+          <div className="status-label">Aplicações</div>
+          <div className="status-value">
+            <span className="status-online">{summary.apps_online}</span>
+            <span className="status-separator">/</span>
+            <span className="status-total">{summary.apps_total}</span>
+          </div>
+          <div className="status-subtitle">Online</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Tempo Resposta</div>
+          <div className="status-value">
+            <span className="status-online">{summary.avg_response_time}</span>
+          </div>
+          <div className="status-subtitle">ms (média)</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Taxa de Erro</div>
+          <div className="status-value">
+            <span className={summary.error_rate > 10 ? "status-critical" : "status-online"}>
+              {summary.error_rate}%
+            </span>
+          </div>
+          <div className="status-subtitle">Erros</div>
+        </div>
+      </div>
+
+      {/* App Cards */}
+      <div className="server-cards">
+        {apps.map(app => (
+          <div key={app.id} className={`server-card status-${app.status}`}>
+            <div className="server-header">
+              <h4>🌐 {app.name}</h4>
+              <span className={`status-badge ${app.status}`}>
+                {app.status === 'ok' ? '● Online' : 
+                 app.status === 'warning' ? '⚠ Warning' : 
+                 '● Offline'}
+              </span>
+            </div>
+            <div className="server-metrics">
+              <div className="metric">
+                <span className="metric-label">URL</span>
+                <span className="metric-value" style={{ fontSize: '0.85em', wordBreak: 'break-all' }}>
+                  {app.url || 'N/A'}
+                </span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Tempo de Resposta</span>
+                <span className="metric-value">{app.response_time} ms</span>
+                <div className="metric-bar">
+                  <div 
+                    className="metric-bar-fill" 
+                    style={{ 
+                      width: `${Math.min(app.response_time / 10, 100)}%`, 
+                      backgroundColor: app.response_time < 500 ? '#10b981' : app.response_time < 1000 ? '#f59e0b' : '#ef4444'
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Status HTTP</span>
+                <span className={`metric-value ${app.status_code >= 200 && app.status_code < 300 ? '' : 'text-red-500'}`}>
+                  {app.status_code || 'N/A'}
+                </span>
+              </div>
+              {app.ssl_expires && (
+                <div className="metric">
+                  <span className="metric-label">SSL</span>
+                  <span className="metric-value">
+                    {app.ssl_valid ? '✓ Válido' : '✗ Inválido'} - {app.ssl_expires}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {apps.length === 0 && (
+        <div className="empty-state">
+          <p>🌐 Nenhuma aplicação web encontrada</p>
+          <p className="empty-subtitle">Configure sensores HTTP/HTTPS para monitorar suas aplicações</p>
+        </div>
+      )}
     </div>
   );
 };
 
-// Kubernetes Dashboard (placeholder)
+// Kubernetes Dashboard
 const KubernetesDashboard = ({ data }) => {
   if (!data) return <div className="loading">Carregando dados de Kubernetes...</div>;
   
+  const { summary, clusters } = data;
+
   return (
     <div className="dashboard-content">
-      <h2>Dashboard de Kubernetes</h2>
-      <p>Em desenvolvimento...</p>
+      {/* Summary Cards */}
+      <div className="summary-cards">
+        <div className="status-card">
+          <div className="status-label">Clusters</div>
+          <div className="status-value">
+            <span className="status-online">{summary.clusters_total}</span>
+          </div>
+          <div className="status-subtitle">Total</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Pods</div>
+          <div className="status-value">
+            <span className="status-online">{summary.pods_total}</span>
+          </div>
+          <div className="status-subtitle">Total</div>
+        </div>
+        <GaugeChart 
+          value={summary.cpu_total} 
+          label="CPU Total" 
+          thresholds={{ warning: 80, critical: 95 }}
+        />
+        <GaugeChart 
+          value={summary.memory_total} 
+          label="Memória Total" 
+          thresholds={{ warning: 80, critical: 95 }}
+        />
+      </div>
+
+      {/* Cluster Cards */}
+      <div className="server-cards">
+        {clusters.map(cluster => (
+          <div key={cluster.id} className={`server-card status-${cluster.status}`}>
+            <div className="server-header">
+              <h4>☸️ {cluster.name}</h4>
+              <span className={`status-badge ${cluster.status}`}>
+                {cluster.status === 'ok' ? '● Healthy' : 
+                 cluster.status === 'warning' ? '⚠ Warning' : 
+                 '● Critical'}
+              </span>
+            </div>
+            <div className="server-metrics">
+              <div className="metric">
+                <span className="metric-label">Nodes</span>
+                <span className="metric-value">{cluster.nodes}</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Namespaces</span>
+                <span className="metric-value">{cluster.namespaces}</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Pods</span>
+                <span className="metric-value">{cluster.pods}</span>
+              </div>
+              <div className="metric">
+                <span className="metric-label">CPU</span>
+                <span className="metric-value">{cluster.cpu}%</span>
+                <div className="metric-bar">
+                  <div 
+                    className="metric-bar-fill" 
+                    style={{ width: `${cluster.cpu}%`, backgroundColor: getMetricColor(cluster.cpu) }}
+                  />
+                </div>
+              </div>
+              <div className="metric">
+                <span className="metric-label">Memória</span>
+                <span className="metric-value">{cluster.memory}%</span>
+                <div className="metric-bar">
+                  <div 
+                    className="metric-bar-fill" 
+                    style={{ width: `${cluster.memory}%`, backgroundColor: getMetricColor(cluster.memory) }}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {clusters.length === 0 && (
+        <div className="empty-state">
+          <p>☸️ Nenhum cluster Kubernetes encontrado</p>
+          <p className="empty-subtitle">Configure sensores Kubernetes para monitorar seus clusters</p>
+        </div>
+      )}
     </div>
   );
 };
 
-// Custom Dashboard (placeholder)
+// Custom Dashboard
 const CustomDashboard = () => {
+  const [widgets, setWidgets] = useState([
+    { id: 1, type: 'metric', title: 'CPU Média', value: '45%', color: '#10b981' },
+    { id: 2, type: 'metric', title: 'Memória Média', value: '62%', color: '#f59e0b' },
+    { id: 3, type: 'metric', title: 'Servidores Online', value: '12/15', color: '#3b82f6' },
+    { id: 4, type: 'metric', title: 'Incidentes Abertos', value: '3', color: '#ef4444' }
+  ]);
+
   return (
     <div className="dashboard-content">
-      <h2>Dashboard Personalizado</h2>
-      <p>Arraste e solte widgets para criar seu dashboard personalizado</p>
+      <div className="custom-dashboard-header">
+        <h2>Dashboard Personalizado</h2>
+        <p className="custom-subtitle">
+          Configure widgets personalizados para monitorar suas métricas mais importantes
+        </p>
+      </div>
+
+      {/* Widget Grid */}
+      <div className="custom-widgets-grid">
+        {widgets.map(widget => (
+          <div key={widget.id} className="custom-widget" style={{ borderLeft: `4px solid ${widget.color}` }}>
+            <div className="widget-header">
+              <h4>{widget.title}</h4>
+              <button className="widget-remove" onClick={() => setWidgets(widgets.filter(w => w.id !== widget.id))}>
+                ✕
+              </button>
+            </div>
+            <div className="widget-value" style={{ color: widget.color }}>
+              {widget.value}
+            </div>
+          </div>
+        ))}
+        
+        {/* Add Widget Button */}
+        <div className="custom-widget add-widget" onClick={() => {
+          const newWidget = {
+            id: Date.now(),
+            type: 'metric',
+            title: 'Nova Métrica',
+            value: '0',
+            color: '#6366f1'
+          };
+          setWidgets([...widgets, newWidget]);
+        }}>
+          <div className="add-widget-content">
+            <span className="add-icon">+</span>
+            <span>Adicionar Widget</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Instructions */}
+      <div className="custom-instructions">
+        <h3>Como usar:</h3>
+        <ul>
+          <li>Clique em "Adicionar Widget" para criar novos widgets personalizados</li>
+          <li>Clique no ✕ para remover widgets que não precisa</li>
+          <li>Em breve: arraste e solte para reorganizar widgets</li>
+          <li>Em breve: configure fontes de dados personalizadas para cada widget</li>
+        </ul>
+      </div>
     </div>
   );
 };
