@@ -2027,6 +2027,9 @@ function Settings({ onNavigate }) {
           <h3>🌙 Modo Escuro</h3>
           <div className="form-group">
             <label className="toggle-switch-large">
+              <span className="toggle-label">
+                {appearanceSettings.darkMode ? 'Modo Escuro Ativado' : 'Modo Claro Ativado'}
+              </span>
               <input 
                 type="checkbox" 
                 checked={appearanceSettings.darkMode}
@@ -2036,9 +2039,6 @@ function Settings({ onNavigate }) {
                 })}
               />
               <span className="toggle-slider-large"></span>
-              <span className="toggle-label">
-                {appearanceSettings.darkMode ? 'Modo Escuro Ativado' : 'Modo Claro Ativado'}
-              </span>
             </label>
             <small>Reduz o cansaço visual em ambientes com pouca luz</small>
           </div>

@@ -1,0 +1,198 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    🔄 COMO LIMPAR O CACHE DO NAVEGADOR                       ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+O problema que você está vendo é que o navegador está usando arquivos CSS antigos
+do cache. Siga os passos abaixo para forçar o carregamento da nova versão:
+
+
+═══════════════════════════════════════════════════════════════════════════════
+MÉTODO 1: HARD REFRESH (MAIS RÁPIDO)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Abra o navegador em http://localhost:3000
+2. Pressione as teclas:
+
+   Windows/Linux:
+   ┌─────────────────────────────────┐
+   │  Ctrl + Shift + R               │
+   │  ou                             │
+   │  Ctrl + F5                      │
+   └─────────────────────────────────┘
+
+   Mac:
+   ┌─────────────────────────────────┐
+   │  Cmd + Shift + R                │
+   └─────────────────────────────────┘
+
+3. Aguarde a página recarregar completamente
+4. Verifique se o botão de modo claro/escuro está correto
+
+
+═══════════════════════════════════════════════════════════════════════════════
+MÉTODO 2: LIMPAR CACHE COMPLETO (RECOMENDADO)
+═══════════════════════════════════════════════════════════════════════════════
+
+CHROME / EDGE
+─────────────────────────────────────────────────────────────────────────────
+
+1. Pressione: Ctrl + Shift + Delete
+2. Na janela que abrir:
+   ☑ Imagens e arquivos em cache
+   ☑ Cookies e outros dados do site (opcional)
+3. Período: "Todo o período" ou "Última hora"
+4. Clique em "Limpar dados"
+5. Feche e abra o navegador novamente
+6. Acesse: http://localhost:3000
+
+
+FIREFOX
+─────────────────────────────────────────────────────────────────────────────
+
+1. Pressione: Ctrl + Shift + Delete
+2. Na janela que abrir:
+   ☑ Cache
+   ☑ Cookies (opcional)
+3. Intervalo: "Tudo"
+4. Clique em "Limpar agora"
+5. Feche e abra o navegador novamente
+6. Acesse: http://localhost:3000
+
+
+═══════════════════════════════════════════════════════════════════════════════
+MÉTODO 3: MODO ANÔNIMO/PRIVADO (PARA TESTAR)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Abra uma janela anônima/privada:
+
+   Chrome/Edge:
+   ┌─────────────────────────────────┐
+   │  Ctrl + Shift + N               │
+   └─────────────────────────────────┘
+
+   Firefox:
+   ┌─────────────────────────────────┐
+   │  Ctrl + Shift + P               │
+   └─────────────────────────────────┘
+
+2. Acesse: http://localhost:3000
+3. Faça login normalmente
+4. Vá em Configurações → Aparência
+5. Verifique se o botão está correto
+
+
+═══════════════════════════════════════════════════════════════════════════════
+MÉTODO 4: FORÇAR RECONSTRUÇÃO COMPLETA (SE NADA FUNCIONAR)
+═══════════════════════════════════════════════════════════════════════════════
+
+Execute os seguintes comandos no PowerShell:
+
+1. Parar o frontend:
+   docker-compose stop frontend
+
+2. Remover o container:
+   docker-compose rm -f frontend
+
+3. Remover a imagem:
+   docker rmi corujamonitor-frontend
+
+4. Rebuild completo:
+   docker-compose build --no-cache frontend
+
+5. Iniciar novamente:
+   docker-compose up -d frontend
+
+6. Aguardar 30 segundos
+
+7. Abrir navegador em modo anônimo:
+   http://localhost:3000
+
+
+═══════════════════════════════════════════════════════════════════════════════
+VERIFICAÇÃO: COMO SABER SE FUNCIONOU
+═══════════════════════════════════════════════════════════════════════════════
+
+Após limpar o cache, vá em:
+Configurações → Aparência → Modo Escuro
+
+O layout deve estar assim:
+
+┌────────────────────────────────────────────────────────────────────────────┐
+│                                                                            │
+│  🌙 Modo Escuro                                                            │
+│                                                                            │
+│  Modo Claro Ativado                                    [  ○────  ]        │
+│  Reduz o cansaço visual em ambientes com pouca luz                        │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+✅ CORRETO: Texto à esquerda, toggle à direita, sem sobreposição
+❌ ERRADO: Toggle em cima do texto
+
+
+═══════════════════════════════════════════════════════════════════════════════
+DICAS ADICIONAIS
+═══════════════════════════════════════════════════════════════════════════════
+
+1. SEMPRE use Ctrl+Shift+R após mudanças no frontend
+2. Se usar Chrome, desabilite extensões que podem interferir
+3. Verifique se não há Service Workers ativos:
+   - Chrome: chrome://serviceworker-internals/
+   - Clique em "Unregister" se houver algum
+4. Limpe cookies do localhost se necessário
+
+
+═══════════════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+PROBLEMA: Ainda vejo o layout antigo
+SOLUÇÃO: 
+1. Feche TODAS as abas do localhost:3000
+2. Feche o navegador completamente
+3. Abra novamente e acesse localhost:3000
+
+PROBLEMA: Erro 404 ou página não carrega
+SOLUÇÃO:
+1. Verifique se o container está rodando:
+   docker-compose ps frontend
+2. Veja os logs:
+   docker-compose logs -f frontend
+3. Reinicie se necessário:
+   docker-compose restart frontend
+
+PROBLEMA: Mudanças não aparecem mesmo após limpar cache
+SOLUÇÃO:
+1. Verifique se o arquivo foi realmente modificado:
+   - Abra: frontend/src/components/Settings.css
+   - Procure por: "justify-content: space-between"
+   - Deve estar na linha ~570
+2. Se não estiver, o arquivo não foi salvo corretamente
+3. Refaça o build: docker-compose build frontend
+
+
+═══════════════════════════════════════════════════════════════════════════════
+RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════════
+
+Após seguir os passos acima, você deve ver:
+
+✅ Texto "Modo Claro Ativado" à ESQUERDA
+✅ Toggle (botão deslizante) à DIREITA
+✅ Espaçamento adequado entre texto e toggle
+✅ Sem sobreposição de elementos
+✅ Layout responsivo e bonito
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Se após seguir TODOS os métodos acima o problema persistir, me avise que
+vou verificar se há algum outro problema no código!
+
+Data: 04 de Março de 2026
+Status: ✅ Correção Aplicada no Código
+Próximo Passo: Limpar Cache do Navegador
+
+═══════════════════════════════════════════════════════════════════════════════

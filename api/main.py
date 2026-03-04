@@ -7,6 +7,14 @@ from contextlib import asynccontextmanager
 from database import engine, Base
 from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config
 
+# Importar WAF Middleware
+try:
+    from middleware.waf import WAFMiddleware
+    WAF_AVAILABLE = True
+except ImportError:
+    WAF_AVAILABLE = False
+    print("⚠️  WAF Middleware not available")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
@@ -20,6 +28,11 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# WAF Middleware - DEVE ser adicionado ANTES do CORS
+if WAF_AVAILABLE:
+    app.add_middleware(WAFMiddleware)
+    print("✅ WAF Middleware enabled")
 
 app.add_middleware(
     CORSMiddleware,
