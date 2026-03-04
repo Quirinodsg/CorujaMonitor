@@ -481,6 +481,18 @@ def send_incident_notifications_with_aiops(incident_id: int, aiops_result: dict 
             except Exception as e:
                 notifications_failed.append(f"Teams: {str(e)}")
         
+        # Dynamics 365
+        if notification_config.get('dynamics365', {}).get('enabled'):
+            try:
+                result = send_dynamics365_notification_sync(notification_config['dynamics365'], incident_data)
+                if result.get('success'):
+                    notifications_sent.append(f"Dynamics 365: {result.get('incident_id')}")
+                    logger.info(f"✅ Dynamics 365: Incidente {result.get('incident_id')} criado com AIOps")
+                else:
+                    notifications_failed.append(f"Dynamics 365: {result.get('error')}")
+            except Exception as e:
+                notifications_failed.append(f"Dynamics 365: {str(e)}")
+        
         # Email
         if notification_config.get('email', {}).get('enabled'):
             try:
@@ -592,6 +604,23 @@ def send_incident_notifications(incident_id: int):
                 logger.error(f"❌ Teams exception: {e}")
         else:
             logger.info("⚪ Teams desabilitado")
+        
+        # Dynamics 365
+        if notification_config.get('dynamics365', {}).get('enabled'):
+            logger.info("🔵 Dynamics 365 está habilitado, tentando enviar...")
+            try:
+                result = send_dynamics365_notification_sync(notification_config['dynamics365'], incident_data)
+                if result.get('success'):
+                    notifications_sent.append(f"Dynamics 365: {result.get('incident_id')}")
+                    logger.info(f"✅ Dynamics 365: Incidente {result.get('incident_id')} criado")
+                else:
+                    notifications_failed.append(f"Dynamics 365: {result.get('error')}")
+                    logger.error(f"❌ Dynamics 365: {result.get('error')}")
+            except Exception as e:
+                notifications_failed.append(f"Dynamics 365: {str(e)}")
+                logger.error(f"❌ Dynamics 365 exception: {e}")
+        else:
+            logger.info("⚪ Dynamics 365 desabilitado")
         
         # Email
         if notification_config.get('email', {}).get('enabled'):
@@ -905,3 +934,114 @@ def cleanup_old_backups(backup_dir: Path, keep_last: int = 30):
                 old_backup.unlink()
     except Exception as e:
         logger.error(f"❌ Erro ao limpar backups antigos: {str(e)}")
+
+
+
+def send_dynamics365_notification_sync(config: dict, incident_data: dict) -> dict:
+    """Send notification to Microsoft Dynamics 365 (synchronous)"""
+    import httpx
+    
+    url = config.get('url', '').rstrip('/')
+    tenant_id = config.get('tenant_id')
+    client_id = config.get('client_id')
+    client_secret = config.get('client_secret')
+    resource = config.get('resource', url)
+    api_version = config.get('api_version', '9.2')
+    incident_type = config.get('incident_type', 'incident')
+    
+    if not all([url, tenant_id, client_id, client_secret]):
+        return {'success': False, 'error': 'Dynamics 365 configuration incomplete'}
+    
+    try:
+        with httpx.Client(timeout=60.0, verify=False) as client:
+            # Step 1: Get OAuth2 token
+            token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
+            token_data = {
+                'grant_type': 'client_credentials',
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'resource': resource
+            }
+            
+            token_response = client.post(token_url, data=token_data)
+            
+            if token_response.status_code != 200:
+                return {
+                    'success': False,
+                    'error': f"OAuth2 authentication failed: {token_response.status_code}"
+                }
+            
+            access_token = token_response.json().get('access_token')
+            
+            # Step 2: Create incident
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'OData-MaxVersion': '4.0',
+                'OData-Version': '4.0',
+                'Accept': 'application/json',
+                'Prefer': 'return=representation'
+            }
+            
+            # Map severity to priority
+            priority_map = {
+                'critical': 1,  # High
+                'warning': 2,   # Normal
+                'info': 3       # Low
+            }
+            priority = priority_map.get(incident_data.get('severity', 'warning'), 2)
+            
+            # Build payload
+            description = f"{incident_data.get('description', '')}\n\n"
+            description += f"Servidor: {incident_data.get('server_hostname')}\n"
+            description += f"Sensor: {incident_data.get('sensor_name')}\n"
+            description += f"Tipo: {incident_data.get('sensor_type')}\n"
+            description += f"Severidade: {incident_data.get('severity')}"
+            
+            payload = {
+                'title': incident_data.get('title', 'Alerta do Coruja Monitor')[:200],
+                'description': description[:2000],
+                'prioritycode': priority,
+                'caseorigincode': 3,  # Web
+                'casetypecode': 1,    # Problem
+                'statecode': 0,       # Active
+                'statuscode': 1       # In Progress
+            }
+            
+            # Add owner if configured
+            if config.get('owner_id'):
+                payload['ownerid@odata.bind'] = f"/systemusers({config.get('owner_id')})"
+            
+            # Create incident
+            api_endpoint = f"{url}/api/data/v{api_version}/{incident_type}s"
+            incident_response = client.post(
+                api_endpoint,
+                headers=headers,
+                json=payload
+            )
+            
+            if incident_response.status_code in [200, 201, 204]:
+                # Get incident ID
+                if incident_response.status_code == 204:
+                    entity_id_header = incident_response.headers.get('OData-EntityId', '')
+                    incident_id = entity_id_header.split('(')[-1].split(')')[0] if '(' in entity_id_header else 'unknown'
+                else:
+                    result = incident_response.json()
+                    incident_id = result.get('incidentid') or result.get('id', 'unknown')
+                
+                return {
+                    'success': True,
+                    'incident_id': incident_id,
+                    'incident_url': f"{url}/main.aspx?pagetype=entityrecord&etn={incident_type}&id={incident_id}"
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f"Dynamics 365 API error: {incident_response.status_code}"
+                }
+                
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f"Dynamics 365 connection error: {str(e)}"
+        }

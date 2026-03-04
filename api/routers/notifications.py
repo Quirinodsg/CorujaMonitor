@@ -22,6 +22,7 @@ class NotificationConfig(BaseModel):
     telegram: Optional[Dict[str, Any]] = None
     topdesk: Optional[Dict[str, Any]] = None
     glpi: Optional[Dict[str, Any]] = None
+    dynamics365: Optional[Dict[str, Any]] = None
 
 
 class NotificationConfigResponse(BaseModel):
@@ -130,6 +131,20 @@ async def update_notification_config(
             'impact': config.glpi.get('impact', 3)
         }
     
+    if config.dynamics365:
+        notification_config['dynamics365'] = {
+            'enabled': config.dynamics365.get('enabled', False),
+            'url': config.dynamics365.get('url'),
+            'tenant_id': config.dynamics365.get('tenant_id'),
+            'client_id': config.dynamics365.get('client_id'),
+            'client_secret': config.dynamics365.get('client_secret'),
+            'resource': config.dynamics365.get('resource'),
+            'api_version': config.dynamics365.get('api_version', '9.2'),
+            'incident_type': config.dynamics365.get('incident_type', 'incident'),
+            'priority': config.dynamics365.get('priority', 2),
+            'owner_id': config.dynamics365.get('owner_id')
+        }
+    
     tenant.notification_config = notification_config
     db.commit()
     db.refresh(tenant)
@@ -172,6 +187,8 @@ async def test_notification(
         return await test_topdesk(db, current_user)
     elif channel == 'glpi':
         return await test_glpi(db, current_user)
+    elif channel == 'dynamics365':
+        return await test_dynamics365(db, current_user)
     else:
         raise HTTPException(status_code=400, detail=f"Unknown channel: {channel}")
 
@@ -989,6 +1006,377 @@ async def test_telegram_internal(config: Dict[str, Any], tenant: Tenant, current
         return {
             'message': result.get('message'),
             'channel': 'telegram',
+            'errors': result.get('errors')
+        }
+    else:
+        raise HTTPException(status_code=500, detail=result.get('error'))
+
+
+
+# Microsoft Dynamics 365 Integration
+async def create_dynamics365_incident(config: Dict[str, Any], incident_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Create incident in Microsoft Dynamics 365
+    
+    Args:
+        config: Dynamics 365 configuration (url, tenant_id, client_id, client_secret, etc)
+        incident_data: Incident details (title, description, severity, etc)
+    
+    Returns:
+        Dict with incident ID and status
+    """
+    import httpx
+    import logging
+    
+    logger = logging.getLogger(__name__)
+    
+    url = config.get('url', '').rstrip('/')
+    tenant_id = config.get('tenant_id')
+    client_id = config.get('client_id')
+    client_secret = config.get('client_secret')
+    resource = config.get('resource', url)
+    api_version = config.get('api_version', '9.2')
+    incident_type = config.get('incident_type', 'incident')
+    
+    logger.info(f"Dynamics 365: Tentando criar incidente em {url}")
+    
+    if not all([url, tenant_id, client_id, client_secret]):
+        logger.error("Dynamics 365: Configuração incompleta")
+        raise ValueError("Dynamics 365 configuration incomplete")
+    
+    try:
+        async with httpx.AsyncClient(timeout=60.0, verify=False) as client:
+            # Step 1: Get OAuth2 token
+            logger.info(f"Dynamics 365: Obtendo token OAuth2 para tenant {tenant_id}")
+            
+            token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
+            token_data = {
+                'grant_type': 'client_credentials',
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'resource': resource
+            }
+            
+            token_response = await client.post(token_url, data=token_data)
+            
+            if token_response.status_code != 200:
+                logger.error(f"Dynamics 365: Erro ao obter token: {token_response.status_code} - {token_response.text}")
+                return {
+                    'success': False,
+                    'error': f"Erro de autenticação OAuth2: {token_response.status_code} - Verifique tenant_id, client_id e client_secret"
+                }
+            
+            access_token = token_response.json().get('access_token')
+            logger.info("Dynamics 365: Token OAuth2 obtido com sucesso")
+            
+            # Step 2: Create incident
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Content-Type': 'application/json',
+                'OData-MaxVersion': '4.0',
+                'OData-Version': '4.0',
+                'Accept': 'application/json',
+                'Prefer': 'return=representation'
+            }
+            
+            # Map severity to Dynamics 365 priority
+            # Priority: 1 = High, 2 = Normal, 3 = Low
+            priority_map = {
+                'critical': 1,  # High
+                'warning': 2,   # Normal
+                'info': 3       # Low
+            }
+            priority = priority_map.get(incident_data.get('severity', 'warning'), 2)
+            
+            # Build incident payload
+            # Entity name depends on your Dynamics 365 configuration
+            # Common entities: incident (case), msdyn_workorder, etc.
+            payload = {
+                'title': incident_data.get('title', 'Alerta do Coruja Monitor')[:200],  # Max 200 chars
+                'description': incident_data.get('description', '')[:2000],  # Max 2000 chars
+                'prioritycode': priority,
+                'caseorigincode': 3,  # 3 = Web (you can customize this)
+                'casetypecode': 1,    # 1 = Problem
+                'statecode': 0,       # 0 = Active
+                'statuscode': 1       # 1 = In Progress
+            }
+            
+            # Add owner if configured
+            if config.get('owner_id'):
+                payload['ownerid@odata.bind'] = f"/systemusers({config.get('owner_id')})"
+            
+            logger.info(f"Dynamics 365: Payload: {payload}")
+            
+            # Determine API endpoint based on incident type
+            api_endpoint = f"{url}/api/data/v{api_version}/{incident_type}s"
+            logger.info(f"Dynamics 365: Enviando POST para {api_endpoint}")
+            
+            incident_response = await client.post(
+                api_endpoint,
+                headers=headers,
+                json=payload
+            )
+            
+            logger.info(f"Dynamics 365: Status code: {incident_response.status_code}")
+            logger.info(f"Dynamics 365: Response: {incident_response.text[:500]}")
+            
+            if incident_response.status_code in [200, 201, 204]:
+                # Get incident ID from response
+                if incident_response.status_code == 204:
+                    # No content, get ID from OData-EntityId header
+                    entity_id_header = incident_response.headers.get('OData-EntityId', '')
+                    incident_id = entity_id_header.split('(')[-1].split(')')[0] if '(' in entity_id_header else 'unknown'
+                else:
+                    result = incident_response.json()
+                    incident_id = result.get('incidentid') or result.get('msdyn_workorderid') or result.get('id', 'unknown')
+                
+                logger.info(f"Dynamics 365: Incidente criado com sucesso: {incident_id}")
+                
+                return {
+                    'success': True,
+                    'incident_id': incident_id,
+                    'incident_url': f"{url}/main.aspx?pagetype=entityrecord&etn={incident_type}&id={incident_id}"
+                }
+            elif incident_response.status_code == 401:
+                logger.error("Dynamics 365: Erro 401 - Token inválido ou expirado")
+                return {
+                    'success': False,
+                    'error': "Erro de Autenticação (401): Token OAuth2 inválido ou expirado. Verifique as credenciais e permissões do aplicativo no Azure AD."
+                }
+            elif incident_response.status_code == 403:
+                logger.error("Dynamics 365: Erro 403 - Sem permissão")
+                return {
+                    'success': False,
+                    'error': "Erro de Permissão (403): O aplicativo não tem permissão para criar incidentes. Verifique as permissões no Azure AD e Dynamics 365."
+                }
+            elif incident_response.status_code == 400:
+                error_detail = incident_response.text
+                logger.error(f"Dynamics 365: Erro 400 - Dados inválidos: {error_detail}")
+                return {
+                    'success': False,
+                    'error': f"Erro 400: Dados inválidos - {error_detail[:300]}"
+                }
+            else:
+                logger.error(f"Dynamics 365: Erro na API: {incident_response.status_code} - {incident_response.text[:500]}")
+                return {
+                    'success': False,
+                    'error': f"Dynamics 365 API error: {incident_response.status_code} - {incident_response.text[:500]}"
+                }
+                
+    except Exception as e:
+        logger.error(f"Dynamics 365: Exceção: {type(e).__name__}: {str(e)}")
+        return {
+            'success': False,
+            'error': f"Dynamics 365 connection error: {str(e)}"
+        }
+
+
+@router.post("/test/dynamics365")
+async def test_dynamics365(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
+    """Test Microsoft Dynamics 365 integration"""
+    tenant = db.query(Tenant).filter(Tenant.id == current_user.tenant_id).first()
+    
+    if not tenant or not tenant.notification_config:
+        raise HTTPException(status_code=404, detail="Notification config not found")
+    
+    config = tenant.notification_config.get('dynamics365')
+    if not config or not config.get('enabled'):
+        raise HTTPException(status_code=400, detail="Dynamics 365 not configured or disabled")
+    
+    # Test incident data
+    test_data = {
+        'title': 'Teste de Integração - Coruja Monitor',
+        'description': f'''Este é um incidente de teste criado automaticamente pelo Coruja Monitor para validar a integração com Microsoft Dynamics 365.
+
+Tenant: {tenant.name}
+Usuário: {current_user.email}
+Data/Hora: {datetime.now(BRAZIL_TZ).strftime('%d/%m/%Y %H:%M:%S')}
+
+Se você está vendo este incidente no Dynamics 365, a integração está funcionando corretamente!''',
+        'severity': 'warning'
+    }
+    
+    result = await create_dynamics365_incident(config, test_data)
+    
+    if result.get('success'):
+        return {
+            'message': 'Incidente de teste criado com sucesso no Dynamics 365!',
+            'incident_id': result.get('incident_id'),
+            'incident_url': result.get('incident_url')
+        }
+    else:
+        raise HTTPException(status_code=500, detail=result.get('error'))
+
+
+# Enhanced Twilio Integration with WhatsApp support
+async def send_twilio_whatsapp(config: Dict[str, Any], message_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Send WhatsApp message via Twilio API
+    
+    Args:
+        config: Twilio configuration (account_sid, auth_token, from_number, to_numbers)
+        message_data: Message details (body, etc)
+    
+    Returns:
+        Dict with success status
+    """
+    try:
+        from twilio.rest import Client
+        
+        account_sid = config.get('account_sid')
+        auth_token = config.get('auth_token')
+        from_number = config.get('from_number')  # Format: whatsapp:+14155238886
+        to_numbers = config.get('to_numbers', [])  # Format: whatsapp:+5511999999999
+        
+        if not all([account_sid, auth_token, from_number, to_numbers]):
+            raise ValueError("Twilio WhatsApp configuration incomplete")
+        
+        # Ensure numbers have whatsapp: prefix
+        if not from_number.startswith('whatsapp:'):
+            from_number = f'whatsapp:{from_number}'
+        
+        client = Client(account_sid, auth_token)
+        
+        message_body = message_data.get('body', 'Alerta do Coruja Monitor')
+        
+        sent_count = 0
+        errors = []
+        
+        for to_number in to_numbers:
+            try:
+                # Ensure number has whatsapp: prefix
+                if not to_number.startswith('whatsapp:'):
+                    to_number = f'whatsapp:{to_number}'
+                
+                message = client.messages.create(
+                    body=message_body,
+                    from_=from_number,
+                    to=to_number
+                )
+                sent_count += 1
+            except Exception as e:
+                errors.append(f"{to_number}: {str(e)}")
+        
+        if sent_count > 0:
+            return {
+                'success': True,
+                'message': f'WhatsApp enviado para {sent_count} número(s) via Twilio',
+                'errors': errors if errors else None
+            }
+        else:
+            return {
+                'success': False,
+                'error': f'Falha ao enviar WhatsApp: {", ".join(errors)}'
+            }
+            
+    except ImportError:
+        return {
+            'success': False,
+            'error': 'Biblioteca Twilio não instalada. Execute: pip install twilio'
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'Erro Twilio WhatsApp: {str(e)}'
+        }
+
+
+# Update WhatsApp integration to use Twilio
+async def send_whatsapp_notification_enhanced(config: Dict[str, Any], message_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Send WhatsApp notification via Twilio API (recommended) or custom API
+    
+    Args:
+        config: WhatsApp configuration
+        message_data: Message details
+    
+    Returns:
+        Dict with success status
+    """
+    # Check if using Twilio for WhatsApp
+    if config.get('provider') == 'twilio' or config.get('account_sid'):
+        return await send_twilio_whatsapp(config, message_data)
+    
+    # Otherwise use custom API (if configured)
+    api_url = config.get('api_url')
+    api_key = config.get('api_key')
+    phone_numbers = config.get('phone_numbers', [])
+    
+    if not all([api_url, api_key, phone_numbers]):
+        return {
+            'success': False,
+            'error': 'WhatsApp configuration incomplete. Configure Twilio (recommended) or custom API provider.'
+        }
+    
+    import httpx
+    
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            sent_count = 0
+            errors = []
+            
+            for phone in phone_numbers:
+                try:
+                    # Generic API call - adjust based on your provider
+                    response = await client.post(
+                        api_url,
+                        headers={'Authorization': f'Bearer {api_key}'},
+                        json={
+                            'phone': phone,
+                            'message': message_data.get('body', 'Alerta do Coruja Monitor')
+                        }
+                    )
+                    
+                    if response.status_code in [200, 201]:
+                        sent_count += 1
+                    else:
+                        errors.append(f"{phone}: HTTP {response.status_code}")
+                except Exception as e:
+                    errors.append(f"{phone}: {str(e)}")
+            
+            if sent_count > 0:
+                return {
+                    'success': True,
+                    'message': f'WhatsApp enviado para {sent_count} número(s)',
+                    'errors': errors if errors else None
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f'Falha ao enviar WhatsApp: {", ".join(errors)}'
+                }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f'Erro WhatsApp: {str(e)}'
+        }
+
+
+# Update test function for WhatsApp
+async def test_whatsapp_enhanced(config: Dict[str, Any], tenant: Tenant, current_user: User) -> Dict[str, Any]:
+    """Enhanced test function for WhatsApp integration"""
+    test_data = {
+        'body': f'''🦉 *Coruja Monitor* - Teste de Integração
+
+*Tenant:* {tenant.name}
+*Usuário:* {current_user.email}
+*Data/Hora:* {datetime.now(BRAZIL_TZ).strftime('%d/%m/%Y %H:%M:%S')}
+
+✅ Se você recebeu esta mensagem no WhatsApp, a integração está funcionando corretamente!
+
+_Mensagem enviada via {config.get('provider', 'API customizada')}_'''
+    }
+    
+    result = await send_whatsapp_notification_enhanced(config, test_data)
+    
+    if result.get('success'):
+        return {
+            'message': result.get('message'),
+            'channel': 'whatsapp',
+            'provider': config.get('provider', 'custom'),
             'errors': result.get('errors')
         }
     else:

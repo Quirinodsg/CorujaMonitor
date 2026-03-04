@@ -766,3 +766,49 @@ class KubernetesAlertRule(Base):
         Index('idx_k8s_alert_rules_tenant', 'tenant_id'),
         Index('idx_k8s_alert_rules_active', 'is_active'),
     )
+
+
+class AuthenticationConfig(Base):
+    """
+    Configuração de Autenticação Enterprise
+    Suporta LDAP, SAML, OAuth2, Azure AD, Google, Okta, MFA, etc.
+    """
+    __tablename__ = "authentication_config"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, unique=True)
+    
+    # LDAP / Active Directory
+    ldap_config = Column(JSON, default={})
+    
+    # SAML 2.0
+    saml_config = Column(JSON, default={})
+    
+    # OAuth2 / OpenID Connect
+    oauth2_config = Column(JSON, default={})
+    
+    # Azure AD (Entra ID)
+    azure_ad_config = Column(JSON, default={})
+    
+    # Google Workspace
+    google_config = Column(JSON, default={})
+    
+    # Okta
+    okta_config = Column(JSON, default={})
+    
+    # MFA / 2FA
+    mfa_config = Column(JSON, default={})
+    
+    # Password Policy
+    password_policy = Column(JSON, default={})
+    
+    # Session Management
+    session_config = Column(JSON, default={})
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    
+    __table_args__ = (
+        Index('idx_auth_config_tenant', 'tenant_id'),
+    )

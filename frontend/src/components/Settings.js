@@ -14,11 +14,25 @@ function Settings({ onNavigate }) {
     telegram: { enabled: false, bot_token: '', chat_ids: [] },
     topdesk: { enabled: false, url: '', username: '', password: '', operator_group: '', category: '', subcategory: '' },
     glpi: { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
-    zammad: { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' }
+    zammad: { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' },
+    dynamics365: { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' }
   });
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  
+  // Security/Authentication settings state
+  const [authConfig, setAuthConfig] = useState({
+    ldap: { enabled: false, server: '', port: 389, use_ssl: false, base_dn: '', bind_dn: '', bind_password: '', user_filter: '(uid={username})', group_filter: '', admin_group: '', user_group: '', viewer_group: '' },
+    saml: { enabled: false, entity_id: '', sso_url: '', slo_url: '', x509_cert: '', attribute_mapping: { email: 'email', name: 'name', role: 'role' } },
+    oauth2: { enabled: false, provider: 'generic', client_id: '', client_secret: '', authorization_url: '', token_url: '', userinfo_url: '', scope: 'openid profile email', attribute_mapping: { email: 'email', name: 'name', role: 'role' } },
+    azure_ad: { enabled: false, tenant_id: '', client_id: '', client_secret: '', redirect_uri: '', admin_group_id: '', user_group_id: '', viewer_group_id: '' },
+    google: { enabled: false, client_id: '', client_secret: '', redirect_uri: '', hosted_domain: '', admin_group: '', user_group: '', viewer_group: '' },
+    okta: { enabled: false, domain: '', client_id: '', client_secret: '', redirect_uri: '', admin_group: '', user_group: '', viewer_group: '' },
+    mfa: { enabled: false, method: 'totp', issuer: 'CorujaMonitor', enforce_for_admins: true, enforce_for_all: false },
+    password_policy: { min_length: 8, require_uppercase: true, require_lowercase: true, require_numbers: true, require_special: true, expiry_days: 90, prevent_reuse: 5 },
+    session: { timeout_minutes: 480, max_concurrent_sessions: 3, remember_me_days: 30 }
+  });
   
   // Admin tools state
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -154,7 +168,8 @@ function Settings({ onNavigate }) {
           telegram: notifResponse.data.notification_config.telegram || { enabled: false, bot_token: '', chat_ids: [] },
           topdesk: notifResponse.data.notification_config.topdesk || { enabled: false, url: '', username: '', password: '', operator_group: '', category: '', subcategory: '' },
           glpi: notifResponse.data.notification_config.glpi || { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
-          zammad: notifResponse.data.notification_config.zammad || { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' }
+          zammad: notifResponse.data.notification_config.zammad || { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' },
+          dynamics365: notifResponse.data.notification_config.dynamics365 || { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' }
         });
       }
 
@@ -181,6 +196,26 @@ function Settings({ onNavigate }) {
         if (appearance.darkMode) {
           document.body.classList.add('dark-mode');
         }
+      }
+
+      // Load authentication/security config
+      try {
+        const authResponse = await api.get('/api/v1/auth-config');
+        if (authResponse.data) {
+          setAuthConfig({
+            ldap: authResponse.data.ldap || authConfig.ldap,
+            saml: authResponse.data.saml || authConfig.saml,
+            oauth2: authResponse.data.oauth2 || authConfig.oauth2,
+            azure_ad: authResponse.data.azure_ad || authConfig.azure_ad,
+            google: authResponse.data.google || authConfig.google,
+            okta: authResponse.data.okta || authConfig.okta,
+            mfa: authResponse.data.mfa || authConfig.mfa,
+            password_policy: authResponse.data.password_policy || authConfig.password_policy,
+            session: authResponse.data.session || authConfig.session
+          });
+        }
+      } catch (error) {
+        console.log('Auth config not found or error loading:', error);
       }
     } catch (error) {
       console.error('Erro ao carregar configurações:', error);
@@ -433,6 +468,27 @@ function Settings({ onNavigate }) {
     }
     
     alert('Configurações de aparência salvas com sucesso!');
+  };
+
+  const handleSaveAuthConfig = async () => {
+    setSaving(true);
+    try {
+      await api.put('/api/v1/auth-config', authConfig);
+      alert('Configurações de segurança salvas com sucesso!');
+    } catch (error) {
+      alert('Erro ao salvar configurações de segurança: ' + (error.response?.data?.detail || error.message));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleTestAuthConfig = async (provider) => {
+    try {
+      const response = await api.post(`/api/v1/auth-config/test/${provider}`);
+      alert(`✅ Teste bem-sucedido!\n\n${response.data.message || `Conexão com ${provider} funcionando corretamente.`}`);
+    } catch (error) {
+      alert(`❌ Erro ao testar ${provider}:\n\n${error.response?.data?.detail || error.message}`);
+    }
   };
 
   const renderNotifications = () => (
@@ -1204,6 +1260,179 @@ function Settings({ onNavigate }) {
         )}
       </div>
 
+      {/* Microsoft Dynamics 365 */}
+      <div className="integration-card">
+        <div className="integration-header">
+          <div className="integration-title">
+            <span className="integration-icon">🏢</span>
+            <h3>Microsoft Dynamics 365 CRM</h3>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={notificationConfig.dynamics365.enabled}
+              onChange={(e) => setNotificationConfig({
+                ...notificationConfig,
+                dynamics365: { ...notificationConfig.dynamics365, enabled: e.target.checked }
+              })}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+        
+        {notificationConfig.dynamics365.enabled && (
+          <div className="integration-config">
+            <div className="info-box" style={{ marginBottom: '15px', background: '#d1ecf1', border: '1px solid #0c5460', padding: '12px', borderRadius: '5px' }}>
+              <p style={{ margin: 0, color: '#0c5460', fontSize: '13px' }}>
+                <strong>ℹ️ Pré-requisitos:</strong><br/>
+                1. Aplicativo registrado no Azure AD<br/>
+                2. Permissões: Dynamics CRM API access<br/>
+                3. Application User criado no Dynamics 365<br/>
+                4. Consulte: docs/integracoes-dynamics365-twilio-whatsapp.md
+              </p>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>URL do Dynamics 365: <span style={{color: 'red'}}>*</span></label>
+                <input
+                  type="text"
+                  value={notificationConfig.dynamics365.url}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, url: e.target.value }
+                  })}
+                  placeholder="https://suaempresa.crm2.dynamics.com"
+                />
+                <small>URL da sua instância Dynamics 365</small>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Azure AD Tenant ID: <span style={{color: 'red'}}>*</span></label>
+                <input
+                  type="text"
+                  value={notificationConfig.dynamics365.tenant_id}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, tenant_id: e.target.value }
+                  })}
+                  placeholder="12345678-1234-1234-1234-123456789012"
+                />
+                <small>Directory (tenant) ID do Azure AD</small>
+              </div>
+              <div className="form-group">
+                <label>Client ID: <span style={{color: 'red'}}>*</span></label>
+                <input
+                  type="text"
+                  value={notificationConfig.dynamics365.client_id}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, client_id: e.target.value }
+                  })}
+                  placeholder="87654321-4321-4321-4321-210987654321"
+                />
+                <small>Application (client) ID do Azure AD</small>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Client Secret: <span style={{color: 'red'}}>*</span></label>
+                <input
+                  type="password"
+                  value={notificationConfig.dynamics365.client_secret}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, client_secret: e.target.value }
+                  })}
+                  placeholder="••••••••••••••••"
+                />
+                <small>Client secret do aplicativo Azure AD</small>
+              </div>
+              <div className="form-group">
+                <label>Resource URL:</label>
+                <input
+                  type="text"
+                  value={notificationConfig.dynamics365.resource}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, resource: e.target.value }
+                  })}
+                  placeholder="https://suaempresa.crm2.dynamics.com"
+                />
+                <small>Geralmente igual à URL (deixe vazio para usar URL)</small>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Versão da API:</label>
+                <input
+                  type="text"
+                  value={notificationConfig.dynamics365.api_version}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, api_version: e.target.value }
+                  })}
+                  placeholder="9.2"
+                />
+                <small>Versão da Web API (padrão: 9.2)</small>
+              </div>
+              <div className="form-group">
+                <label>Tipo de Entidade:</label>
+                <select
+                  value={notificationConfig.dynamics365.incident_type}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, incident_type: e.target.value }
+                  })}
+                >
+                  <option value="incident">Incident (Case)</option>
+                  <option value="msdyn_workorder">Work Order (Field Service)</option>
+                </select>
+                <small>Tipo de registro a ser criado</small>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Prioridade Padrão:</label>
+                <select
+                  value={notificationConfig.dynamics365.priority}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, priority: parseInt(e.target.value) }
+                  })}
+                >
+                  <option value="1">1 - Alta</option>
+                  <option value="2">2 - Normal</option>
+                  <option value="3">3 - Baixa</option>
+                </select>
+                <small>Prioridade para alertas de warning</small>
+              </div>
+              <div className="form-group">
+                <label>Owner ID (opcional):</label>
+                <input
+                  type="text"
+                  value={notificationConfig.dynamics365.owner_id}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    dynamics365: { ...notificationConfig.dynamics365, owner_id: e.target.value }
+                  })}
+                  placeholder="12345678-1234-1234-1234-123456789012"
+                />
+                <small>GUID do usuário proprietário (opcional)</small>
+              </div>
+            </div>
+            <div className="info-box" style={{ marginBottom: '10px', background: '#fff3cd', border: '1px solid #ffc107', padding: '10px', borderRadius: '5px' }}>
+              <p style={{ margin: 0, color: '#856404', fontSize: '12px' }}>
+                <strong>⚠️ Lembre-se:</strong> Salve as configurações antes de testar!
+              </p>
+            </div>
+            <button className="btn-test" onClick={() => handleTestNotification('dynamics365')}>
+              Testar Criação de Incidente
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="settings-actions">
         <button className="btn-primary" onClick={handleSaveNotifications} disabled={saving}>
           {saving ? 'Salvando...' : 'Salvar Configurações'}
@@ -1225,6 +1454,561 @@ function Settings({ onNavigate }) {
         <p>Crie, edite e gerencie usuários e suas permissões</p>
         <button className="btn-primary" onClick={() => onNavigate('users')}>
           Ir para Gerenciamento de Usuários
+        </button>
+      </div>
+    </div>
+  );
+
+  const renderSecurity = () => (
+    <div className="settings-section">
+      <h2>🔐 Segurança e Autenticação</h2>
+      <p className="section-description">
+        Configure métodos de autenticação enterprise, políticas de senha, MFA e gerenciamento de sessões.
+        Compatível com LGPD e ISO 27001.
+      </p>
+
+      <div className="info-banner" style={{ marginBottom: '20px', background: '#e3f2fd', padding: '15px', borderRadius: '8px', border: '1px solid #2196f3' }}>
+        <p style={{ margin: 0, color: '#1976d2' }}>
+          ℹ️ <strong>Nota:</strong> As configurações de autenticação enterprise requerem configuração adicional no backend.
+          Consulte a documentação em <code>docs/LGPD_COMPLIANCE.md</code> e <code>docs/ISO27001_COMPLIANCE.md</code> para mais detalhes.
+        </p>
+      </div>
+
+      {/* LDAP / Active Directory */}
+      <div className="integration-card">
+        <div className="integration-header">
+          <div className="integration-title">
+            <span className="integration-icon">🏢</span>
+            <h3>LDAP / Active Directory</h3>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={authConfig.ldap.enabled}
+              onChange={(e) => setAuthConfig({
+                ...authConfig,
+                ldap: { ...authConfig.ldap, enabled: e.target.checked }
+              })}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+        
+        {authConfig.ldap.enabled && (
+          <div className="integration-config">
+            <div className="form-row">
+              <div className="form-group">
+                <label>Servidor LDAP:</label>
+                <input
+                  type="text"
+                  value={authConfig.ldap.server}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, server: e.target.value }
+                  })}
+                  placeholder="ldap.empresa.com ou 192.168.1.10"
+                />
+                <small>Endereço do servidor LDAP/AD</small>
+              </div>
+              <div className="form-group">
+                <label>Porta:</label>
+                <input
+                  type="number"
+                  value={authConfig.ldap.port}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, port: parseInt(e.target.value) }
+                  })}
+                  placeholder="389"
+                />
+                <small>389 (LDAP) ou 636 (LDAPS)</small>
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={authConfig.ldap.use_ssl}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, use_ssl: e.target.checked }
+                  })}
+                />
+                Usar SSL/TLS (LDAPS)
+              </label>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Base DN:</label>
+                <input
+                  type="text"
+                  value={authConfig.ldap.base_dn}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, base_dn: e.target.value }
+                  })}
+                  placeholder="dc=empresa,dc=com"
+                />
+                <small>Distinguished Name base para busca</small>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Bind DN (usuário de serviço):</label>
+                <input
+                  type="text"
+                  value={authConfig.ldap.bind_dn}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, bind_dn: e.target.value }
+                  })}
+                  placeholder="cn=admin,dc=empresa,dc=com"
+                />
+                <small>Usuário para conectar ao LDAP</small>
+              </div>
+              <div className="form-group">
+                <label>Senha do Bind:</label>
+                <input
+                  type="password"
+                  value={authConfig.ldap.bind_password}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, bind_password: e.target.value }
+                  })}
+                  placeholder="••••••••••••••••"
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Filtro de Usuário:</label>
+                <input
+                  type="text"
+                  value={authConfig.ldap.user_filter}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, user_filter: e.target.value }
+                  })}
+                  placeholder="(uid={username})"
+                />
+                <small>Filtro LDAP para buscar usuários</small>
+              </div>
+              <div className="form-group">
+                <label>Filtro de Grupo (opcional):</label>
+                <input
+                  type="text"
+                  value={authConfig.ldap.group_filter}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, group_filter: e.target.value }
+                  })}
+                  placeholder="(memberOf=cn=coruja,ou=groups,dc=empresa,dc=com)"
+                />
+                <small>Filtro para restringir acesso por grupo</small>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Grupo Admin:</label>
+                <input
+                  type="text"
+                  value={authConfig.ldap.admin_group}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, admin_group: e.target.value }
+                  })}
+                  placeholder="cn=coruja-admins,ou=groups,dc=empresa,dc=com"
+                />
+                <small>Membros terão role admin</small>
+              </div>
+              <div className="form-group">
+                <label>Grupo User:</label>
+                <input
+                  type="text"
+                  value={authConfig.ldap.user_group}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    ldap: { ...authConfig.ldap, user_group: e.target.value }
+                  })}
+                  placeholder="cn=coruja-users,ou=groups,dc=empresa,dc=com"
+                />
+                <small>Membros terão role user</small>
+              </div>
+            </div>
+            <div className="form-group">
+              <label>Grupo Viewer:</label>
+              <input
+                type="text"
+                value={authConfig.ldap.viewer_group}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  ldap: { ...authConfig.ldap, viewer_group: e.target.value }
+                })}
+                placeholder="cn=coruja-viewers,ou=groups,dc=empresa,dc=com"
+              />
+              <small>Membros terão role viewer</small>
+            </div>
+            <button className="btn-test" onClick={() => handleTestAuthConfig('ldap')}>
+              Testar Conexão LDAP
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Azure AD (Entra ID) */}
+      <div className="integration-card">
+        <div className="integration-header">
+          <div className="integration-title">
+            <span className="integration-icon">☁️</span>
+            <h3>Azure AD (Microsoft Entra ID)</h3>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={authConfig.azure_ad.enabled}
+              onChange={(e) => setAuthConfig({
+                ...authConfig,
+                azure_ad: { ...authConfig.azure_ad, enabled: e.target.checked }
+              })}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+        
+        {authConfig.azure_ad.enabled && (
+          <div className="integration-config">
+            <div className="form-row">
+              <div className="form-group">
+                <label>Tenant ID:</label>
+                <input
+                  type="text"
+                  value={authConfig.azure_ad.tenant_id}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    azure_ad: { ...authConfig.azure_ad, tenant_id: e.target.value }
+                  })}
+                  placeholder="12345678-1234-1234-1234-123456789012"
+                />
+              </div>
+              <div className="form-group">
+                <label>Client ID:</label>
+                <input
+                  type="text"
+                  value={authConfig.azure_ad.client_id}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    azure_ad: { ...authConfig.azure_ad, client_id: e.target.value }
+                  })}
+                  placeholder="87654321-4321-4321-4321-210987654321"
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Client Secret:</label>
+                <input
+                  type="password"
+                  value={authConfig.azure_ad.client_secret}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    azure_ad: { ...authConfig.azure_ad, client_secret: e.target.value }
+                  })}
+                  placeholder="••••••••••••••••"
+                />
+              </div>
+              <div className="form-group">
+                <label>Redirect URI:</label>
+                <input
+                  type="text"
+                  value={authConfig.azure_ad.redirect_uri}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    azure_ad: { ...authConfig.azure_ad, redirect_uri: e.target.value }
+                  })}
+                  placeholder="https://coruja.empresa.com/auth/azure/callback"
+                />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>ID do Grupo Admin (opcional):</label>
+                <input
+                  type="text"
+                  value={authConfig.azure_ad.admin_group_id}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    azure_ad: { ...authConfig.azure_ad, admin_group_id: e.target.value }
+                  })}
+                  placeholder="11111111-1111-1111-1111-111111111111"
+                />
+              </div>
+              <div className="form-group">
+                <label>ID do Grupo User (opcional):</label>
+                <input
+                  type="text"
+                  value={authConfig.azure_ad.user_group_id}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    azure_ad: { ...authConfig.azure_ad, user_group_id: e.target.value }
+                  })}
+                  placeholder="22222222-2222-2222-2222-222222222222"
+                />
+              </div>
+            </div>
+            <button className="btn-test" onClick={() => handleTestAuthConfig('azure_ad')}>
+              Testar Azure AD
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* MFA / 2FA */}
+      <div className="integration-card">
+        <div className="integration-header">
+          <div className="integration-title">
+            <span className="integration-icon">🔒</span>
+            <h3>Autenticação Multi-Fator (MFA/2FA)</h3>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={authConfig.mfa.enabled}
+              onChange={(e) => setAuthConfig({
+                ...authConfig,
+                mfa: { ...authConfig.mfa, enabled: e.target.checked }
+              })}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+        
+        {authConfig.mfa.enabled && (
+          <div className="integration-config">
+            <div className="form-group">
+              <label>Método MFA:</label>
+              <select
+                value={authConfig.mfa.method}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  mfa: { ...authConfig.mfa, method: e.target.value }
+                })}
+              >
+                <option value="totp">TOTP (Google Authenticator, Authy)</option>
+                <option value="sms">SMS</option>
+                <option value="email">E-mail</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Issuer (para TOTP):</label>
+              <input
+                type="text"
+                value={authConfig.mfa.issuer}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  mfa: { ...authConfig.mfa, issuer: e.target.value }
+                })}
+                placeholder="CorujaMonitor"
+              />
+              <small>Nome que aparecerá no app autenticador</small>
+            </div>
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={authConfig.mfa.enforce_for_admins}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    mfa: { ...authConfig.mfa, enforce_for_admins: e.target.checked }
+                  })}
+                />
+                Obrigatório para Administradores
+              </label>
+            </div>
+            <div className="form-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={authConfig.mfa.enforce_for_all}
+                  onChange={(e) => setAuthConfig({
+                    ...authConfig,
+                    mfa: { ...authConfig.mfa, enforce_for_all: e.target.checked }
+                  })}
+                />
+                Obrigatório para Todos os Usuários
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Política de Senha */}
+      <div className="integration-card">
+        <div className="integration-header">
+          <div className="integration-title">
+            <span className="integration-icon">🔑</span>
+            <h3>Política de Senha</h3>
+          </div>
+        </div>
+        
+        <div className="integration-config" style={{ display: 'block' }}>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Comprimento Mínimo:</label>
+              <input
+                type="number"
+                value={authConfig.password_policy.min_length}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  password_policy: { ...authConfig.password_policy, min_length: parseInt(e.target.value) }
+                })}
+                min="6"
+                max="32"
+              />
+            </div>
+            <div className="form-group">
+              <label>Expiração (dias):</label>
+              <input
+                type="number"
+                value={authConfig.password_policy.expiry_days}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  password_policy: { ...authConfig.password_policy, expiry_days: parseInt(e.target.value) }
+                })}
+                min="0"
+                max="365"
+              />
+              <small>0 = nunca expira</small>
+            </div>
+          </div>
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={authConfig.password_policy.require_uppercase}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  password_policy: { ...authConfig.password_policy, require_uppercase: e.target.checked }
+                })}
+              />
+              Exigir Letras Maiúsculas
+            </label>
+          </div>
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={authConfig.password_policy.require_lowercase}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  password_policy: { ...authConfig.password_policy, require_lowercase: e.target.checked }
+                })}
+              />
+              Exigir Letras Minúsculas
+            </label>
+          </div>
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={authConfig.password_policy.require_numbers}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  password_policy: { ...authConfig.password_policy, require_numbers: e.target.checked }
+                })}
+              />
+              Exigir Números
+            </label>
+          </div>
+          <div className="form-group">
+            <label className="checkbox-label">
+              <input
+                type="checkbox"
+                checked={authConfig.password_policy.require_special}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  password_policy: { ...authConfig.password_policy, require_special: e.target.checked }
+                })}
+              />
+              Exigir Caracteres Especiais (!@#$%^&*)
+            </label>
+          </div>
+          <div className="form-group">
+            <label>Prevenir Reutilização (últimas N senhas):</label>
+            <input
+              type="number"
+              value={authConfig.password_policy.prevent_reuse}
+              onChange={(e) => setAuthConfig({
+                ...authConfig,
+                password_policy: { ...authConfig.password_policy, prevent_reuse: parseInt(e.target.value) }
+              })}
+              min="0"
+              max="24"
+            />
+            <small>0 = permitir reutilização</small>
+          </div>
+        </div>
+      </div>
+
+      {/* Gerenciamento de Sessões */}
+      <div className="integration-card">
+        <div className="integration-header">
+          <div className="integration-title">
+            <span className="integration-icon">⏱️</span>
+            <h3>Gerenciamento de Sessões</h3>
+          </div>
+        </div>
+        
+        <div className="integration-config" style={{ display: 'block' }}>
+          <div className="form-row">
+            <div className="form-group">
+              <label>Timeout de Sessão (minutos):</label>
+              <input
+                type="number"
+                value={authConfig.session.timeout_minutes}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  session: { ...authConfig.session, timeout_minutes: parseInt(e.target.value) }
+                })}
+                min="5"
+                max="1440"
+              />
+              <small>Tempo de inatividade antes de logout automático</small>
+            </div>
+            <div className="form-group">
+              <label>Sessões Simultâneas Máximas:</label>
+              <input
+                type="number"
+                value={authConfig.session.max_concurrent_sessions}
+                onChange={(e) => setAuthConfig({
+                  ...authConfig,
+                  session: { ...authConfig.session, max_concurrent_sessions: parseInt(e.target.value) }
+                })}
+                min="1"
+                max="10"
+              />
+              <small>Número máximo de logins simultâneos por usuário</small>
+            </div>
+          </div>
+          <div className="form-group">
+            <label>Duração "Lembrar-me" (dias):</label>
+            <input
+              type="number"
+              value={authConfig.session.remember_me_days}
+              onChange={(e) => setAuthConfig({
+                ...authConfig,
+                session: { ...authConfig.session, remember_me_days: parseInt(e.target.value) }
+              })}
+              min="1"
+              max="90"
+            />
+            <small>Quanto tempo manter sessão com "Lembrar-me" marcado</small>
+          </div>
+        </div>
+      </div>
+
+      <div className="settings-actions">
+        <button className="btn-primary" onClick={handleSaveAuthConfig} disabled={saving}>
+          {saving ? 'Salvando...' : '💾 Salvar Configurações de Segurança'}
         </button>
       </div>
     </div>
@@ -1990,6 +2774,12 @@ function Settings({ onNavigate }) {
           👥 Usuários
         </button>
         <button 
+          className={`tab ${activeTab === 'security' ? 'active' : ''}`}
+          onClick={() => setActiveTab('security')}
+        >
+          🔐 Segurança
+        </button>
+        <button 
           className={`tab ${activeTab === 'tests' ? 'active' : ''}`}
           onClick={(e) => {
             e.preventDefault();
@@ -2025,6 +2815,7 @@ function Settings({ onNavigate }) {
         {activeTab === 'thresholds' && <ThresholdConfig />}
         {activeTab === 'notifications' && renderNotifications()}
         {activeTab === 'users' && renderUsers()}
+        {activeTab === 'security' && renderSecurity()}
         {activeTab === 'backup' && renderBackup()}
         {activeTab === 'admin' && renderAdminTools()}
         {activeTab === 'advanced' && renderAdvanced()}
