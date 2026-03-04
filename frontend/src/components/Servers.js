@@ -867,109 +867,56 @@ function Servers({ selectedServerId, selectedSensorId }) {
   const renderMixedSensors = () => {
     const grouped = groupSensorsByType(sensors);
     const aggregatorCards = [];
-    const individualSensors = [];
-    
-    // Debug: verificar sensores Docker
-    console.log('Total sensors:', sensors.length);
-    console.log('Grouped sensors:', grouped);
-    const dockerSensors = sensors.filter(s => s.sensor_type === 'docker');
-    console.log('Docker sensors found:', dockerSensors.length, dockerSensors);
     
     grouped.forEach(([groupKey, group]) => {
       const isExpanded = expandedSensorGroups[groupKey];
       const statusCounts = getGroupStatusCounts(group.sensors);
       
-      // Nome do card: sempre usa o nome do grupo
-      const cardName = group.name;
-      
-      // Determinar qual resumo mostrar
-      let summaryComponent = null;
-      if (!isExpanded && group.sensors.length > 0) {
-        switch(groupKey) {
-          case 'system':
-            summaryComponent = renderSystemSummary(group.sensors);
-            break;
-          case 'docker':
-            summaryComponent = renderDockerSummary(group.sensors);
-            break;
-          case 'services':
-            summaryComponent = renderServicesSummary(group.sensors);
-            break;
-          case 'applications':
-            summaryComponent = renderApplicationsSummary(group.sensors);
-            break;
-          case 'network':
-            summaryComponent = renderNetworkSummary(group.sensors);
-            break;
-          default:
-            summaryComponent = null;
-        }
-      }
-      
-      // Card agregador para o grupo
+      // Card agregador compacto
       const aggregatorCard = (
         <div 
           key={`agg-${groupKey}`}
-          className="sensor-card aggregator-card"
-          onClick={() => toggleSensorGroup(groupKey)}
-          style={{ 
-            cursor: 'pointer',
-            '--card-color': group.color
-          }}
+          className={`category-card ${isExpanded ? 'expanded' : ''}`}
+          style={{ borderLeftColor: group.color }}
         >
-          <div className="aggregator-card-content">
-            <div className="aggregator-card-info">
-              <span className="sensor-icon">{group.icon}</span>
-              <h3>{cardName}</h3>
-              <span className="count-badge">{group.sensors.length}</span>
-            </div>
+          {/* Header compacto - só ícone e contador */}
+          <div 
+            className="category-header"
+            onClick={() => toggleSensorGroup(groupKey)}
+          >
+            <span className="category-icon">{group.icon}</span>
+            <span className="category-name">{group.name}</span>
+            <span className="category-count">{group.sensors.length}</span>
             
+            {/* Status badges */}
             {group.sensors.length > 0 && (
-              <div className="aggregator-card-stats">
-                {statusCounts.ok > 0 && (
-                  <span className="stat-item ok">
-                    <span>✓</span>
-                    <span>{statusCounts.ok}</span>
-                  </span>
-                )}
-                {statusCounts.warning > 0 && (
-                  <span className="stat-item warning">
-                    <span>⚠</span>
-                    <span>{statusCounts.warning}</span>
-                  </span>
-                )}
-                {statusCounts.critical > 0 && (
-                  <span className="stat-item critical">
-                    <span>🔥</span>
-                    <span>{statusCounts.critical}</span>
-                  </span>
-                )}
+              <div className="category-status">
+                {statusCounts.ok > 0 && <span className="status-badge ok">✓ {statusCounts.ok}</span>}
+                {statusCounts.warning > 0 && <span className="status-badge warning">⚠ {statusCounts.warning}</span>}
+                {statusCounts.critical > 0 && <span className="status-badge critical">🔥 {statusCounts.critical}</span>}
               </div>
             )}
             
-            <span className="aggregator-card-toggle">
-              {isExpanded ? '▲' : '▼'}
-            </span>
+            <span className="category-toggle">{isExpanded ? '▲' : '▼'}</span>
           </div>
           
-          {!isExpanded && summaryComponent}
+          {/* Sensores aparecem DENTRO do card quando expandido */}
+          {isExpanded && group.sensors.length > 0 && (
+            <div className="category-sensors">
+              <div className="sensors-grid-inner">
+                {group.sensors.map(sensor => renderSensorCard(sensor))}
+              </div>
+            </div>
+          )}
         </div>
       );
       
       aggregatorCards.push(aggregatorCard);
-      
-      // Se expandido, adiciona sensores individuais
-      if (isExpanded) {
-        group.sensors.forEach(sensor => {
-          individualSensors.push(renderSensorCard(sensor));
-        });
-      }
     });
     
     return (
-      <div className="sensors-grid">
+      <div className="categories-container">
         {aggregatorCards}
-        {individualSensors}
       </div>
     );
   };

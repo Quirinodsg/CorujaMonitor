@@ -3050,9 +3050,155 @@
 
 
 /* ========================================
-   CORRECAO URGENTE - Cards de Categorias
+   CORRECAO URGENTE - Cards de Categorias COMPACTOS
    Data: 04/03/2026
+   Layout: Ícone na borda, sensores dentro do card
    ======================================== */
+
+/* Container das categorias */
+.categories-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+/* Card de categoria - COMPACTO */
+.category-card {
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid #2196f3;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.category-card:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.category-card.expanded {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Header compacto - só ícone e contador */
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  background: white;
+  transition: background 0.2s ease;
+}
+
+.category-header:hover {
+  background: #f9fafb;
+}
+
+.category-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.category-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a1a;
+  flex: 1;
+}
+
+.category-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #666;
+  background: #f3f4f6;
+  padding: 4px 12px;
+  border-radius: 12px;
+  min-width: 32px;
+  text-align: center;
+}
+
+.category-status {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.category-status .status-badge {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.category-status .status-badge.ok {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.category-status .status-badge.warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.category-status .status-badge.critical {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.category-toggle {
+  font-size: 14px;
+  color: #666;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+/* Sensores DENTRO do card */
+.category-sensors {
+  padding: 16px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 2000px;
+  }
+}
+
+.sensors-grid-inner {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .sensors-grid-inner {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Ajuste dos sensor cards quando dentro da categoria */
+.category-sensors .sensor-card {
+  margin: 0;
+}
 
 /* Docker Summary - Cards internos dos agregadores */
 .docker-summary {
