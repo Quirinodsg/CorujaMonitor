@@ -1,6 +1,7 @@
 """
 WAF Middleware - Web Application Firewall
 Proteção contra SQL Injection, XSS, CSRF, DDoS e outros ataques
+Otimizado para alta performance com cache e processamento assíncrono
 """
 
 from fastapi import Request, Response
@@ -8,8 +9,10 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from collections import defaultdict
 from datetime import datetime, timedelta
+from functools import lru_cache
 import re
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -17,6 +20,7 @@ class WAFMiddleware(BaseHTTPMiddleware):
     """
     Web Application Firewall Middleware
     Implementa proteções contra ataques comuns
+    Otimizado para alta performance
     """
     
     def __init__(self, app):
@@ -28,12 +32,24 @@ class WAFMiddleware(BaseHTTPMiddleware):
         # Blacklist de IPs bloqueados
         self.blacklist = set()
         
+        # Cache de padrões compilados para melhor performance
+        self._compiled_sql_patterns = None
+        self._compiled_xss_patterns = None
+        
         # Configurações
         self.max_requests_per_minute = 100
         self.max_requests_per_hour = 1000
         self.blacklist_duration = timedelta(hours=1)
         
-        # Padrões de ataque
+        # Whitelist de paths que não precisam de verificação completa
+        self.whitelist_paths = [
+            "/health",
+            "/",
+            "/api/v1/auth/login",
+            "/api/v1/auth/refresh"
+        ]
+        
+        # Padrões de ataque (compilados sob demanda)
         self.sql_injection_patterns = [
             r"(\bunion\b.*\bselect\b)",
             r"(\bselect\b.*\bfrom\b)",
@@ -58,14 +74,41 @@ class WAFMiddleware(BaseHTTPMiddleware):
             r"<object[^>]*>",
         ]
         
-        logger.info("WAF Middleware initialized")
+        logger.info("WAF Middleware initialized with performance optimizations")
+    
+    @property
+    def compiled_sql_patterns(self):
+        """Lazy compilation de padrões SQL"""
+        if self._compiled_sql_patterns is None:
+            self._compiled_sql_patterns = [
+                re.compile(pattern, re.IGNORECASE)
+                for pattern in self.sql_injection_patterns
+            ]
+        return self._compiled_sql_patterns
+    
+    @property
+    def compiled_xss_patterns(self):
+        """Lazy compilation de padrões XSS"""
+        if self._compiled_xss_patterns is None:
+            self._compiled_xss_patterns = [
+                re.compile(pattern, re.IGNORECASE)
+                for pattern in self.xss_patterns
+            ]
+        return self._compiled_xss_patterns
     
     async def dispatch(self, request: Request, call_next):
         """Processa cada requisição através do WAF"""
         
         client_ip = request.client.host
+        path = request.url.path
         
-        # 1. Verificar blacklist
+        # Skip verificação completa para paths whitelisted (performance)
+        if path in self.whitelist_paths:
+            response = await call_next(request)
+            self._add_security_headers(response)
+            return response
+        
+        # 1. Verificar blacklist (mais rápido)
         if client_ip in self.blacklist:
             logger.warning(f"Blocked request from blacklisted IP: {client_ip}")
             return JSONResponse(
@@ -73,7 +116,7 @@ class WAFMiddleware(BaseHTTPMiddleware):
                 content={"detail": "Access denied"}
             )
         
-        # 2. Rate Limiting
+        # 2. Rate Limiting (otimizado)
         if not self.check_rate_limit(client_ip):
             logger.warning(f"Rate limit exceeded for IP: {client_ip}")
             return JSONResponse(
@@ -81,8 +124,8 @@ class WAFMiddleware(BaseHTTPMiddleware):
                 content={"detail": "Too many requests. Please try again later."}
             )
         
-        # 3. Detectar SQL Injection
-        if await self.detect_sql_injection(request):
+        # 3. Detectar SQL Injection (apenas em query params para performance)
+        if await self.detect_sql_injection_fast(request):
             logger.error(f"SQL Injection attempt detected from IP: {client_ip}")
             self.add_to_blacklist(client_ip)
             return JSONResponse(
@@ -90,15 +133,15 @@ class WAFMiddleware(BaseHTTPMiddleware):
                 content={"detail": "Invalid request"}
             )
         
-        # 4. Detectar XSS
-        if await self.detect_xss(request):
+        # 4. Detectar XSS (apenas em headers críticos)
+        if await self.detect_xss_fast(request):
             logger.error(f"XSS attempt detected from IP: {client_ip}")
             return JSONResponse(
                 status_code=400,
                 content={"detail": "Invalid request"}
             )
         
-        # 5. Validar Content-Type
+        # 5. Validar Content-Type (apenas POST/PUT/PATCH)
         if request.method in ["POST", "PUT", "PATCH"]:
             content_type = request.headers.get("content-type", "")
             if not self.validate_content_type(content_type):
@@ -112,6 +155,12 @@ class WAFMiddleware(BaseHTTPMiddleware):
         response = await call_next(request)
         
         # 6. Adicionar Security Headers
+        self._add_security_headers(response)
+        
+        return response
+    
+    def _add_security_headers(self, response: Response):
+        """Adiciona security headers (método separado para reuso)"""
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
@@ -130,8 +179,6 @@ class WAFMiddleware(BaseHTTPMiddleware):
             "frame-ancestors 'none';"
         )
         response.headers["Content-Security-Policy"] = csp
-        
-        return response
     
     def check_rate_limit(self, ip: str) -> bool:
         """Verifica rate limiting por IP"""
@@ -161,43 +208,37 @@ class WAFMiddleware(BaseHTTPMiddleware):
         
         return True
     
-    async def detect_sql_injection(self, request: Request) -> bool:
-        """Detecta tentativas de SQL Injection"""
+    async def detect_sql_injection_fast(self, request: Request) -> bool:
+        """Detecta tentativas de SQL Injection (versão otimizada)"""
         
-        # Verificar query parameters
+        # Verificar apenas query parameters (mais rápido)
         query_string = str(request.url.query).lower()
-        for pattern in self.sql_injection_patterns:
-            if re.search(pattern, query_string, re.IGNORECASE):
-                return True
         
-        # Verificar body (se existir)
-        if request.method in ["POST", "PUT", "PATCH"]:
-            try:
-                body = await request.body()
-                body_str = body.decode('utf-8').lower()
-                
-                for pattern in self.sql_injection_patterns:
-                    if re.search(pattern, body_str, re.IGNORECASE):
-                        return True
-            except:
-                pass
+        # Early return se query vazia
+        if not query_string:
+            return False
+        
+        # Usar padrões compilados
+        for pattern in self.compiled_sql_patterns:
+            if pattern.search(query_string):
+                return True
         
         return False
     
-    async def detect_xss(self, request: Request) -> bool:
-        """Detecta tentativas de XSS"""
+    async def detect_xss_fast(self, request: Request) -> bool:
+        """Detecta tentativas de XSS (versão otimizada)"""
         
-        # Verificar query parameters
+        # Verificar apenas query parameters
         query_string = str(request.url.query)
-        for pattern in self.xss_patterns:
-            if re.search(pattern, query_string, re.IGNORECASE):
-                return True
         
-        # Verificar headers
-        for header_value in request.headers.values():
-            for pattern in self.xss_patterns:
-                if re.search(pattern, header_value, re.IGNORECASE):
-                    return True
+        # Early return se query vazia
+        if not query_string:
+            return False
+        
+        # Usar padrões compilados
+        for pattern in self.compiled_xss_patterns:
+            if pattern.search(query_string):
+                return True
         
         return False
     

@@ -1,0 +1,4407 @@
+{
+  "generated_at": "2026-03-04T12:48:53.167336",
+  "total_files": 880,
+  "base_directory": ".",
+  "checksums": {
+    "abrir_sistema.ps1": {
+      "hash": "1ba26a6bbde8f8a5461c31b13c249595accb272b3a6e30f534511750fe9c0362",
+      "size": 2631,
+      "modified": "2026-03-04T10:45:01.714386"
+    },
+    "COMANDOS_FINAIS.txt": {
+      "hash": "4f98172426587b9a7f369061146945248f704713409ada585c553c808a70cb7e",
+      "size": 794,
+      "modified": "2026-02-26T18:12:13.978008"
+    },
+    "COMECE_AQUI.txt": {
+      "hash": "da1a9f0b8da95e8a9784bbb557f0c0185a8bcbdd986581ffaee9fd0b96326e69",
+      "size": 5711,
+      "modified": "2026-02-26T17:26:54.545761"
+    },
+    "COMECE_AQUI_SEGURANCA.txt": {
+      "hash": "8a1fc3f819fcf208292c0003d62cb2a10529a322e397b8253017d314cde9d37d",
+      "size": 18550,
+      "modified": "2026-03-04T10:46:53.730891"
+    },
+    "commit_atualizacao_04mar.ps1": {
+      "hash": "74623bf05b070f5e2ba6bc479d0ea515bb15c96a893b0f69943f604c58c67208",
+      "size": 4535,
+      "modified": "2026-03-04T11:20:16.865314"
+    },
+    "commit_organizacao.ps1": {
+      "hash": "b1065b9510380347c93ffeb9bb64c5fdcc677ed43006ae9a2f10277d8e44c098",
+      "size": 2958,
+      "modified": "2026-03-04T09:53:22.292261"
+    },
+    "CONTRIBUTING.md": {
+      "hash": "553cf066d8a5f4024f763d408debd48df8c3f7b7953d852565bc4a95767e9941",
+      "size": 1188,
+      "modified": "2026-02-11T11:00:53.486670"
+    },
+    "diagnose.html": {
+      "hash": "7e778b70120eb41a165dcd5e54540d4de1518c82ee28f56e25e10652c05234f7",
+      "size": 6701,
+      "modified": "2026-02-11T14:24:07.252508"
+    },
+    "docker-compose.security.yml": {
+      "hash": "a4a4253ada45fec18b69b2cebce274a1eb2f0b85456680a7c78471f0301d0906",
+      "size": 2408,
+      "modified": "2026-03-04T12:32:58.147804"
+    },
+    "docker-compose.yml": {
+      "hash": "761d276d0c0177b90091a4aba405c83207893726856dc00f13aea2436d9f4817",
+      "size": 3146,
+      "modified": "2026-02-26T13:06:57.605313"
+    },
+    "fix_sensor_navigation.js": {
+      "hash": "a1e6168e7ee68debbae18848f6e0deffdfee1b261804aed085b2f54715034b6b",
+      "size": 2899,
+      "modified": "2026-02-25T09:06:56.361800"
+    },
+    "GIT_COMMIT_SEGURANCA_04MAR.md": {
+      "hash": "a528ed71909504fab1d3ccc92141b6bc13f0238cf3a79cb288a0fcfa0c4f4303",
+      "size": 7209,
+      "modified": "2026-03-04T10:59:37.339055"
+    },
+    "GUIA_SEGURANCA_COMPLETO_04MAR.md": {
+      "hash": "bae759ee978139dde2aa26ba280d9ab819dc20d721b1852894befa3c6c1cff2a",
+      "size": 13678,
+      "modified": "2026-03-04T12:29:59.993185"
+    },
+    "IMPLEMENTACAO_DASHBOARDS_METRICAS_04MAR.md": {
+      "hash": "7596ef70df4841842b9e0830ff65c53c271c0e0ca2874edce7e805f278805431",
+      "size": 8438,
+      "modified": "2026-03-04T11:07:12.010930"
+    },
+    "IMPLEMENTACAO_SEGURANCA_AUTH_04MAR.md": {
+      "hash": "9a8b068cae79ab2d48eb330d17cbc9b8661473ac7e72d54ad9fe0e74baa32f33",
+      "size": 9577,
+      "modified": "2026-03-04T10:34:52.140485"
+    },
+    "IMPLEMENTACAO_SEGURANCA_COMPLETA.md": {
+      "hash": "58ce1699c9c1ff8a1970bc0a4600150764f7c6263a39277501a1719f4339b599",
+      "size": 9844,
+      "modified": "2026-03-04T12:35:17.572342"
+    },
+    "INSTRUCOES_FINAIS_ORGANIZACAO.md": {
+      "hash": "66c0e4ffb559e079225f4c234925e221353e897d300cfa60eef92bf2e4540b65",
+      "size": 7653,
+      "modified": "2026-03-04T09:54:36.148493"
+    },
+    "INSTRUCOES_SEGURANCA_USUARIO.md": {
+      "hash": "80c8aa637d98ffcb096513a2bf1049844f314ca2ba443db98f0255a120340c51",
+      "size": 7104,
+      "modified": "2026-03-04T12:44:35.665809"
+    },
+    "INTEGRACAO_DYNAMICS365_TWILIO_WHATSAPP.md": {
+      "hash": "cd9037f13e3ccaaea6e0509dfd3be038a9f2a10fea529d2d1d4ef04ff58eed12",
+      "size": 12432,
+      "modified": "2026-03-04T10:07:28.410233"
+    },
+    "LEIA_ISTO_PRIMEIRO.md": {
+      "hash": "d5354dcefee64bd911929377efe6118d406d59fda1024278ba9413f3d29680ed",
+      "size": 2584,
+      "modified": "2026-03-04T09:55:07.662617"
+    },
+    "LICENSE": {
+      "hash": "2c1ca2f1371a4f9389a777e110b0b754d48025c313f9eeef498aa5ca329f0728",
+      "size": 1092,
+      "modified": "2026-02-11T11:01:50.433256"
+    },
+    "LIMPAR_CACHE_NAVEGADOR.txt": {
+      "hash": "ad9e4368e306ec824761afbfe0082249f3b4ff30bf566c327e4dd634ada9d0dc",
+      "size": 11421,
+      "modified": "2026-03-04T11:33:59.261242"
+    },
+    "limpar_temporarios.ps1": {
+      "hash": "4c8a4499560ba386c35163fa983358e6d33484cb83ef266c3969ca182cd9510f",
+      "size": 1724,
+      "modified": "2026-03-04T09:51:04.259088"
+    },
+    "ORGANIZACAO_FINAL_04MAR.md": {
+      "hash": "b64c66fa9487daece8cae0fd44a668a5c62302671668298dc91ed139e7025c34",
+      "size": 8262,
+      "modified": "2026-03-04T09:53:57.040445"
+    },
+    "organizar_final.ps1": {
+      "hash": "75e3c561bd54d0b015218ce66df8c6b1ee56c59b6a291836ec567c165bed53db",
+      "size": 3515,
+      "modified": "2026-03-04T09:51:37.036148"
+    },
+    "README.md": {
+      "hash": "9f552b93bcda9313993018df10a0c748070dc66a7400a17ff2774eb3fe8589a4",
+      "size": 32832,
+      "modified": "2026-03-04T11:18:55.690920"
+    },
+    "rebuild_frontend.ps1": {
+      "hash": "2c84a258290187c8b89a22e29f52fa42ad2f793b0c42a7102cd146416019d505",
+      "size": 2581,
+      "modified": "2026-03-04T10:13:36.153305"
+    },
+    "REINICIAR_FRONTEND_INTEGRACOES.md": {
+      "hash": "4cc77e64bff20d1b706bcec93c6d4d5f322df5905979fda7433940fabfa7e88d",
+      "size": 5697,
+      "modified": "2026-03-04T10:13:06.525196"
+    },
+    "RESUMO_ATUALIZACAO_GIT_04MAR.md": {
+      "hash": "2cf1ce7b28f387adffb4ce3cad87d138fe55fa42c2a1076dd0b5202c6b881491",
+      "size": 9470,
+      "modified": "2026-03-04T11:21:01.674189"
+    },
+    "RESUMO_FINAL_SEGURANCA_04MAR.md": {
+      "hash": "3b76c970679ffa35a5f3ad6e9f8948eddf90d4a6a5cb06ace47a024a44517dbb",
+      "size": 8387,
+      "modified": "2026-03-04T12:43:21.937335"
+    },
+    "RESUMO_IMPLEMENTACAO_04MAR_INTEGRACOES.md": {
+      "hash": "6343b0212a96c610acbb74f0b1ff1ad8887c8b9ac60b6c2a0fb4da431d84e2a0",
+      "size": 6054,
+      "modified": "2026-03-04T10:08:14.041529"
+    },
+    "SEGURANCA_IMPLEMENTADA_04MAR.md": {
+      "hash": "a7e0260ada268fbdf0f5b99a6f879d93303fcbb36b6badc6b4310521da764048",
+      "size": 10628,
+      "modified": "2026-03-04T12:40:33.487290"
+    },
+    "STATUS_FINAL_GIT_04MAR.md": {
+      "hash": "6598da8769db56235ee0a2127df20da781757254b26d5ef16da5f4cfe812c750",
+      "size": 7477,
+      "modified": "2026-03-04T11:24:11.483168"
+    },
+    "STATUS_FINAL_REPOSITORIO.md": {
+      "hash": "742a577d7d4fe9dfadfecc5334ed65ae8811c6682029d37a1267e8ff2be967fc",
+      "size": 12562,
+      "modified": "2026-03-04T09:56:19.299895"
+    },
+    "STATUS_IMPLEMENTACAO_SEGURANCA.txt": {
+      "hash": "41699018f074557bfaed3b468d22003de6051e41c11fb42eb46829e889e977a3",
+      "size": 8376,
+      "modified": "2026-03-04T12:46:09.390639"
+    },
+    "SUCESSO_ATUALIZACAO_COMPLETA_04MAR.txt": {
+      "hash": "8b44dd0db9bd50c55a78a19e1b8578763edba82a1f32a36bd9fb897c56d888e5",
+      "size": 9993,
+      "modified": "2026-03-04T11:25:27.600089"
+    },
+    "testar_dashboard_metricas.ps1": {
+      "hash": "26206f333929139ebbd2b15c7dba9c5c780727728b9e93e07c77b916c05fc234",
+      "size": 1669,
+      "modified": "2026-03-04T12:37:53.346852"
+    },
+    "testar_logo.html": {
+      "hash": "fe50a7e817cafee19eed5d05d2102f17a26f5933b2d58dc6395c7c37d480faa3",
+      "size": 7987,
+      "modified": "2026-02-25T10:17:05.079437"
+    },
+    "testar_noc_contadores.py": {
+      "hash": "85f342dec1a3957887ad6a4a24ed6d829667b0f0912bd74c8006d662be5ae048",
+      "size": 4483,
+      "modified": "2026-03-02T15:57:22.239251"
+    },
+    "TESTE_SEGURANCA_RAPIDO.md": {
+      "hash": "1fdba8925aaaa3361888c0dfa768d489ff673a131a39d68ba59d488448faada9",
+      "size": 6116,
+      "modified": "2026-03-04T10:44:46.977936"
+    },
+    "test_complete_flow.sql": {
+      "hash": "02d69a8fa5d7f332de9391b9ae8d3560c290be44fe7489113878fa3aa0654619",
+      "size": 4157,
+      "modified": "2026-02-25T07:33:10.033524"
+    },
+    "test_incident_flow.py": {
+      "hash": "28127c9df443bbdf3350156c5f8316665764907e9dbce85f67c4f20f91f818c2",
+      "size": 5836,
+      "modified": "2026-02-25T07:31:18.230196"
+    },
+    "test_noc_fixes.py": {
+      "hash": "5df8922834d2eb48da63ac44894421f40ce716f0d06a13ea608992e9f6ba080c",
+      "size": 4304,
+      "modified": "2026-02-20T09:46:05.024552"
+    },
+    "VERIFICAR_GITHUB_04MAR.txt": {
+      "hash": "54a4b107d9cc9de82000cfdec735b0bfdcf9297de423cef10e7ddb3dd7d54605",
+      "size": 14727,
+      "modified": "2026-03-04T11:24:56.310688"
+    },
+    "verificar_screenshots.ps1": {
+      "hash": "834e20f8ad2dd32e14c3870df04aa0e4be9b7fa0d7194fcbb43a664e48eb1e93",
+      "size": 2815,
+      "modified": "2026-03-04T09:28:33.091858"
+    },
+    "version.txt": {
+      "hash": "92521fc3cbd964bdc9f584a991b89fddaa5754ed1cc96d6d42445338669c1305",
+      "size": 5,
+      "modified": "2026-03-02T10:00:26.245450"
+    },
+    ".vscode\\settings.json": {
+      "hash": "a510610b7365a16bb21e3a38313c58b392a46a317f3d0c7ad1674c63f594a04a",
+      "size": 46,
+      "modified": "2026-02-25T10:17:05.150209"
+    },
+    "ai-agent\\aiops_engine.py": {
+      "hash": "c47b070a2af6cfb04b1a8cf8ea98702bdaa0bfa21d3147a81e6a8e3fb76fa02f",
+      "size": 39933,
+      "modified": "2026-02-18T13:34:29.965550"
+    },
+    "ai-agent\\ai_engine.py": {
+      "hash": "b7356369e5464ffc1d82a0bc5944e63dc3736e958c205280d14bdcf9f5283044",
+      "size": 8344,
+      "modified": "2026-02-11T10:57:21.233731"
+    },
+    "ai-agent\\config.py": {
+      "hash": "c972741078be867a479b3989b06e041f47f4b28c67c4d113503916883bf2f9c1",
+      "size": 718,
+      "modified": "2026-02-25T11:50:20.731675"
+    },
+    "ai-agent\\Dockerfile": {
+      "hash": "3583f7d6aeb159f7ef5b37084443c3e3660004499746dbdf6ea55c8617fe226b",
+      "size": 200,
+      "modified": "2026-02-11T10:56:50.726678"
+    },
+    "ai-agent\\main.py": {
+      "hash": "1608e430dc12068155c3a3bf979740fee0ac4222a74a5676893cc79034ff98e8",
+      "size": 2571,
+      "modified": "2026-02-19T16:36:02.494374"
+    },
+    "ai-agent\\ml_engine.py": {
+      "hash": "23d1b3b125ffecf802844b16fa9b040de2e963fbb09f2dc263d098d8f01efbaf",
+      "size": 14246,
+      "modified": "2026-02-19T16:35:07.019852"
+    },
+    "ai-agent\\ml_routes.py": {
+      "hash": "62cfea1f01ada21b682f7b74806be87d8d8624f098f1ce5323b196c37fcc373d",
+      "size": 3235,
+      "modified": "2026-02-19T16:35:51.276951"
+    },
+    "ai-agent\\requirements.txt": {
+      "hash": "d8fb145992cdfa75bb25cf7d36466be89b011782afd66f33bc3c60e994489696",
+      "size": 230,
+      "modified": "2026-02-19T16:34:29.238194"
+    },
+    "api\\atualizar_ip_servidor.py": {
+      "hash": "724c06c2288579080ef346fbf9c32f947e5da935c5908e2e8dd13aa2a5979686",
+      "size": 2695,
+      "modified": "2026-02-26T11:48:49.154500"
+    },
+    "api\\auth.py": {
+      "hash": "789a651484717c2d2a55d009c1eaf05e1719bcbe829552fcc499a3bc47273a68",
+      "size": 3127,
+      "modified": "2026-02-11T14:49:29.494475"
+    },
+    "api\\auto_resolve_simulated_failures.py": {
+      "hash": "9f3aabf5aad34e54335d0a50bffa0bd8c5ff19755d999ee033182423b200aba3",
+      "size": 2358,
+      "modified": "2026-02-20T09:58:01.584358"
+    },
+    "api\\check_and_fix_duplicates.py": {
+      "hash": "884d8a8f77f7042642c6a1f1c5a1fdd170775db12e048fb12167f2fabb2b658d",
+      "size": 4436,
+      "modified": "2026-02-19T17:10:34.712314"
+    },
+    "api\\check_duplicate_sensors.py": {
+      "hash": "34eae9da9fdd2a5ed7d199684f252be5d17928071b4680062b1677ca1cf15110",
+      "size": 3266,
+      "modified": "2026-02-19T15:35:25.814280"
+    },
+    "api\\cleanup_ping_sensors.py": {
+      "hash": "e009314dbc8f256980e22e5c01d3a5841b58896fa3eb00ac4505a3b1ce2cdd43",
+      "size": 2441,
+      "modified": "2026-02-12T15:52:07.330735"
+    },
+    "api\\cleanup_unknown_sensors_daemon.py": {
+      "hash": "2ea499fa39a4debca768bf2daf84bf1d28135b0f317edcd634d7ee91797932d1",
+      "size": 2511,
+      "modified": "2026-02-20T08:56:42.862021"
+    },
+    "api\\config.py": {
+      "hash": "9aa2f24c2c23472e45c6d901caee3784538ee2b95ff2ee97487acdeaac16567f",
+      "size": 989,
+      "modified": "2026-02-11T10:54:04.106430"
+    },
+    "api\\corrigir_status_incidentes.py": {
+      "hash": "fe58e314bb96ea42e183a8eb93e2f68fe445f66365633b0e6b56ef21ed332c1d",
+      "size": 2261,
+      "modified": "2026-02-25T07:10:47.122862"
+    },
+    "api\\create_kb_80_items.py": {
+      "hash": "24de1decac8a644af3960efa2a19ce33101cb0a569a392579ac51b3b80a7f2b2",
+      "size": 21194,
+      "modified": "2026-02-26T14:56:51.712181"
+    },
+    "api\\create_kb_tables.py": {
+      "hash": "cb8254a7b2f41fe350a689fea6eb2673f995d0e8062db8147f298439ab209431",
+      "size": 653,
+      "modified": "2026-02-25T10:49:09.323282"
+    },
+    "api\\create_kubernetes_alerts_tables.sql": {
+      "hash": "88e74d6992be93bc9a776f4b48b64c9d0b09dbd7e9a36b47b98d5050572ddefe",
+      "size": 4446,
+      "modified": "2026-02-27T14:19:04.925500"
+    },
+    "api\\criar_falha_teste.py": {
+      "hash": "4870749df621aa61964a26dd6e6ae270d8a811053205ed79f26a3fcf6b6cb95d",
+      "size": 3006,
+      "modified": "2026-02-25T14:12:28.003790"
+    },
+    "api\\database.py": {
+      "hash": "bb2d19961a71108b51d97f35fb6736650dd238197819b033135ae7a2f5f9794e",
+      "size": 442,
+      "modified": "2026-02-11T10:54:05.240497"
+    },
+    "api\\Dockerfile": {
+      "hash": "040ac9ecf2294c74c3bf4ff6b6c5920289cd34e51e361ba000e7d3d5a6f38e3e",
+      "size": 318,
+      "modified": "2026-02-11T10:53:52.502599"
+    },
+    "api\\fechar_incidentes_resolvidos.py": {
+      "hash": "a77b08ab026cea008d3a2205dea54f580a2c1a6103ef750e47eefb3750a25506",
+      "size": 4257,
+      "modified": "2026-02-26T12:40:23.739099"
+    },
+    "api\\fix_sensor_categories.py": {
+      "hash": "068f92733c0431523a9c9b8862caab9e88d8e416cd1172b5c17542c11e16a1cd",
+      "size": 3310,
+      "modified": "2026-02-19T14:29:30.319892"
+    },
+    "api\\fix_server_tenant.py": {
+      "hash": "69281c703f05445ea58350d977c3c257dcf63ada3a0336cd0a59ba2ef9e66016",
+      "size": 1847,
+      "modified": "2026-02-20T10:23:17.917690"
+    },
+    "api\\fix_unknown_sensors_auto.py": {
+      "hash": "a6deb18b784646543b15df9e3972ef075f4584a6dc9cbaf9f45ca07cd7f6d3a9",
+      "size": 2461,
+      "modified": "2026-02-19T17:11:12.165069"
+    },
+    "api\\init_admin.py": {
+      "hash": "dcc1b1a92cb30ba9a65848302a9760c8364af401770c2ab53dfbf9815e24c1ed",
+      "size": 1781,
+      "modified": "2026-02-11T14:09:47.297052"
+    },
+    "api\\kb_entries_part2.py": {
+      "hash": "409a0d03adfc1dfdcfdc90be80cb5694cf77f9fce4881760dedee4b5beb8bbc7",
+      "size": 9741,
+      "modified": "2026-02-26T11:02:53.807975"
+    },
+    "api\\list_sensors.py": {
+      "hash": "58898e5bbde284fd6dab0569bcc317275b190d378d0e6015e34a501b18fae5ad",
+      "size": 2171,
+      "modified": "2026-02-19T15:35:55.698797"
+    },
+    "api\\main.py": {
+      "hash": "004b0534bdd4eb977e5a6da2df5ac3d4e0bfc93546ea00c03b7eacf789d9f924",
+      "size": 5088,
+      "modified": "2026-03-04T12:38:04.918855"
+    },
+    "api\\migrate_acknowledgement.py": {
+      "hash": "f9be54cd6d9e5760dbe142b123dc4f01ef882b778c98b6f84e76bd9ceb5a576a",
+      "size": 2493,
+      "modified": "2026-02-13T11:00:37.830106"
+    },
+    "api\\migrate_acknowledgement_fields.py": {
+      "hash": "b1030c06b64e3d961978a7241ec8c5028bba1c9a0b8ca0f6eda6b91a767c8bbf",
+      "size": 2751,
+      "modified": "2026-02-25T16:18:25.317362"
+    },
+    "api\\migrate_auth_config.py": {
+      "hash": "47f1b913f0beb8ad7f31ee567704c8127905e638af65eabfc57ba55829af8b3b",
+      "size": 2276,
+      "modified": "2026-03-04T10:37:04.028329"
+    },
+    "api\\migrate_custom_reports.py": {
+      "hash": "7b60ad175b042b88eeea50d746d37e7eabc39a737d9979dd8f2b52a094cb53d6",
+      "size": 1895,
+      "modified": "2026-02-26T16:19:52.858757"
+    },
+    "api\\migrate_db.py": {
+      "hash": "2914b3a93d61f959d21e82bb2121906166dcc8e920fe0943bd5afaaea5fa8229",
+      "size": 967,
+      "modified": "2026-02-12T13:52:45.998085"
+    },
+    "api\\migrate_knowledge_base.py": {
+      "hash": "5463861f43749aa326b1b3bb5018673a9477c1a6499ae4d59c1c463fe07b2140",
+      "size": 11181,
+      "modified": "2026-02-25T10:48:11.188325"
+    },
+    "api\\migrate_kubernetes.py": {
+      "hash": "9ab65a8e4ddf3160d5ddfbf68f7a3bc3cb93c901306c39cbbdbbfe8b393399d2",
+      "size": 1134,
+      "modified": "2026-02-27T13:53:29.925321"
+    },
+    "api\\migrate_kubernetes_alerts.py": {
+      "hash": "e62379416b7287eec4f0ddedd3dd00488bf3af3f803dd40ee226a93b86c5e5fa",
+      "size": 8134,
+      "modified": "2026-02-27T14:17:57.023936"
+    },
+    "api\\migrate_maintenance_windows.py": {
+      "hash": "ab8afa22fee94d785475d0ac24f62040d7cafa3ab036932418e4c07080db3994",
+      "size": 2315,
+      "modified": "2026-02-13T13:27:35.867643"
+    },
+    "api\\migrate_monitoring_features.py": {
+      "hash": "bc27842719611f2aa9ec5462167603e0c456c87f04d0d0bbfb228ffd381fa4e6",
+      "size": 5392,
+      "modified": "2026-02-13T10:06:13.608259"
+    },
+    "api\\migrate_sensor_groups.py": {
+      "hash": "49d8426219d96ae1c8867b8ea7f3d32c827021331865f9624d8c3f53fc4b79d5",
+      "size": 3160,
+      "modified": "2026-02-27T09:36:52.892951"
+    },
+    "api\\migrate_sensor_notes.py": {
+      "hash": "322bb16a58ed386dbe5362780ee678db4a9623a4a68beed0fab55dfbdd290770",
+      "size": 3404,
+      "modified": "2026-02-12T16:34:18.550146"
+    },
+    "api\\migrate_standalone_sensors.py": {
+      "hash": "bccd73d27d4062cbe92b70866dedf9fbb26733bf63de48ba874a43d60738ee0a",
+      "size": 2044,
+      "modified": "2026-02-26T18:18:57.546078"
+    },
+    "api\\migrate_threshold_config.py": {
+      "hash": "b1497062c38b186e7f28096b24de310d8d42e34636f9c41ff46263c81feb89f6",
+      "size": 5267,
+      "modified": "2026-02-25T15:34:38.537467"
+    },
+    "api\\migrate_wmi_credentials.py": {
+      "hash": "0f020c7f9a1ec1f845edff8ee53d5d35981066db39d1f54f39a9df59112072ec",
+      "size": 2133,
+      "modified": "2026-02-13T13:56:15.729542"
+    },
+    "api\\models.py": {
+      "hash": "55847d61f7df6c65b01780033445af9477d173feda0c1f194c71a371cf9a5252",
+      "size": 33913,
+      "modified": "2026-03-04T10:33:02.891456"
+    },
+    "api\\mover_probe_para_default.py": {
+      "hash": "15a9c91ef97cce0c87803b0664eac1df5f1e484db854ec52e633efe48c0a4124",
+      "size": 4442,
+      "modified": "2026-02-24T13:49:40.083405"
+    },
+    "api\\remove_sensors.py": {
+      "hash": "10102354b3eb0cbe7046f190df2328849571068f04c3b6b1e333b0b910bcb35f",
+      "size": 746,
+      "modified": "2026-02-12T13:13:35.815326"
+    },
+    "api\\remove_unknown_sensors.py": {
+      "hash": "ce96aea0373ff70fb017f50fc6b3f2041dc0053ec601cfb0dcdf99bcc44c173f",
+      "size": 1952,
+      "modified": "2026-02-19T15:37:57"
+    },
+    "api\\remove_unknown_sensors_v2.py": {
+      "hash": "59d65bb7981ec7e960252c98afdac7a8b21fc2cb937fe7cb1d91c81ec2c39739",
+      "size": 2881,
+      "modified": "2026-02-19T17:11:03.568904"
+    },
+    "api\\rename_ping_sensor.py": {
+      "hash": "78811da075c0fe40bc46367a60e747cb288b8d12095782197d1b50314e12e629",
+      "size": 933,
+      "modified": "2026-02-12T15:08:27.403948"
+    },
+    "api\\requirements.txt": {
+      "hash": "98b4f2b2e2ed6b9674fab7f794f646d6ce4464f63eb5812afbba6910c6edca96",
+      "size": 591,
+      "modified": "2026-03-02T10:22:53.313884"
+    },
+    "api\\resolver_falhas_teste.py": {
+      "hash": "cea896b09de95d4d4dad4d8aa529e6f4749fe4baaf675118db6474379aa9a50b",
+      "size": 2943,
+      "modified": "2026-02-24T16:18:26.348301"
+    },
+    "api\\resolve_all_test_incidents.py": {
+      "hash": "8a2700f55faa578cb0d0f7040ff95b09da61910d74babf04d076b48a10a26e6c",
+      "size": 1431,
+      "modified": "2026-02-20T10:13:17.339164"
+    },
+    "api\\seed_kb_30_items.py": {
+      "hash": "ab8e3f8e374947fb4813e7d5c4dcdebcd087840ea5d46b55f1ecc74bba7f9e55",
+      "size": 24827,
+      "modified": "2026-02-26T11:04:42.807826"
+    },
+    "api\\seed_kb_80_items.py": {
+      "hash": "ee83062d87cf49f153ec36ba676071a11edf1e46678bcff59616632650bb7f43",
+      "size": 5749,
+      "modified": "2026-02-26T14:55:26.705254"
+    },
+    "api\\seed_knowledge_base.py": {
+      "hash": "665d70a72e6f8ac4309a5dbc0b8eb602813fba79f6180db0947fdc3fa2d1aa3a",
+      "size": 19217,
+      "modified": "2026-02-26T09:48:57.293457"
+    },
+    "api\\seed_knowledge_base_extended.py": {
+      "hash": "ec7a20ecb63aab536d41100f7bea998a59e316ec0e4ac807213ed97d10cfbebd",
+      "size": 14634,
+      "modified": "2026-02-26T11:02:09.092109"
+    },
+    "api\\test_jwt.py": {
+      "hash": "a406f396ad26d7d7e4a97329d4fb49b180a12247e373b6f7d7a75b0a8dc8eee6",
+      "size": 1071,
+      "modified": "2026-02-11T14:37:09.710547"
+    },
+    "api\\test_jwt_v2.py": {
+      "hash": "fee79fd26773cf79cf44f799bb22060fd3537e3696470b3601dd135831fdfb5e",
+      "size": 1238,
+      "modified": "2026-02-11T14:44:15.381642"
+    },
+    "api\\test_login.py": {
+      "hash": "1c4456d4a2f377766e8b6ff9b6fdc023e762f122a5d2b3be56b89666f7f25ba4",
+      "size": 1476,
+      "modified": "2026-02-11T14:17:14.874273"
+    },
+    "api\\test_noc_direct.py": {
+      "hash": "a0574e94cb98ce576b013fe403bd612c560ca5512d8e4472c9d84c4f871438a0",
+      "size": 4390,
+      "modified": "2026-02-20T10:14:14.603256"
+    },
+    "api\\test_ollama_status.py": {
+      "hash": "5561ac31abd2d000a9dcdb26468119e82ac1aa99ef88a936e5aa2ac8eb2b8eee",
+      "size": 1654,
+      "modified": "2026-02-25T14:59:20.906271"
+    },
+    "api\\test_servers_endpoint.py": {
+      "hash": "ffac8ea5b0b2596c8e0258f38d69d4b6203cbfdc1d40f20eb360bbf5439ac6fb",
+      "size": 962,
+      "modified": "2026-02-20T10:31:59.802389"
+    },
+    "api\\test_simulated_endpoint.py": {
+      "hash": "7bf5609cf242114932ee023e0160a015e0dcfcbc6ad4ac962f7f370b23ca5ae2",
+      "size": 2539,
+      "modified": "2026-02-20T09:59:14.157234"
+    },
+    "api\\update_sensor_thresholds.py": {
+      "hash": "ee89c018e75dcb831d4ebdc1101ecbd9b8fb0689f8498d76bf1d107e7d2f9eab",
+      "size": 1408,
+      "modified": "2026-02-12T14:58:19.981665"
+    },
+    "docs\\acknowledgement-system.md": {
+      "hash": "63a1574bd968576241a1138d0f9fc06ffac0f590e2df160077cd2bcb831a18ea",
+      "size": 6792,
+      "modified": "2026-02-13T11:04:59.814849"
+    },
+    "docs\\aiops-system.md": {
+      "hash": "6e4a52c5a9914d9d0210249a8a40f16b1d605df4beb49a44cfd0393a267e5de7",
+      "size": 10367,
+      "modified": "2026-02-18T13:36:40.640850"
+    },
+    "docs\\api.md": {
+      "hash": "79171487e116e648fe07854e57eced566ecb7f59a45021d123bed437b45b96fa",
+      "size": 5456,
+      "modified": "2026-02-11T11:00:50.585434"
+    },
+    "docs\\architecture.md": {
+      "hash": "eb97133d867905177e021464425cc937d26dc381096c3b45faf0582dab412d91",
+      "size": 8664,
+      "modified": "2026-02-11T11:00:04.281040"
+    },
+    "docs\\deployment.md": {
+      "hash": "5fce2a5e530573b996bb9d1e0dccc1cdedc83dd193149f6effcc28fbbf4d511d",
+      "size": 4504,
+      "modified": "2026-02-11T11:00:19.681203"
+    },
+    "docs\\ia-functionality.md": {
+      "hash": "d8fe545b47f8bf7e4d4d16797dd8d8637ada72ed22867a7321849c716b02ff8a",
+      "size": 4902,
+      "modified": "2026-02-12T16:26:22.050504"
+    },
+    "docs\\integracoes-dynamics365-twilio-whatsapp.md": {
+      "hash": "03d1cf8eb1c764917bd5886120eed6d56a3f66ff9b8124967fde727bb3d6be93",
+      "size": 15131,
+      "modified": "2026-03-04T10:05:41.849231"
+    },
+    "docs\\integracoes-service-desk.md": {
+      "hash": "8a146813223a35765cf3b7cbff4d253f52aaa1ee04109a45c40cac8d87757609",
+      "size": 16290,
+      "modified": "2026-02-19T15:13:13.672210"
+    },
+    "docs\\ISO27001_COMPLIANCE.md": {
+      "hash": "45f5ab4f62c22d4e4c539d54be67ad1d6077bfe71cd23c77771e54598b8fc8c0",
+      "size": 11170,
+      "modified": "2026-03-04T08:15:23.039268"
+    },
+    "docs\\LGPD_COMPLIANCE.md": {
+      "hash": "63ea4556eb5481f7817d9f4b4d452a1a3448e6b2a870f267f5cbd937e256aa78",
+      "size": 6819,
+      "modified": "2026-03-04T08:14:21.944802"
+    },
+    "docs\\monitoring-features.md": {
+      "hash": "040175a04228727eaa1031aa681e73f20671b8c8a9c99290704bcf28250da925",
+      "size": 9282,
+      "modified": "2026-02-13T10:09:44.623467"
+    },
+    "docs\\snmp-sensors-oids.md": {
+      "hash": "566463542aadd5b337066807bbd5b6167cdfeeef7235d4ca3c62a88abfa051c4",
+      "size": 7513,
+      "modified": "2026-02-13T14:30:09.535254"
+    },
+    "docs\\wmi-remote-monitoring.md": {
+      "hash": "75d6bb53a8392d4fb5659b5b3e7a4bf5e4967a8158f65c1cd88902d981c6779d",
+      "size": 9594,
+      "modified": "2026-02-13T13:57:08.417447"
+    },
+    "frontend\\Dockerfile": {
+      "hash": "18b8e9f08a506f73a5efa117a89cd932675e8a12f1b491e90271c414bf9e51b0",
+      "size": 130,
+      "modified": "2026-02-11T10:58:35.939148"
+    },
+    "frontend\\package.json": {
+      "hash": "01e0f281234db3519c77a33b4be4a28b1863f037d5afbd6f9252df662b6258c2",
+      "size": 764,
+      "modified": "2026-02-11T10:58:38.333318"
+    },
+    "installer\\build-msi-simple.ps1": {
+      "hash": "012ef92b69c8c433572587ced7d16dbe76d699495a2ee1324bec5547508e8faf",
+      "size": 7233,
+      "modified": "2026-03-03T16:25:18.739423"
+    },
+    "installer\\build-msi.ps1": {
+      "hash": "c1d5c352ee7be25b5dcac2287c834a44470b95a64e24c99f9242614fba31c77a",
+      "size": 6552,
+      "modified": "2026-03-03T16:22:22.287539"
+    },
+    "installer\\computers-example.txt": {
+      "hash": "d124e0dfafd2dd7eda95cd289281917983c610c34453e8f433a5a0d87cc7ca7d",
+      "size": 472,
+      "modified": "2026-03-03T16:24:03.767246"
+    },
+    "installer\\CorujaProbe.wxs": {
+      "hash": "dcc53c5247588ff22df938d8f74266ff420242f4bb957388aebcd41722d9aec2",
+      "size": 10785,
+      "modified": "2026-03-03T16:21:55.303786"
+    },
+    "installer\\CustomActions.wxs": {
+      "hash": "8b6cb7e3bd4efeb9c56e21b179bf3d68cfecde724d50c8b8d63401bf8800bc0c",
+      "size": 6965,
+      "modified": "2026-03-03T16:22:50.010749"
+    },
+    "installer\\deploy-mass.ps1": {
+      "hash": "548759e89155730f806204f34c9d83672d122fa8e1e55daf3502c53ac05ca456",
+      "size": 7876,
+      "modified": "2026-03-03T16:23:56.266814"
+    },
+    "installer\\README_INSTALADOR_MSI.md": {
+      "hash": "857ebb8c82a6fd175ec659a7737868794d79805f8e79655747da481d01e611dc",
+      "size": 8536,
+      "modified": "2026-03-03T16:23:29.892605"
+    },
+    "installer\\sign-msi.ps1": {
+      "hash": "68b1352e973a1fcd4afd4aa477f6fb4089a5856bf4c31d1115a5e5e6d4ca8eeb",
+      "size": 7695,
+      "modified": "2026-03-04T12:32:24.056934"
+    },
+    "probe\\aplicar_token.bat": {
+      "hash": "427563e1b4d909bea58e1f80fb6176867a24c1929763d27bd432e2dee45d3fd8",
+      "size": 734,
+      "modified": "2026-02-19T13:33:15.090729"
+    },
+    "probe\\atualizar_sensores.bat": {
+      "hash": "ff2b77a795269ff680c45cbfc7014f9b1a2f1b2ff9e088fce4d9fbddb5167a11",
+      "size": 1453,
+      "modified": "2026-02-18T16:32:16.751240"
+    },
+    "probe\\atualizar_sonda.bat": {
+      "hash": "c6d372d271fe0f66f56d7524c6a4d7c9f8fd59596ea4af020b386d3950e8eaf5",
+      "size": 1781,
+      "modified": "2026-02-13T14:57:32.793263"
+    },
+    "probe\\check_python.bat": {
+      "hash": "811eebe6ead694b21d7443cae9f672a2d57ea1d9a43f3228ad651deac94e4f99",
+      "size": 1426,
+      "modified": "2026-02-11T15:29:25.364357"
+    },
+    "probe\\check_task.bat": {
+      "hash": "ffa4c9d633d1437c5ade2e8656be6f2840253d32b2dab344c687494cd43891dd",
+      "size": 933,
+      "modified": "2026-02-12T12:23:12.457728"
+    },
+    "probe\\COMECE_AQUI.txt": {
+      "hash": "ec582698e8535754fd216a9d4f1b57699183ba3caad934cedd7c87df425a3bda",
+      "size": 2224,
+      "modified": "2026-02-11T15:29:46.779567"
+    },
+    "probe\\config.py": {
+      "hash": "51e9a8c28a0d25cc8352704a37d0551d17b2cdba9f0df00b8c60c6bf67db4ee0",
+      "size": 5150,
+      "modified": "2026-03-02T11:48:33.027937"
+    },
+    "probe\\configurar_probe.bat": {
+      "hash": "cfaa34ad6939cc535e2c50df973515b68fa959a9d64e5c62b1bdbf86ba4384e7",
+      "size": 2204,
+      "modified": "2026-02-11T15:39:44.195107"
+    },
+    "probe\\corrigir_url.bat": {
+      "hash": "2c3f2efc293e9acdc859e7cafb9094a364f5756df37045ee5b9631f050bc8e22",
+      "size": 2721,
+      "modified": "2026-02-18T15:44:37.290743"
+    },
+    "probe\\criar_usuario.bat": {
+      "hash": "25bfe06c30f5f12bd9176c903a85408a0105ebcee635697295b26286df781e31",
+      "size": 4330,
+      "modified": "2026-02-24T09:45:16.325737"
+    },
+    "probe\\debug_probe.bat": {
+      "hash": "2a8e2a4979754395fb64425210ed6bb27540b79ffc0dd085e544d7c92bfb4c44",
+      "size": 1523,
+      "modified": "2026-02-11T15:46:37.955595"
+    },
+    "probe\\debug_remote.bat": {
+      "hash": "700fd0cde1bc65452de6fa23c5604f6a37991da8925a732c374f8012b133522d",
+      "size": 999,
+      "modified": "2026-02-13T15:25:42.978398"
+    },
+    "probe\\desinstalar_probe.bat": {
+      "hash": "ee5d0a61cdb866aee9ee7886eae57729b7af32f77243c63eb52bf07a4f1c3de8",
+      "size": 6080,
+      "modified": "2026-02-24T11:36:07.153262"
+    },
+    "probe\\desinstalar_tudo.bat": {
+      "hash": "54eb308d474d5a9117b67297b666f3c65440fe218bfcbfc04c0017c4e793aadb",
+      "size": 7466,
+      "modified": "2026-02-24T11:36:34.659658"
+    },
+    "probe\\diagnostico.bat": {
+      "hash": "d4a5a762e28ac11ceb091363f268733ee0e81f3c931126ee1935d04047ef15c8",
+      "size": 1959,
+      "modified": "2026-02-11T15:41:56.354721"
+    },
+    "probe\\diagnostico_probe.bat": {
+      "hash": "2025a78378706e193d8d9bdd21ad1b17f613ecc73a42b1c32ff33ffe0f96a077",
+      "size": 2055,
+      "modified": "2026-02-18T15:33:55.701138"
+    },
+    "probe\\discovery_server.py": {
+      "hash": "5ce60f30cee817a108d604c064e018f4735bc7ca53ac03cca49ef19806c6ed65",
+      "size": 3854,
+      "modified": "2026-02-18T15:56:08.212262"
+    },
+    "probe\\fix_service.bat": {
+      "hash": "07a3ae64050a5beeaa3fa796e78c59cc36fcdd760f9297f57dce81d642c7f4fd",
+      "size": 1561,
+      "modified": "2026-02-11T15:52:31.962286"
+    },
+    "probe\\force_restart.bat": {
+      "hash": "eccf677b245b4e4529edd49c3b67a795c84c6ff346b690254776359307f9f390",
+      "size": 788,
+      "modified": "2026-02-19T13:24:56.219414"
+    },
+    "probe\\iniciar_probe_limpo.bat": {
+      "hash": "1a4a8704cbe8136376dbef1fad57ed8799bd2b9b038fac06403f44eb6fa1780d",
+      "size": 1274,
+      "modified": "2026-02-24T13:32:07.158975"
+    },
+    "probe\\INSTALACAO.md": {
+      "hash": "273c8f1f9d045f2593c75d33faeb211e2e27af9068aef4ede5b0f41ffaefdd5a",
+      "size": 5414,
+      "modified": "2026-02-11T14:53:19.361745"
+    },
+    "probe\\INSTALACAO_RAPIDA.md": {
+      "hash": "b45e6f6d501287879cf41a8d84f4dcffbbb3659aa9417c5a00ba72c344a5b1d5",
+      "size": 2452,
+      "modified": "2026-02-11T15:29:20.006783"
+    },
+    "probe\\INSTALAR_AQUI.bat": {
+      "hash": "71fb8255426dd672d6c0502cae8de0e8aeebebfb17d01ad8b203110234b26cd0",
+      "size": 725,
+      "modified": "2026-02-24T09:22:36.943036"
+    },
+    "probe\\install.bat": {
+      "hash": "c8d0fe8fe0bd128c474caae3a86b6ccf5a9734c46b10cc36ec5348d19f0097c5",
+      "size": 12951,
+      "modified": "2026-02-28T14:11:56.456071"
+    },
+    "probe\\install_automated.bat": {
+      "hash": "15601b23cc6e1e24fcccc3b553dc2417ca8ed241500c0ec4b2311bc508f9cbc6",
+      "size": 9828,
+      "modified": "2026-02-20T09:32:04.296641"
+    },
+    "probe\\install_completo_com_servico.bat": {
+      "hash": "354e6022056800d056b718cd6eef51292d92710c1903c5e8f7fcef4389ee342e",
+      "size": 10613,
+      "modified": "2026-02-24T11:34:19.554949"
+    },
+    "probe\\install_debug.bat": {
+      "hash": "6c2d5c0e8e2e15546284a598464420a5220df41117c6ae03eb681763034e197b",
+      "size": 9801,
+      "modified": "2026-02-24T09:27:40.299854"
+    },
+    "probe\\install_entraid.bat": {
+      "hash": "ba13b171aefb392d7e6ba7e878a78fc6eeef5977a11a9d1436897c33b05bcc9a",
+      "size": 7633,
+      "modified": "2026-02-23T09:43:20.336395"
+    },
+    "probe\\install_manual.bat": {
+      "hash": "07f1a49d91d20d7309e218307a46f39b60ab8b434bfd7788254d5fca3a042c97",
+      "size": 2426,
+      "modified": "2026-02-11T15:29:34.295343"
+    },
+    "probe\\install_remote.bat": {
+      "hash": "adc7e18ab53b0b1cfe1aa2c2cc72b06409a778b8c5b8d2cf36f924b31a6d96c8",
+      "size": 3620,
+      "modified": "2026-02-13T14:30:31.387718"
+    },
+    "probe\\install_sem_usuario.bat": {
+      "hash": "297e4614f6f697e23d390aec5dd5345a60dc89e4a2cf9a2e768d470e42d3b72e",
+      "size": 6224,
+      "modified": "2026-02-24T09:45:00.416852"
+    },
+    "probe\\install_service.bat": {
+      "hash": "1b729c2cde1fb05c6df11d9a53d51775560a647d9481e577e16d0230367e4a57",
+      "size": 2073,
+      "modified": "2026-02-13T14:57:25.000616"
+    },
+    "probe\\install_simples.bat": {
+      "hash": "6d0baf9b212dc0dbbe6cd046e166c62f188aea0b7873b1ca1126ed256cf43ac0",
+      "size": 6658,
+      "modified": "2026-02-24T09:28:04.015245"
+    },
+    "probe\\install_task.bat": {
+      "hash": "3ce43c6d819a23cc23156f4c7a9f7898292f6c0d0b3652b10cee6dd639b081fc",
+      "size": 2064,
+      "modified": "2026-02-11T15:55:10.174238"
+    },
+    "probe\\install_usuario_atual.bat": {
+      "hash": "0bcce0e08a8ae1aead4e3f8267ec5a552d848293d1d85ca67b0422a40038487a",
+      "size": 6245,
+      "modified": "2026-02-24T10:09:51.277153"
+    },
+    "probe\\install_workgroup.bat": {
+      "hash": "a200a0e188b8bf08911875526945c700a04d8e5da1975a47a1ee2637af7496d6",
+      "size": 6787,
+      "modified": "2026-02-20T15:51:16.212562"
+    },
+    "probe\\parar_todas_probes.bat": {
+      "hash": "3b784c6153d56f1f3e9768d90b70a443c6b872d8a2c17241f18bf1a230bc9c8b",
+      "size": 1692,
+      "modified": "2026-02-24T13:31:58.360425"
+    },
+    "probe\\probe_config.json": {
+      "hash": "8899453c2f49db7d1450a71813aacbf929de3ede0f191f20076296e0af193818",
+      "size": 188,
+      "modified": "2026-03-02T11:40:57.873930"
+    },
+    "probe\\probe_core.py": {
+      "hash": "d9ba0daec899bbb8a0f0e8b878c0cbd885943e6a7d31a011626c1743120055cc",
+      "size": 20791,
+      "modified": "2026-03-02T11:49:11.149756"
+    },
+    "probe\\probe_service.py": {
+      "hash": "8d8c085e8ee6b9e2ed52c1572102337eb44c88b5e80e52000d2e7ae0b2134dc3",
+      "size": 3870,
+      "modified": "2026-02-11T15:52:19.394291"
+    },
+    "probe\\README.md": {
+      "hash": "6c29347344dfb42e9ce939020e3510bff2e1d1cc63066939805045c0affee035",
+      "size": 4286,
+      "modified": "2026-02-24T11:37:28.167240"
+    },
+    "probe\\reiniciar_probe.bat": {
+      "hash": "a5b7238adff1cd5ad5df329f5d3299091ea3d901936a4cff1849b60948e296d6",
+      "size": 520,
+      "modified": "2026-02-19T12:32:27.362969"
+    },
+    "probe\\reinstall_service.bat": {
+      "hash": "ef4375c668aecd103bc2ce2004ebc56cf21bb627beec24cd3571789c79f404dd",
+      "size": 1500,
+      "modified": "2026-02-11T15:42:28.536138"
+    },
+    "probe\\requirements.txt": {
+      "hash": "1372a9fe87fcb9ecca626b4dba1a77cf58633d51989e685c4c057b026aea9599",
+      "size": 75,
+      "modified": "2026-02-19T16:52:52.025591"
+    },
+    "probe\\setup_wizard.bat": {
+      "hash": "783535ddc086500ddb0a92c429fde4a13e1209c244cb68611e83ab6219d47602",
+      "size": 4080,
+      "modified": "2026-02-18T15:21:24.682439"
+    },
+    "probe\\start_probe.bat": {
+      "hash": "dbe6163cefd4b9313e5f7d32415af82b8d45a37ed11d8098d4a866901465b263",
+      "size": 576,
+      "modified": "2026-02-19T12:14:42.919515"
+    },
+    "probe\\test_probe.bat": {
+      "hash": "a1b1d6b611e080501f5345f6bd7996f319528c2132fd8e582b3f89495af1648c",
+      "size": 1443,
+      "modified": "2026-02-11T15:42:19.007350"
+    },
+    "probe\\uninstall_service.bat": {
+      "hash": "ebe1ec5c3064cf2e324a80933acaea4d14e6e8ae3f2ba2355c3ec67580df894b",
+      "size": 500,
+      "modified": "2026-02-11T10:58:24.328158"
+    },
+    "probe\\verificar_instalacao.bat": {
+      "hash": "7872567db05020bb505bb14f52255ad26fa4990fcf9268b521d43772e1ebfc71",
+      "size": 5485,
+      "modified": "2026-02-24T10:27:25.269328"
+    },
+    "probe\\verificar_status.bat": {
+      "hash": "13a440bc1afe6e2f586a615a630663f58acd29b1035694596491df0de8a346f8",
+      "size": 1109,
+      "modified": "2026-02-11T15:42:58.539882"
+    },
+    "probe\\version.txt": {
+      "hash": "4ca8bbd3c595ee306226c6996b32b8d47a900217c55a7ed0cfc868ee444f34f1",
+      "size": 7,
+      "modified": "2026-03-02T09:54:08.476676"
+    },
+    "scripts\\build-appimage.sh": {
+      "hash": "29bc5aaaf108565b748674ae4d28b1e9d45807336c65f97a2ac198bebd8b3e71",
+      "size": 3296,
+      "modified": "2026-03-02T09:26:34.668664"
+    },
+    "scripts\\build-deb.sh": {
+      "hash": "d6844fa9aa0985f7993fd9b02e18395d34617813ad0c7d6c99f31d06777c0e5b",
+      "size": 3758,
+      "modified": "2026-03-02T09:26:17.984934"
+    },
+    "scripts\\build-msi.ps1": {
+      "hash": "0228b571960185f60b69dfff79f7bfac12089435efef25828ca7f1e453d721f3",
+      "size": 8727,
+      "modified": "2026-03-02T09:27:03.710680"
+    },
+    "scripts\\README.md": {
+      "hash": "a139712c5ca5bf4ecb777a35b66eea96630e11c3fda365f8956b60a8eb9df123",
+      "size": 728,
+      "modified": "2026-03-04T09:39:21.123062"
+    },
+    "security\\integrity_check.py": {
+      "hash": "32154e9b1a9a8a3b6e99a0ce0fa39cc17611becfce5e978c43fdac8233897f17",
+      "size": 8942,
+      "modified": "2026-03-04T12:31:53.066313"
+    },
+    "security\\README.md": {
+      "hash": "63761c88dc5a4dfa1721547635466ffaf0f3a840a25b8e0072e5337fb60fd2e0",
+      "size": 5690,
+      "modified": "2026-03-04T12:34:34.493016"
+    },
+    "security\\run_security_scan.ps1": {
+      "hash": "e1bcfeb5617384d72eadd6829e8459bbc507dac085550de2c81957209f46c4f5",
+      "size": 7545,
+      "modified": "2026-03-04T12:34:03.437839"
+    },
+    "security\\scan_dependencies.py": {
+      "hash": "08f9085507a49dabfe3db356c19682e3e465f7450f7ae0bbf60ae48d4a689529",
+      "size": 9786,
+      "modified": "2026-03-04T12:33:33.424347"
+    },
+    "worker\\celerybeat-schedule": {
+      "hash": "318d44af4068e0e3497b1a5b36379e1e25d53a3d9e7c051516a02fa751d54b9d",
+      "size": 16384,
+      "modified": "2026-03-04T12:45:58.854086"
+    },
+    "worker\\config.py": {
+      "hash": "921c348d05f084de9179f21ce5252d24c3a2210fd4a425b8312330870af43f0a",
+      "size": 719,
+      "modified": "2026-02-11T10:56:18.839866"
+    },
+    "worker\\database.py": {
+      "hash": "a1770963baba8639d8eb6ab82fe2e93405039bfa42983665f74a58cc934fb8f0",
+      "size": 338,
+      "modified": "2026-02-11T10:56:19.715443"
+    },
+    "worker\\Dockerfile": {
+      "hash": "0d856b36476dd725c13391a621cc4a80475cbcb27eef6205e65ecbbf139266f0",
+      "size": 329,
+      "modified": "2026-02-11T10:55:53.807224"
+    },
+    "worker\\models.py": {
+      "hash": "f00fbaa5dd25481e050ea30ab3e3f1328f44746f9fadf88ce8e9e54aba8a4d26",
+      "size": 6378,
+      "modified": "2026-02-25T14:40:45.293971"
+    },
+    "worker\\requirements.txt": {
+      "hash": "aa978af016de3e400c2aae217f62a1fbb674fa9512a520b50d32f6f3813dee39",
+      "size": 131,
+      "modified": "2026-02-11T10:55:54.933147"
+    },
+    "worker\\self_healing.py": {
+      "hash": "bfb08d5807ca4e2e9e27a6dccc9959ec5421c575abfbea92382ad964db8adeeb",
+      "size": 1791,
+      "modified": "2026-02-13T13:36:35.575682"
+    },
+    "worker\\sla_calculator.py": {
+      "hash": "bf133979a512851e6b51a38ae49985788fb46f41b1bc11d0f1e95002fe213294",
+      "size": 4878,
+      "modified": "2026-02-11T10:56:38.825523"
+    },
+    "worker\\tasks.py": {
+      "hash": "2474c79edf16e4fd9139d2d830a4399eda83d588333661cc967af6c64b938ff8",
+      "size": 44822,
+      "modified": "2026-03-04T10:06:26.780386"
+    },
+    "worker\\threshold_evaluator.py": {
+      "hash": "832c6aae1d23b14ed11fbf4b1490a1fc2dece88a86396f38ca64b076cd4944b3",
+      "size": 1951,
+      "modified": "2026-02-13T13:50:05.023312"
+    },
+    "scripts\\deployment\\aplicar_ajuste_fonte_sensores.ps1": {
+      "hash": "8557f41209e1ff8d364913f021e113ab9d4bb225e32a6a2ec4a20051436a966f",
+      "size": 1598,
+      "modified": "2026-03-03T07:33:55.533164"
+    },
+    "scripts\\deployment\\aplicar_biblioteca_sensores.ps1": {
+      "hash": "75ccaca1903ab686fefce29029260759db7f617847539d46314ec7f1c6fe5ec6",
+      "size": 7432,
+      "modified": "2026-02-26T17:14:28.112074"
+    },
+    "scripts\\deployment\\aplicar_correcoes_finais_03mar.ps1": {
+      "hash": "8378cf3e91719a0c3511b76344224a71768cb462e374a978eca51e31c839a69c",
+      "size": 5095,
+      "modified": "2026-03-02T16:19:08.035336"
+    },
+    "scripts\\deployment\\aplicar_correcoes_finais_26fev.ps1": {
+      "hash": "7d998ea19ccf48d67bf010c69c58fc8c06bef6e75d934ef4b3f7a4ff2cad4f69",
+      "size": 4905,
+      "modified": "2026-02-26T16:55:02.104013"
+    },
+    "scripts\\deployment\\aplicar_correcoes_layout_noc_02mar.ps1": {
+      "hash": "f7a28729971b242f4d4b79c4fb59ee3a20a283694205c570458af109fbb9b821",
+      "size": 2848,
+      "modified": "2026-03-02T15:43:11.417208"
+    },
+    "scripts\\deployment\\aplicar_correcoes_login_cards.ps1": {
+      "hash": "147e192d3b0fc57110798874bb3b9aaa709307fdea292b3bebe540766b4624fc",
+      "size": 5771,
+      "modified": "2026-03-04T07:56:30.786321"
+    },
+    "scripts\\deployment\\aplicar_correcoes_multiplas_02mar.ps1": {
+      "hash": "1b0cb8aeb679974c4a78631d1b907bc6601ca94c95fc15b59667cda912977d84",
+      "size": 3969,
+      "modified": "2026-03-02T16:04:01.545506"
+    },
+    "scripts\\deployment\\aplicar_design_melhorado_relatorios.ps1": {
+      "hash": "180b191c3c5f9aee598bf9cb4f0a5beedd610bcdf894e9d57b5e3d7a733c1514",
+      "size": 4451,
+      "modified": "2026-02-26T16:45:26.941408"
+    },
+    "scripts\\deployment\\aplicar_grafana_dashboard.ps1": {
+      "hash": "a99acf9a89a0a1849165d3d9de6024507bf45f0f765e8f7f652b4628a1d67fa4",
+      "size": 4373,
+      "modified": "2026-02-27T15:23:09.825387"
+    },
+    "scripts\\deployment\\aplicar_kubernetes_completo.ps1": {
+      "hash": "718a7e5b0982ee2638c7711b9fe50e51b48ed34107c54e943ec720dff976253a",
+      "size": 6856,
+      "modified": "2026-02-27T14:15:46.917378"
+    },
+    "scripts\\deployment\\aplicar_layout_compacto.ps1": {
+      "hash": "9ea66c52a52a853315a3391e76ba0b9535792af3a69dcd13c221cfcf9f0bec9f",
+      "size": 1664,
+      "modified": "2026-03-04T09:10:22.940944"
+    },
+    "scripts\\deployment\\aplicar_modernizacao.ps1": {
+      "hash": "db4aa2f2a58b3c79357dba5713c73c71dfe9ebf4a81e68cbd3aa98b32e928577",
+      "size": 12936,
+      "modified": "2026-03-02T09:28:30.908218"
+    },
+    "scripts\\deployment\\aplicar_override_css_agora.ps1": {
+      "hash": "e5a8d1ca25ca93ec87a371709dca48610600e7b7b7ec21064edce1d049f36ccb",
+      "size": 1122,
+      "modified": "2026-03-02T20:09:41.734999"
+    },
+    "scripts\\deployment\\aplicar_relatorios_completos.ps1": {
+      "hash": "1aaaa5531c5f5fb3dd1fe06691b7cab3f454df721521e74d4c04e0c8230cd508",
+      "size": 4148,
+      "modified": "2026-02-26T16:40:45.980763"
+    },
+    "scripts\\deployment\\aplicar_relatorios_integrados.ps1": {
+      "hash": "8fc8388854ff1d87e06107d69f027dffa4f1e4928fb29e21bbbb2905ea005534",
+      "size": 4113,
+      "modified": "2026-02-26T16:31:10.375202"
+    },
+    "scripts\\deployment\\aplicar_reorganizacao_menu.ps1": {
+      "hash": "ffe0d8a2797edf66fd601617bdf7e3202cbef4c6fd7c53c86ab60278d947058d",
+      "size": 3112,
+      "modified": "2026-02-27T15:58:20.529759"
+    },
+    "scripts\\deployment\\aplicar_tema_moderno.ps1": {
+      "hash": "62fba12baa14c4a153fad51f114f19b8a94f51d8ea5938df52f697fd2450be4f",
+      "size": 6043,
+      "modified": "2026-03-02T09:47:14.384594"
+    },
+    "scripts\\deployment\\rebuild_frontend_completo.ps1": {
+      "hash": "4c126e7e3ef3734a366521eaf80d89d0f1c9f06a2dec5096b1d3a1898299c450",
+      "size": 1754,
+      "modified": "2026-03-02T16:56:44.067004"
+    },
+    "scripts\\maintenance\\aplicar_biblioteca_sensores.bat": {
+      "hash": "f09de2130ec55f673fcf845192fabd899c5eb8c204f8e25807f887100718a4c2",
+      "size": 3366,
+      "modified": "2026-02-26T17:15:05.906329"
+    },
+    "scripts\\maintenance\\atualizar_probe_desktop.bat": {
+      "hash": "f5084880de2ce095ecc08ab5ed6888d445cd5a1a23c4a6e0c814cdeef5a9b75c",
+      "size": 758,
+      "modified": "2026-02-19T17:43:05.795844"
+    },
+    "scripts\\maintenance\\atualizar_probe_instalada.bat": {
+      "hash": "609d0c367a9f86591993d61d94d6cd2ca4328d24385bdfcc1c8d0346d78038d3",
+      "size": 2627,
+      "modified": "2026-02-18T16:44:27.968077"
+    },
+    "scripts\\maintenance\\atualizar_sistema_completo.bat": {
+      "hash": "39dea9bf0708bdc8fb478a510b680aba90b0ea854ba6e9242c70838d6e379b5e",
+      "size": 755,
+      "modified": "2026-02-26T12:11:31.084459"
+    },
+    "scripts\\maintenance\\check_services.bat": {
+      "hash": "1d9bbdae9a1771695fd5bd44829d250663f302c674db1de0dcb99b5dd6584baf",
+      "size": 863,
+      "modified": "2026-02-11T14:15:46.165016"
+    },
+    "scripts\\maintenance\\commit_correcoes_03mar.ps1": {
+      "hash": "e822be76ba225b5f3d5e99941bdc9230004ecb54b09d08165558aa20c55281db",
+      "size": 4651,
+      "modified": "2026-03-04T08:15:56.099076"
+    },
+    "scripts\\maintenance\\commit_documentacao_completa.ps1": {
+      "hash": "3192196ac4ce03532d3cc274133d3a4b52828cb42b36aa00f0d055aab39023ba",
+      "size": 5888,
+      "modified": "2026-03-03T16:08:05.149009"
+    },
+    "scripts\\maintenance\\complete_fix.bat": {
+      "hash": "5758068c35040eefea53586181966f70242524c8dc48bf7c9e534471a6293636",
+      "size": 1098,
+      "modified": "2026-02-11T14:37:20.956647"
+    },
+    "scripts\\maintenance\\complete_reset.bat": {
+      "hash": "c81d6fca4b12616aeff043891a44f7c14a2d1560d844f51a94932cfaaf9d00db",
+      "size": 1861,
+      "modified": "2026-02-11T14:20:31.403989"
+    },
+    "scripts\\maintenance\\configurar_probe_ping.ps1": {
+      "hash": "108a0f3abec2dbf1854702a28479169aa0c184c6e9c09ba9d497e3f6a4309314",
+      "size": 2647,
+      "modified": "2026-02-25T16:03:25.606255"
+    },
+    "scripts\\maintenance\\copiar_probe_atualizada.bat": {
+      "hash": "f178bdfc1de6ef9076373ada136ef68d8aee8f142ad33b51a8b4580cb14ceca3",
+      "size": 2525,
+      "modified": "2026-02-18T16:32:48.278811"
+    },
+    "scripts\\maintenance\\corrigir_cards_categorias_final.ps1": {
+      "hash": "b6ad3c13d0442367376802b70dc3fdf2fd45923f8889b260f32eb6ac7979b261",
+      "size": 1713,
+      "modified": "2026-03-02T16:51:39.759964"
+    },
+    "scripts\\maintenance\\corrigir_cards_categorias_urgente.ps1": {
+      "hash": "d977644916554cf8c8b4d68eaa277a017b475b58642beba68de56aec69d92145",
+      "size": 3256,
+      "modified": "2026-03-04T08:40:21.560090"
+    },
+    "scripts\\maintenance\\corrigir_css_direto_container.ps1": {
+      "hash": "7c15157a1c0421dc95a0d0ea0fa40d12886d8f04b165dfd04b5c5aee9e527cc9",
+      "size": 2638,
+      "modified": "2026-03-02T20:09:02.482627"
+    },
+    "scripts\\maintenance\\corrigir_dependencias.ps1": {
+      "hash": "a57aed9b1bf7021f6a690cb30697df97174f6c31daba698e7a82066899cb93b7",
+      "size": 1146,
+      "modified": "2026-02-26T18:01:38.889793"
+    },
+    "scripts\\maintenance\\corrigir_e_reiniciar_tudo.bat": {
+      "hash": "561963489822c9bdbceee8aadb3d012283db151155c3a31b051fa8b4ff7a03b3",
+      "size": 1967,
+      "modified": "2026-02-25T08:52:18.973099"
+    },
+    "scripts\\maintenance\\corrigir_ferramentas_admin_logo.ps1": {
+      "hash": "df517ac5f2a487948685dd364679d28fdabb157e803e684b52ec4c8d66059c89",
+      "size": 4345,
+      "modified": "2026-02-26T16:50:41.860832"
+    },
+    "scripts\\maintenance\\corrigir_login_admin.ps1": {
+      "hash": "d4b2774597c6979ad684e769e53fa10d7948cb1c4eab34d66af888883a5e111d",
+      "size": 2987,
+      "modified": "2026-03-04T08:08:38.369210"
+    },
+    "scripts\\maintenance\\corrigir_problemas_27fev.ps1": {
+      "hash": "70bd3afd0f42ad02bdf4730ab6eea417fb5ddd2d004304f23cf2d138d33ebdbe",
+      "size": 2787,
+      "modified": "2026-02-27T15:09:44.086637"
+    },
+    "scripts\\maintenance\\corrigir_relatorios_personalizados.ps1": {
+      "hash": "ed421383e3a4c118ca4f95a4e96aee83405088686b00230ccc5f88e28851e301",
+      "size": 4581,
+      "modified": "2026-02-26T16:34:49.327049"
+    },
+    "scripts\\maintenance\\corrigir_tudo_agora.ps1": {
+      "hash": "14a2a7269f9ecc7293b89a96aa89447e86cf3e95b5662913f27722de8c7c63b1",
+      "size": 3804,
+      "modified": "2026-02-26T12:28:17.204564"
+    },
+    "scripts\\maintenance\\create_admin.bat": {
+      "hash": "cd41e1e58fa79ef3c258801845b6f213d58f1e142f8f111eaf450b2ee5d5eeb9",
+      "size": 503,
+      "modified": "2026-02-11T14:10:05.159605"
+    },
+    "scripts\\maintenance\\create_user_direct.bat": {
+      "hash": "d0a838a4ef60392cbc3006f4c7a360254cad4f84527235718994d0ed6e402142",
+      "size": 1432,
+      "modified": "2026-02-11T14:12:16.119103"
+    },
+    "scripts\\maintenance\\descobrir_ip.bat": {
+      "hash": "954608cccd8383978a5adde744bbd751d19a8a159ae3ce9ac020599ed433ec7c",
+      "size": 1520,
+      "modified": "2026-02-11T15:39:35.259098"
+    },
+    "scripts\\maintenance\\diagnostico_probe_completo.bat": {
+      "hash": "c144e25ed1bf481166601dbcdea829ea3b23cbc659a9041bab71fb164e14b5e8",
+      "size": 2032,
+      "modified": "2026-02-25T07:39:09.465245"
+    },
+    "scripts\\maintenance\\executar_correcoes.ps1": {
+      "hash": "9735ed71788e0faa603e83bafb97d344fe19801cf320f0c76c5b3d6a11e3f1f6",
+      "size": 1676,
+      "modified": "2026-02-26T12:22:04.020774"
+    },
+    "scripts\\maintenance\\fix_and_create_user.bat": {
+      "hash": "4987ba256c4edcd7301863febd57f9d77b6ad46825b81cf22b599adcd56edfe6",
+      "size": 884,
+      "modified": "2026-02-11T14:13:25.839232"
+    },
+    "scripts\\maintenance\\force_rebuild.bat": {
+      "hash": "ab904f951aa9382c99da261d31a2591a75dbcb78517d10fbf3381db00e5aeb85",
+      "size": 1103,
+      "modified": "2026-02-11T14:26:40.944780"
+    },
+    "scripts\\maintenance\\full_restart.bat": {
+      "hash": "659617e00baf67d317101ec0b307885e9ec414d756e4483db5f8008de2144ecb",
+      "size": 1212,
+      "modified": "2026-02-11T14:16:09.626509"
+    },
+    "scripts\\maintenance\\iniciar_ollama.bat": {
+      "hash": "ec6149a29769b0f4e98c48113a8356ba8891f9d0d36c88b02f8b0511f8fa68ee",
+      "size": 748,
+      "modified": "2026-02-25T11:39:47.442777"
+    },
+    "scripts\\maintenance\\iniciar_probe.bat": {
+      "hash": "5aac33be3b7a07424bc5e43ef4f40316e94ffec4746843448f36f0b837d8bc68",
+      "size": 638,
+      "modified": "2026-02-20T10:57:07.114678"
+    },
+    "scripts\\maintenance\\iniciar_probe_debug.ps1": {
+      "hash": "1aa41c3ea9324210801140640dc7df497a024ea569dcd7a455d0c4051367da22",
+      "size": 2563,
+      "modified": "2026-02-26T12:53:06.654407"
+    },
+    "scripts\\maintenance\\instalar_agora.ps1": {
+      "hash": "260fbbfe3f42b1908ec17f29b3aaec36926d5f3865ab74fd36c7195c95250c7d",
+      "size": 912,
+      "modified": "2026-02-26T18:01:45.426885"
+    },
+    "scripts\\maintenance\\instalar_biblioteca_sensores.ps1": {
+      "hash": "61932bd9ca49a56572d41818084021de69a68effe2dc5c444dd6f121d2a58987",
+      "size": 3944,
+      "modified": "2026-02-26T18:01:30.747366"
+    },
+    "scripts\\maintenance\\instalar_grupos_azure_completo.ps1": {
+      "hash": "e282ce2bf72d361e0a09b47f5ee035f5971996d950ca5adac92d1a660fc80180",
+      "size": 3633,
+      "modified": "2026-02-27T09:38:09.121154"
+    },
+    "scripts\\maintenance\\instalar_relatorios_personalizados.ps1": {
+      "hash": "3d6ec3b17b2c1a86e4030b2fdcbb860af6b80103e2a0a6819f8f92a725ccd8fb",
+      "size": 3189,
+      "modified": "2026-02-26T16:24:30.663674"
+    },
+    "scripts\\maintenance\\instalar_sem_psycopg2.ps1": {
+      "hash": "4f3b3e5ef302a721251039ddc2a11762e7c7392446841ec44e1aeb4f125fb209",
+      "size": 1226,
+      "modified": "2026-02-26T18:14:34.668462"
+    },
+    "scripts\\maintenance\\limpar_cache_completo.ps1": {
+      "hash": "d279a82dc7b6160c6b8371270b50240621b7e3d05fe86c5316c75339da0484fa",
+      "size": 5719,
+      "modified": "2026-03-02T12:53:06.882634"
+    },
+    "scripts\\maintenance\\popular_base_conhecimento.ps1": {
+      "hash": "b8749398e2f7d4d4a7216d6fb43d83ca0919082efbc39f3331bd0f50a8a20825",
+      "size": 3828,
+      "modified": "2026-02-26T15:02:16.019965"
+    },
+    "scripts\\maintenance\\popular_dashboard_aiops.ps1": {
+      "hash": "fefa13d46c5f36782562336a95b9198ba28b788eda4046e879df359569cfcd6c",
+      "size": 7006,
+      "modified": "2026-02-26T15:45:37.450911"
+    },
+    "scripts\\maintenance\\push_para_github.ps1": {
+      "hash": "dd5593a08f2b3b967c79d79d01acfc8260ba3150d98dfda095776c71ee0786b1",
+      "size": 5856,
+      "modified": "2026-03-03T16:14:30.300417"
+    },
+    "scripts\\maintenance\\rebuild_api.bat": {
+      "hash": "666996492f9695dde006837bb560b49bb90423c29c9e17177f05d9a27d296144",
+      "size": 632,
+      "modified": "2026-02-11T14:13:17.689383"
+    },
+    "scripts\\maintenance\\rebuild_docker_frontend.bat": {
+      "hash": "f215e9098dd2b776dbd07cd293ba4ab9192952e13608f16327c849d05bd2eed1",
+      "size": 685,
+      "modified": "2026-02-18T16:28:59.174459"
+    },
+    "scripts\\maintenance\\rebuild_frontend.bat": {
+      "hash": "08eddca1fb4759377ff9e8ef6eee4c938536579e5db752ecf5ae148581d77d3b",
+      "size": 720,
+      "modified": "2026-02-18T16:28:50.784433"
+    },
+    "scripts\\maintenance\\register_user.bat": {
+      "hash": "a70ccbdb3c0c7d846dba5e7765592fb0d6ecb79603619e9fa588d08094a4e461",
+      "size": 423,
+      "modified": "2026-02-11T14:09:54.071532"
+    },
+    "scripts\\maintenance\\register_via_api.bat": {
+      "hash": "5e5134217fc83ab514fdb0a49294add5a70c8cce947ae4fe4bbc12a44a4406d0",
+      "size": 674,
+      "modified": "2026-02-11T14:12:24.235945"
+    },
+    "scripts\\maintenance\\reiniciar_api_topdesk.bat": {
+      "hash": "7f4f0fa76fb4f3651a2c332067a85f3d56db3d12d5c22a24b03d84fb529d6800",
+      "size": 760,
+      "modified": "2026-02-25T12:02:45.405260"
+    },
+    "scripts\\maintenance\\reiniciar_frontend_limpo.ps1": {
+      "hash": "87ff72ac4bcaa5fa6fbbebf58f27a547d7289f872ba99a4554d38caf101edede",
+      "size": 2210,
+      "modified": "2026-03-02T12:20:25.615541"
+    },
+    "scripts\\maintenance\\reiniciar_probe_forcado.bat": {
+      "hash": "1ecdd1881707e7d2d7a4fd69ada870e62c72f1cef48d418fcddf17a4c2970246",
+      "size": 2012,
+      "modified": "2026-02-25T07:39:20.657256"
+    },
+    "scripts\\maintenance\\reiniciar_sistema_completo.ps1": {
+      "hash": "dee6241c93e19149338b2008d78d58862ac0e398cc8b855c9b26527422841ad9",
+      "size": 1412,
+      "modified": "2026-03-02T11:46:49.075688"
+    },
+    "scripts\\maintenance\\reinstalar_servidor_completo.bat": {
+      "hash": "dc48f8a983bb6d32f0726e51b69572c6d879f088938cc46d2231671e63ef47b1",
+      "size": 4970,
+      "modified": "2026-02-20T11:23:31.208931"
+    },
+    "scripts\\maintenance\\restart.bat": {
+      "hash": "52af06b2b117ecdf103f3a8379a2a615ab9da299af0abf555a75e7dfa17da06c",
+      "size": 731,
+      "modified": "2026-02-11T14:05:43.217269"
+    },
+    "scripts\\maintenance\\restart_api_only.bat": {
+      "hash": "6435bbb9e1e7fbbf84c8ab530bb91f5e17ab2292ccf2b4c51e0abf54adb9994b",
+      "size": 170,
+      "modified": "2026-02-12T12:02:50.636242"
+    },
+    "scripts\\maintenance\\restart_frontend.bat": {
+      "hash": "a35052abfc77af3d18a7bad9e76657bccac884a69e306020371f2a61c0ee2405",
+      "size": 919,
+      "modified": "2026-02-19T16:44:50.420705"
+    },
+    "scripts\\maintenance\\restaurar_banco_completo.ps1": {
+      "hash": "1977879b9d9ccca7db45f49a253d723ae4977b3daf17dfa30bd5151067a730cd",
+      "size": 2043,
+      "modified": "2026-02-26T18:30:56.228653"
+    },
+    "scripts\\maintenance\\setup.bat": {
+      "hash": "2702561bcaba0c2ba690ac3086b7a3dbcc826e2136d6b13c169267a0c0dcbcbb",
+      "size": 1778,
+      "modified": "2026-02-11T11:00:31.145234"
+    },
+    "scripts\\maintenance\\sincronizar_pastas.bat": {
+      "hash": "34a04d7c404881704404b75282c039f1afa0420b8ad207222f4183340ffeef45",
+      "size": 2873,
+      "modified": "2026-02-23T09:19:26.831352"
+    },
+    "scripts\\maintenance\\start_auto_resolve_daemon.bat": {
+      "hash": "50851ac3d45b09caf553ce7a232622f21fcee99bcc9a65e4a871be29a003514d",
+      "size": 215,
+      "modified": "2026-02-20T10:43:45.596162"
+    },
+    "scripts\\maintenance\\testar_topdesk_debug.bat": {
+      "hash": "0c769c25059aab9587a54402eb57350c96d5aef04c51eac1369fcd7f26e946b0",
+      "size": 579,
+      "modified": "2026-02-25T12:10:08.578180"
+    },
+    "scripts\\maintenance\\teste_noc_simples.ps1": {
+      "hash": "d2b1038165541edab6d6521cfc932a8d549a1aa03d70fc8ecaa908e0f0379635",
+      "size": 849,
+      "modified": "2026-02-26T16:09:48.808985"
+    },
+    "scripts\\maintenance\\test_fixes.bat": {
+      "hash": "515c788b29dc870e5bc63f5a58fd111c78a87666fe3c38378188cfcbda37c176",
+      "size": 1156,
+      "modified": "2026-02-20T10:44:34.309562"
+    },
+    "scripts\\maintenance\\test_kb_endpoint.ps1": {
+      "hash": "769d4f131108d56e602942660be88dfc75ab04d59bbea2fa0ec49afe0e8be2f3",
+      "size": 1320,
+      "modified": "2026-02-26T10:44:56.798812"
+    },
+    "scripts\\maintenance\\test_login.bat": {
+      "hash": "a8fdbfd5162861997da8fcf22b3b3ff71753de1929ad0b2a64e73749013a8cfd",
+      "size": 506,
+      "modified": "2026-02-11T14:16:49.844466"
+    },
+    "scripts\\maintenance\\test_login.ps1": {
+      "hash": "00de427f71fca7b838c3212bee86d1096ac64b506dd6239071568a8e3a58f886",
+      "size": 2433,
+      "modified": "2026-02-11T14:17:02.121132"
+    },
+    "scripts\\maintenance\\test_resolve_incident.bat": {
+      "hash": "8221f9593bb3da9ed707fe2c8db7992651d6638c83f5f79cdf803d1d7d9b9eaf",
+      "size": 2596,
+      "modified": "2026-02-25T07:32:52.334335"
+    },
+    "scripts\\maintenance\\update_and_restart.ps1": {
+      "hash": "6711c805801cc92d90dba71b2598f0b77fd7e49361ef56c6c43c422a2b12a5d1",
+      "size": 4238,
+      "modified": "2026-03-02T09:25:26.477618"
+    },
+    "scripts\\maintenance\\verificacao_final_sistema.bat": {
+      "hash": "ac9c9fcbe50ae86658373e740604162eebb87b0714e32b529455e064deebc9b5",
+      "size": 3122,
+      "modified": "2026-02-25T07:36:18.412188"
+    },
+    "scripts\\maintenance\\verificar_build.bat": {
+      "hash": "031bf72d9f74f7993edb44dfb62eb4d9d5873dcf7af50feca69953b6da29c0d8",
+      "size": 457,
+      "modified": "2026-02-19T09:05:38.359546"
+    },
+    "scripts\\maintenance\\verificar_probe.bat": {
+      "hash": "718a9a7cf3294ff25dba166d21edfb62932fbf77ea516761c7abbe77a511e175",
+      "size": 1063,
+      "modified": "2026-02-18T16:45:57.273065"
+    },
+    "scripts\\testing\\testar_aiops_completo.ps1": {
+      "hash": "00c3069e5a74d9d2968cd6f31bbae52bc94d3d09dcba02234740009b45e3ffe8",
+      "size": 10348,
+      "modified": "2026-02-26T15:31:07.081383"
+    },
+    "scripts\\testing\\testar_auth_topdesk.ps1": {
+      "hash": "c6b7ebe2ba81dc82744057fdb0ee96ab79657093fba372f1a8986d63ba8874d0",
+      "size": 3437,
+      "modified": "2026-02-25T12:13:30.077704"
+    },
+    "scripts\\testing\\testar_auto_descoberta.ps1": {
+      "hash": "4d0601f10b82cc483298a0a2899e8d16392335b2b69b6b556f33505298d3fa7d",
+      "size": 2013,
+      "modified": "2026-03-02T11:49:27.495322"
+    },
+    "scripts\\testing\\testar_backend_kubernetes.ps1": {
+      "hash": "9b19e737c0623646de9b04aaa9982f4ad5200dc7609ed0d7e241b34d347e949f",
+      "size": 5803,
+      "modified": "2026-02-27T13:54:54.845472"
+    },
+    "scripts\\testing\\testar_correcoes_27fev.ps1": {
+      "hash": "5505a7ab9c94e8b6fcbbff5c6714cac5ebcc23f386a7a19ffdd08a61ecd49553",
+      "size": 8113,
+      "modified": "2026-02-27T14:34:37.812752"
+    },
+    "scripts\\testing\\testar_correcoes_problemas.ps1": {
+      "hash": "a05859187fc6aa20ddce6c649907d47df7618c42a56835b7105918d25f45a9b8",
+      "size": 5533,
+      "modified": "2026-02-27T15:13:00.983060"
+    },
+    "scripts\\testing\\testar_dashboard_grafana.ps1": {
+      "hash": "31b0c289e2db70eacfcab5b22bbd8f8e8a565f7b81b3d08499a39f3c9d39022e",
+      "size": 6798,
+      "modified": "2026-02-27T15:39:44.445075"
+    },
+    "scripts\\testing\\testar_dashboard_metricas.ps1": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-27T16:36:11.306790"
+    },
+    "scripts\\testing\\testar_deteccao_ip.ps1": {
+      "hash": "fe36d2b3a66943a7af8e7a35a4cf94466c4d29f14fd09dbe5b13780363bd4cb3",
+      "size": 2630,
+      "modified": "2026-02-26T11:32:22.777346"
+    },
+    "scripts\\testing\\testar_grupos_hierarquicos.ps1": {
+      "hash": "f036366947335fd934f768911382d11934d651d115dda1ca6b958813b18a15b6",
+      "size": 5793,
+      "modified": "2026-02-27T10:24:06.202161"
+    },
+    "scripts\\testing\\testar_integracao_kubernetes.ps1": {
+      "hash": "5133337ce744d72930c924b4ec531a948100806a00fcd4f1ef2462a79e6d3a3f",
+      "size": 10742,
+      "modified": "2026-02-27T14:02:21.602261"
+    },
+    "scripts\\testing\\testar_kubernetes_wizard.ps1": {
+      "hash": "7a672595241d0a4bfb37641dc5f1a35fcbfa7ba0ac7bdee82f202a1dbe5512e7",
+      "size": 5231,
+      "modified": "2026-02-27T13:45:32.499524"
+    },
+    "scripts\\testing\\testar_metricas_backend.ps1": {
+      "hash": "bdc8f0823516194ae61d5205c2f5d82c93e3ea039e8aa68271f388d2ce9637aa",
+      "size": 1520,
+      "modified": "2026-02-28T14:15:21.806468"
+    },
+    "scripts\\testing\\testar_metricas_corrigido.ps1": {
+      "hash": "18d2b7caaf5d0f4dd5a6d038938043b02cb44652bdf41092c7a1989bbe7c8ea3",
+      "size": 3161,
+      "modified": "2026-03-02T13:14:01.403266"
+    },
+    "scripts\\testing\\testar_monitorar_servicos.ps1": {
+      "hash": "1c5c432d9fd0b6f6663205cba71eed41ed7a8461013084db2115ea42938cc0bb",
+      "size": 4001,
+      "modified": "2026-02-26T19:37:31.798942"
+    },
+    "scripts\\testing\\testar_noc_agora.ps1": {
+      "hash": "b985e62249c66f6eac2cc952cc403a6fd42363ced693b413fa9a8eff29b60426",
+      "size": 7133,
+      "modified": "2026-02-26T16:07:56.921856"
+    },
+    "scripts\\testing\\testar_notificacoes_automaticas.ps1": {
+      "hash": "b3482724d36bc97bee9861a3170b6d85ab51ed6f6591289572cc7210d5a3bfb7",
+      "size": 4122,
+      "modified": "2026-02-25T14:11:55.511918"
+    },
+    "scripts\\testing\\testar_ollama_status.ps1": {
+      "hash": "aa855bd9526829725053b02b2fdc623cb79b1822f2df69f0b043c5db3dc0357f",
+      "size": 2978,
+      "modified": "2026-02-25T15:52:55.104570"
+    },
+    "scripts\\testing\\testar_relatorios.ps1": {
+      "hash": "8d907e7e88684e9485cb876f77260169ec39f6a6cd506031d503f3bd5187e763",
+      "size": 5157,
+      "modified": "2026-02-26T16:17:36.707717"
+    },
+    "scripts\\testing\\testar_relatorios_personalizados.ps1": {
+      "hash": "326c8daba0541807cb3487fe6cffb3905cd7635bf937ce0f374b16d1b814c7db",
+      "size": 2407,
+      "modified": "2026-02-26T16:34:31.843654"
+    },
+    "scripts\\testing\\verificar_e_corrigir_cards.ps1": {
+      "hash": "00867910efc9cd002188b220aa301b696184c9c8a7cad00f6b0a360277356393",
+      "size": 2591,
+      "modified": "2026-03-03T16:16:45.386966"
+    },
+    "scripts\\testing\\verificar_sistema_completo.ps1": {
+      "hash": "33b43167a037b499679fd210124e5c658ca691d3de8afcc10ba6f9d20366088f",
+      "size": 3730,
+      "modified": "2026-03-02T12:47:43.229468"
+    },
+    "scripts\\testing\\verificar_status_completo.ps1": {
+      "hash": "b3ce923311e60ea2b69e50877e7905332be41b78065e254e323b5a6223e38ea6",
+      "size": 5633,
+      "modified": "2026-02-26T12:51:43.628004"
+    },
+    "probe\\collectors\\cpu_collector.py": {
+      "hash": "e448fda185cf9dd84868c11f734ce470014df67597e7d344662ddc7f060c6a6c",
+      "size": 954,
+      "modified": "2026-02-18T15:44:13.107543"
+    },
+    "probe\\collectors\\disk_collector.py": {
+      "hash": "6b3b37b22da73d131533a8285cbe7dec64d0d7be5d74a96824264b28058a39be",
+      "size": 1550,
+      "modified": "2026-02-18T15:44:18.103697"
+    },
+    "probe\\collectors\\docker_collector.py": {
+      "hash": "1c6c5db9404165f1630c071d67e45e2a8eaddc2c9f5c63874e6ef544c01ef6fa",
+      "size": 7932,
+      "modified": "2026-02-19T12:13:55.313424"
+    },
+    "probe\\collectors\\generic_collector.py": {
+      "hash": "77679c58e55b7f32481319f7b93cae9b6e860b527facba9538af82444f1342e4",
+      "size": 9089,
+      "modified": "2026-02-19T12:18:02.009051"
+    },
+    "probe\\collectors\\hyperv_collector.py": {
+      "hash": "adc653d8a565b48ccc9c81ea38fb8bc921d9d2623e92eee0fe0cf39cb095cd97",
+      "size": 1712,
+      "modified": "2026-02-12T12:02:36.188675"
+    },
+    "probe\\collectors\\kubernetes_collector.py": {
+      "hash": "9ba5f62cfcccf545e582e49ac1a964db656d152af2f6c0dcea47225382904789",
+      "size": 26486,
+      "modified": "2026-02-27T14:08:36.581385"
+    },
+    "probe\\collectors\\memory_collector.py": {
+      "hash": "e912d3835cc598fbe2750dee96b3aafb10355f68f9964ac8894896a9adc19362",
+      "size": 950,
+      "modified": "2026-02-18T15:44:14.844654"
+    },
+    "probe\\collectors\\network_collector.py": {
+      "hash": "60847b72688e16e5a62f2d70d5ef5da0580a0dc89fb80c661fccabb88b8829b0",
+      "size": 1523,
+      "modified": "2026-02-18T15:44:21.348959"
+    },
+    "probe\\collectors\\ping_collector.py": {
+      "hash": "8437d95f45617f422d952ac98b5e23b7343052aed066dc71c3d2c9a6d5ce1c20",
+      "size": 3592,
+      "modified": "2026-02-18T15:43:48.476469"
+    },
+    "probe\\collectors\\service_collector.py": {
+      "hash": "7eafd03269139d6aac85caeb9a796cee716563ce2b5d37b2fb6ae5bdde76794d",
+      "size": 2465,
+      "modified": "2026-02-12T12:02:28.854189"
+    },
+    "probe\\collectors\\snmp_ac_collector.py": {
+      "hash": "9b7839f31a2b81b15fe2c5dd9473beea51ce53af4e8c2a393082d65ee1a511ed",
+      "size": 11288,
+      "modified": "2026-02-25T09:16:13.216031"
+    },
+    "probe\\collectors\\snmp_ap_collector.py": {
+      "hash": "ffc1de20b49667bc57e7447dc300f95af6149bc23e68cec936353126225462a7",
+      "size": 7333,
+      "modified": "2026-02-25T09:15:39.317266"
+    },
+    "probe\\collectors\\snmp_collector.py": {
+      "hash": "1e297bc568a3fabe834e1bc05b8dc907d548b94d79f3034f44bc5ae484833e21",
+      "size": 14288,
+      "modified": "2026-02-19T16:52:39.601656"
+    },
+    "probe\\collectors\\system_collector.py": {
+      "hash": "a8bd0653c450b8937027fe0110d707997c48cb785b492bb156f8c041df9b3025",
+      "size": 1518,
+      "modified": "2026-02-18T15:44:23.849303"
+    },
+    "probe\\collectors\\udm_collector.py": {
+      "hash": "ae0e967277717db402b86f6329c1f784d95f577ff71175ab06f43bbefc3ba1a6",
+      "size": 2816,
+      "modified": "2026-02-12T15:08:45.466069"
+    },
+    "probe\\collectors\\wmi_remote_collector.py": {
+      "hash": "2059f3c23a716a335b9a9cff81200d5ec03640609d65af0653967e6c46802636",
+      "size": 15109,
+      "modified": "2026-02-18T15:55:50.291091"
+    },
+    "probe\\collectors\\__init__.py": {
+      "hash": "f4c3446de06150358be40cf8e529bd3bc5493d30ff76c9713a54b651a4f63de9",
+      "size": 21,
+      "modified": "2026-02-11T10:58:16.291007"
+    },
+    "installer\\templates\\probe_config.json": {
+      "hash": "a2e3f360855ef6d115d3e85dfc3d31c2b0259fc301013e9b26144e19c4c8847a",
+      "size": 167,
+      "modified": "2026-03-03T16:22:28.060346"
+    },
+    "frontend\\build\\asset-manifest.json": {
+      "hash": "8240a87fcfff34912513434ed434f271c6d5d6499f68bf18479736931def1beb",
+      "size": 369,
+      "modified": "2026-02-26T16:55:33.087138"
+    },
+    "frontend\\build\\coruja-logo-backup.png": {
+      "hash": "102519a94b6ce33a9899b59ee73fd9e45a53dc71c274a95cb591437c27a9330f",
+      "size": 273104,
+      "modified": "2026-02-26T16:55:19.066097"
+    },
+    "frontend\\build\\coruja-logo.png": {
+      "hash": "9775acca8fa2930067d5e7edbd41ada7050ccb2da8e80b5529479d56708e5dd6",
+      "size": 1386990,
+      "modified": "2026-02-26T16:55:19.093833"
+    },
+    "frontend\\build\\index.html": {
+      "hash": "e6ba57a8b559ecee7b7b757f86931067a91d01cf7afeef71266e47d24adae1eb",
+      "size": 631,
+      "modified": "2026-02-26T16:55:33.085833"
+    },
+    "frontend\\build\\test-logo.png": {
+      "hash": "102519a94b6ce33a9899b59ee73fd9e45a53dc71c274a95cb591437c27a9330f",
+      "size": 273104,
+      "modified": "2026-02-26T16:55:19.105467"
+    },
+    "frontend\\public\\coruja-logo-backup.png": {
+      "hash": "102519a94b6ce33a9899b59ee73fd9e45a53dc71c274a95cb591437c27a9330f",
+      "size": 273104,
+      "modified": "2026-02-25T10:10:59.748536"
+    },
+    "frontend\\public\\coruja-logo.png": {
+      "hash": "9775acca8fa2930067d5e7edbd41ada7050ccb2da8e80b5529479d56708e5dd6",
+      "size": 1386990,
+      "modified": "2026-02-25T10:21:03.045576"
+    },
+    "frontend\\public\\index.html": {
+      "hash": "f2334a8cf0af21ec451dd987e865b146a334e176cc48bdbb67a0ab5833cc1b5c",
+      "size": 582,
+      "modified": "2026-02-25T09:57:56.279761"
+    },
+    "frontend\\public\\test-logo.png": {
+      "hash": "102519a94b6ce33a9899b59ee73fd9e45a53dc71c274a95cb591437c27a9330f",
+      "size": 273104,
+      "modified": "2026-02-25T10:16:27.605457"
+    },
+    "frontend\\src\\App.css": {
+      "hash": "b03d9b06414bce66b4043030bf628320440671b5329fd80fdf55680871f60680",
+      "size": 33,
+      "modified": "2026-02-11T10:58:49.510083"
+    },
+    "frontend\\src\\App.js": {
+      "hash": "1de7bdd46f6b33dac29be9993f627e181a417fce90fa97e443dd6c9a7bdb2465",
+      "size": 3182,
+      "modified": "2026-03-02T10:35:21.068773"
+    },
+    "frontend\\src\\config.js": {
+      "hash": "e419d1038ae4887102e7a22677ff88d03db1376c8e833b86bbe147cda1657efb",
+      "size": 1232,
+      "modified": "2026-03-02T13:03:24.228807"
+    },
+    "frontend\\src\\index.css": {
+      "hash": "75ec884f637300f9f591782645ed7397255abfcbba1f98de2bc496d6ddeb4995",
+      "size": 461,
+      "modified": "2026-02-11T10:58:42.243311"
+    },
+    "frontend\\src\\index.js": {
+      "hash": "31034e864d903efa810a9a2a37e22b035fcda129466ec9389a7141abfad71d6c",
+      "size": 288,
+      "modified": "2026-02-18T15:04:33.357822"
+    },
+    "frontend\\src\\theme.css": {
+      "hash": "c0d831153a6ad4394c6668c1e299f78a26f384fa7987fcaaeac6ed20a0127dfb",
+      "size": 14015,
+      "modified": "2026-02-18T15:04:17.086980"
+    },
+    "frontend\\src\\components\\AddSensorModal.css": {
+      "hash": "b5b3537f11edc2b7da5f647ecd2a05b465f7396a4e465ea9e4e9ac004f94e994",
+      "size": 6554,
+      "modified": "2026-02-19T08:36:56"
+    },
+    "frontend\\src\\components\\AddSensorModal.js": {
+      "hash": "75e46c32962ec96acf1e9f0aa3b56e142cc3d0b049a1e981e22a28060115edbc",
+      "size": 12426,
+      "modified": "2026-02-19T11:39:38"
+    },
+    "frontend\\src\\components\\AdvancedDashboard.css": {
+      "hash": "60619e2a5a9897faf6aa6f4b409fad0e61b6cb08f89975a46a2970d6ab4a5fff",
+      "size": 5705,
+      "modified": "2026-02-19T16:33:13.350136"
+    },
+    "frontend\\src\\components\\AdvancedDashboard.js": {
+      "hash": "096f0432a62bf79e6adfdaff3f111b30f336420731aa33a6289dbfe461c3a308",
+      "size": 10344,
+      "modified": "2026-02-27T16:21:56.242939"
+    },
+    "frontend\\src\\components\\AIActivities.css": {
+      "hash": "ff99b1b498cd8a98edb2d5f29b790b81b0c7b01d7e9380f8b71c175846df8142",
+      "size": 11397,
+      "modified": "2026-02-26T11:24:35.407900"
+    },
+    "frontend\\src\\components\\AIActivities.js": {
+      "hash": "a3796d9cd0bebf4662bc92584c5bd0a7e4c3e7b5dc9eb7a0f1b6fac66e437cb6",
+      "size": 31615,
+      "modified": "2026-02-26T11:30:03.402446"
+    },
+    "frontend\\src\\components\\AIOps.css": {
+      "hash": "6bc9726750a9fe3a355118f00b43ef5436f73d13b55ba02ae6bdc2c3f0f5d364",
+      "size": 18534,
+      "modified": "2026-02-18T14:36:43.739278"
+    },
+    "frontend\\src\\components\\AIOps.js": {
+      "hash": "ced5b5c3532082b9362be868f2fb307227a0244a30e6af92e0e49b40353cfa56",
+      "size": 33207,
+      "modified": "2026-02-18T14:36:17.224043"
+    },
+    "frontend\\src\\components\\AutoRemediation.js": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-25T16:08:23.803872"
+    },
+    "frontend\\src\\components\\Companies.css": {
+      "hash": "98b75e4bd7ea77bf1ec3fb2656dcb05b7137a64487a62a0db0399cc850ce3f91",
+      "size": 5463,
+      "modified": "2026-02-27T16:04:14.867123"
+    },
+    "frontend\\src\\components\\Companies.js": {
+      "hash": "f1dd051d9910f6168711323939e53ae45cfc0352a949f24b579a628a5b7f9a40",
+      "size": 16396,
+      "modified": "2026-02-27T16:08:33.247613"
+    },
+    "frontend\\src\\components\\CustomReports.css": {
+      "hash": "8fa13a825f6a103e01f8a1d334161b4832c6333bd3dfab5d8bcb821d801b0f49",
+      "size": 7950,
+      "modified": "2026-02-26T16:21:54.773941"
+    },
+    "frontend\\src\\components\\CustomReports.js": {
+      "hash": "653ea8e16baa173fd63782e29f46cebdddbd015fcf6a4fe751faf04520ceb108",
+      "size": 20407,
+      "modified": "2026-02-28T14:11:56.456071"
+    },
+    "frontend\\src\\components\\Dashboard.css": {
+      "hash": "33fd278ceb66db9b55236493d883dbab8563a9b7998c3ab2266ae6c4ac931170",
+      "size": 4439,
+      "modified": "2026-03-02T12:29:03.211293"
+    },
+    "frontend\\src\\components\\Dashboard.js": {
+      "hash": "d2561dc5ffd5c365dd5c8f80314f5206c304a1c4194851dd543fb4a4c7f04b5f",
+      "size": 16411,
+      "modified": "2026-03-02T12:28:54.782452"
+    },
+    "frontend\\src\\components\\Incidents.js": {
+      "hash": "0ec838f8f9b7843a1c85e59e0127a0df8ec7bd1c384fb1fa28a5cb36e48f540f",
+      "size": 18899,
+      "modified": "2026-03-02T12:15:42.879163"
+    },
+    "frontend\\src\\components\\KnowledgeBase.css": {
+      "hash": "7bf0bcc4a2fd41c1cea3f51d46c177b0785b3ff863025baf742c443905e0404f",
+      "size": 5564,
+      "modified": "2026-02-25T11:25:27.813100"
+    },
+    "frontend\\src\\components\\KnowledgeBase.js": {
+      "hash": "eef4d0916f2fd77e731b0ab1eaadabc86448f1ccf1cd41a536619fdd9d4af4d6",
+      "size": 12154,
+      "modified": "2026-02-26T11:30:04.123077"
+    },
+    "frontend\\src\\components\\KubernetesDashboard.css": {
+      "hash": "6168ff9ae8cd9db77ec3df7e981fa257b9799c5743fa1541b42f62ee5f44ea9d",
+      "size": 6869,
+      "modified": "2026-02-27T14:09:54.671539"
+    },
+    "frontend\\src\\components\\KubernetesDashboard.js": {
+      "hash": "74cd6355991f1bdf206c222612a49ee7ad7d0d670db40529b71d4577de62ed8d",
+      "size": 12353,
+      "modified": "2026-02-27T14:09:27.572431"
+    },
+    "frontend\\src\\components\\Login.css": {
+      "hash": "3c316a0501fb892d67e26d83fb8bb57d9323b6b9509c90a4a0070afe3a79cdb3",
+      "size": 13000,
+      "modified": "2026-03-04T08:02:09.843315"
+    },
+    "frontend\\src\\components\\Login.js": {
+      "hash": "20bf1b32c0648f2d940c9df4cd0c7bfde3e82359dfacf28327865d472c88cb59",
+      "size": 6453,
+      "modified": "2026-03-04T07:52:02.415822"
+    },
+    "frontend\\src\\components\\MainLayout.css": {
+      "hash": "596118f9acce6a82f28ac0ed3d6e858f7fb8c2ac017b086bf17e13f5c2f963e6",
+      "size": 1651,
+      "modified": "2026-02-25T09:57:46.097106"
+    },
+    "frontend\\src\\components\\MainLayout.js": {
+      "hash": "76d8f463f6f5574e04b7f3dbb8bbb853dc84bd90e771c8a8a78734059aa8b3ad",
+      "size": 4755,
+      "modified": "2026-02-27T16:08:34.449921"
+    },
+    "frontend\\src\\components\\MaintenanceWindows.js": {
+      "hash": "e27e7a616a43d2d2fa0036df03b93129c1710188804dba2f9f9e1c345b69407a",
+      "size": 15753,
+      "modified": "2026-02-13T13:29:13.433053"
+    },
+    "frontend\\src\\components\\Management-override.css": {
+      "hash": "a23c0662298755d7185e400b516482d5bd1a2b8cf0907392a07794a0ff448896",
+      "size": 6362,
+      "modified": "2026-03-03T07:33:44.830530"
+    },
+    "frontend\\src\\components\\Management.css": {
+      "hash": "50d266329db3a7de1f215598424d39ab775613e90a98cd1e7172869307aa5fa9",
+      "size": 55853,
+      "modified": "2026-03-04T09:10:10.857351"
+    },
+    "frontend\\src\\components\\MetricsViewer.css": {
+      "hash": "4b05a97d8fb62413b96d2ba20ea5d8a3ea43c82befc38220fdb5e62e2fea091d",
+      "size": 11466,
+      "modified": "2026-03-04T11:05:17.047518"
+    },
+    "frontend\\src\\components\\MetricsViewer.js": {
+      "hash": "52c8efa9ee09c773d41e8897d1a3ff88206d95ad37681d78117b5a9f24128e61",
+      "size": 26189,
+      "modified": "2026-03-04T11:04:54.562466"
+    },
+    "frontend\\src\\components\\NOCMode.css": {
+      "hash": "888832c91504e323ac524be287570f7f9b8c4aea2fd1499b50dbd2374ce5775f",
+      "size": 13980,
+      "modified": "2026-02-26T13:42:11.756840"
+    },
+    "frontend\\src\\components\\NOCMode.js": {
+      "hash": "daa83a49dddbf6e9bc2b998f2aa32069d1e6648d2212fca01eae52d777eddf80",
+      "size": 9198,
+      "modified": "2026-02-26T13:42:01.942631"
+    },
+    "frontend\\src\\components\\NOCRealTime.css": {
+      "hash": "ac9ef81487b959a2007dd4f9f8b1120450f658905cd1fc61cfb23da35adacd51",
+      "size": 18593,
+      "modified": "2026-02-26T13:28:54.770822"
+    },
+    "frontend\\src\\components\\NOCRealTime.js": {
+      "hash": "783ba24704d6d33ab2f887b9f07e0985c9d4d11f4207c7ae03a408ed576b30e3",
+      "size": 19928,
+      "modified": "2026-02-26T13:24:12.101169"
+    },
+    "frontend\\src\\components\\Probes.js": {
+      "hash": "7d4896f92df85a3ce437811f43d28b2b2726e192cbbe83612d8475af1f7e48b6",
+      "size": 9980,
+      "modified": "2026-03-02T12:01:10.299758"
+    },
+    "frontend\\src\\components\\Reports.css": {
+      "hash": "7ef8ddbf469272ef71b754345921b1be27f24e5a5ce44cbbd8f92af25ea11de0",
+      "size": 28484,
+      "modified": "2026-02-26T16:45:05.022007"
+    },
+    "frontend\\src\\components\\Reports.js": {
+      "hash": "8e0458742e2894ee6345c2e68a2dd3d29b471dab3bd0f4c4ccaeb32200df7c45",
+      "size": 59828,
+      "modified": "2026-02-26T16:44:40.414484"
+    },
+    "frontend\\src\\components\\SensorGroups.css": {
+      "hash": "1827e566347398c8ba281b0e713c93b74bfe46d9e38b6cba9d012060425f7ce5",
+      "size": 7358,
+      "modified": "2026-02-19T16:04:58.248111"
+    },
+    "frontend\\src\\components\\SensorLibrary.js": {
+      "hash": "ca08982f07fbc93f17fddad87eb1f7d120284f40e010a2b9a40f76d1e9c15733",
+      "size": 38054,
+      "modified": "2026-02-26T19:07:23.184736"
+    },
+    "frontend\\src\\components\\Sensors.js": {
+      "hash": "41514088c8164199e3c17ecd323cf13308463195136b642a1a02d377421abe9a",
+      "size": 21446,
+      "modified": "2026-02-27T11:39:46.487561"
+    },
+    "frontend\\src\\components\\Servers.js": {
+      "hash": "d9248cef5dfff8507cc763910d3b4c17dd21247b00818a6f87f2df23dad9eed7",
+      "size": 192702,
+      "modified": "2026-03-04T09:09:43.472700"
+    },
+    "frontend\\src\\components\\ServersGrouped.js": {
+      "hash": "9e435b347df9e33f662b16c25416d83055577f44438dfb2c062312579b8c6ac8",
+      "size": 9202,
+      "modified": "2026-02-19T13:46:38.745704"
+    },
+    "frontend\\src\\components\\Settings.css": {
+      "hash": "bad2ffac0201c07f0ce394c27eda27613f7e11001562bd50e52239f54f6c960e",
+      "size": 18931,
+      "modified": "2026-03-04T11:31:15.842067"
+    },
+    "frontend\\src\\components\\Settings.js": {
+      "hash": "92c8dfd1c6c64bb06c57f55baf68cb8cb7d084205af06d0e79f5da58605c7869",
+      "size": 116688,
+      "modified": "2026-03-04T11:35:48.514808"
+    },
+    "frontend\\src\\components\\Sidebar.css": {
+      "hash": "98f060a1bdcc3a23bec3e7d5c4dd9de4149c1c0751d15cae90a5415c4d67a01c",
+      "size": 2650,
+      "modified": "2026-02-19T15:52:25.298412"
+    },
+    "frontend\\src\\components\\Sidebar.js": {
+      "hash": "9d32cfc017b13f6f39bc6d38a233d05cba3177fd2378829e5def09cdb234e366",
+      "size": 1500,
+      "modified": "2026-02-27T16:19:30.159676"
+    },
+    "frontend\\src\\components\\SystemUpdates.css": {
+      "hash": "292041f5eb357d5dfb153dac6d271bfafc3757e6579496fdc7b6f0e57236d184",
+      "size": 5670,
+      "modified": "2026-03-02T09:25:08.659425"
+    },
+    "frontend\\src\\components\\SystemUpdates.js": {
+      "hash": "92ffdd06de83b8bc52dbc85c7168f689aaedfd0a1386ff842c9cfc7a00ae6564",
+      "size": 8933,
+      "modified": "2026-03-02T09:24:45.845423"
+    },
+    "frontend\\src\\components\\TestTools.js": {
+      "hash": "40ecac5b118a077d9f23d4220cabc2e682dc80d62b3bc4462aba82126f2b00d9",
+      "size": 16712,
+      "modified": "2026-02-20T10:36:52.583296"
+    },
+    "frontend\\src\\components\\ThresholdConfig.css": {
+      "hash": "30b91b55d860fe57ffe2404c161547b2c67a690a83f60bdd56bb3d1c3abc780f",
+      "size": 5925,
+      "modified": "2026-02-26T09:02:50.908896"
+    },
+    "frontend\\src\\components\\ThresholdConfig.js": {
+      "hash": "1b9be6590459031385a38d2b8f950cd9ee32b0dd4d2d64ed1e2d7cada6295442",
+      "size": 16515,
+      "modified": "2026-02-26T11:30:04.974517"
+    },
+    "frontend\\src\\components\\Users.js": {
+      "hash": "ba0b76017bab3d31295f314e3cfe99a1cec02280ef59f27780272642c1748e72",
+      "size": 12113,
+      "modified": "2026-02-12T16:25:39.504180"
+    },
+    "frontend\\src\\data\\sensorTemplates.js": {
+      "hash": "a3e1f33dcaefb6450df329185fde0c74494c7260fdeb0a566d1c9e449ceb2784",
+      "size": 36524,
+      "modified": "2026-02-26T16:54:39.881155"
+    },
+    "frontend\\src\\services\\api.js": {
+      "hash": "4a41b5e4e81e6cb9391867617dd6770ad1a4255c4f8b07e30e17388d535eb305",
+      "size": 1949,
+      "modified": "2026-02-28T14:13:18.448280"
+    },
+    "frontend\\src\\styles\\cards-theme.css": {
+      "hash": "f426765774948d8293bafee076fda7492560d4a515048f9de8708333bea4c09e",
+      "size": 31360,
+      "modified": "2026-03-02T12:15:35.115391"
+    },
+    "frontend\\src\\styles\\modern-theme.css": {
+      "hash": "81b3d7f75da700220cee8bcab5a1dca823a7966b2d6b8bdf53cad66212263607",
+      "size": 10877,
+      "modified": "2026-03-02T09:23:41.541427"
+    },
+    "frontend\\build\\static\\css\\main.ce36d176.css": {
+      "hash": "bbca69188f04b1efa0d684d79e274d4fc53eb27b9988c6ec3cd2385332348dbb",
+      "size": 136646,
+      "modified": "2026-02-26T16:55:33.103199"
+    },
+    "frontend\\build\\static\\css\\main.ce36d176.css.map": {
+      "hash": "d12d634fd3c4ecd4f275ec70eaee20bc47bb5b32f974413f143670654006cdc2",
+      "size": 292271,
+      "modified": "2026-02-26T16:55:33.104203"
+    },
+    "frontend\\build\\static\\js\\main.56c17886.js": {
+      "hash": "ed1b0b929fbeccd21f5448bd8d46e955854cca5700d404e22d8ee544054fb824",
+      "size": 890852,
+      "modified": "2026-02-26T16:55:33.107260"
+    },
+    "frontend\\build\\static\\js\\main.56c17886.js.LICENSE.txt": {
+      "hash": "99569a0d93cd6fb25e28cb56e25563f6692e0b30be29a52afceed0769ae3afe8",
+      "size": 1296,
+      "modified": "2026-02-26T16:55:33.093150"
+    },
+    "frontend\\build\\static\\js\\main.56c17886.js.map": {
+      "hash": "506aaedc5d92a566bab721d771819be99a6f208d9a308500adf3300b65dfc52b",
+      "size": 3039315,
+      "modified": "2026-02-26T16:55:33.138680"
+    },
+    "docs\\architecture\\AIOPS_AUTOMATICO_EXPLICADO.md": {
+      "hash": "899471088b148ee2a628b4d81e963fdc433966b10601ce45e0ac61f279ca1c46",
+      "size": 10202,
+      "modified": "2026-02-26T15:25:41.393399"
+    },
+    "docs\\architecture\\AIOPS_IA_HIBRIDA_EXPLICADA.md": {
+      "hash": "4623aa77a9b4e220753017bb8b74e21d849caade21112c732eb50023a7890509",
+      "size": 13818,
+      "modified": "2026-02-26T15:29:10.192995"
+    },
+    "docs\\architecture\\ARQUITETURA_COMPLETA.md": {
+      "hash": "ca8cf292557d209355f18d7c02d3f9503c311119bd6c0a1c2391d879132afea4",
+      "size": 20933,
+      "modified": "2026-03-03T16:31:44.805233"
+    },
+    "docs\\architecture\\ARQUITETURA_PRTG_AGENTLESS.md": {
+      "hash": "a5d560c804f7188ec14be41becce4c0d7dee668e8732aeef7c0ef1ae44e1aca1",
+      "size": 10982,
+      "modified": "2026-02-13T14:39:11.355184"
+    },
+    "docs\\architecture\\ARQUITETURA_SENSORES_PROBE.md": {
+      "hash": "d3f132da61f434778899300bed5e5afdcfc1378724d16799acb7c3f78d50008e",
+      "size": 8488,
+      "modified": "2026-02-19T12:19:05.319516"
+    },
+    "docs\\architecture\\DESIGN_GRAFANA_STYLE_DASHBOARD.md": {
+      "hash": "a34ccc5e8f58bb707f4d5256980f42b1c3c72892ffa172a21d43b73258e5274f",
+      "size": 8710,
+      "modified": "2026-02-27T15:19:00.989223"
+    },
+    "docs\\architecture\\DESIGN_GRUPOS_AZURE_COMPLETO.md": {
+      "hash": "f2721de5b89173a3d15156019f82c1b6e877e2978e2a344e7afaf904da1a8e69",
+      "size": 9752,
+      "modified": "2026-02-27T09:36:01.308186"
+    },
+    "docs\\architecture\\README.md": {
+      "hash": "08d77c45e91414c03737887fd106fb855f5edb43fa507b6d50a3bf24341b9799",
+      "size": 980,
+      "modified": "2026-03-04T09:39:21.119906"
+    },
+    "docs\\architecture\\ROADMAP_ENTERPRISE.md": {
+      "hash": "c9a5767dfa2352ac942bc490504c8f762ffbd6542ca307984770f1541424d4c5",
+      "size": 11907,
+      "modified": "2026-02-19T09:06:34.206625"
+    },
+    "docs\\architecture\\ROADMAP_ENTERPRISE_DETALHADO.md": {
+      "hash": "06906541116efb64f2b1615af262ad16bfbf6cc70fe4df54a2c0eaea16ff3479",
+      "size": 8678,
+      "modified": "2026-02-19T16:28:15.856351"
+    },
+    "docs\\changelog\\README.md": {
+      "hash": "6dd847c3baa180ab0c91b9ce88ab2198c883365212aec0d92ad10207dd9de7b9",
+      "size": 787,
+      "modified": "2026-03-04T09:39:21.108195"
+    },
+    "docs\\guides\\GUIA_COMMIT_GITHUB.md": {
+      "hash": "8c9983879948d4b869ac4f48c2275e5ad964523c713442810779e7809bcf4cfb",
+      "size": 5395,
+      "modified": "2026-03-03T16:10:11.242572"
+    },
+    "docs\\guides\\GUIA_COMPLETO_KUBERNETES.md": {
+      "hash": "0847a8c234d1d294b18f7f7ecbced5c844701477ac9f3c135c617f42614e8fa0",
+      "size": 16817,
+      "modified": "2026-02-27T14:04:40.648017"
+    },
+    "docs\\guides\\GUIA_CONFIGURAR_TEAMS.md": {
+      "hash": "5b16fdf4ea0d730a3499fd95cb25353b97e2695251a526bb1ef5f9bdf6424a8c",
+      "size": 5623,
+      "modified": "2026-02-25T09:34:02.967320"
+    },
+    "docs\\guides\\GUIA_ENTRA_ID_AZURE_AD.md": {
+      "hash": "18ca72931315518424b8df5b9ca6c2708ffe12cda62e783acf4ef9e65fb9bfce",
+      "size": 10046,
+      "modified": "2026-02-23T09:44:10.890602"
+    },
+    "docs\\guides\\GUIA_INSTALADOR_DOMINIO.md": {
+      "hash": "ce84fb57cfb681bd0a76ab0650e9778b9862d4fbc3287af408cbc0f210d43189",
+      "size": 6733,
+      "modified": "2026-02-23T09:39:23.735547"
+    },
+    "docs\\guides\\GUIA_INSTALADOR_MSI.md": {
+      "hash": "bf56b54603835065b603843dddc52d4711bf299d088ddf98d5af88ca2030ccc3",
+      "size": 9232,
+      "modified": "2026-03-03T16:24:47.531713"
+    },
+    "docs\\guides\\GUIA_INSTALADOR_UNIVERSAL.md": {
+      "hash": "b4560779980232942f06181f0eb2717235b3e03be06d518bacad18054d14f4cf",
+      "size": 8131,
+      "modified": "2026-02-23T09:49:47.097056"
+    },
+    "docs\\guides\\GUIA_MONITORAMENTO_AGENTLESS_COMPLETO.md": {
+      "hash": "b818ecfabd2652db5cb5006dfebff3e667149b6d5ff8e2c4d98f4e6569a751f1",
+      "size": 14354,
+      "modified": "2026-02-20T09:20:16.330795"
+    },
+    "docs\\guides\\GUIA_MONITORAMENTO_SEM_DOMINIO.md": {
+      "hash": "3b3777a90c3665cacd27acf1aad21452e7ad56f8effa9cbca98c82cece9d2241",
+      "size": 9099,
+      "modified": "2026-02-20T15:52:02.247043"
+    },
+    "docs\\guides\\GUIA_RAPIDO_AIOPS.md": {
+      "hash": "e767004a54a80c55e987f0576be92bfa6494ef8ef6f89c16c9cdf289ec9a7c1f",
+      "size": 8165,
+      "modified": "2026-02-26T15:40:52.471565"
+    },
+    "docs\\guides\\GUIA_RAPIDO_INSTALACAO.md": {
+      "hash": "480b9c43b92bc01fec475d05ff6b1e97f8ce0f3babc5bc7c2be837b56c670aa7",
+      "size": 6051,
+      "modified": "2026-02-20T15:55:18.839659"
+    },
+    "docs\\guides\\GUIA_RAPIDO_KUBERNETES.md": {
+      "hash": "7277781fe1ef0c6d76a70907b6234b6ac978f50e309180b4694742089273b24b",
+      "size": 4961,
+      "modified": "2026-02-27T13:47:04.275073"
+    },
+    "docs\\guides\\INICIO_RAPIDO.md": {
+      "hash": "4384a8f64558daa8cd7b51ea110536283a5a92a29d3321af16076967e9fe2098",
+      "size": 9516,
+      "modified": "2026-02-13T12:58:17.528470"
+    },
+    "docs\\guides\\LEIA_PRIMEIRO.md": {
+      "hash": "a48f55e334666fe88fdbe64cdb2851e36ea1c66b40b5b2818fc3a1bc7e477acf",
+      "size": 5652,
+      "modified": "2026-02-24T09:25:35.710383"
+    },
+    "docs\\guides\\PASSO_A_PASSO_NOVA_EMPRESA.md": {
+      "hash": "ce18c4a66e0d3ccc48eb255ce8d47bb9545b457c0f81b06030be26f41e09d9f8",
+      "size": 8334,
+      "modified": "2026-02-23T09:37:27.653530"
+    },
+    "docs\\guides\\README.md": {
+      "hash": "a28d000c4123f500f6f9217d1386f2a9702bcf1a783d99b8b480742fa8c66e0d",
+      "size": 1499,
+      "modified": "2026-03-04T09:39:21.116904"
+    },
+    "docs\\implementation\\AIOPS_IMPLEMENTADO.md": {
+      "hash": "2dd786a23f8ababaa14bebf02f67e1de952bfed01e19327baca8b34d65c581dd",
+      "size": 9130,
+      "modified": "2026-02-18T13:53:39.781697"
+    },
+    "docs\\implementation\\AUTO_REMEDIACAO_IMPLEMENTADA.md": {
+      "hash": "49f9f24180f5ca76776ad5417fed037eeb9009f67ff5c095e0d336378383f684",
+      "size": 8037,
+      "modified": "2026-02-25T16:11:22.424394"
+    },
+    "docs\\implementation\\BIBLIOTECA_SENSORES_IMPLEMENTADA.md": {
+      "hash": "59bbc0f67b5a1515c76fe0c053ad8fedbeeacbf7a1b817c41f801216f2f68421",
+      "size": 13309,
+      "modified": "2026-02-26T17:08:35.066597"
+    },
+    "docs\\implementation\\CONFIGURACOES_IMPLEMENTADAS.md": {
+      "hash": "c783779dc963464702e152159a66255272b8c1c0f8133de99df035c1132b6b2c",
+      "size": 10910,
+      "modified": "2026-02-13T10:27:47.359151"
+    },
+    "docs\\implementation\\CORRECOES_FINAIS_IMPLEMENTADAS.md": {
+      "hash": "ebf2ab8964a1ca385a9b9548738638142693c6ebe3e526d6992cb50cdb48f548",
+      "size": 8287,
+      "modified": "2026-02-20T09:09:05.355737"
+    },
+    "docs\\implementation\\DESCOBERTA_SERVICOS_TEMPO_REAL.md": {
+      "hash": "048448558c124b7665f8e3be89bf49409209640477ca21538b9e6021001462ba",
+      "size": 5754,
+      "modified": "2026-02-18T15:57:31.875220"
+    },
+    "docs\\implementation\\FERRAMENTAS_ADMIN_IMPLEMENTADAS.md": {
+      "hash": "e5a132003fd68f90497ae707cfb7446a8ae55e20e28a3a4d9e14cd73f0761e71",
+      "size": 9350,
+      "modified": "2026-02-18T12:52:00.192614"
+    },
+    "docs\\implementation\\IMPLEMENTACAO_AGRUPAMENTO_SENSORES.md": {
+      "hash": "65498f73a8749ed76f9289c209eae6a05a9f05199ce6eb3cdca0d31ddda6c7f7",
+      "size": 10622,
+      "modified": "2026-02-19T13:44:29.337087"
+    },
+    "docs\\implementation\\IMPLEMENTACAO_COMPLETA.md": {
+      "hash": "b2c59c27b551f08a9392ddc67ea98ba8efda73d76b74416a2f5d89ba7b47eff1",
+      "size": 9364,
+      "modified": "2026-02-13T09:46:29.439730"
+    },
+    "docs\\implementation\\IMPLEMENTACAO_COMPLETA_GRUPOS_AZURE.md": {
+      "hash": "5f6a2bf3f416a859bdefd4a132ecea8cf311abc955b969ca70a55b0a1658c282",
+      "size": 1979,
+      "modified": "2026-02-27T09:37:20.620873"
+    },
+    "docs\\implementation\\IMPLEMENTACAO_DASHBOARD_NOC_AIOPS.md": {
+      "hash": "1647ac5bbad83d7850c8a70a4ff54c6d213580a178a58096ee0796a1c8c1e596",
+      "size": 10079,
+      "modified": "2026-02-19T16:36:49.958389"
+    },
+    "docs\\implementation\\IMPLEMENTACAO_NOC_SNMP_COMPLETA.md": {
+      "hash": "4502784679150395621d0a37fd54439c78088de3223837d65a8cb65096a6e93b",
+      "size": 13582,
+      "modified": "2026-02-19T16:53:57.576564"
+    },
+    "docs\\implementation\\INCIDENTES_IMPLEMENTADO.md": {
+      "hash": "80677e243109ca95a36e100577dc5e8e719b666f27002386aafaeb5dc6f74bd3",
+      "size": 11450,
+      "modified": "2026-02-13T11:20:40.966294"
+    },
+    "docs\\implementation\\INSTALADORES_MSI_CRIADOS.md": {
+      "hash": "e39109f828e72096cced3d8a9e4c28e949f459c375fd8f95ef53686ad1be27f1",
+      "size": 8608,
+      "modified": "2026-03-03T16:26:00.888951"
+    },
+    "docs\\implementation\\INTERFACE_AIOPS_IMPLEMENTADA.md": {
+      "hash": "e9ba6752668ff09481aff250a92137e322b97d6e81b0549a8457e74c0da6524a",
+      "size": 9699,
+      "modified": "2026-02-18T14:15:38.324890"
+    },
+    "docs\\implementation\\JANELAS_MANUTENCAO_IMPLEMENTADO.md": {
+      "hash": "7dbec14f91ce25837165a66c596f55a6bbc208f0e7cc82124824eff9b7dafd58",
+      "size": 14858,
+      "modified": "2026-02-13T13:31:59.264635"
+    },
+    "docs\\implementation\\KNOWLEDGE_BASE_IMPLEMENTADO_COMPLETO.md": {
+      "hash": "0125b9d33637268a764ad486fa967f53132478589fcb05ddf3fad26592fa1906",
+      "size": 14306,
+      "modified": "2026-02-25T11:31:03.024496"
+    },
+    "docs\\implementation\\LOGO_E_TIMEZONE_IMPLEMENTADOS.md": {
+      "hash": "e4e726aa7b677af46e047e7188af0ece52257f945e376cc0771c381c0a74b904",
+      "size": 5494,
+      "modified": "2026-02-25T09:58:52.217923"
+    },
+    "docs\\implementation\\MODERNIZACAO_APLICADA_SUCESSO.md": {
+      "hash": "0a0ce0a63c459bdb733222ae6bfbe3dcdf3d65e0c179a6f7a3c0416709976d8e",
+      "size": 7631,
+      "modified": "2026-03-02T10:05:39.933679"
+    },
+    "docs\\implementation\\MODERNIZACAO_IMPLEMENTADA.md": {
+      "hash": "ea48757bb08c0245dca6fa618ee0c1f97b5a45b8f90c72e8de40e664b552cc11",
+      "size": 10030,
+      "modified": "2026-03-02T09:29:17.179155"
+    },
+    "docs\\implementation\\MONITORAMENTO_ATIVOS_REDE_IMPLEMENTADO.md": {
+      "hash": "d2ac0c184f8085995ba1a41c7aadb7d67ebf2cd97c38c766624c645e723bfd73",
+      "size": 7916,
+      "modified": "2026-02-25T09:17:27.041169"
+    },
+    "docs\\implementation\\NAVEGACAO_SENSOR_IMPLEMENTADA.md": {
+      "hash": "f805b5b61fb5143f4043f560e146e6813b853db8a0844ecdc34af97910f7fe37",
+      "size": 6063,
+      "modified": "2026-02-25T09:03:12.515585"
+    },
+    "docs\\implementation\\NOTIFICACAO_EMAIL_IMPLEMENTADA.md": {
+      "hash": "a4cc2c3988de240e18f2e14a5afb28e6ef04e89c807f8ed23084080485175f9f",
+      "size": 7805,
+      "modified": "2026-02-18T12:44:33.963697"
+    },
+    "docs\\implementation\\NOTIFICACOES_AUTOMATICAS_IMPLEMENTADAS.md": {
+      "hash": "e3e219c3782d695ae10cb79a132650b7bc99c3db8e6ad53b9176f6e440c02896",
+      "size": 6640,
+      "modified": "2026-02-25T12:32:18.292162"
+    },
+    "docs\\implementation\\OLLAMA_DOCKER_INSTALADO.md": {
+      "hash": "22ca82054d3ebc316267efee2013fc546dac483265769524fae499732a49c21a",
+      "size": 3722,
+      "modified": "2026-02-25T11:50:35.519018"
+    },
+    "docs\\implementation\\PROBE_AUTO_START_IMPLEMENTADO.md": {
+      "hash": "59e184421ee67faf897318fb855899d8d257b2a05937efabc755fa2c5b2a2aad",
+      "size": 10037,
+      "modified": "2026-02-24T10:30:29.697535"
+    },
+    "docs\\implementation\\README.md": {
+      "hash": "a252edfaf23fc342ed77425d6b0404d3ef0d60bd793f5ae40fdb601e4b89844c",
+      "size": 2463,
+      "modified": "2026-03-04T09:46:31.535442"
+    },
+    "docs\\implementation\\RELATORIOS_PERSONALIZADOS_IMPLEMENTADO.md": {
+      "hash": "ca483163b441b548c7e4f444d9101c292c4e755208095947f796f3ad5ecf481c",
+      "size": 9851,
+      "modified": "2026-02-26T16:24:14.354606"
+    },
+    "docs\\implementation\\SENSOR_DOCKER_IMPLEMENTADO.md": {
+      "hash": "80e10d68e89d8ca2857cf271e5ccfdd06a75ff2edad923bb1b49da512503f71f",
+      "size": 6392,
+      "modified": "2026-02-19T12:15:21.014696"
+    },
+    "docs\\implementation\\SISTEMA_GRUPOS_HIERARQUICOS_IMPLEMENTADO.md": {
+      "hash": "4836f1ad1796304d313c93d540b7e4f3e914dfb6fa8a39e662e050cd8b3906ee",
+      "size": 5261,
+      "modified": "2026-02-27T10:24:55.737095"
+    },
+    "docs\\implementation\\SISTEMA_KNOWLEDGE_BASE_IMPLEMENTADO.md": {
+      "hash": "0053c2fe477c20e368604286ade100e63de30208dc8966a7dd22416adab4104f",
+      "size": 13349,
+      "modified": "2026-02-25T10:50:33.545175"
+    },
+    "docs\\implementation\\SISTEMA_RECONHECIMENTO_IMPLEMENTADO.md": {
+      "hash": "f3a8623c61e495e4d023608a4430ee6bd9846a85469c2bb0784ea8b5661eb759",
+      "size": 8850,
+      "modified": "2026-02-13T11:05:46.226830"
+    },
+    "docs\\implementation\\TEMA_MODERNO_IMPLEMENTADO.md": {
+      "hash": "fc2205b5f71362842b293c12b1c588b4172a479e2f2510fe268bd1981b905ef2",
+      "size": 9562,
+      "modified": "2026-02-18T15:06:05.999611"
+    },
+    "docs\\implementation\\TESTE_CONEXAO_IMPLEMENTADO.md": {
+      "hash": "e0cdd5db84c78d8e31d06b35b0290f9050cacaf9e7f28616a66612a58535d240",
+      "size": 8737,
+      "modified": "2026-02-26T17:09:23.816992"
+    },
+    "docs\\implementation\\THRESHOLDS_TEMPORAIS_IMPLEMENTADO.md": {
+      "hash": "aab7333659b6eb47ca65ab4949e8cc2970af8bfbb242d10f9afff203615437e6",
+      "size": 7783,
+      "modified": "2026-02-25T15:38:41.941751"
+    },
+    "docs\\reference\\AGRUPAMENTO_SENSORES_DESIGN.md": {
+      "hash": "b372e13882d1724f4fa2d29fdc8423e6ba4b76c764e55f635ac17b51177444a2",
+      "size": 9766,
+      "modified": "2026-02-19T13:43:43.715484"
+    },
+    "docs\\reference\\BASE_CONHECIMENTO_32_ITENS.md": {
+      "hash": "6e19355bd74cdb1ad72bb600fc6cb33205fb1eeb49b36af252a9500576479b87",
+      "size": 6691,
+      "modified": "2026-02-26T11:21:47.813012"
+    },
+    "docs\\reference\\BASE_CONHECIMENTO_80_ITENS_COMPLETA.md": {
+      "hash": "6b210c18aa8472490c151ffe929955fb707dbc43fce82ef440321503a5c0eb8e",
+      "size": 3184,
+      "modified": "2026-02-26T15:16:29.798187"
+    },
+    "docs\\reference\\INDICE_BIBLIOTECA_SENSORES.md": {
+      "hash": "ea87a8de804d4bba35f7cfdb536e9e497a01abe5933ce98cef034fb86dc4496d",
+      "size": 5818,
+      "modified": "2026-02-26T17:25:20.910018"
+    },
+    "docs\\reference\\INDICE_DOCUMENTACAO_AIOPS.md": {
+      "hash": "ecae45a0bc60b072f83a4b9bc0e8cb08b3633a227611648355113f0080818f6d",
+      "size": 7877,
+      "modified": "2026-02-26T15:43:19.590124"
+    },
+    "docs\\reference\\INDICE_INSTALADORES.md": {
+      "hash": "555cfadbf99e9564d125bccbd5a07b3639596dae8c904d9e4c32aea440d81597",
+      "size": 5771,
+      "modified": "2026-02-24T09:25:10.151002"
+    },
+    "docs\\reference\\INDICE_INSTALADORES_ATUALIZADO.md": {
+      "hash": "eca13078d6c8dddcd16057312d7a7b8ba3368eb9887411611a09666f4996ee77",
+      "size": 6319,
+      "modified": "2026-02-24T10:32:37.641212"
+    },
+    "docs\\reference\\INTEGRACOES_TOPDESK_GLPI.md": {
+      "hash": "f4e2a836a7aed727e55008cd1d4bff898b54cfc3873c3de062224b56d447fb9f",
+      "size": 5954,
+      "modified": "2026-02-18T12:30:44.378871"
+    },
+    "docs\\reference\\NOVAS_FUNCIONALIDADES.md": {
+      "hash": "0a6b243053e73a302079af7ec1f0548f8ed0ffdecb40f8b941c9606f5231892f",
+      "size": 9378,
+      "modified": "2026-02-13T10:10:30.051701"
+    },
+    "docs\\reference\\PLANO_MODERNIZACAO_SISTEMA.md": {
+      "hash": "b586b250dad8c8c23da0af3874da89a4d9a1239bf56b7956d9498032e4556e03",
+      "size": 15617,
+      "modified": "2026-03-02T09:23:04.311110"
+    },
+    "docs\\reference\\PROJECT_SUMMARY.md": {
+      "hash": "9b73cdc6f216d75885f02e8e7f8405f386113f6e3183f965c6341a77c132774d",
+      "size": 10336,
+      "modified": "2026-02-11T11:01:38.673105"
+    },
+    "docs\\reference\\README.md": {
+      "hash": "e8296548288b651ad6faeb66670de0b073658f27f9f926b6db7b57a9098e653a",
+      "size": 1428,
+      "modified": "2026-03-04T09:46:31.536847"
+    },
+    "docs\\reference\\RELATORIOS_EXECUTIVOS.md": {
+      "hash": "2095c526d231ba19fc4db345c625b60e278fbfc0f4ade77d77be727f25999085",
+      "size": 10483,
+      "modified": "2026-02-13T10:51:18.015320"
+    },
+    "docs\\reference\\RELATORIOS_PERSONALIZADOS_DESIGN.md": {
+      "hash": "37cb20107bf796cbc9628bd79b063d2ad06649a4ef3aa47754a3756fbcec565d",
+      "size": 8520,
+      "modified": "2026-02-26T16:14:15.803150"
+    },
+    "docs\\reference\\TEMPLATES_EXPANDIDOS.md": {
+      "hash": "e036db4354d9a9a0a6603e584d28c926b10a3786545dff8919256fb6aa8fbee9",
+      "size": 5171,
+      "modified": "2026-02-19T09:21:41.831793"
+    },
+    "docs\\screenshots\\ADICIONAR_SCREENSHOTS_GIT.md": {
+      "hash": "bc25b5c6d2392d437ebe478b34cc4cf7bdb97519e61909671812a739b5a4de50",
+      "size": 6514,
+      "modified": "2026-03-04T09:26:24.602779"
+    },
+    "docs\\screenshots\\CAPTURAR_SCREENSHOTS_AGORA.md": {
+      "hash": "e070faaf779f233aa27bef0b75b2de9191fd1a62263f197f28094587db69b046",
+      "size": 1848,
+      "modified": "2026-03-04T09:32:36.717267"
+    },
+    "docs\\screenshots\\README.md": {
+      "hash": "08582b0fc28c2dff924f5469e49a98af8f8cdf3904edc9724d95fbe6fe87be8d",
+      "size": 3526,
+      "modified": "2026-03-04T09:25:56.729493"
+    },
+    "docs\\troubleshooting\\DIAGNOSTICO_COMPLETO.md": {
+      "hash": "9822a4ef11b151616b5a8d6d35874f5e2f17ccd04ab9ea0958aa3d76d44c2d90",
+      "size": 6333,
+      "modified": "2026-02-25T16:03:11.301754"
+    },
+    "docs\\troubleshooting\\DIAGNOSTICO_REMOTO.md": {
+      "hash": "2c018a247b61a20d29bf49458e3d8260d2f905836cff71ab62545b7eeebaa600",
+      "size": 4242,
+      "modified": "2026-02-13T15:26:15.203798"
+    },
+    "docs\\troubleshooting\\DIAGNOSTICO_SENSOR_DOCKER.md": {
+      "hash": "ab6a93eef233c80fce10ffe7a194502a53b0f365379e7c03e46fcd275d3eb933",
+      "size": 6408,
+      "modified": "2026-02-19T12:33:00.495936"
+    },
+    "docs\\troubleshooting\\INSTALADOR_FECHA_MESMO_ADMIN.md": {
+      "hash": "e764f515ad2eb4f17fb2d2512b1080aa5ea0d296f93d617477c50c62480906cf",
+      "size": 6758,
+      "modified": "2026-02-24T09:28:37.381569"
+    },
+    "docs\\troubleshooting\\INSTALADOR_FECHOU_JANELA.md": {
+      "hash": "379cb38b9405ee2b1916b7a246c4ec986d55a8467ef0fcb0c8874580ab7be8ef",
+      "size": 3007,
+      "modified": "2026-02-24T09:22:55.708355"
+    },
+    "docs\\troubleshooting\\PROBLEMA_URL_PROBE.md": {
+      "hash": "f561584f002a6ce4706c315d9909541aefeb7cb26e4fc8851aa6dd2b554148b8",
+      "size": 3637,
+      "modified": "2026-02-18T15:34:30.658900"
+    },
+    "docs\\troubleshooting\\README.md": {
+      "hash": "0adecae1e5bb2e430e2e77b487ac9c9ac49f5b7f9aecf3d81e7d5e4d671b7612",
+      "size": 634,
+      "modified": "2026-03-04T09:39:21.111377"
+    },
+    "docs\\troubleshooting\\RESOLVER_BANCO_DADOS.md": {
+      "hash": "63b269c56450c6bac1089e175dd02141c5689d430d04c7f545b712bbc0208e03",
+      "size": 1399,
+      "modified": "2026-02-26T18:24:02.294437"
+    },
+    "docs\\troubleshooting\\RESTAURAR_INTERFACE.md": {
+      "hash": "154b05f3b2fa6e1bacc7f08915453a9a79471f933690fbce5534d9c998933ff7",
+      "size": 678,
+      "modified": "2026-02-19T16:42:15.160016"
+    },
+    "docs\\troubleshooting\\SOLUCAO_COLETA_REMOTA.md": {
+      "hash": "eb84c7434d443795fb6e2b5345686f1f821218453f339c05d95714f7d2c3a5f4",
+      "size": 5756,
+      "modified": "2026-02-13T15:27:36.674479"
+    },
+    "docs\\troubleshooting\\SOLUCAO_COMPLETA_DOCKER.md": {
+      "hash": "1e77f5f173854ecdc7319cc2c56ee070ad8c9926287cd0bc7b9ec32bffa062ea",
+      "size": 7418,
+      "modified": "2026-02-19T13:25:34.117336"
+    },
+    "docs\\troubleshooting\\SOLUCAO_DASHBOARD_ZERADO.md": {
+      "hash": "d40dd07955db80875aece128c7594a419193a27e1786dcea802bfa4c09b4156f",
+      "size": 2255,
+      "modified": "2026-02-26T15:47:18.023842"
+    },
+    "docs\\troubleshooting\\SOLUCAO_DEFINITIVA_SENSORES_DUPLICADOS.md": {
+      "hash": "1203eecc7cfc0730cdea485e9c03958ae18b4452b0f8818f431e9ec9a0006cd7",
+      "size": 5934,
+      "modified": "2026-02-20T09:00:22.188427"
+    },
+    "docs\\troubleshooting\\SOLUCAO_ERRO_400_CATEGORIA.md": {
+      "hash": "0bcdee139baa4222811205de62c376b794f3208660a73b83b02749529ba7fc50",
+      "size": 3491,
+      "modified": "2026-02-25T12:22:05.764233"
+    },
+    "docs\\troubleshooting\\SOLUCAO_ERRO_401_TOPDESK.md": {
+      "hash": "287baaa9ce1027d5c645ee30971b84ce13a02ddfeeaf15816bf6f262227271f1",
+      "size": 8330,
+      "modified": "2026-02-25T12:13:17.433830"
+    },
+    "docs\\troubleshooting\\SOLUCAO_ERRO_INSTALACAO.md": {
+      "hash": "86ef954761e7a7a20b55be94a4f9643eec4cc9b64e02bf50b7888c08ba70799b",
+      "size": 4446,
+      "modified": "2026-02-13T14:57:57.407924"
+    },
+    "docs\\troubleshooting\\SOLUCAO_FINAL_BIBLIOTECA.md": {
+      "hash": "f0795ff23d2520f9342e055f79442b89dc3f70933e6a85f9c2fcb8ac9f1c2d8f",
+      "size": 2662,
+      "modified": "2026-02-26T18:19:51.097262"
+    },
+    "docs\\troubleshooting\\SOLUCAO_FINAL_COMPLETA.md": {
+      "hash": "aff8d8b193827299f56b44c1d34a202e0745689c868722bf9341b9da905d5a32",
+      "size": 6461,
+      "modified": "2026-02-20T10:15:04.401989"
+    },
+    "docs\\troubleshooting\\SOLUCAO_FINAL_NOTIFICACOES.md": {
+      "hash": "38db23754c404ed600a0d88fcc3e269c8c7f16f1acbad2cf3f0eada579a82100",
+      "size": 4234,
+      "modified": "2026-02-25T14:38:08.809130"
+    },
+    "docs\\troubleshooting\\SOLUCAO_FINAL_PROBE_INCIDENTES.md": {
+      "hash": "9699f8dc553c408d8ffc457228388e28b5e1bda78eae18c228b4e4045b15d91a",
+      "size": 7227,
+      "modified": "2026-02-26T12:30:18.785531"
+    },
+    "docs\\troubleshooting\\SOLUCAO_FINAL_SERVICOS.md": {
+      "hash": "912702eeb2f4d3ebf8664534b043933f763e758fa4ede5846d6b8f3bfbf8257d",
+      "size": 2531,
+      "modified": "2026-02-18T16:19:24.434296"
+    },
+    "docs\\troubleshooting\\SOLUCAO_FRONTEND_ATUALIZADO.md": {
+      "hash": "f37d94f45788504d0990735bf3b0a6bad4b3a36bf5d0c40c6059ba8de95ca8d8",
+      "size": 3995,
+      "modified": "2026-02-19T11:35:26.441679"
+    },
+    "docs\\troubleshooting\\SOLUCAO_INTERFACE_RESETADA.md": {
+      "hash": "515f8db5dc2d4d8416d61516c0cc93c5648f3f58b9efdb1f4c13ec6468edb3f7",
+      "size": 4899,
+      "modified": "2026-02-19T16:46:03.699850"
+    },
+    "docs\\troubleshooting\\SOLUCAO_NOC_ZERADO_FINAL.md": {
+      "hash": "fe704e167487ef7928a8b82b02be9b72a9175e3a825db12a5495622ca3d573bb",
+      "size": 6661,
+      "modified": "2026-03-02T15:58:38.860574"
+    },
+    "docs\\troubleshooting\\SOLUCAO_PROBE_401_UNAUTHORIZED.md": {
+      "hash": "7e485f4e2656b788ea17e82f347f1d760d32ff77eb24dfbea8bae687bd549ea1",
+      "size": 4398,
+      "modified": "2026-02-24T13:32:55.680136"
+    },
+    "docs\\troubleshooting\\SOLUCAO_PSYCOPG2.md": {
+      "hash": "197c91532fb88d1537c32c13a7d3cc0ed706d74a03fd6b4dcc0c2b7d3ef0511a",
+      "size": 1333,
+      "modified": "2026-02-26T18:14:46.121823"
+    },
+    "docs\\troubleshooting\\SOLUCAO_RAPIDA.md": {
+      "hash": "405bae93a314f4aa64d5cf0fbd7d3df403e5bbefeea97ff71b22f7d011cd1f36",
+      "size": 2073,
+      "modified": "2026-02-11T14:32:18.700159"
+    },
+    "docs\\troubleshooting\\SOLUCAO_SENSORES_DESCONHECIDOS.md": {
+      "hash": "b3c8f770291520e4dc4d65733d60385d2195105d8143a96a74700e2e6274d464",
+      "size": 5283,
+      "modified": "2026-02-20T10:57:39.617022"
+    },
+    "docs\\troubleshooting\\SOLUCAO_SENSORES_SNMP_REMOTO.md": {
+      "hash": "5310f5065d6eab4a0efe47fc3f7f2cc7797b1e9abc86ba6e0a9820ead41fd39e",
+      "size": 9176,
+      "modified": "2026-02-13T14:31:43.207899"
+    },
+    "docs\\troubleshooting\\SOLUCAO_TENANT_ERRADO.md": {
+      "hash": "3aeccc4bc1da32af1555d8791b3462220214699ea76f2a70fe2ad152077ee428",
+      "size": 4749,
+      "modified": "2026-02-24T13:51:35.151853"
+    },
+    "docs\\troubleshooting\\SOLUCAO_URGENTE_INSTALADOR.md": {
+      "hash": "61677a35f3bbe739b25f3da31d7d78755bc3f4709ed78fa8495e33681cac580e",
+      "size": 3754,
+      "modified": "2026-02-24T09:46:00.369350"
+    },
+    "docs\\tutorials\\COMANDOS_DOCKER_CORRETOS.md": {
+      "hash": "f22c70e88d526f33bd1a7c2b80f96107968f2180eb22cda8452b41a74c60905c",
+      "size": 4339,
+      "modified": "2026-02-19T16:44:42.528237"
+    },
+    "docs\\tutorials\\COMANDOS_RAPIDOS.md": {
+      "hash": "08dcd8a200ca93a62e0d959461f4881bd2b9a2ec8961c2aaa6e7c7955e313790",
+      "size": 2831,
+      "modified": "2026-02-19T12:38:41.955553"
+    },
+    "docs\\tutorials\\COMANDOS_TOPDESK.md": {
+      "hash": "79921d47b89b2ba283f5c4c641f5747564cb41f1ae59be03efba85cfdf276740",
+      "size": 4853,
+      "modified": "2026-02-25T12:03:30.786105"
+    },
+    "docs\\tutorials\\COMO_INSTALAR_NOVA_PROBE.md": {
+      "hash": "51501cd1e19c4fbec6521fd6ad102bd482b62d0e0372d5fd958da71942725d83",
+      "size": 11124,
+      "modified": "2026-02-24T10:29:38.285007"
+    },
+    "docs\\tutorials\\CONFIGURAR_LOGO_CORUJA.md": {
+      "hash": "3e00db7338c0f8d195ae547d2fc969694f720121d7f709ba90acd871739e8eea",
+      "size": 2237,
+      "modified": "2026-02-25T09:43:21.798917"
+    },
+    "docs\\tutorials\\EXEMPLOS_PRATICOS_AIOPS.md": {
+      "hash": "21a72998cd9a3f15f0cb054d78b73fdaff69faaa9f0c322d7596d109fd56be37",
+      "size": 13965,
+      "modified": "2026-02-26T15:42:00.068703"
+    },
+    "docs\\tutorials\\GUIA_ATUALIZACAO_SONDA.md": {
+      "hash": "34473d979afa1884ef0f24f55a5cb609d6cabcd3a170fd5b3435fa2e5a58370a",
+      "size": 5616,
+      "modified": "2026-02-13T14:51:22.703712"
+    },
+    "docs\\tutorials\\GUIA_DESINSTALACAO.md": {
+      "hash": "84dd60f43fcd3446e37bab448c216fdf90b756eaaa45f7b9d4aa2ee99fcadcc7",
+      "size": 9436,
+      "modified": "2026-02-24T11:37:18.249220"
+    },
+    "docs\\tutorials\\GUIA_MODERNIZACAO_COMPLETO.md": {
+      "hash": "8dcc85c0d2facf7f54146d0061f769a0bf6145cfecbf23212ea34483a9a94ec7",
+      "size": 9727,
+      "modified": "2026-03-02T09:27:47.582839"
+    },
+    "docs\\tutorials\\GUIA_RAPIDO_AUTO_START.md": {
+      "hash": "02a683fe34a72eb7c17c15d55387aa67e1d8882259337b81889af07b4a320514",
+      "size": 1593,
+      "modified": "2026-02-24T10:32:05.342584"
+    },
+    "docs\\tutorials\\GUIA_RAPIDO_GRUPOS.md": {
+      "hash": "cbb89e56bc01f0faa9a4106ffc260c7307f7978b429279807314d3b1dba7f973",
+      "size": 2624,
+      "modified": "2026-02-27T10:31:48.745660"
+    },
+    "docs\\tutorials\\GUIA_REINSTALACAO_LIMPA.md": {
+      "hash": "ea8ba541f44cb73ad656c17b000ea6e3d8b58d87b594d8d46fa50cbddb1bf5e4",
+      "size": 4435,
+      "modified": "2026-02-20T11:23:58.218577"
+    },
+    "docs\\tutorials\\GUIA_URL_PROBE.md": {
+      "hash": "640690871ff3faf11b22f242a635bb8faf8b37769bdb41b08d8e320e77eef387",
+      "size": 6771,
+      "modified": "2026-02-18T15:39:40.058110"
+    },
+    "docs\\tutorials\\GUIA_VISUAL_LOGO_CORUJA.md": {
+      "hash": "433a86879c10a911e93116225ba20f5b467262ecf9291dbb47342d2a1e7255e6",
+      "size": 7650,
+      "modified": "2026-02-25T09:59:40.740462"
+    },
+    "docs\\tutorials\\GUIA_VISUAL_RECONHECIMENTO.md": {
+      "hash": "a8f1e736e1f32620011b060620d61e7f991f44c0043aa0fdf9d46f047d376453",
+      "size": 12186,
+      "modified": "2026-02-13T11:06:57.071814"
+    },
+    "docs\\tutorials\\INSTALAR_OLLAMA_WINDOWS.md": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-25T11:38:34.053321"
+    },
+    "docs\\tutorials\\LEIA_ISTO_PRIMEIRO.md": {
+      "hash": "5a261c0f722e602dc130c7023d2a25e6ba25d665ba8dfec61f6641f1181a4392",
+      "size": 3036,
+      "modified": "2026-02-26T17:25:38.250896"
+    },
+    "docs\\tutorials\\LEIA_ISTO_TOPDESK.md": {
+      "hash": "421708d83bf78befdd0b41e63d2a272f4fb7105e08716366d687690111260e8f",
+      "size": 3564,
+      "modified": "2026-02-25T12:03:07.373574"
+    },
+    "docs\\tutorials\\README.md": {
+      "hash": "660614b872c6076cd18cb27e77cb3ccf001b242e21e77dac3f492710dd08d32e",
+      "size": 1545,
+      "modified": "2026-03-04T09:46:31.532929"
+    },
+    "docs\\tutorials\\WMI_COMPARACAO_VISUAL.md": {
+      "hash": "15003b6a7cc913c2551541d2510ef0ec9be451da5c1b870ddf13ab35f983c0cb",
+      "size": 15105,
+      "modified": "2026-02-13T13:58:21.583175"
+    },
+    "docs\\tutorials\\WMI_REMOTO_RESUMO.md": {
+      "hash": "c6b2a76115d82319e4d6bb70240ad17ce77d10e598b192b347a730d6870676d2",
+      "size": 5829,
+      "modified": "2026-02-13T13:57:38.241292"
+    },
+    "docs\\changelog\\02MAR\\AUTO_DESCOBERTA_IP_IMPLEMENTADA_02MAR.md": {
+      "hash": "717f2bdb14d5f65def22dd3540e13f670c821d18b64a548c6565f66a4abbfbce",
+      "size": 3781,
+      "modified": "2026-03-02T11:52:09.237692"
+    },
+    "docs\\changelog\\02MAR\\CARDS_AGREGADORES_AMPLIADOS_02MAR.md": {
+      "hash": "566d1a811626d7c5d16bcb034e50a2703ef666e62df64bea2fb41e3ae956ea93",
+      "size": 5585,
+      "modified": "2026-03-02T11:18:42.687513"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_API_METRICAS_02MAR.md": {
+      "hash": "095ff9f730e4f1c8d177919a91e4d6ba8665299ab27f3e2f6e7cc8d903a0f592",
+      "size": 3195,
+      "modified": "2026-03-02T12:34:20.655226"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_BARRAS_METRICAS_02MAR.md": {
+      "hash": "6e726ef3d17290e5a6ece6619a7290b283be0c357a11af52d803f4f716d0508a",
+      "size": 6356,
+      "modified": "2026-03-02T14:51:20.719642"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_CARD_METRICAS_HORIZONTAL_02MAR.md": {
+      "hash": "58dde206a45c2d0dd599bd4327ba2cd6965e656f3c8a94703596b38f76506b4c",
+      "size": 5263,
+      "modified": "2026-03-02T16:12:52.678752"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_COMPLETA_CARDS_02MAR.md": {
+      "hash": "893631ac55be360c1bca293ea6bd6e4f2d02a1ebee9dfee767ec338713dcf433",
+      "size": 6831,
+      "modified": "2026-03-02T10:40:16.323542"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_CORES_CARDS_02MAR.md": {
+      "hash": "1e6577eb3d5035b210cec89c63ddae3dbf4ccf6afb23b6c75c0349eed4cf27b8",
+      "size": 3119,
+      "modified": "2026-03-02T10:29:47.201172"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_CORES_INCIDENTES_02MAR.md": {
+      "hash": "72ae8d4f779b72f49afe5c1995e7918dfb9dd7355f877c9694bd46096c7b9aed",
+      "size": 3975,
+      "modified": "2026-03-02T12:18:15.074713"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_DASHBOARD_INCIDENTES_02MAR.md": {
+      "hash": "2d33fe10eb255be01148ca20444484b7b7cf26dbe34f0d9a2ca4fec8f6febe86",
+      "size": 4728,
+      "modified": "2026-03-02T11:09:21.011407"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_DEFINITIVA_CARDS_02MAR.md": {
+      "hash": "5acb049d913fb7addc26ba2604768a788222081896e9cd7789cce77000e3563f",
+      "size": 6903,
+      "modified": "2026-03-02T11:28:18.467788"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_FINAL_CARDS_COMPLETA_02MAR.md": {
+      "hash": "f556e9c8a56b21270ceaf5a099943b667feb5633478c57219af298a3f08d53a7",
+      "size": 5904,
+      "modified": "2026-03-02T10:48:22.013320"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_FINAL_METRICAS_02MAR.md": {
+      "hash": "80803869caa8ce80c670c599346a603d3700971e292898687be94a7fb9ff355f",
+      "size": 2910,
+      "modified": "2026-03-02T13:01:01.015553"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_FINAL_METRICAS_ROUTERS_02MAR.md": {
+      "hash": "e320ae8d58402a949b090284ca7cad6abf0fe956d3faf6f11aa877248bc46cb2",
+      "size": 4201,
+      "modified": "2026-03-02T13:14:26.591219"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_LAYOUT_AGREGADORES_02MAR.md": {
+      "hash": "5df218436c70fed3b928f3557f6e9d3565a8de71901ac660b2e4fffbe32f74a9",
+      "size": 5805,
+      "modified": "2026-03-02T11:13:03.629826"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_LAYOUT_CARDS_02MAR.md": {
+      "hash": "f1f46e54de1ec10c9ff95d4ee61c1dc302db152aac0b7d43a7dcbae7fb62ead5",
+      "size": 7750,
+      "modified": "2026-03-02T14:56:12.555809"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_LAYOUT_NOC_FINAL_02MAR.md": {
+      "hash": "1847cc864a97e373e8b1b5bcd43973bd8e598683c6af7560a175668aac770134",
+      "size": 8073,
+      "modified": "2026-03-02T15:43:55.451703"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_NAVEGACAO_INCIDENTES_02MAR.md": {
+      "hash": "46278ebdffe28694108478d4b9590400d5133c6f315f3fa01d8de19889d40409",
+      "size": 3509,
+      "modified": "2026-03-02T12:29:22.522491"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_NOC_ZERADO_02MAR.md": {
+      "hash": "374ae1a207e67282a58b6b3cb99592236522269b386b722da11eb99dc1608b3d",
+      "size": 6443,
+      "modified": "2026-03-02T14:45:28.193651"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_TEMA_APLICADA_02MAR.md": {
+      "hash": "247d5e5990342cef4ea9616732042b33cc62393065ec4bfef3bb73309edd44aa",
+      "size": 5442,
+      "modified": "2026-03-02T10:25:40.142485"
+    },
+    "docs\\changelog\\02MAR\\CORRECAO_TEXTO_VISIVEL_METRICAS_02MAR.md": {
+      "hash": "6d471f6d147d40c4a5989bd6fb0fac4f3b27ee50068999e6af4f8a9f06f74a06",
+      "size": 4844,
+      "modified": "2026-03-02T16:15:05.848106"
+    },
+    "docs\\changelog\\02MAR\\CORRECOES_FINAIS_02MAR.md": {
+      "hash": "f412720792dc7bb4642933ca971b1b3baf062535f98aa224241b1ad683b919b8",
+      "size": 3887,
+      "modified": "2026-03-02T12:13:18.272891"
+    },
+    "docs\\changelog\\02MAR\\CORRECOES_URGENTES_MULTIPLAS_02MAR.md": {
+      "hash": "24f6938b12c00f610710dc1fe11de1800c0cb0e2b7f02275c52fc6cf967b7692",
+      "size": 9671,
+      "modified": "2026-03-02T16:02:45.099927"
+    },
+    "docs\\changelog\\02MAR\\INSTRUCOES_CORES_INCIDENTES_02MAR.md": {
+      "hash": "eacfea3dd97d6c6432590375fee1a8d483ebedc8958d0ed6af91d4297ba3c90c",
+      "size": 3526,
+      "modified": "2026-03-02T12:21:37.357803"
+    },
+    "docs\\changelog\\02MAR\\INSTRUCOES_FINAIS_CORRECOES_02MAR.md": {
+      "hash": "db25dbffaaa2ab4694d112fd627141b24e45a96029ba4877b670ccc655593e0b",
+      "size": 6163,
+      "modified": "2026-03-02T15:46:22.029879"
+    },
+    "docs\\changelog\\02MAR\\RESUMO_CORRECOES_APLICADAS_02MAR.md": {
+      "hash": "a43339021e8f78427463c1d9ffccd45e6a55fc4edb3544c928eb255ad7486914",
+      "size": 1792,
+      "modified": "2026-03-02T15:46:34.124329"
+    },
+    "docs\\changelog\\02MAR\\RESUMO_CORRECOES_MULTIPLAS_02MAR.md": {
+      "hash": "595e74074d05f702f672eeca733f2d6ef0bac3ca1e2dcb0bad6bd69ef7b22435",
+      "size": 5163,
+      "modified": "2026-03-02T16:04:29.872152"
+    },
+    "docs\\changelog\\02MAR\\RESUMO_FINAL_CORES_INCIDENTES_02MAR.md": {
+      "hash": "a606a5e4c3686524376c58ba24e87c0008e6808533742c8c888f1cbff15cd655",
+      "size": 5973,
+      "modified": "2026-03-02T12:26:38.177772"
+    },
+    "docs\\changelog\\02MAR\\RESUMO_FINAL_SESSAO_02MAR.md": {
+      "hash": "561102a13b7bec25cf75ecec04cc1b47bbb61ad9e69c6fee8b3f9306f760bea4",
+      "size": 5659,
+      "modified": "2026-03-02T15:10:18.929034"
+    },
+    "docs\\changelog\\02MAR\\SISTEMA_REINICIADO_SUCESSO_02MAR.md": {
+      "hash": "c709e0ca6194c2a3c7aaee27f7d7c2c28a3792f702e4ae6169a6dc651b86e9d3",
+      "size": 7229,
+      "modified": "2026-03-02T10:16:38.611068"
+    },
+    "docs\\changelog\\02MAR\\SOLUCAO_METRICAS_404_02MAR.md": {
+      "hash": "1ef579ed86a43c05317b050333189b97199b538bfaecf3e2ed55f33b6d395734",
+      "size": 5465,
+      "modified": "2026-03-02T12:52:45.453321"
+    },
+    "docs\\changelog\\02MAR\\STATUS_FINAL_SISTEMA_02MAR.md": {
+      "hash": "a93d64f4513ef3a44cc3694d0256a71383287f16e0101eee7e17b41c94f8a78e",
+      "size": 7905,
+      "modified": "2026-03-02T12:45:19.758442"
+    },
+    "docs\\changelog\\02MAR\\SUCESSO_COMPLETO_02MAR.md": {
+      "hash": "ba34cfb91ce3040aa42deef1b48088f24ca0fa7914409e5fdd8a458d34951606",
+      "size": 4974,
+      "modified": "2026-03-02T12:42:56.817504"
+    },
+    "docs\\changelog\\02MAR\\SUCESSO_CORES_APLICADAS_02MAR.md": {
+      "hash": "3519f59dbabc25074317bb3e07ab2b08a2b191a6b966d105a40dc68d83f91b90",
+      "size": 4500,
+      "modified": "2026-03-02T12:25:42.548682"
+    },
+    "docs\\changelog\\02MAR\\SUCESSO_CORRECAO_METRICAS_02MAR.md": {
+      "hash": "70088c5a05b16b1862ca444894befe85fb8d6c4ebbba82af0ee18bd88c86e3fb",
+      "size": 3646,
+      "modified": "2026-03-02T13:18:02.505466"
+    },
+    "docs\\changelog\\02MAR\\SUCESSO_CORRECAO_NOC_02MAR.md": {
+      "hash": "45454acbbf186b9fa18f0015a2c302ff29de6cce8ad182d4323addbea3f6fdb6",
+      "size": 1981,
+      "modified": "2026-03-02T14:45:43.981344"
+    },
+    "docs\\changelog\\02MAR\\SUCESSO_FINAL_CORRECOES_02MAR.md": {
+      "hash": "a0f5005d018dc49ea5f81ab153856ebadb98f46246f0dc97abe41b08632f3a1a",
+      "size": 2892,
+      "modified": "2026-03-02T15:59:06.966226"
+    },
+    "docs\\changelog\\03MAR\\ANTES_DEPOIS_VISUAL_03MAR.md": {
+      "hash": "f95c2c8897cc2c901052f2f5193f88db59e6e728d3c0b8e0a7ac4f6ec6cac412",
+      "size": 16323,
+      "modified": "2026-03-04T07:47:57.419567"
+    },
+    "docs\\changelog\\03MAR\\APLICAR_AGORA_03MAR.md": {
+      "hash": "a02be3e10b485c8c1bcc324e40721dc405951107540f24eb0da859d99250f383",
+      "size": 1913,
+      "modified": "2026-03-02T16:23:35.158881"
+    },
+    "docs\\changelog\\03MAR\\ATUALIZACAO_GITHUB_03MAR.md": {
+      "hash": "788e4e33fb09f94fa30c58884aa19960cf4feded631c0bedae7d241d027f5ea2",
+      "size": 7516,
+      "modified": "2026-03-03T16:34:53.456987"
+    },
+    "docs\\changelog\\03MAR\\CHECKLIST_CORRECOES_03MAR.md": {
+      "hash": "f951392737aa68ad18a7a97b1ae25b7970915e5964a3fb53f1a5dd282fd7e07c",
+      "size": 4552,
+      "modified": "2026-03-02T16:23:20.631716"
+    },
+    "docs\\changelog\\03MAR\\CORRECAO_CONTRASTE_INPUT_03MAR.md": {
+      "hash": "8d8f80006e47e4f019fa9c2d9407499758a6ba25d2d6015332de721e61ec2cea",
+      "size": 8405,
+      "modified": "2026-03-04T08:02:55.223731"
+    },
+    "docs\\changelog\\03MAR\\CORRECAO_CORES_LOGO_03MAR.md": {
+      "hash": "f7aa98d2a6d439fc50425497a13a0677b347673172251c2e7c1cd475ebde65f9",
+      "size": 10565,
+      "modified": "2026-03-04T07:56:12.874713"
+    },
+    "docs\\changelog\\03MAR\\CORRECAO_LOGIN_03MAR.md": {
+      "hash": "005920d7e6c8cb3014d5e8f2a9fc56ce2f51e392dd8e31b9747b0c47b61cbcce",
+      "size": 7330,
+      "modified": "2026-03-04T07:43:43.335962"
+    },
+    "docs\\changelog\\03MAR\\CORRECAO_LOGIN_ADMIN_03MAR.md": {
+      "hash": "bd13ecdbebe4882e54724041e1722f9f475e9b0f3110e0eb9c10166b2a33a33f",
+      "size": 8053,
+      "modified": "2026-03-04T08:09:18.005777"
+    },
+    "docs\\changelog\\03MAR\\CORRECOES_FINAIS_03MAR.md": {
+      "hash": "4bf151f039156f37fb4ed7031fa774c994f3ee5dbc3f15fd6b8eb7d763b89c68",
+      "size": 6035,
+      "modified": "2026-03-02T16:19:28.848928"
+    },
+    "docs\\changelog\\03MAR\\EXECUTAR_AGORA_03MAR.md": {
+      "hash": "96bdec50ca1f34ef028e4dff1e43ea4941f82a89f3c179718402527c787dd694",
+      "size": 6650,
+      "modified": "2026-03-04T07:46:59.326782"
+    },
+    "docs\\changelog\\03MAR\\EXECUTAR_CORRECOES_FINAIS_03MAR.md": {
+      "hash": "690cabb4823ce7320a3e27bc3257d7bae298f8fd3b18cda3c6fd7ea3531091e8",
+      "size": 8881,
+      "modified": "2026-03-04T07:57:13.539457"
+    },
+    "docs\\changelog\\03MAR\\INSTRUCOES_APLICAR_CORRECOES_03MAR.md": {
+      "hash": "62d46ac0e1dee8187dc7eb6aed93a70772be1f878572601050c587c8d17cee1d",
+      "size": 4858,
+      "modified": "2026-03-02T16:22:36.830606"
+    },
+    "docs\\changelog\\03MAR\\RESUMO_FINAL_CARDS_CATEGORIAS_03MAR.md": {
+      "hash": "1ac14d7bcc0862f1d6ddf0313d5bd381b940da0eece65303540628eafe8978a9",
+      "size": 5402,
+      "modified": "2026-03-02T17:01:32.375658"
+    },
+    "docs\\changelog\\03MAR\\RESUMO_SESSAO_03MAR.md": {
+      "hash": "beb353e8b36685339142e2cc9fab043044ee5b23c00c3c50d4f5294bb0cce4c2",
+      "size": 4317,
+      "modified": "2026-03-02T16:22:58.426550"
+    },
+    "docs\\changelog\\03MAR\\SITUACAO_CARDS_03MAR.md": {
+      "hash": "f934f8dfbc7ac3faf38d6e36ef93e15b7a453448424daf0a4aab170e5a72d30a",
+      "size": 3220,
+      "modified": "2026-03-03T16:17:03.566176"
+    },
+    "docs\\changelog\\03MAR\\SOLUCAO_CARDS_CATEGORIAS_03MAR.md": {
+      "hash": "04e7aeb9d1d7ccf3857af57d690594257b5d0864fe233c4feee2cc1edc50087d",
+      "size": 4718,
+      "modified": "2026-03-02T16:52:55.949575"
+    },
+    "docs\\changelog\\03MAR\\STATUS_COMPLETO_LOGIN_CARDS_03MAR.md": {
+      "hash": "71a07646854ea819a50f8d7dd99552a2d22b8573ec56d42a01604177721d9abb",
+      "size": 9762,
+      "modified": "2026-03-04T07:46:03.146145"
+    },
+    "docs\\changelog\\03MAR\\TELA_LOGIN_EPICA_03MAR.md": {
+      "hash": "1549e48af071a3b84a4d2ac13f2d6e9b2e0d8cb5da32db7e7f5534878162899b",
+      "size": 7372,
+      "modified": "2026-03-04T07:34:37.625310"
+    },
+    "docs\\changelog\\04MAR\\ACAO_URGENTE_REINICIAR.md": {
+      "hash": "1e016485d47691eef98a9ee3b40e32c2c9ac57e52b646492f9f80661ebd8fc76",
+      "size": 3893,
+      "modified": "2026-02-19T12:45:48.618968"
+    },
+    "docs\\changelog\\04MAR\\ACOES_URGENTES_INCIDENTES.md": {
+      "hash": "d1480fbe8c750c0013bcdcc6803736333502943aa1937994f7a75841d16de351",
+      "size": 5210,
+      "modified": "2026-02-26T12:12:05.490010"
+    },
+    "docs\\changelog\\04MAR\\AGRUPAMENTO_FINAL_IMPLEMENTADO.md": {
+      "hash": "248e8407d23087cf3a2e1ed2a65e0d98527bc6cf20d81ac3d951a8069070b121",
+      "size": 5453,
+      "modified": "2026-02-19T14:07:52.972214"
+    },
+    "docs\\changelog\\04MAR\\AGRUPAMENTO_SENSORES_IMPLEMENTADO.md": {
+      "hash": "dd3953c5a1ef830270e13574d82ec92a9414efe4f6c0134216f97383cd6a613a",
+      "size": 3434,
+      "modified": "2026-02-19T13:52:24.559246"
+    },
+    "docs\\changelog\\04MAR\\AJUSTE_DIMENSOES_CARDS.md": {
+      "hash": "4868815bc6f1d8c3139f3d7c74d48c0bd7226d5e0a91a904681c2458f19ad14a",
+      "size": 4241,
+      "modified": "2026-02-19T16:09:45.415646"
+    },
+    "docs\\changelog\\04MAR\\AJUSTE_TAMANHOS_SIDEBAR_CARDS.md": {
+      "hash": "824077eb889a9c05f2cd1525c1986cbc32a4d47ae7b71daa463596cdeec1124c",
+      "size": 6591,
+      "modified": "2026-02-19T16:00:17.586884"
+    },
+    "docs\\changelog\\04MAR\\APLICACAO_KUBERNETES_MANUAL.md": {
+      "hash": "758fdb2e62def73dbe13a38cc8f2a8d33756e0ebb23993c07101fd655b44925c",
+      "size": 6544,
+      "modified": "2026-02-27T14:18:50.823714"
+    },
+    "docs\\changelog\\04MAR\\aplicar_biblioteca_sensores_manual.md": {
+      "hash": "fa08149af060463ad10b9a2c9275bbb45337206d869c02a9fc2812bc4694cada",
+      "size": 3728,
+      "modified": "2026-02-26T17:14:48.233501"
+    },
+    "docs\\changelog\\04MAR\\APLICAR_CORRECAO_CONTRASTE_AGORA.md": {
+      "hash": "ebec7bf7b20c5c1120b01420f71c34e60eb79b84f2a1f3a7c6f51e66617103b1",
+      "size": 1341,
+      "modified": "2026-03-04T08:03:07.610697"
+    },
+    "docs\\changelog\\04MAR\\APLICAR_MELHORIAS.md": {
+      "hash": "5e91fa4520be9a6a3a7c6c1022a93e6c3b6583f473377425021fa9dd7b54e268",
+      "size": 3602,
+      "modified": "2026-02-19T08:38:36.739208"
+    },
+    "docs\\changelog\\04MAR\\APLICAR_MODERNIZACAO_AGORA.md": {
+      "hash": "80dfcb1fb952819618baf34996a780b9a687a6118bcac7c797f34ba56308eda7",
+      "size": 13049,
+      "modified": "2026-03-02T09:58:12.393107"
+    },
+    "docs\\changelog\\04MAR\\ATUALIZACAO_COMPLETA_04MAR.md": {
+      "hash": "0a62d9b6f2ca68b5fabe6943b6fa08d1249d2806200f43c7a8e0dd92c9ffcc7f",
+      "size": 11370,
+      "modified": "2026-03-04T11:19:54.470565"
+    },
+    "docs\\changelog\\04MAR\\ATUALIZACAO_GIT_LAYOUT_COMPACTO_04MAR.md": {
+      "hash": "4388aee1ebcebebd3af13a29329d33f9acd838455f10e72ed6d824b24cc04cee",
+      "size": 5393,
+      "modified": "2026-03-04T09:23:20.759669"
+    },
+    "docs\\changelog\\04MAR\\ATUALIZAR_PROBE_AGORA.md": {
+      "hash": "526138ca96ddc45ff60ea5dc4d424f19c690cfe1f90ceb2fb06c335afe97504c",
+      "size": 2838,
+      "modified": "2026-02-18T16:32:35.738703"
+    },
+    "docs\\changelog\\04MAR\\CARDS_AGREGADORES_E_FILTROS.md": {
+      "hash": "e5a345a4bf79547bf09cbafb11923cb2b1f380ae3911c5c7576d69ef85214904",
+      "size": 7648,
+      "modified": "2026-02-19T14:13:46.312768"
+    },
+    "docs\\changelog\\04MAR\\CHECKLIST_TESTE_LOGO_TIMEZONE.md": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-25T10:00:51.903553"
+    },
+    "docs\\changelog\\04MAR\\CONFORMIDADE_IMPLEMENTADA_04MAR.md": {
+      "hash": "303eb1b9c88e52960a325fb52b61b64ee3ac90199c568c8334d91dd19785fb14",
+      "size": 7842,
+      "modified": "2026-03-04T08:16:41.233428"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_AIOPS_ENGINE.md": {
+      "hash": "67feb36af99206d3c1b2813d93ebb19be0f3e8df8647049be11d7170cb154f7d",
+      "size": 4977,
+      "modified": "2026-02-18T14:29:54.928535"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_AUTOMATICA_CATEGORIAS.md": {
+      "hash": "21c125a1e2a3a12819782012da2388b1eff0624c680f36a5e52d4d49d03f5130",
+      "size": 2380,
+      "modified": "2026-02-19T14:32:03.190303"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_AUTO_RESOLUCAO.md": {
+      "hash": "67b00eb39e36ca13a8ae151eb4a15c028300653afe8cf10de0f23f45737e0f88",
+      "size": 5732,
+      "modified": "2026-02-13T13:52:02.152013"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_BIBLIOTECA_SENSORES.md": {
+      "hash": "cbbdae37b4379d5846dc916adb58c02651a03d3bd0c98626cf5ce5e43a3e13ed",
+      "size": 1989,
+      "modified": "2026-02-19T11:30:51.691308"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_CARDS_CATEGORIAS_URGENTE_04MAR.md": {
+      "hash": "5c8a55914888c1d63e8e0900d9b7989fc08099b9bd550214ca5b662b56dc8ef1",
+      "size": 6862,
+      "modified": "2026-03-04T08:52:17.635602"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_DESCOBERTA_SERVICOS.md": {
+      "hash": "c110be8ac4c1443b5709aef50be4223c9e3317b1b5ef899d04e46bc628686270",
+      "size": 3140,
+      "modified": "2026-02-18T16:22:36.224798"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_DUPLICADOS_E_NOC_IMPLEMENTADO.md": {
+      "hash": "1225a8da1673c95d3666c75cb769317e17db643b5aab690614704596a881f536",
+      "size": 7519,
+      "modified": "2026-02-19T17:13:55.880274"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_EXCLUSAO_IMPRESSAO.md": {
+      "hash": "510295acda12f5d8592dfb65962fd27b1301f21f02afc7699b204618c50e0c26",
+      "size": 6621,
+      "modified": "2026-02-18T14:50:44.342126"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_FERRAMENTAS_ADMIN.md": {
+      "hash": "8d9653e541a37ddc693f5f7c4b403aa6cc56d790059ea201b0b25c579c56e210",
+      "size": 6745,
+      "modified": "2026-02-18T13:03:02.616110"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_FINAL_ADICIONAR_SENSOR.md": {
+      "hash": "68509cd214726af81a3e28b93f04660597e587cda28064bee3daf2ac116b52e6",
+      "size": 6197,
+      "modified": "2026-02-19T11:43:41.381596"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_FINAL_NOC_TESTES_COMPLETA.md": {
+      "hash": "26f0d0e06b0b30bb53d5765fdb239e7e5e83266a2e97220812776de02eba5355",
+      "size": 11801,
+      "modified": "2026-02-20T10:06:57.956872"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_FINAL_SENSORES_E_NOC_MODERNO.md": {
+      "hash": "197af4ab1441b2f8ef381246e4cc45611b2b8f89732ae9fa9f26a42e1524be2a",
+      "size": 8404,
+      "modified": "2026-02-19T17:23:51.166869"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_LOOP_TOPDESK.md": {
+      "hash": "4510fbe3e9dccb91e17e4b4dd3560471b5f90fbc97b1df05c6b4e9028696fef5",
+      "size": 10750,
+      "modified": "2026-02-25T12:00:39.355859"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_NOME_SERVIDOR_COMPLETO.md": {
+      "hash": "4538e6155ee0f0b3383dd9a04187901686abf08a092eaf5036fa672422e0848f",
+      "size": 5846,
+      "modified": "2026-02-19T15:57:00.938373"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_NOTIFICACOES_COMPLETA.md": {
+      "hash": "dde2631b29033ae34d582edc1c00be32154e479d3eaf05e45239c2a0248c230a",
+      "size": 9829,
+      "modified": "2026-02-25T09:20:33.778748"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_RELATORIOS_CUSTOS_NUVEM.md": {
+      "hash": "470cf21093ce4d559fb34f52041d1a9ee2cd0ed796ecbf93cb7134c841dbcb0f",
+      "size": 5168,
+      "modified": "2026-02-18T13:27:23.199435"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_SENSORES_DOCKER_VISIBILIDADE.md": {
+      "hash": "dcb59fc2808f430c9c5ad974e8d68c0f7aaa804eec246abddae96b7dc6d0feb8",
+      "size": 4967,
+      "modified": "2026-02-19T14:19:26.306897"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_SENSORES_E_SIDEBAR.md": {
+      "hash": "855f7f358a75a3ea1bca397d660e2143b14b4b278a43621a3fd9a7c19f21bbf4",
+      "size": 5855,
+      "modified": "2026-02-19T15:39:05.407060"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_SENSORES_PADRAO.md": {
+      "hash": "fdfaca10defefab2f313b19c4faa8cc730decc2d67de9fd7e273affa49615643",
+      "size": 4904,
+      "modified": "2026-02-18T15:45:16.847454"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_SETUP_WIZARD.md": {
+      "hash": "265b37673b05bf912c3ece2494597497ddd770246fdb8207c2c18a81190550b8",
+      "size": 1853,
+      "modified": "2026-02-18T15:21:37.187105"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_SSL_PROBE.md": {
+      "hash": "a8110bd890bb1b63db202d769f3fcccc3b636440b9f43010bc3eaa38acd6f502",
+      "size": 4176,
+      "modified": "2026-02-19T12:25:27.082316"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_TEXTO_CONTRASTE_CARDS.md": {
+      "hash": "3a6481520095939214a9add990081e4e39ca33dc7dad54253e6fc8b25841442b",
+      "size": 4860,
+      "modified": "2026-02-19T16:06:07.008169"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_TOKEN_PROBE.md": {
+      "hash": "4feff3128b5148a12c7e785f7e9a0d53409144e9c8055e78c14edf82a3f8a338",
+      "size": 3940,
+      "modified": "2026-02-19T13:33:39.801087"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_TOPDESK_CALLER_OPERATOR.md": {
+      "hash": "5e1a536802bd9e7733c453ae9f32ea7fd0a5fc6c9e1e93e3192be5a83fe5cef0",
+      "size": 7348,
+      "modified": "2026-02-25T12:01:13.708637"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_URGENTE_PROBE.md": {
+      "hash": "99560fe43eb6cb5bfba175413caf8b7069246340e8dae81587b30a794990459b",
+      "size": 1654,
+      "modified": "2026-02-18T15:34:41.651302"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_VALIDACAO_SENSORES.md": {
+      "hash": "0c8ee679d3d6c4c2a24bbc589f729fb410e8725aa024da48135d1197ae645891",
+      "size": 4309,
+      "modified": "2026-02-19T11:40:40.746414"
+    },
+    "docs\\changelog\\04MAR\\CORRECAO_VISUALIZACAO_SENSORES.md": {
+      "hash": "ccf575143fc4224a27858581b2abd60761aecb06c33010cb9672d4c48c8b5de0",
+      "size": 4027,
+      "modified": "2026-02-19T13:59:14.642771"
+    },
+    "docs\\changelog\\04MAR\\CORRECOES_APLICADAS.md": {
+      "hash": "4e053456d087b403424304daf3dd554be1cc27e34ec5709e9a9566e50e9205e1",
+      "size": 9144,
+      "modified": "2026-02-13T13:21:04.590112"
+    },
+    "docs\\changelog\\04MAR\\CORRECOES_EXCLUIR_DUPLICADO.md": {
+      "hash": "d3e6074e7343d9e158cc8a87492e905076fa58524072672286b450ea4c19ed71",
+      "size": 15021,
+      "modified": "2026-02-13T14:16:14.431399"
+    },
+    "docs\\changelog\\04MAR\\CORRECOES_E_ROADMAP_ENTERPRISE.md": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-19T16:25:32.612024"
+    },
+    "docs\\changelog\\04MAR\\CORRECOES_IMEDIATAS.md": {
+      "hash": "bc6727d66884c4330cfd0441f9717e774d8f2c5ed135d4b2c3bd69d67625a44a",
+      "size": 1111,
+      "modified": "2026-02-19T16:26:54.097136"
+    },
+    "docs\\changelog\\04MAR\\CORRECOES_SERVIDOR_SENSORES.md": {
+      "hash": "342d4ee4c26c5787a7e30ccb384255b807aa132fdcdfaa9a0eebc107e856f338",
+      "size": 9591,
+      "modified": "2026-02-13T14:10:27.123063"
+    },
+    "docs\\changelog\\04MAR\\CORRIGIR_CARDS_AGORA.md": {
+      "hash": "558967c9aa29719fa56130ba8a1fc067abd940c6f5724a4681591ee49b899bc2",
+      "size": 1231,
+      "modified": "2026-03-03T16:17:13.709416"
+    },
+    "docs\\changelog\\04MAR\\corrigir_cards_definitivo.ps1": {
+      "hash": "12b0ad68ea7ad97da50c4afc1f80f30946e804711c2eb31c0aeaa7ed8aac5c72",
+      "size": 3292,
+      "modified": "2026-03-04T08:51:43.851286"
+    },
+    "docs\\changelog\\04MAR\\EXECUTAR_AGORA.md": {
+      "hash": "fdc89af51489f33dbdf8fe7996eb2ab9b58be58c990302f9b6ac972c64b952b0",
+      "size": 2188,
+      "modified": "2026-02-26T17:24:43.198995"
+    },
+    "docs\\changelog\\04MAR\\EXECUTAR_AGORA_REBUILD.md": {
+      "hash": "0d43feac66259fb5775ffe9aa89ac3c2fbaef8f0b5032997658414be0275e733",
+      "size": 3588,
+      "modified": "2026-03-02T15:02:16.592854"
+    },
+    "docs\\changelog\\04MAR\\EXECUTAR_AGORA_REBUILD_FRONTEND.md": {
+      "hash": "489f939bbd9af949b5bc71e269d3da708830aff98945d039310971f6d84bdcc8",
+      "size": 3019,
+      "modified": "2026-03-02T17:00:59.618288"
+    },
+    "docs\\changelog\\04MAR\\EXECUTAR_AIOPS_AGORA.md": {
+      "hash": "eb3748b817c3cfca1b23149a88299b124532ee8373fd913f4ec3042aee626cad",
+      "size": 5613,
+      "modified": "2026-02-26T15:45:10.991504"
+    },
+    "docs\\changelog\\04MAR\\EXECUTAR_MIGRACAO_AGORA.md": {
+      "hash": "843fba1a12398d8ce303e688c5388bcf24ea2b6027416228ded0c413d9c7e901",
+      "size": 1244,
+      "modified": "2026-02-26T18:21:28.626351"
+    },
+    "docs\\changelog\\04MAR\\EXECUTAR_ORGANIZACAO_AGORA.md": {
+      "hash": "922861ca53f75cf6f430b99635597e556e8d84e8008144b162335457ae512301",
+      "size": 3320,
+      "modified": "2026-03-04T09:36:55.283653"
+    },
+    "docs\\changelog\\04MAR\\EXECUTE_ISTO.md": {
+      "hash": "de6ad8f072b8a643eb8343a2fb92aa9dec245fbcd2c8875835bbe7c3f7d32ba8",
+      "size": 742,
+      "modified": "2026-02-26T18:01:53.965668"
+    },
+    "docs\\changelog\\04MAR\\INSTALACAO_EM_DUAS_ETAPAS.md": {
+      "hash": "fdddfb0382b64b15d8e7db42d1ff5f819ca8663fcd32dd4dec0aef66623eb41b",
+      "size": 6783,
+      "modified": "2026-02-24T09:45:50.047040"
+    },
+    "docs\\changelog\\04MAR\\INSTALAR_BIBLIOTECA_AGORA.md": {
+      "hash": "f967accb0b1a92616dc71abd2fb788bf6b4afc1b34bc358b2fcf800cd2ea1fcf",
+      "size": 3876,
+      "modified": "2026-02-26T17:24:03.055172"
+    },
+    "docs\\changelog\\04MAR\\INSTRUCOES_FINAIS.md": {
+      "hash": "e013c60ccb2e5eac374d8b0affabf5f5b59642b0cb1b445fb5764242767a6e87",
+      "size": 5402,
+      "modified": "2026-02-26T12:24:24.792338"
+    },
+    "docs\\changelog\\04MAR\\INSTRUCOES_FINAIS_04MAR.md": {
+      "hash": "c6ceccc05e2c80e42bf6b82b592300563cb0eae695dd5bbb8a520aa649ef6af9",
+      "size": 6423,
+      "modified": "2026-03-04T08:18:57.977173"
+    },
+    "docs\\changelog\\04MAR\\INSTRUCOES_RAPIDAS_REMOTO.md": {
+      "hash": "2e8f11062c5559b05085eac8d003185375e85dfef66a6ad55546af9c02fa3c71",
+      "size": 2594,
+      "modified": "2026-02-13T15:28:01.171110"
+    },
+    "docs\\changelog\\04MAR\\INSTRUCOES_REINICIAR_PROBE.md": {
+      "hash": "4e0e07c3f29801db2b1af4741bf4b9943f3cae2737cec87c8a7f28020c1fa814",
+      "size": 4065,
+      "modified": "2026-02-19T12:37:46.935828"
+    },
+    "docs\\changelog\\04MAR\\INSTRUCOES_TESTE_CARDS_04MAR.md": {
+      "hash": "9af05d05c001633472cfcfefb7bf1b39b4fe6fd23eda691c078715b32b3ed878",
+      "size": 6788,
+      "modified": "2026-03-04T09:06:35.714027"
+    },
+    "docs\\changelog\\04MAR\\INSTRUCOES_USUARIO_METRICAS.md": {
+      "hash": "9aece6ed2011ef16428bd56a565bf3e0dcf8b67b353869bb30017808e993551a",
+      "size": 2604,
+      "modified": "2026-03-02T13:18:22.483748"
+    },
+    "docs\\changelog\\04MAR\\INTEGRACAO_RELATORIOS_PERSONALIZADOS.md": {
+      "hash": "7f57b986ff6643f480b218b7a0daf23d895481812cfe3836a0fce09dccfa21c6",
+      "size": 9203,
+      "modified": "2026-02-26T16:30:52.502330"
+    },
+    "docs\\changelog\\04MAR\\INTEGRAR_NOC_TEMPO_REAL.md": {
+      "hash": "ba943b5c881029c7ff8cc0951e917241dff32ab3f0797d0f7fadc889b9b87908",
+      "size": 2650,
+      "modified": "2026-02-26T13:31:49.312178"
+    },
+    "docs\\changelog\\04MAR\\LAYOUT_COMPACTO_IMPLEMENTADO_04MAR.md": {
+      "hash": "fa2aedf8a5b371a1d202620e0a4d11ad791191db50c9b102d997a186f2f7b23a",
+      "size": 4772,
+      "modified": "2026-03-04T09:11:19.134789"
+    },
+    "docs\\changelog\\04MAR\\LIMPAR_CACHE_NAVEGADOR_AGORA.md": {
+      "hash": "e208ee97b9af8b6b34b502042c26470c52578f270c204aaceeecb02d4cd5aad3",
+      "size": 2982,
+      "modified": "2026-02-28T14:29:06.369423"
+    },
+    "docs\\changelog\\04MAR\\LOGO_ATUALIZADA_FINAL.md": {
+      "hash": "11f593fa2499ca621a1124437cb78b7acc8144a400c6b8eeefdd19bb7c3a8e21",
+      "size": 6307,
+      "modified": "2026-02-25T10:27:22.271165"
+    },
+    "docs\\changelog\\04MAR\\LOGO_CORUJA_CONFIGURADO.md": {
+      "hash": "eb1533d428d3b016cb79785afd39bab1437779fd803e781db1b96e82f44abc2a",
+      "size": 3699,
+      "modified": "2026-02-25T09:45:36.593964"
+    },
+    "docs\\changelog\\04MAR\\MELHORIAS_AIOPS_INTERATIVIDADE.md": {
+      "hash": "0a5c574800e5aa53db2f2a46de3f6140851a2896854a8388a0b5cc149ee8fccf",
+      "size": 7372,
+      "modified": "2026-02-18T14:37:43.094461"
+    },
+    "docs\\changelog\\04MAR\\MELHORIAS_AUTO_REMEDIACAO.md": {
+      "hash": "70d096a321c5459065ce51fa91b97a734dd85bd20cb65b7f6e28e7d550687e7f",
+      "size": 17749,
+      "modified": "2026-02-25T16:07:57.231383"
+    },
+    "docs\\changelog\\04MAR\\MELHORIAS_IA_URGENTES.md": {
+      "hash": "183fd055dc6f2625a560bb31ee4c2c1d039150e961fbdb36d8af20f96b4bbb0c",
+      "size": 17785,
+      "modified": "2026-02-25T10:53:19.852650"
+    },
+    "docs\\changelog\\04MAR\\MELHORIAS_NAVEGACAO_LATERAL.md": {
+      "hash": "e44748cefcf6884ed4d7113083b32700b47ad63cbdaa78cf45463e084175ae6f",
+      "size": 6063,
+      "modified": "2026-02-19T15:53:48.091741"
+    },
+    "docs\\changelog\\04MAR\\MELHORIAS_RELATORIOS_IMPLEMENTADAS.md": {
+      "hash": "34b7c0df7c185796e6c4a9a6c463f3cbc3499e991c890027d57b7147d3b2465d",
+      "size": 7348,
+      "modified": "2026-02-18T13:14:18.923728"
+    },
+    "docs\\changelog\\04MAR\\MELHORIAS_SIDEBAR_CHECKMK.md": {
+      "hash": "cdd521beffae81fed2397156d942e48beb9ffba06c48e60ec0badf018e0cf300",
+      "size": 5801,
+      "modified": "2026-02-19T15:26:45.135079"
+    },
+    "docs\\changelog\\04MAR\\MELHORIA_INSTALADOR_CREDENCIAIS.md": {
+      "hash": "92b8cd6a50e36d2fb7b2be070b1cc858d85d40aa9f2b38aca4c71781744718a7",
+      "size": 8247,
+      "modified": "2026-02-24T11:34:57.686563"
+    },
+    "docs\\changelog\\04MAR\\MODO_DARK_AUTO_REMEDIACAO.md": {
+      "hash": "5e152429e9c73af62e52b2738f0a595554e17156135b27ccd7a56e1446b17098",
+      "size": 7176,
+      "modified": "2026-02-18T14:55:12.705070"
+    },
+    "docs\\changelog\\04MAR\\MOVER_SENSORES_ENTRE_CATEGORIAS.md": {
+      "hash": "266348f1b2e9430d894d3c4d163e7e5213f9199619c09326e58f9d6ed81fa76a",
+      "size": 1332,
+      "modified": "2026-02-19T14:26:15.953179"
+    },
+    "docs\\changelog\\04MAR\\NOVA_ESTRUTURA_REPOSITORIO.md": {
+      "hash": "58a255f5ea6f05e65a3dec19466ef9231f0f39f0f7be05dd972e33c92df30a91",
+      "size": 11078,
+      "modified": "2026-03-04T09:36:36.034105"
+    },
+    "docs\\changelog\\04MAR\\ORGANIZACAO_CONCLUIDA_04MAR.md": {
+      "hash": "40e18a843e132621c48f58daf3643b7632352fc40131b5acbf882690ac90e4a3",
+      "size": 7938,
+      "modified": "2026-03-04T09:41:17.764213"
+    },
+    "docs\\changelog\\04MAR\\organizar_repositorio.ps1": {
+      "hash": "94950e440dabbfc5798a3fa69a410b1a5a9ed6152414df312a133429a3468559",
+      "size": 14874,
+      "modified": "2026-03-04T09:35:48.048807"
+    },
+    "docs\\changelog\\04MAR\\organizar_restante.ps1": {
+      "hash": "bea61cc0859565b8a6505d34ead1f9586c9240271135a2c7edc4b794950503a4",
+      "size": 19175,
+      "modified": "2026-03-04T09:45:56.767020"
+    },
+    "docs\\changelog\\04MAR\\POPULAR_DASHBOARD_AGORA.md": {
+      "hash": "020c251ca8a564c3952a34bf3a8daee78dd936e4a7f8dc5123aac5279d0bc44b",
+      "size": 2686,
+      "modified": "2026-02-26T15:47:01.242604"
+    },
+    "docs\\changelog\\04MAR\\REINICIAR_PROBE_AGORA.md": {
+      "hash": "f364dc6dc17e4859f20e4edb535ea4462eb7f215c0a3a93f788694487cf60d38",
+      "size": 3206,
+      "modified": "2026-02-26T12:57:07.956625"
+    },
+    "docs\\changelog\\04MAR\\REINICIAR_PROBE_DOCKER.md": {
+      "hash": "87ab4d48d6570c81a66cc1cfd1f64b61b731ff3d1876fba83b7d04f38acfe0ab",
+      "size": 3866,
+      "modified": "2026-02-19T12:15:43.271554"
+    },
+    "docs\\changelog\\04MAR\\RESPOSTA_USUARIO_NOC_FINAL.md": {
+      "hash": "379a1c0f27c554788c898f76651ad637ed96c9fc7785d21df3887b9b7b177633",
+      "size": 2715,
+      "modified": "2026-02-26T16:12:36.901545"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_BIBLIOTECA_SENSORES_COMPLETA.md": {
+      "hash": "93b0124051660ed89a0d48ca7aade144bb5ddabdb675fa70a47575ac14346c6e",
+      "size": 11046,
+      "modified": "2026-02-26T17:10:09.274044"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_COMPLETO_IMPLEMENTACAO.md": {
+      "hash": "40081fc53c929b46da0115e33774bf8d83f4dc3d3a86f4da3e8aec3cff227f4c",
+      "size": 7697,
+      "modified": "2026-02-19T09:22:40.674967"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_CORRECAO_SENSOR.md": {
+      "hash": "e474ef2a476812acfbfb9c537be7a49df8d55268e4e4e9f5af8b35cf2e8bee05",
+      "size": 4867,
+      "modified": "2026-02-19T11:49:49.806235"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_CORRECOES_24FEV_FINAL.md": {
+      "hash": "2b4498cb00ee87b32ebcc7ec122077f328d03927cdb5b8b67730723dec3fe298",
+      "size": 6493,
+      "modified": "2026-02-24T10:15:53.366779"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_CORRECOES_24FEV_PARTE2.md": {
+      "hash": "b22ab34acc813a6b715fcc58385099038d70bd019c7626c5c026e19c27a59b01",
+      "size": 9891,
+      "modified": "2026-02-24T10:31:51.814873"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_CORRECOES_25FEV_FINAL.md": {
+      "hash": "9d505a7642916fed2f984f5531c2b7effa4a5dd2ac55152b79253c63b716e578",
+      "size": 7656,
+      "modified": "2026-02-25T16:00:00.057255"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_CORRECOES_APLICADAS.md": {
+      "hash": "2f5b93163fcbad615d43d8b150e8061715acc52cdffcceef54202006efc8ec0c",
+      "size": 2613,
+      "modified": "2026-02-19T16:29:30.504296"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_DESCOBERTA_SERVICOS.md": {
+      "hash": "40d39bf266ae3c94586f9975262f10922b15311e562fa281762261a82fbebba7",
+      "size": 4916,
+      "modified": "2026-02-18T16:14:47.351261"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_BIBLIOTECA_SENSORES.md": {
+      "hash": "590869234463f7344280a75e46e81004911e12b2b0fac6134ce65aba77ccc87b",
+      "size": 2953,
+      "modified": "2026-02-26T17:26:40.233304"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_CONFORMIDADE_04MAR.md": {
+      "hash": "65a0cba0b61abed8e69d3afa2973608c317cc259108ce137f89865186a7a56a3",
+      "size": 9918,
+      "modified": "2026-03-04T08:18:01.244437"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_CORRECOES_27FEV_1635.md": {
+      "hash": "66a17168f36b30153891b893fca5b764e527aabbd3d8843033cd51f75a61f20f",
+      "size": 7004,
+      "modified": "2026-02-27T16:38:13.021237"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_IMPLEMENTACAO.md": {
+      "hash": "24eb302cfa617177f5e555346426ee98439789bc6c87d98658e55d5aff5bec2e",
+      "size": 12088,
+      "modified": "2026-02-13T12:56:48.814427"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_IMPLEMENTACAO_NOC.md": {
+      "hash": "f82b07c90b4f1b304063fcb763f9f09994d9ab537315aee25978ae18a6832592",
+      "size": 6023,
+      "modified": "2026-02-20T09:01:15.456596"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_SCREENSHOTS_04MAR.md": {
+      "hash": "e142255e0e4f34235923f37cc3f7779a2ce87ff403dfd5ac6adca4d6eb7ce0de",
+      "size": 6185,
+      "modified": "2026-03-04T09:32:24.131046"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_SESSAO.md": {
+      "hash": "0b78aebab97c16661b888194f483faa417eb7a042189a5643360cb7849e6fed8",
+      "size": 7524,
+      "modified": "2026-02-19T12:38:25.506004"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_FINAL_SESSAO_26FEV_PARTE2.md": {
+      "hash": "8cfbecbe5a6c2173f6e06fff1db8ffdcac79337331b3b6a2d00357b9507f0fef",
+      "size": 6789,
+      "modified": "2026-02-26T15:17:51.820204"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_IMPLEMENTACOES_FINAIS.md": {
+      "hash": "c8286288e33fdcb611c76ff4ff18a06dd5bb128cdfb9b0c7a5172b11d5a2bdf3",
+      "size": 9097,
+      "modified": "2026-02-20T09:21:23.655842"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_MELHORIAS_APLICADAS.md": {
+      "hash": "5c86cbdbe4d016e25e2ad7e1bf1c9b6e394723617d95e2dd8cf86faa44632375",
+      "size": 6547,
+      "modified": "2026-02-19T15:41:21.538875"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_MIGRACAO_OLLAMA_DOCKER.md": {
+      "hash": "c485ca29040d8e06c18ed6a98a3ff5c1d42baa8d1340b7cc3843fe8bd5edc713",
+      "size": 3765,
+      "modified": "2026-02-25T11:52:56.064232"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_MOVER_SENSORES.md": {
+      "hash": "11e190ea59acfd3aed6662dc9758f1c242ae04d8dccb7311ab94c5e52dda0df2",
+      "size": 1162,
+      "modified": "2026-02-19T14:26:52.128303"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_NOC_TEMPO_REAL_FINAL.md": {
+      "hash": "7407308f255e5c6490a1943c817a7b9bdb4117ceb9e1b082fd9b10773b696481",
+      "size": 10125,
+      "modified": "2026-02-26T13:31:32.920854"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SCREENSHOTS_04MAR.md": {
+      "hash": "df998cd06a1afe85ae5a52b6a44f439a847b5a929063c11f16a26be0ef738423",
+      "size": 7474,
+      "modified": "2026-03-04T09:27:19.844655"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_02MAR_COMPLETO.md": {
+      "hash": "a32da2f1949d4e5575c5de26286ec571982eb6bf2a83a2536b797a578e18d63e",
+      "size": 5097,
+      "modified": "2026-03-02T12:39:37.603061"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_24FEV_COMPLETO.md": {
+      "hash": "846c03703586c434be00f0536330a047e75e74b8f77838ad96ce0d3e49e24f59",
+      "size": 11808,
+      "modified": "2026-02-24T11:38:26.138395"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_25FEV_COMPLETO.md": {
+      "hash": "0f23e9525184b131db32d4f882aee569d8fff2ae0dd4231502191ee69b4c49b1",
+      "size": 8741,
+      "modified": "2026-02-25T07:36:01.715573"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_25FEV_LOGO_TIMEZONE.md": {
+      "hash": "c603038a2b6594ce845c5c70cdd8b25f349255c8b0181f3403f3c1b109110545",
+      "size": 6654,
+      "modified": "2026-02-25T10:00:47.798652"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_26FEV_COMPLETO.md": {
+      "hash": "4e7cf7605628cc169de944894893f05db7ee319d7a7b080223969a9ccd295ed4",
+      "size": 7959,
+      "modified": "2026-02-26T10:38:35.409072"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_26FEV_IP_AUTOMATICO.md": {
+      "hash": "c4fac61aac964add9db45f98f47839ac40f66b0794183f34b1b94737b848a33c",
+      "size": 5357,
+      "modified": "2026-02-26T11:33:22.836605"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_AGRUPAMENTO.md": {
+      "hash": "46053252a5ee0947e5ea1a8183848d0f138baf235e3dab39a1062ef1f5c0b786",
+      "size": 2910,
+      "modified": "2026-02-19T14:37:24.957156"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_ATUAL.md": {
+      "hash": "347cbe1b0b54dc6b133cdc6ca455ef6a0d2aede27dfd98cc5a9ec5eba0fad353",
+      "size": 6132,
+      "modified": "2026-02-19T09:07:47.725561"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_BIBLIOTECA_SENSORES.md": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-26T18:23:22.217479"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SESSAO_FINAL.md": {
+      "hash": "f95e7aa4eafd4db28b83ef62c1f5bc5976b6ba6f1c6c849cfb40a91d29806927",
+      "size": 6959,
+      "modified": "2026-02-18T16:21:11.658622"
+    },
+    "docs\\changelog\\04MAR\\RESUMO_SITUACAO_ATUAL.md": {
+      "hash": "0e43d64c33e6fd9c28453ffc2bde0bce7e01a350b30a232b6531b14f047550cf",
+      "size": 6219,
+      "modified": "2026-02-26T17:24:30.837737"
+    },
+    "docs\\changelog\\04MAR\\SOLUCAO_DEFINITIVA_CARDS_04MAR.md": {
+      "hash": "6a42bd2c063b9616ab643909706f20209219d2e45ffee7f2aa74a013d282e1bb",
+      "size": 5958,
+      "modified": "2026-03-04T08:48:28.721358"
+    },
+    "docs\\changelog\\04MAR\\STATUS_CORRECOES_13FEV.md": {
+      "hash": "3e50bf2f20278592d1674d3f73445d11d6175a5ef7c0f81b70e689a622853b53",
+      "size": 7490,
+      "modified": "2026-02-13T13:39:39.564208"
+    },
+    "docs\\changelog\\04MAR\\STATUS_IMPLEMENTACAO_GRUPOS_AZURE.md": {
+      "hash": "86c51b2edfdc1cf1daa55a2732a77435203d7521a3073f2708be734e694ed0a8",
+      "size": 4628,
+      "modified": "2026-02-27T09:38:37.925854"
+    },
+    "docs\\changelog\\04MAR\\STATUS_NOTIFICACOES_AUTOMATICAS.md": {
+      "hash": "d079d5bf1a6059208d80e3f0feb3230d46f6bc88d22f1b488efc83cd3ed27e48",
+      "size": 4950,
+      "modified": "2026-02-25T14:19:11.532443"
+    },
+    "docs\\changelog\\04MAR\\STATUS_SCREENSHOTS_04MAR.md": {
+      "hash": "ec1c52f256e709665077f6c4faef14de70bd09ff8934c9990a4419b259b55831",
+      "size": 9991,
+      "modified": "2026-03-04T09:29:25.725796"
+    },
+    "docs\\changelog\\04MAR\\SUCESSO_CORRECAO_CARDS_04MAR.md": {
+      "hash": "53446b91492e5d62ce58e2e9b41465dda405fd9e76db175ce08c29e1158b9971",
+      "size": 4754,
+      "modified": "2026-03-04T08:45:22.025589"
+    },
+    "docs\\changelog\\04MAR\\SUCESSO_LAYOUT_COMPACTO_04MAR.md": {
+      "hash": "cee2dd5ba0669504913af2ce8ccb5af66d0c6c917bae4f68bcb9cf19c37d5491",
+      "size": 8008,
+      "modified": "2026-03-04T09:14:14.936239"
+    },
+    "docs\\changelog\\04MAR\\TESTAR_AIOPS_AUTOMATICO_AGORA.md": {
+      "hash": "31b86d0997f1816713d13533420276cb4366931c2feab2879a8cf574137242fd",
+      "size": 6586,
+      "modified": "2026-02-26T15:55:14.058878"
+    },
+    "docs\\changelog\\04MAR\\TESTAR_KNOWLEDGE_BASE_AGORA.md": {
+      "hash": "08f90dbd6ad10d43447827a03178944bd21556a947902a79f73a97d158e94baf",
+      "size": 8593,
+      "modified": "2026-02-25T11:35:59.299396"
+    },
+    "docs\\changelog\\04MAR\\TESTAR_NOTIFICACOES_AGORA.md": {
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "size": 0,
+      "modified": "2026-02-25T14:11:23.220268"
+    },
+    "docs\\changelog\\04MAR\\TESTAR_TOPDESK_AGORA.md": {
+      "hash": "31c972bb6d6f687a37396b6994491bb851390759565c2fd88bfbbb62c2376d92",
+      "size": 7152,
+      "modified": "2026-02-25T12:01:55.163095"
+    },
+    "docs\\changelog\\04MAR\\TESTE_ADICIONAR_SENSOR.md": {
+      "hash": "69a9f1d917a022cd21170088955bb5add6830e80832558d94e3c6144b1b10f1e",
+      "size": 4304,
+      "modified": "2026-02-19T11:49:08.273422"
+    },
+    "docs\\changelog\\04MAR\\TESTE_INCIDENTES_SERVICOS.md": {
+      "hash": "5a719642d5cf48742c369c9ffb1cb65fec43db74aa04b339bee84a5580840890",
+      "size": 3691,
+      "modified": "2026-02-13T13:38:26.588828"
+    },
+    "docs\\changelog\\04MAR\\TESTE_VERIFICADO_TI.md": {
+      "hash": "0996f58d7547a103cb71a1ba9aed1a8cf48667ce113f211030429a00b167451a",
+      "size": 13966,
+      "modified": "2026-02-13T12:54:30.609829"
+    },
+    "docs\\changelog\\20FEV\\CORRECAO_NOC_E_TESTES_20FEV.md": {
+      "hash": "5351a79914b5da69ab0460fc4d841b60950e1444a3098bdc9f2af7e7d48188aa",
+      "size": 8992,
+      "modified": "2026-02-20T09:44:40.664575"
+    },
+    "docs\\changelog\\20FEV\\CORRECOES_DASHBOARD_NOC_TESTES_20FEV.md": {
+      "hash": "01063abe3677bdae3855c8ab0effeebe1561d2b224fa13224f746a4167416969",
+      "size": 7444,
+      "modified": "2026-02-20T10:44:24.102292"
+    },
+    "docs\\changelog\\20FEV\\CORRECOES_FINAIS_APLICADAS_20FEV.md": {
+      "hash": "60a2a31bee19d0442b581d8652ec1e7766be4915e5989fc42e174f0931431332",
+      "size": 7682,
+      "modified": "2026-02-20T09:34:56.985456"
+    },
+    "docs\\changelog\\20FEV\\CORRECOES_FINAIS_SENSORES_PROBES_20FEV.md": {
+      "hash": "ce3896ac21deaf61958f30cdfda271fada96c3bd465aa10763ced14ec68a5a48",
+      "size": 7038,
+      "modified": "2026-02-20T10:51:12.172628"
+    },
+    "docs\\changelog\\20FEV\\INDICE_DOCUMENTACAO_20FEV.md": {
+      "hash": "e106d74e053a7f2e2da609e81b8ef92cb693df746368db299ba0674c4b63396f",
+      "size": 7240,
+      "modified": "2026-02-23T09:20:09.411445"
+    },
+    "docs\\changelog\\24FEV\\CORRECAO_INSTALADOR_24FEV.md": {
+      "hash": "7461db5afcd7dd5f1286e6dcc789e6a32f2473a463c355720706030bcae933f8",
+      "size": 7429,
+      "modified": "2026-02-24T09:26:11.521754"
+    },
+    "docs\\changelog\\24FEV\\CORRECAO_TESTES_E_NOC_24FEV.md": {
+      "hash": "8fc09e42aa4945d34d51982b9b490abe3f772b01320fbfe835fb3a93ee976777",
+      "size": 5388,
+      "modified": "2026-02-24T16:19:17.325858"
+    },
+    "docs\\changelog\\24FEV\\CORRECOES_PROBE_EMPRESA_24FEV.md": {
+      "hash": "2a961f153c1695c508b5d1d13734c71da55b57144730d6c778d0f047c9ad6bb5",
+      "size": 8512,
+      "modified": "2026-02-24T10:11:05.441580"
+    },
+    "docs\\changelog\\24FEV\\SISTEMA_TESTES_COMPLETO_24FEV.md": {
+      "hash": "e4ef3a5c1cc69af505c8b24bb183fe2b3bf5a673bd338e36b750ab240b5d4147",
+      "size": 8031,
+      "modified": "2026-02-24T16:26:48.922655"
+    },
+    "docs\\changelog\\25FEV\\ANALISE_COMPLETA_SISTEMA_25FEV.md": {
+      "hash": "8ebddeaaca81c294dc5e63af275c9ac59cc6b886d1cc8cb13acf3e82526621ec",
+      "size": 16119,
+      "modified": "2026-02-25T07:38:57.739865"
+    },
+    "docs\\changelog\\25FEV\\CORRECAO_DASHBOARD_ZERO_25FEV.md": {
+      "hash": "584257b4655d51ab8d58fa6742458a2fa864a22bbf9a56976f1863c5d4608d26",
+      "size": 2714,
+      "modified": "2026-02-25T08:56:09.880386"
+    },
+    "docs\\changelog\\25FEV\\CORRECAO_OLLAMA_DOCKER_25FEV.md": {
+      "hash": "a94c672cbe59687c03e1713015a5504b1206aec235f4b12391a7948b3c96646c",
+      "size": 4741,
+      "modified": "2026-02-25T15:56:20.415680"
+    },
+    "docs\\changelog\\25FEV\\CORRECAO_RESOLUCAO_INCIDENTES_25FEV.md": {
+      "hash": "ccbf174db62acbcdf23c27a2491e8c5002bdab4a3488f9918f38065fc3920521",
+      "size": 7139,
+      "modified": "2026-02-25T07:34:18.561876"
+    },
+    "docs\\changelog\\25FEV\\RESUMO_CORRECAO_TOPDESK_25FEV.md": {
+      "hash": "99478f142de48489854323221f80f173c1a7d1eb38046ee9ce98f3173c8b164a",
+      "size": 7772,
+      "modified": "2026-02-25T12:02:37.011695"
+    },
+    "docs\\changelog\\25FEV\\RESUMO_FINAL_NOTIFICACOES_25FEV.md": {
+      "hash": "cadde2c6197106fe8bf8c6f43bf30068aa0caaaf01440e823e310c42b4ed9ce6",
+      "size": 5376,
+      "modified": "2026-02-25T14:33:44.584043"
+    },
+    "docs\\changelog\\25FEV\\RESUMO_IMPLEMENTACAO_KB_25FEV.md": {
+      "hash": "f09337ffc8a38fee5b96d25d8eeba429fbee02924bf131c73d75adcd4b11e938",
+      "size": 8439,
+      "modified": "2026-02-25T11:36:41.679953"
+    },
+    "docs\\changelog\\25FEV\\RESUMO_SESSAO_COMPLETA_25FEV.md": {
+      "hash": "fad90bccc33f6e7851222e7bd4243baf6d9cb867fc298b4f286f83863430a6ca",
+      "size": 5213,
+      "modified": "2026-02-25T14:53:29.208090"
+    },
+    "docs\\changelog\\25FEV\\RESUMO_SESSAO_THRESHOLDS_25FEV.md": {
+      "hash": "cdc6ebcd14e6aa3899efb3a8425171e3192a1ab510cd5dc1e24ebc3ecb42f5fc",
+      "size": 7325,
+      "modified": "2026-02-25T15:39:36.641646"
+    },
+    "docs\\changelog\\25FEV\\SOLUCAO_DEFINITIVA_COMPLETA_25FEV.md": {
+      "hash": "180834ece7565e78340d007e92d1ec23367a1744c700ebf44ed287ccd14bdc42",
+      "size": 5302,
+      "modified": "2026-02-25T08:34:10.915402"
+    },
+    "docs\\changelog\\25FEV\\STATUS_FINAL_SISTEMA_25FEV.md": {
+      "hash": "d0e3c1089e603baa95afc324a11988ba26d8903bfcb5cd673e8347a503e59334",
+      "size": 5073,
+      "modified": "2026-02-25T08:52:07.060670"
+    },
+    "docs\\changelog\\26FEV\\AIOPS_AUTOMATICO_IMPLEMENTADO_26FEV.md": {
+      "hash": "ba1e92c467f22198ce40f8036562a95fad7c5b47e50f28acb10f177e316ee989",
+      "size": 7849,
+      "modified": "2026-02-26T15:53:51.892098"
+    },
+    "docs\\changelog\\26FEV\\AIOPS_TESTADO_FUNCIONANDO_26FEV.md": {
+      "hash": "a42bc6c614d01ec8259aa31c6c88e425bd4dedb002ecd979156a89ecab10190b",
+      "size": 8571,
+      "modified": "2026-02-26T15:39:31.321865"
+    },
+    "docs\\changelog\\26FEV\\ATUALIZACAO_AUTOMATICA_IP_26FEV.md": {
+      "hash": "46b66eca0220480907d11a4f2814f32c64c120f0ec3be6220717f3068e9e7e41",
+      "size": 7341,
+      "modified": "2026-02-26T11:53:15.177118"
+    },
+    "docs\\changelog\\26FEV\\AUTO_REMEDIACAO_COMPLETA_26FEV.md": {
+      "hash": "c90f09d25a28dd04437a4e070fdd5712ad07d24d13d4b148fb83e2172c34a9b4",
+      "size": 6914,
+      "modified": "2026-02-26T11:26:27.871138"
+    },
+    "docs\\changelog\\26FEV\\BACKUP_RESTORE_IMPLEMENTADO_26FEV.md": {
+      "hash": "8e347d43fbef01f19c54913aaec83c5a56916416a7511868010c2c3d03a808d8",
+      "size": 5601,
+      "modified": "2026-02-26T18:58:22.656651"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_BASE_CONHECIMENTO_26FEV.md": {
+      "hash": "6ad96e8feb78d9f9e83e853459d0ca959eca5d3edb4a82e48415efbb1f22363b",
+      "size": 3987,
+      "modified": "2026-02-26T10:48:05.963095"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_DEFINITIVA_NOC_26FEV.md": {
+      "hash": "9927f1a0f0479a0ecca3a11e4bc295da1dfd0c4b472c5c77052cd9a6b0bdfb56",
+      "size": 5620,
+      "modified": "2026-02-26T14:08:19.955840"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_FINAL_APLICADA_26FEV.md": {
+      "hash": "1433d9e79e745727038fb2cff499d442e66fc3733dd9d5b52f3a8bfed1f61d10",
+      "size": 6027,
+      "modified": "2026-02-26T13:02:58.298067"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_INCIDENTES_NOC_26FEV.md": {
+      "hash": "5e4c0e6e51bd9f319a6205c30200f09774f3ea21692261611abb63d7254f7215",
+      "size": 7805,
+      "modified": "2026-02-26T12:05:24.112659"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_NOC_FINAL_26FEV.md": {
+      "hash": "0e4edaff0ea8c893310855c956530df11569f4b07e94a7e0bb097e2639c19252",
+      "size": 4354,
+      "modified": "2026-02-26T13:42:47.044108"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_PING_AGUARDANDO_DADOS_26FEV.md": {
+      "hash": "f8901ffa4e359448d8f126d4dd33778e66ef9f0d93ad34ea9d39afc68ba715d1",
+      "size": 5000,
+      "modified": "2026-02-26T11:46:28.359502"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_REACT_HOOKS_26FEV.md": {
+      "hash": "850cacb84db27edb4614c757ccd6e12c88bcf6f55ecb144122cceaaa14cf588f",
+      "size": 2507,
+      "modified": "2026-02-26T19:03:16.976270"
+    },
+    "docs\\changelog\\26FEV\\CORRECAO_TIMEZONE_METRICAS_26FEV.md": {
+      "hash": "bc4d1f7838d7fce902cbd3feac7f3a407ce165c0775dc1b1c8517df9cb094a41",
+      "size": 3101,
+      "modified": "2026-02-26T13:14:18.679676"
+    },
+    "docs\\changelog\\26FEV\\CORRECOES_ADMIN_LOGO_26FEV.md": {
+      "hash": "89fa462af98f1e0163cf3272d53ed0b11760d1ae314ba8001bbab3a304e8fea1",
+      "size": 11585,
+      "modified": "2026-02-26T16:51:54.171910"
+    },
+    "docs\\changelog\\26FEV\\CORRECOES_APLICADAS_26FEV.md": {
+      "hash": "b45a90dddf4c46ce891d55413f34c8901ddc223b5e4d41fc00c4667ab3501808",
+      "size": 6224,
+      "modified": "2026-02-26T09:42:39.277367"
+    },
+    "docs\\changelog\\26FEV\\DESIGN_MELHORADO_RELATORIOS_26FEV.md": {
+      "hash": "84ef57c9b782283cbeafd68b4bf4c74f9025beb8c91ecf0d183b751d17cfaeae",
+      "size": 12299,
+      "modified": "2026-02-26T16:46:46.782730"
+    },
+    "docs\\changelog\\26FEV\\DETECCAO_AUTOMATICA_IP_26FEV.md": {
+      "hash": "894746230bfdced4d4942cb43a74e48d777685ae60b4403b0ccf493d2ffe8cfd",
+      "size": 5455,
+      "modified": "2026-02-26T11:32:08.086982"
+    },
+    "docs\\changelog\\26FEV\\DIAGNOSTICO_RELATORIOS_PERSONALIZADOS_26FEV.md": {
+      "hash": "53ea43506a787e466d3a0a6814e5a18739f1b3adacd89e99a89cbc5f89c6545c",
+      "size": 9124,
+      "modified": "2026-02-26T16:35:29.065426"
+    },
+    "docs\\changelog\\26FEV\\IMPLEMENTACOES_FINAIS_26FEV.md": {
+      "hash": "220e3965a7d15824637d8a24b6da3a09e8ee4c9298a5b7db0d77b67fc985ff75",
+      "size": 7387,
+      "modified": "2026-02-26T09:55:07.163471"
+    },
+    "docs\\changelog\\26FEV\\INDICE_DOCUMENTACAO_NOC_26FEV.md": {
+      "hash": "ee89d158ed89becce27d5dd195bd125f65f8e9f61ae2d1ba23eace1152f94bca",
+      "size": 6410,
+      "modified": "2026-02-26T16:13:08.096194"
+    },
+    "docs\\changelog\\26FEV\\MONITORAR_SERVICOS_COMPLETO_26FEV.md": {
+      "hash": "3b77aa75b4c10ecdcca94a713fedba90bc4b7274fd0a4ebebf91a7a2b3828094",
+      "size": 4697,
+      "modified": "2026-02-26T19:39:20.310644"
+    },
+    "docs\\changelog\\26FEV\\NOC_TEMPO_REAL_IMPLEMENTADO_26FEV.md": {
+      "hash": "2167a1a632698c4f4b3ed167868f73ce1d44a822fde19363fad15ebb34d16a1d",
+      "size": 6867,
+      "modified": "2026-02-26T13:27:46.334959"
+    },
+    "docs\\changelog\\26FEV\\RELATORIOS_PERSONALIZADOS_COMPLETO_26FEV.md": {
+      "hash": "f0c0fe885386f0cb5d48a196eab6431657f3cb27b069db096233dbfbbc17215e",
+      "size": 11084,
+      "modified": "2026-02-26T16:40:25.882847"
+    },
+    "docs\\changelog\\26FEV\\RESPOSTA_FINAL_NOC_26FEV.md": {
+      "hash": "7b3704f2e3f12d8b5bb47f47aed6adb670b1fa8691aab6ce8b63e056f5da0713",
+      "size": 6426,
+      "modified": "2026-02-26T16:11:45.953784"
+    },
+    "docs\\changelog\\26FEV\\RESPOSTA_FINAL_USUARIO_26FEV.md": {
+      "hash": "68cbe252a5baf58443095eff83b50b0fc89d7d6bebeea0dcb227c38e4d75dbd2",
+      "size": 7149,
+      "modified": "2026-02-26T15:42:41.680542"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_CORRECOES_FINAIS_26FEV.md": {
+      "hash": "ac1b348702b2dbefc664d3342cc529f189947e983a11309811f95f345b8fc7cc",
+      "size": 13219,
+      "modified": "2026-02-26T16:56:36.181969"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_FINAL_COMPLETO_26FEV.md": {
+      "hash": "00aa757b80fde5b539007b448e334c0ae4430434012e3dd234b9cda7145746bd",
+      "size": 11577,
+      "modified": "2026-02-26T12:31:23.046438"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_FINAL_RELATORIOS_26FEV.md": {
+      "hash": "a0ba0a23319c52a7c898178bd84304eceefacdc44130cb72805a0ac9e2ef1b9a",
+      "size": 10254,
+      "modified": "2026-02-26T16:42:22.084278"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_FINAL_SESSAO_26FEV.md": {
+      "hash": "c6a24a49605913e32d8055728d5b4c4c71c101ed223a25e258ffe8289fc948d2",
+      "size": 6375,
+      "modified": "2026-02-26T11:57:27.241237"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_FINAL_SESSAO_AIOPS_26FEV.md": {
+      "hash": "0045e6ab9d7b5e9e5f54e0d7609a638d5030bb714986b2ab998e83c00f4a128d",
+      "size": 8458,
+      "modified": "2026-02-26T15:54:36.875153"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_RELATORIOS_PERSONALIZADOS_26FEV.md": {
+      "hash": "fd7bf79ce4d489cfa28dadb17351f1c3c51aa28c1de6c2b0ae80e0d91e6288e1",
+      "size": 8833,
+      "modified": "2026-02-26T16:25:16.011353"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_SESSAO_AIOPS_26FEV.md": {
+      "hash": "ba17cb43766e945330c6b96d0f765fd888f53da5daa016584653421d60a44516",
+      "size": 7269,
+      "modified": "2026-02-26T15:40:05.003736"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_SESSAO_BIBLIOTECA_SENSORES_26FEV.md": {
+      "hash": "97112130ae65bc294899840683912fa3f045f430c318266feedf1db089be0cc2",
+      "size": 5979,
+      "modified": "2026-02-26T18:30:11.426283"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_SESSAO_CONTINUACAO_26FEV.md": {
+      "hash": "748ff78ffabccc52cee7c179e63eda57e7da18dd0a243f04ffe2dc2d646da17a",
+      "size": 7485,
+      "modified": "2026-02-26T16:12:21.536549"
+    },
+    "docs\\changelog\\26FEV\\RESUMO_SESSAO_INCIDENTES_26FEV.md": {
+      "hash": "b41c6f35e4781ee275480d69f869b4571c7ae1cb97ee554955df2f46766de4b5",
+      "size": 9312,
+      "modified": "2026-02-26T12:12:55.833434"
+    },
+    "docs\\changelog\\26FEV\\SISTEMA_RESTAURADO_26FEV.md": {
+      "hash": "559179993ff0cee528924ba5c39354eaeb149f93596f02a4a37fbce3f89ee9aa",
+      "size": 4754,
+      "modified": "2026-02-26T18:45:34.253310"
+    },
+    "docs\\changelog\\26FEV\\STATUS_FINAL_COMPLETO_26FEV.md": {
+      "hash": "30cc764c83a3a879ee72f26ed886a6c1a80c65b5a38240594dcd3b55c9a1badd",
+      "size": 9412,
+      "modified": "2026-02-26T16:06:49.523526"
+    },
+    "docs\\changelog\\26FEV\\SUCESSO_CORRECAO_26FEV.md": {
+      "hash": "8287a74697e2c1f969976ad7a597848eb93a069fd77341615b98c7c5ee80c92c",
+      "size": 8423,
+      "modified": "2026-02-26T12:41:40.945118"
+    },
+    "docs\\changelog\\26FEV\\TIMEZONE_BRASIL_CONFIGURADO_26FEV.md": {
+      "hash": "1bb7f44ac13ed9bdf38d1c5a9b2aa8a5e39bc33fbe5826a45397535c0b9f037b",
+      "size": 5273,
+      "modified": "2026-02-26T13:07:56.303053"
+    },
+    "docs\\changelog\\26FEV\\VERIFICACAO_NOC_26FEV.md": {
+      "hash": "4ac2fa018812d2aafd678ed29cc28523c6a39eaa2b23a48f50b406c1f047e918",
+      "size": 5484,
+      "modified": "2026-02-26T16:11:08.475887"
+    },
+    "docs\\changelog\\27FEV\\BACKEND_KUBERNETES_IMPLEMENTADO_27FEV.md": {
+      "hash": "1c6425cb6e6cccf85b6e95dd46f5b67af846e7120e62657083a94e053ed7fdcb",
+      "size": 12655,
+      "modified": "2026-02-27T13:56:17.239290"
+    },
+    "docs\\changelog\\27FEV\\BIBLIOTECA_INTEGRADA_SENSORES_27FEV.md": {
+      "hash": "a393d76583eeaa8547bb32c2a58e23c1f14c02b85a5c563f82b5d3e85e128510",
+      "size": 3569,
+      "modified": "2026-02-27T11:36:37.917100"
+    },
+    "docs\\changelog\\27FEV\\BOTOES_PASTAS_SERVIDORES_27FEV.md": {
+      "hash": "dba5d5762503f337e24542b9b6782d90aba4d0198c41e81b29424b6c05cd2929",
+      "size": 3464,
+      "modified": "2026-02-27T10:59:37.103693"
+    },
+    "docs\\changelog\\27FEV\\CORRECAO_GRUPOS_INTERFACE_27FEV.md": {
+      "hash": "d13b2641bb7d353cdd2d34513e1a1f808a005b1c3c7f542fc21ce5495e2b0320",
+      "size": 3407,
+      "modified": "2026-02-27T10:32:12.108624"
+    },
+    "docs\\changelog\\27FEV\\CORRECAO_NAVEGACAO_BOTOES_27FEV.md": {
+      "hash": "df86b50ee3c85bf0c87d1dfa7ae30a0958b89c47db5564e81477df835cf28a54",
+      "size": 7210,
+      "modified": "2026-02-27T16:12:23.055189"
+    },
+    "docs\\changelog\\27FEV\\CORRECAO_PROBLEMAS_27FEV.md": {
+      "hash": "cdbb9319256c22c4e507eb8b5bf66cd0b80598b893bf1814c2f60b6bfc934e6b",
+      "size": 6828,
+      "modified": "2026-02-27T15:11:57.703892"
+    },
+    "docs\\changelog\\27FEV\\CORRECAO_SUBPASTAS_27FEV.md": {
+      "hash": "a2d50e5c7a477d5c7ab219987247f86c099b9e5d88f367b911880fcae0757e9f",
+      "size": 3880,
+      "modified": "2026-02-27T11:32:36.253251"
+    },
+    "docs\\changelog\\27FEV\\CORRECOES_APLICADAS_27FEV.md": {
+      "hash": "dc182b456cfa7ea4a026df43a5fe7967bff10060b802c2e8951378a82a4d447b",
+      "size": 9359,
+      "modified": "2026-02-27T14:34:09.158593"
+    },
+    "docs\\changelog\\27FEV\\CORRECOES_FINAIS_MENU_CSS_27FEV.md": {
+      "hash": "9aa78321566415c7c9ae84630c31a545fcebb4f82f39edb57acbdcd4b95bff35",
+      "size": 6742,
+      "modified": "2026-02-27T16:22:37.775414"
+    },
+    "docs\\changelog\\27FEV\\CORRIGIR_IMPLEMENTACOES_INCOMPLETAS_27FEV.md": {
+      "hash": "a61a7704b2bb303d25c0e25afa66e051377a45c211d2f519e827adf051f53558",
+      "size": 10666,
+      "modified": "2026-02-27T14:30:59.843546"
+    },
+    "docs\\changelog\\27FEV\\DASHBOARD_GRAFANA_FUNCIONANDO_27FEV.md": {
+      "hash": "f1ab9035f718c59770afd9017fc3ceb696638691f52f1f631a8d4f5b79ec2366",
+      "size": 8142,
+      "modified": "2026-02-27T15:38:55.083250"
+    },
+    "docs\\changelog\\27FEV\\DIAGNOSTICO_SISTEMA_COMPLETO_27FEV.md": {
+      "hash": "49f06118ea8f5ed1e00f0ab96949413bb3a93e805cba513341fd8567690cdb86",
+      "size": 12407,
+      "modified": "2026-02-27T14:26:37.947159"
+    },
+    "docs\\changelog\\27FEV\\GRAFANA_STYLE_DASHBOARD_IMPLEMENTADO_27FEV.md": {
+      "hash": "e87036b546d7c6f6bcdaaacda15f3a543de77268c9eff90a7acfda8c2525e68f",
+      "size": 10136,
+      "modified": "2026-02-27T15:22:51.671619"
+    },
+    "docs\\changelog\\27FEV\\INDICE_KUBERNETES_27FEV.md": {
+      "hash": "83856f11d40bcc56f4d00aeb169d4f8c38f86b53830e582a75583f631be0c8d4",
+      "size": 11834,
+      "modified": "2026-02-27T14:05:37.202460"
+    },
+    "docs\\changelog\\27FEV\\INSTRUCOES_FINAIS_CORRECOES_27FEV.md": {
+      "hash": "ab68546036c51f9ca485b458b8605d4310585b64453f3c57c6c1e1e92b734b80",
+      "size": 6006,
+      "modified": "2026-02-27T14:38:50.917479"
+    },
+    "docs\\changelog\\27FEV\\INSTRUCOES_LIMPAR_CACHE_27FEV.md": {
+      "hash": "a8518dfc489622ab507f04893ee98b55164352b510beeb5e5a162acd2dd24a7a",
+      "size": 4751,
+      "modified": "2026-02-28T13:54:25.684609"
+    },
+    "docs\\changelog\\27FEV\\INTEGRACAO_KUBERNETES_PROBE_27FEV.md": {
+      "hash": "74e19322acf7cd3f678145593a92778f540adbc14791790319d2676efeb0f9d3",
+      "size": 15764,
+      "modified": "2026-02-27T14:01:41.706959"
+    },
+    "docs\\changelog\\27FEV\\INTERFACE_GRUPOS_DISCRETA_27FEV.md": {
+      "hash": "a54b1f86d421ddfcd1fd0c8eb2eff295c3a04b03da6c09951b8cc963590b1296",
+      "size": 3402,
+      "modified": "2026-02-27T10:55:19.953340"
+    },
+    "docs\\changelog\\27FEV\\KUBERNETES_APIS_METRICAS_27FEV.md": {
+      "hash": "ff421971504258c43c21fa6c67b2987cdea8c3576aeb2dd058c3b07ecffe0c95",
+      "size": 12517,
+      "modified": "2026-02-27T12:24:49.434329"
+    },
+    "docs\\changelog\\27FEV\\KUBERNETES_DASHBOARDS_ALERTAS_CRIPTOGRAFIA_27FEV.md": {
+      "hash": "326aed3388571edc046a95cacd11819462d3c922cfdc871e037cad58dc659216",
+      "size": 10665,
+      "modified": "2026-02-27T14:12:18.732226"
+    },
+    "docs\\changelog\\27FEV\\KUBERNETES_WIZARD_IMPLEMENTADO_27FEV.md": {
+      "hash": "574625faed095396bcfed26c03ffe5c1711c9f9bbd845817a4311bd5f4939318",
+      "size": 12223,
+      "modified": "2026-02-27T12:26:35.992290"
+    },
+    "docs\\changelog\\27FEV\\MENU_METRICAS_CORRIGIDO_27FEV.md": {
+      "hash": "9446f6b393cc50ee6b3eb9829e63e3adeb6610809dbbe6e96f4e2dc1ecbf377a",
+      "size": 3388,
+      "modified": "2026-02-27T15:46:42.792377"
+    },
+    "docs\\changelog\\27FEV\\MENU_REORGANIZADO_27FEV.md": {
+      "hash": "a397dbf28c4b3289c00162976909790a9cf77a574ab4fa52289ecbf57762c3a1",
+      "size": 1561,
+      "modified": "2026-02-27T15:58:52.736731"
+    },
+    "docs\\changelog\\27FEV\\OIDS_ACCESS_POINTS_27FEV.md": {
+      "hash": "f47a78eb901efc398363ca1d17d1b849f462cf88c6d17c1f49e3f56bb4b8455c",
+      "size": 6322,
+      "modified": "2026-02-27T12:15:42.725614"
+    },
+    "docs\\changelog\\27FEV\\PROBLEMAS_ENCONTRADOS_SISTEMA_27FEV.md": {
+      "hash": "b759ac17bec5d9dcf6c662f4c2cb3db38310c9fe1cc643371d5b9b8c4045d5cc",
+      "size": 13415,
+      "modified": "2026-02-27T14:30:20.340708"
+    },
+    "docs\\changelog\\27FEV\\REORGANIZACAO_MENU_BOTOES_27FEV.md": {
+      "hash": "747a55305cd148ad429581a45d466bf00f5f5963b8658ba7b4d37419bbcfcd5a",
+      "size": 5692,
+      "modified": "2026-02-27T16:05:52.918678"
+    },
+    "docs\\changelog\\27FEV\\REORGANIZACAO_MENU_FINAL_27FEV.md": {
+      "hash": "2d21f2caaf72190c9fad8cbc9a26657b39e3dd43cedfcfdde35ba2f4ac11b1ee",
+      "size": 1840,
+      "modified": "2026-02-27T15:58:05.475240"
+    },
+    "docs\\changelog\\27FEV\\REQUISITOS_KUBERNETES_27FEV.md": {
+      "hash": "90276e5c440155f65e6e4e66cc168e4a469258a13e258ff0c98bb33cc9e31f3a",
+      "size": 11437,
+      "modified": "2026-02-27T12:23:57.084078"
+    },
+    "docs\\changelog\\27FEV\\REQUISITOS_MONITORAMENTO_DISPOSITIVOS_27FEV.md": {
+      "hash": "42f73b92ca303d33c3014f3bebe800e225657eca6de4893b9de49203547486ff",
+      "size": 5099,
+      "modified": "2026-02-27T12:00:18.983300"
+    },
+    "docs\\changelog\\27FEV\\RESUMO_APLICACAO_KUBERNETES_27FEV.md": {
+      "hash": "d04efa8cceaf73cd478ec06dfe75db682e116186b55d2bc2fe5acf8530748960",
+      "size": 6269,
+      "modified": "2026-02-27T14:20:35.012078"
+    },
+    "docs\\changelog\\27FEV\\RESUMO_COMPLETO_KUBERNETES_27FEV.md": {
+      "hash": "2cecd9056044f562b21e59cf73202b41c69acf8963cd06e5d75ef0bec5b8b365",
+      "size": 12176,
+      "modified": "2026-02-27T14:02:30.159862"
+    },
+    "docs\\changelog\\27FEV\\RESUMO_FINAL_DASHBOARD_GRAFANA_27FEV.md": {
+      "hash": "f33709ba0572249b81d83a45a0d5d2b69d1e6b90c63123050cf4640434e61d94",
+      "size": 2945,
+      "modified": "2026-02-27T15:41:58.905243"
+    },
+    "docs\\changelog\\27FEV\\RESUMO_FINAL_KUBERNETES_COMPLETO_27FEV.md": {
+      "hash": "2cbc89e03157a52d1e92673f29fd0d988e2ce4e1164825902d7ca8b8920fb6bc",
+      "size": 14950,
+      "modified": "2026-02-27T14:06:42.846458"
+    },
+    "docs\\changelog\\27FEV\\RESUMO_SESSAO_CONTINUACAO_27FEV.md": {
+      "hash": "232c014bde030565340afacdd334a0e45f3a40e9e698280134582cb4f5256ecf",
+      "size": 17206,
+      "modified": "2026-02-27T14:22:42.126331"
+    },
+    "docs\\changelog\\27FEV\\RESUMO_SESSAO_KUBERNETES_27FEV.md": {
+      "hash": "bfad2a447f37aae32d24867a5707c679a792e3356e2020bc36ed0466d75dfd97",
+      "size": 9185,
+      "modified": "2026-02-27T13:46:40.207173"
+    },
+    "docs\\changelog\\27FEV\\RESUMO_SESSAO_KUBERNETES_INTEGRACAO_27FEV.md": {
+      "hash": "06f416f245a9b14eac92192aa54dc9f52101d71424a0c93cf30235b6edc59a1e",
+      "size": 9276,
+      "modified": "2026-02-27T14:03:22.398609"
+    },
+    "docs\\changelog\\27FEV\\SIDEBAR_PADRAO_RESTAURADO_27FEV.md": {
+      "hash": "88f74f0fcc688bcc3bd3e1c073c13e91703dcc67df56d9d926ca770dbd021c70",
+      "size": 2078,
+      "modified": "2026-02-27T15:50:21.073596"
+    },
+    "docs\\changelog\\27FEV\\STATUS_FINAL_DASHBOARD_METRICAS_27FEV.md": {
+      "hash": "5dca56ba3ec9cbe31ea42cfb96a29931fb8b2ccf11a78c19af7a44a0e5f5009b",
+      "size": 7170,
+      "modified": "2026-02-27T16:32:49.712532"
+    },
+    "docs\\changelog\\27FEV\\STATUS_REINICIO_PROBE_27FEV.md": {
+      "hash": "a08225947fbb36f5cfe8e902fa4e0c7ccc59c7e754141a85035470c5a4a2df18",
+      "size": 4304,
+      "modified": "2026-02-27T15:05:47.509897"
+    },
+    "docs\\changelog\\27FEV\\SUCESSO_CORRECOES_27FEV.md": {
+      "hash": "ccb4b3eaa8dfc31c094fce462b0828a4ef47c957dbc1bb7371a5ca777abf8317",
+      "size": 8491,
+      "modified": "2026-02-27T14:38:21.689231"
+    },
+    "docs\\changelog\\27FEV\\SUCESSO_DASHBOARD_GRAFANA_FINAL_27FEV.md": {
+      "hash": "9d4d1fd075c59d39c041b3e91993b43c5ceba95710ea5bba1d480c14d451775f",
+      "size": 5212,
+      "modified": "2026-02-27T15:47:55.960068"
+    },
+    "docs\\changelog\\27FEV\\SUCESSO_METRICAS_GRAFANA_27FEV.md": {
+      "hash": "11469f4d220a0a35032a1acb47a85fe72ea5dbec4435958146d3fc1a92b37f2a",
+      "size": 6799,
+      "modified": "2026-02-27T16:45:47.713783"
+    },
+    "docs\\changelog\\27FEV\\VERIFICACAO_COMPLETA_27FEV.md": {
+      "hash": "ab9dbf16b6822ae8b3133fb088813ec8f2e9fc458c909747726d627e09e92ce3",
+      "size": 7866,
+      "modified": "2026-02-27T14:27:16.422786"
+    },
+    "docs\\changelog\\28FEV\\CORRECAO_CONFIG_API_URL_28FEV.md": {
+      "hash": "775691c9ff977cfc7d07e92fd4229aa817e8445328b6a580055bd6b618ad67e2",
+      "size": 3705,
+      "modified": "2026-02-28T14:29:24.899679"
+    },
+    "docs\\changelog\\28FEV\\CORRECAO_DEFINITIVA_METRICAS_28FEV.md": {
+      "hash": "179a804101915dd29077ec35a5f65a1e0217a5bb89a2400a5f1ea1b03738adb0",
+      "size": 5422,
+      "modified": "2026-02-28T14:04:52.213042"
+    },
+    "docs\\changelog\\28FEV\\SOLUCAO_FINAL_METRICAS_28FEV.md": {
+      "hash": "333136495c1debd223d3631f5ec0d146182ca870f563de3e2aaf66ca2817222b",
+      "size": 4826,
+      "modified": "2026-02-28T14:01:11.728803"
+    },
+    "docs\\changelog\\28FEV\\STATUS_METRICAS_CACHE_28FEV.md": {
+      "hash": "743a80f24824b88bfbba77e5b18e3f487962e0a6a1024146795a5ba6b2dc28ef",
+      "size": 4602,
+      "modified": "2026-02-28T14:29:47.109766"
+    },
+    "api\\backup_20260227_143233\\MainLayout.js.bak": {
+      "hash": "494078bba924ffb8c295d45e394f10af31d3c6bf63c246e9b9b71cfb4d530c13",
+      "size": 3568,
+      "modified": "2026-02-27T14:14:57.488054"
+    },
+    "api\\backup_20260227_143233\\probe_core.py.bak": {
+      "hash": "e410bc3a9b9233c9fec13b3d1323565f7655632f74167470ad01ac226c070f1c",
+      "size": 18136,
+      "modified": "2026-02-27T14:00:02.490871"
+    },
+    "api\\backup_20260227_143233\\Sidebar.js.bak": {
+      "hash": "5a24cfd39483a0cbd312de40cb27853188256bf69b548b187014fe29b7d52fc0",
+      "size": 1648,
+      "modified": "2026-02-27T14:15:18.283406"
+    },
+    "api\\middleware\\waf.py": {
+      "hash": "d96112cb110d9b6728780cfaf17e47f7820742d70aec70d0bc74876b6e0f666c",
+      "size": 7960,
+      "modified": "2026-03-04T12:37:53.372095"
+    },
+    "api\\middleware\\__init__.py": {
+      "hash": "5ecc247a4b07a9d56a78680a863bb432bf50bc2b362e3022a0f4fe37e7458c46",
+      "size": 118,
+      "modified": "2026-03-04T12:38:10.639287"
+    },
+    "api\\routers\\admin_tools.py": {
+      "hash": "64649326fa4cc808cadee5f75630d3f025a394c3d49d18be4c965ffe87051f9b",
+      "size": 13356,
+      "modified": "2026-02-18T13:01:42.570155"
+    },
+    "api\\routers\\aiops.py": {
+      "hash": "95e6e43efb7580a9848f6b63c6cfa91d9a032c207ddfc84db8ca3b3e33c7c545",
+      "size": 25796,
+      "modified": "2026-02-26T15:38:06.221681"
+    },
+    "api\\routers\\aiops_advanced.py": {
+      "hash": "b750a9ee59cb32afd2ae2243d28f2337dc84efa1e35be00e7d3223651f936072",
+      "size": 12776,
+      "modified": "2026-02-19T16:35:39.656753"
+    },
+    "api\\routers\\ai_activities.py": {
+      "hash": "9d3b3b954b0b7ca817b9136d47d7b885dbed2702ddbc4be825d0c7bab5d3479a",
+      "size": 11310,
+      "modified": "2026-02-25T11:23:51.441959"
+    },
+    "api\\routers\\ai_analysis.py": {
+      "hash": "be52f0645d446356835d46ff21fb33a78cf31d080c23213fb3ffc358fb3a59be",
+      "size": 14031,
+      "modified": "2026-02-12T16:39:17.266048"
+    },
+    "api\\routers\\ai_config.py": {
+      "hash": "08742c21879400011bcb00244b42f2e06735f39055c741c5a2ba9ded40e4649f",
+      "size": 9389,
+      "modified": "2026-02-25T11:40:17.365227"
+    },
+    "api\\routers\\auth.py": {
+      "hash": "33aa0e6c96d585b1970aad78b89825ba2b869050644db9a22b81e3c1d9655523",
+      "size": 3086,
+      "modified": "2026-03-04T08:08:23.249436"
+    },
+    "api\\routers\\auth_config.py": {
+      "hash": "378d9ffda8771e695b6c566d53a004edf6d1ab1110f2bb360c4784f48d512783",
+      "size": 9511,
+      "modified": "2026-03-04T10:33:30.680670"
+    },
+    "api\\routers\\auto_update.py": {
+      "hash": "4df847c34d1400af9c568657ab2ee8243db1b78def718d7603e4b355ef17cd22",
+      "size": 13327,
+      "modified": "2026-03-02T09:24:22.576058"
+    },
+    "api\\routers\\backup.py": {
+      "hash": "d8f98364d1581a06b1cf7e0eb1b45d91fa5c12e79d45d94ad7cc1f6ff8fcac15",
+      "size": 6323,
+      "modified": "2026-02-26T18:49:08.162488"
+    },
+    "api\\routers\\custom_reports.py": {
+      "hash": "d4cffd582bd8169aa69e4fb2d37a502ee94dfb6e2089eadb153d5dd87040cbd7",
+      "size": 22596,
+      "modified": "2026-02-26T16:30:04.640085"
+    },
+    "api\\routers\\dashboard.py": {
+      "hash": "61c77d01af88ef682b378a63878652e1051c2bcafbcf07146adb7033bdc1df2f",
+      "size": 5628,
+      "modified": "2026-02-20T10:36:11.113123"
+    },
+    "api\\routers\\incidents.py": {
+      "hash": "ae01ad4b8d1f944a12f201ec2514cd81d2a2e928ed4a5957b51bd61b649c25ac",
+      "size": 6843,
+      "modified": "2026-02-25T16:17:49.374696"
+    },
+    "api\\routers\\knowledge_base.py": {
+      "hash": "aa1dec344cbccb6cdb6e41bc153f2debf713e297df7c8e2fa46327ec81455398",
+      "size": 8548,
+      "modified": "2026-02-25T11:22:27.933773"
+    },
+    "api\\routers\\kubernetes.py": {
+      "hash": "4bda30b3201834638b1bd70cb8b0900c6fc6b4768a1488d08803762c6da28904",
+      "size": 21827,
+      "modified": "2026-02-27T14:08:27.820937"
+    },
+    "api\\routers\\kubernetes_alerts.py": {
+      "hash": "ad6c784225a680edc6a6a878f06aee5fdd47abb6a7de646fa02fbe88313ed46b",
+      "size": 13054,
+      "modified": "2026-02-27T14:11:25.175571"
+    },
+    "api\\routers\\maintenance.py": {
+      "hash": "77de0dbc104f516998f4330ec7b472b0bfbe50aba40edcd52e97ff36e113241c",
+      "size": 11048,
+      "modified": "2026-02-13T13:28:07.620376"
+    },
+    "api\\routers\\metrics.py": {
+      "hash": "dc127e014a9d567dbdcbf8bb357129129b782ca82a5ec5367140602e7d495bd1",
+      "size": 9033,
+      "modified": "2026-02-26T13:10:17.232225"
+    },
+    "api\\routers\\metrics_dashboard.py": {
+      "hash": "9b5ac6fbb287ec0bdbb5997165b0c45f500310224737d1db8e8c70f55e72ea9f",
+      "size": 16891,
+      "modified": "2026-02-27T15:36:53.955791"
+    },
+    "api\\routers\\noc.py": {
+      "hash": "7117daf32346196ff8c6f07eab0acba72a20d215fd1545a9568799838b354fbe",
+      "size": 15168,
+      "modified": "2026-03-02T14:44:15.548792"
+    },
+    "api\\routers\\noc_realtime.py": {
+      "hash": "85d8510a1e892650380ae50933f6edc36944fb721e182edcad1179ee2db07204",
+      "size": 18784,
+      "modified": "2026-03-02T15:58:47.085270"
+    },
+    "api\\routers\\notifications.py": {
+      "hash": "ac297c672b390cef6dd3ec62190c3fb9819961b5d74c33a25e1adba5657992c0",
+      "size": 54025,
+      "modified": "2026-03-04T10:04:25.101888"
+    },
+    "api\\routers\\probes.py": {
+      "hash": "d65e052dafe95a05340eee3f795f3f9258d7580fde32faf29ae45a238e9ed9a1",
+      "size": 5603,
+      "modified": "2026-03-02T16:18:44.814940"
+    },
+    "api\\routers\\probe_commands.py": {
+      "hash": "047185cff43ab95ab62b478b79e739193e08d51064d6274a8e39c276b8c1893b",
+      "size": 10521,
+      "modified": "2026-02-19T16:28:49.801166"
+    },
+    "api\\routers\\reports.py": {
+      "hash": "5ed1d41ccd4cecdd495714722ccbdd28cb2869cec518dfdd0ba427d1abe93a1a",
+      "size": 26493,
+      "modified": "2026-02-18T13:25:22.661002"
+    },
+    "api\\routers\\seed_kb.py": {
+      "hash": "167b29a6cfc14a93c78aaef9a79369cd96bbfcc6fd056b234d8d0efce61165cd",
+      "size": 15959,
+      "modified": "2026-02-26T15:00:21.250035"
+    },
+    "api\\routers\\sensors.py": {
+      "hash": "9a25a846f964a32ce2fb4a8d99c88ab74a446a19d97a8e4b5fcdff427981e078",
+      "size": 21395,
+      "modified": "2026-02-27T15:10:00.452432"
+    },
+    "api\\routers\\sensor_groups.py": {
+      "hash": "787717ac5708e65f4fa8a4a75ba8e2d44c12f85fbe3f457f52bfc3ff7dff50e4",
+      "size": 8070,
+      "modified": "2026-02-27T09:37:47.891767"
+    },
+    "api\\routers\\sensor_notes.py": {
+      "hash": "a377d1b0355163047360400953424c84c86cb8fa276e16e4e680ead5b86ce917",
+      "size": 4864,
+      "modified": "2026-02-13T11:00:52.865259"
+    },
+    "api\\routers\\servers.py": {
+      "hash": "34fe1a590f753d9dcb6ac507a3a797685dd9fc290dbb796bbfbbc4590a250e93",
+      "size": 14369,
+      "modified": "2026-02-20T10:29:35.888957"
+    },
+    "api\\routers\\tenants.py": {
+      "hash": "5badd542d67adb9f6baccbf39956114f3eb26e7e99e4adbc27d167e0f8e98862",
+      "size": 5283,
+      "modified": "2026-02-12T15:27:55.510857"
+    },
+    "api\\routers\\test_tools.py": {
+      "hash": "eb2553ea355cfd027579cabcffd80a682090595384755b8c48d7f3dc58a00fca",
+      "size": 8253,
+      "modified": "2026-02-24T16:17:31.743970"
+    },
+    "api\\routers\\threshold_config.py": {
+      "hash": "19264163e4fd845d48fd3f172bb0ae406f518cc7bc331e209f5d221cc47905c9",
+      "size": 10235,
+      "modified": "2026-02-25T15:35:51.189260"
+    },
+    "api\\routers\\users.py": {
+      "hash": "12e498543f809802cc1c156f1be37e690857cc48836bfd72e8594c7aa07f9ff7",
+      "size": 5420,
+      "modified": "2026-02-12T16:29:07.056849"
+    },
+    "api\\routers\\__init__.py": {
+      "hash": "b3fb8118c3748953164311f0bcfdfefb9aa7f3cd0e373b15ccc1cd9f6d709136",
+      "size": 15,
+      "modified": "2026-02-11T10:54:45.991449"
+    },
+    "api\\utils\\encryption.py": {
+      "hash": "c20961dbbba056016058c22c32777adf3c0b30533e5af7333c9417a789bf6252",
+      "size": 4377,
+      "modified": "2026-02-27T15:03:02.392483"
+    },
+    "api\\frontend\\public\\coruja-logo.png": {
+      "hash": "102519a94b6ce33a9899b59ee73fd9e45a53dc71c274a95cb591437c27a9330f",
+      "size": 273104,
+      "modified": "2026-02-25T09:56:53.449186"
+    }
+  }
+}

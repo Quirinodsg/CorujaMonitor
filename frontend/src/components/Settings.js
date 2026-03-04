@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import ThresholdConfig from './ThresholdConfig';
+import SecurityMonitor from './SecurityMonitor';
 import './Management.css';
 import './Settings.css';
 
@@ -1466,6 +1467,9 @@ function Settings({ onNavigate }) {
         Configure métodos de autenticação enterprise, políticas de senha, MFA e gerenciamento de sessões.
         Compatível com LGPD e ISO 27001.
       </p>
+
+      {/* Security Monitor Component */}
+      <SecurityMonitor />
 
       <div className="info-banner" style={{ marginBottom: '20px', background: '#e3f2fd', padding: '15px', borderRadius: '8px', border: '1px solid #2196f3' }}>
         <p style={{ margin: 0, color: '#1976d2' }}>
