@@ -1,0 +1,27 @@
+========================================
+COMANDOS PARA CORRIGIR EMPRESA TECHBIZ
+========================================
+
+COPIE E COLE ESTES COMANDOS NO SERVIDOR LINUX (192.168.31.161):
+
+cd ~/CorujaMonitor
+
+chmod +x rebuild_frontend_linux.sh
+
+./rebuild_frontend_linux.sh
+
+
+========================================
+AGUARDE O SCRIPT TERMINAR (cerca de 2-3 minutos)
+========================================
+
+Depois:
+1. Abra o navegador em ABA ANÔNIMA (Ctrl+Shift+N)
+2. Acesse: http://192.168.31.161:3000
+3. Faça login: admin@coruja.com / admin123
+4. Vá em "Empresas"
+5. Agora deve aparecer apenas "Default"
+
+========================================
+PROBLEMA RESOLVIDO!
+========================================

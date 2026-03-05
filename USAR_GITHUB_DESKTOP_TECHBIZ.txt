@@ -1,0 +1,51 @@
+========================================
+USAR GITHUB DESKTOP PARA COMMIT
+========================================
+
+PASSO A PASSO VISUAL:
+
+1. ABRA O GITHUB DESKTOP
+
+2. VERIFIQUE OS ARQUIVOS ALTERADOS (lado esquerdo):
+   ✓ rebuild_frontend_linux.sh
+   ✓ CORRIGIR_EMPRESA_TECHBIZ.md
+   ✓ COMANDOS_CORRIGIR_TECHBIZ.txt
+   ✓ commit_correcao_techbiz.ps1
+   ✓ USAR_GITHUB_DESKTOP_TECHBIZ.txt
+
+3. NO CAMPO "Summary" (canto inferior esquerdo), digite:
+   fix: Corrigir empresa Techbiz fantasma
+
+4. NO CAMPO "Description" (opcional), digite:
+   Adiciona script para rebuild do frontend sem cache
+
+5. CLIQUE NO BOTÃO AZUL:
+   "Commit to master"
+
+6. CLIQUE NO BOTÃO:
+   "Push origin" (canto superior direito)
+
+7. AGUARDE O UPLOAD TERMINAR
+   (barra de progresso no topo)
+
+========================================
+DEPOIS NO SERVIDOR LINUX:
+========================================
+
+Copie e cole estes comandos:
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x rebuild_frontend_linux.sh
+./rebuild_frontend_linux.sh
+
+========================================
+AGUARDE O SCRIPT TERMINAR (2-3 minutos)
+========================================
+
+Depois abra em ABA ANÔNIMA:
+http://192.168.31.161:3000
+
+A empresa Techbiz não deve mais aparecer!
+
+========================================
