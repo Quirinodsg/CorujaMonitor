@@ -1,0 +1,53 @@
+========================================
+🚨 EXECUTAR AGORA NO SERVIDOR LINUX
+========================================
+
+PROBLEMA: Login não funciona após rebuild
+
+SOLUÇÃO RÁPIDA:
+========================================
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x corrigir_login_completo.sh
+./corrigir_login_completo.sh
+
+========================================
+O QUE O SCRIPT FAZ:
+========================================
+
+1. ✅ Dá permissão aos scripts
+2. ✅ Verifica estrutura do banco
+3. ✅ Verifica se admin existe
+4. ✅ Reseta senha para admin123
+5. ✅ Testa login via API (email e username)
+6. ✅ Mostra logs da API
+
+========================================
+APÓS EXECUTAR:
+========================================
+
+Acesse: http://192.168.31.161:3000
+
+Email: admin@coruja.com
+Senha: admin123
+
+========================================
+SE AINDA NÃO FUNCIONAR:
+========================================
+
+OPÇÃO A - Reiniciar API:
+  docker compose restart api
+  sleep 10
+  ./corrigir_login_completo.sh
+
+OPÇÃO B - Recriar admin:
+  docker compose exec api python init_admin.py
+
+OPÇÃO C - Ver logs:
+  docker compose logs --tail=100 api
+
+========================================
+Data: 05/03/2026 15:00
+Status: 🚨 URGENTE - EXECUTAR AGORA
+========================================
