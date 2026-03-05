@@ -1,0 +1,43 @@
+═══════════════════════════════════════════════════════════════
+         🔥 EXECUTAR AGORA - SOLUÇÃO DEFINITIVA 🔥
+═══════════════════════════════════════════════════════════════
+
+NO SERVIDOR LINUX (192.168.31.161):
+
+cd ~/CorujaMonitor && git pull origin master && chmod +x rebuild_definitivo.sh && ./rebuild_definitivo.sh
+
+═══════════════════════════════════════════════════════════════
+
+AGUARDAR 5 MINUTOS (rebuild completo)
+
+═══════════════════════════════════════════════════════════════
+
+DEPOIS:
+
+1. FECHAR TODAS AS ABAS DO NAVEGADOR
+2. LIMPAR CACHE (Ctrl+Shift+Del)
+3. ABRIR ABA ANÔNIMA (Ctrl+Shift+N)
+4. ACESSAR: http://192.168.31.161:3000
+
+═══════════════════════════════════════════════════════════════
+
+CREDENCIAIS:
+Email: admin@coruja.com
+Senha: admin123
+
+═══════════════════════════════════════════════════════════════
+
+O QUE FOI CORRIGIDO:
+
+✅ config.js não usa mais localhost hardcoded
+✅ SEMPRE usa o IP do host atual
+✅ CACHE_VERSION aumentado para v5.0
+
+═══════════════════════════════════════════════════════════════
+
+VERIFICAR NO CONSOLE (F12):
+
+✅ CORRETO: http://192.168.31.161:8000/api/v1/auth/login
+❌ ERRADO:  http://localhost:8000/api/v1/auth/login
+
+═══════════════════════════════════════════════════════════════
