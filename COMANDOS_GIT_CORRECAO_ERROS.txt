@@ -1,0 +1,41 @@
+==========================================
+COMANDOS PARA ENVIAR CORREÇÃO PARA O GIT
+==========================================
+
+Abra o Git Bash e execute:
+
+cd ~/CorujaMonitor
+
+git add corrigir_tabelas_banco.sh
+git add EXECUTAR_AGORA_CORRIGIR_ERROS.txt
+git add diagnostico_login_completo.sh
+git add corrigir_login_definitivo.sh
+git add commit_correcao_erros_paginas.sh
+git add COMANDOS_GIT_CORRECAO_ERROS.txt
+
+git commit -m "fix: Corrigir erros nas páginas (Empresas, Incidentes, Relatórios, KB, IA)"
+
+git push origin master
+
+==========================================
+DEPOIS, NO SERVIDOR LINUX:
+==========================================
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x corrigir_tabelas_banco.sh
+./corrigir_tabelas_banco.sh
+
+==========================================
+
+Após executar o script:
+1. Recarregue o navegador (Ctrl+Shift+R)
+2. Teste as páginas:
+   - Empresas
+   - Incidentes
+   - Relatórios
+   - Base de Conhecimento
+   - Atividades IA
+   - Configuração
+
+==========================================
