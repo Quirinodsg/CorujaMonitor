@@ -1,0 +1,55 @@
+==========================================
+DIAGNOSTICAR ERROS NAS PÁGINAS
+==========================================
+
+PASSO 1 - Enviar arquivos para o Git (Windows):
+==========================================
+
+Abra o Git Bash e execute:
+
+cd ~/CorujaMonitor
+bash git_push_agora.sh
+
+==========================================
+PASSO 2 - Baixar e executar diagnóstico (Linux):
+==========================================
+
+Conecte via SSH no servidor Linux e execute:
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x diagnostico_erros_paginas.sh
+chmod +x testar_endpoints_autenticado.sh
+./diagnostico_erros_paginas.sh
+
+==========================================
+PASSO 3 - Testar com autenticação:
+==========================================
+
+./testar_endpoints_autenticado.sh
+
+==========================================
+PASSO 4 - Analisar resultado:
+==========================================
+
+Se os endpoints funcionam:
+  → Problema está no FRONTEND
+  → Abra o console do navegador (F12)
+  → Vá na aba "Console"
+  → Copie os erros e me envie
+
+Se os endpoints NÃO funcionam:
+  → Problema está na API
+  → Execute: ./corrigir_tabelas_banco.sh
+  → Depois teste novamente
+
+==========================================
+INFORMAÇÕES NECESSÁRIAS:
+==========================================
+
+Me envie:
+1. Saída do comando: ./diagnostico_erros_paginas.sh
+2. Saída do comando: ./testar_endpoints_autenticado.sh
+3. Erros do console do navegador (F12 > Console)
+
+==========================================

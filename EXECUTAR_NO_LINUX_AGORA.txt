@@ -1,0 +1,44 @@
+==========================================
+EXECUTAR NO SERVIDOR LINUX - AGORA
+==========================================
+
+Conecte via SSH no servidor Linux e execute:
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x corrigir_tabelas_banco.sh
+./corrigir_tabelas_banco.sh
+
+==========================================
+O QUE O SCRIPT VAI FAZER:
+==========================================
+
+1. Verificar tabelas existentes no banco
+2. Criar TODAS as tabelas necessárias
+3. Popular Knowledge Base com 5 entradas
+4. Reiniciar API
+5. Testar endpoints
+
+==========================================
+APÓS EXECUTAR:
+==========================================
+
+1. Recarregue o navegador (Ctrl+Shift+R)
+2. Acesse: http://192.168.31.161:3000
+3. Faça login: admin@coruja.com / admin123
+4. Teste as páginas:
+   ✓ Empresas
+   ✓ Incidentes
+   ✓ Relatórios
+   ✓ Base de Conhecimento
+   ✓ Atividades IA
+   ✓ Configuração
+
+==========================================
+SE DER ERRO:
+==========================================
+
+Execute o diagnóstico:
+./diagnostico_login_completo.sh
+
+==========================================
