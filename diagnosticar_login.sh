@@ -1,45 +1,49 @@
 #!/bin/bash
 
-echo "========================================"
-echo "DIAGNÓSTICO DO LOGIN"
-echo "========================================"
+echo "=========================================="
+echo "DIAGNÓSTICO DO PROBLEMA DE LOGIN"
+echo "=========================================="
 echo ""
 
-echo "1. Verificando logs da API..."
-echo "========================================"
-docker logs coruja-api --tail 100 | grep -i "error\|exception\|login\|auth"
+echo "1. Verificando versão do código no servidor..."
+echo "   Última linha do Login.js:"
+tail -5 frontend/src/components/Login.js | head -1
 
 echo ""
-echo "2. Testando endpoint de login..."
-echo "========================================"
-curl -X POST http://localhost:8000/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@coruja.com","password":"admin123"}' \
-  -v
+echo "2. Verificando se import do config.js existe:"
+grep "import.*API_URL.*config" frontend/src/components/Login.js
 
 echo ""
-echo ""
-echo "3. Verificando usuário no banco..."
-echo "========================================"
-docker compose exec -T postgres psql -U coruja -d coruja_monitor -c "SELECT id, email, is_active, role FROM users WHERE email = 'admin@coruja.com';"
+echo "3. Verificando config.js:"
+grep "API_URL" frontend/src/config.js
 
 echo ""
-echo "4. Verificando status dos containers..."
-echo "========================================"
+echo "4. Verificando containers em execução:"
 docker compose ps
 
 echo ""
-echo "5. Verificando logs do frontend..."
-echo "========================================"
-docker logs coruja-frontend --tail 50 | grep -i "error\|failed"
+echo "5. Verificando quando a imagem do frontend foi criada:"
+docker images | grep coruja-frontend
 
 echo ""
-echo "6. Testando conectividade API..."
-echo "========================================"
-curl http://localhost:8000/health
+echo "6. Testando API diretamente:"
+curl -s -X POST http://localhost:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin@coruja.com","password":"admin123"}' | head -c 200
 
 echo ""
 echo ""
-echo "========================================"
-echo "DIAGNÓSTICO CONCLUÍDO"
-echo "========================================"
+echo "=========================================="
+echo "DIAGNÓSTICO COMPLETO"
+echo "=========================================="
+echo ""
+echo "Se o import do config.js NÃO aparecer acima,"
+echo "significa que o git pull não foi executado ainda."
+echo ""
+echo "Se aparecer mas a imagem é antiga (mais de 10 min),"
+echo "significa que o rebuild não foi feito."
+echo ""
+echo "SOLUÇÃO:"
+echo "  chmod +x corrigir_login_final.sh"
+echo "  ./corrigir_login_final.sh"
+echo ""
