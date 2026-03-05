@@ -1,56 +1,70 @@
 ========================================
-SOLUÇÃO: EMPRESA TECHBIZ FANTASMA
+SOLUÇÃO: EMPRESA TECHBIZ - NETWORK ERROR
 ========================================
 
-PROBLEMA:
+PROBLEMA ATUALIZADO:
 - Empresa "Techbiz" aparece no frontend
-- NÃO existe no banco de dados
-- Não é cache do navegador
+- Ao tentar excluir, dá erro "Network Error"
+- Isso significa que ela EXISTE no banco de dados
+- Mas a API não está conseguindo excluir
 
 CAUSA:
-- Frontend no servidor Linux está com imagem Docker antiga
-- Precisa rebuild completo sem cache
+- Empresa existe no banco do servidor Linux
+- Pode ter dados relacionados impedindo exclusão
+- Frontend também precisa de rebuild
 
-SOLUÇÃO RÁPIDA:
-================
+SOLUÇÃO COMPLETA:
+=================
 
-1. ABRA O GITHUB DESKTOP no Windows
+1. ABRA O GIT BASH no Windows e cole:
 
-2. FAÇA COMMIT dos arquivos:
-   - Summary: fix: Corrigir empresa Techbiz fantasma
-   - Clique em "Commit to master"
-   - Clique em "Push origin"
+cd "/c/Users/andre.quirino/Coruja Monitor"
+chmod +x commit_techbiz.sh
+./commit_techbiz.sh
 
-3. NO SERVIDOR LINUX, copie e cole:
+2. NO SERVIDOR LINUX, copie e cole:
 
 cd ~/CorujaMonitor
 git pull origin master
+
+# Verificar se Techbiz existe
+chmod +x verificar_techbiz_linux.sh
+./verificar_techbiz_linux.sh
+
+# Excluir Techbiz diretamente do banco
+chmod +x excluir_techbiz_direto.sh
+./excluir_techbiz_direto.sh
+(Digite: SIM quando pedir confirmação)
+
+# Rebuild do frontend
 chmod +x rebuild_frontend_linux.sh
 ./rebuild_frontend_linux.sh
 
-4. AGUARDE 2-3 MINUTOS
+3. AGUARDE 2-3 MINUTOS
 
-5. ABRA EM ABA ANÔNIMA:
+4. ABRA EM ABA ANÔNIMA:
    http://192.168.31.161:3000
 
-6. PRONTO! Techbiz não aparece mais
+5. PRONTO! Techbiz não aparece mais
 
 ========================================
 ARQUIVOS CRIADOS:
 ========================================
 
+✓ verificar_techbiz_linux.sh
+  → Verifica se Techbiz existe no banco
+
+✓ excluir_techbiz_direto.sh
+  → Exclui Techbiz diretamente do banco
+  → Remove todos os dados relacionados
+
 ✓ rebuild_frontend_linux.sh
-  → Script para rebuild do frontend
+  → Rebuild do frontend sem cache
 
-✓ CORRIGIR_EMPRESA_TECHBIZ.md
-  → Documentação completa do problema
-
-✓ COMANDOS_CORRIGIR_TECHBIZ.txt
+✓ COMANDOS_EXCLUIR_TECHBIZ_LINUX.txt
   → Comandos prontos para copiar
 
-✓ USAR_GITHUB_DESKTOP_TECHBIZ.txt
-  → Passo a passo visual do GitHub Desktop
-
-✓ Este arquivo (resumo)
+✓ commit_techbiz.sh
+  → Script de commit para Git Bash
 
 ========================================
