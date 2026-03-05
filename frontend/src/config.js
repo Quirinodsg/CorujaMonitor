@@ -10,22 +10,16 @@ const getApiUrl = () => {
     return process.env.REACT_APP_API_URL;
   }
   
-  // Detecta automaticamente o IP do host atual
+  // SEMPRE usa o IP do host atual na porta 8000
+  // Isso garante que funcione tanto em localhost quanto em rede
   const hostname = window.location.hostname;
-  
-  // Se estiver em localhost, usa localhost
-  if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    return 'http://localhost:8000/api/v1';
-  }
-  
-  // Caso contrário, usa o IP do host atual na porta 8000
   return `http://${hostname}:8000/api/v1`;
 };
 
 export const API_URL = getApiUrl();
 
 // CACHE BUSTER - Forçar atualização
-const CACHE_VERSION = 'v4.0-REBUILD-' + Date.now();
+const CACHE_VERSION = 'v5.0-FIX-LOCALHOST-' + Date.now();
 
 // Log para debug (sempre ativo para verificar cache)
 console.log('🔧 [CONFIG ' + CACHE_VERSION + '] API URL configurada:', API_URL);
