@@ -37,9 +37,17 @@ class WAFMiddleware(BaseHTTPMiddleware):
         self._compiled_xss_patterns = None
         
         # Configurações
-        self.max_requests_per_minute = 100
-        self.max_requests_per_hour = 1000
+        self.max_requests_per_minute = 500  # Aumentado para suportar frontend
+        self.max_requests_per_hour = 5000   # Aumentado para suportar frontend
         self.blacklist_duration = timedelta(hours=1)
+        
+        # Whitelist de IPs internos (Docker, localhost)
+        self.whitelist_ips = {
+            "127.0.0.1",
+            "::1",
+            "172.18.0.1",  # Docker network
+            "localhost"
+        }
         
         # Whitelist de paths que não precisam de verificação completa
         self.whitelist_paths = [
@@ -101,6 +109,16 @@ class WAFMiddleware(BaseHTTPMiddleware):
         
         client_ip = request.client.host
         path = request.url.path
+        
+        # Debug: log do IP
+        logger.info(f"WAF: Request from IP {client_ip} to {path}")
+        
+        # Skip verificação completa para IPs whitelisted (Docker, localhost)
+        if client_ip in self.whitelist_ips:
+            logger.info(f"WAF: IP {client_ip} is whitelisted, skipping checks")
+            response = await call_next(request)
+            self._add_security_headers(response)
+            return response
         
         # Skip verificação completa para paths whitelisted (performance)
         if path in self.whitelist_paths:

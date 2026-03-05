@@ -1,0 +1,113 @@
+================================================================================
+  CORRIGIR LOGIN - Servidor Linux (192.168.31.161)
+================================================================================
+
+PROBLEMA:
+O frontend está tentando acessar http://localhost:8000 mas deveria usar
+http://192.168.31.161:8000
+
+SOLUÇÃO:
+Execute estes comandos NO SERVIDOR LINUX (192.168.31.161):
+
+================================================================================
+  COMANDOS PARA EXECUTAR
+================================================================================
+
+# 1. Ir para o diretório do projeto
+cd ~/CorujaMonitor
+
+# 2. Fazer backup do Login.js
+cp frontend/src/components/Login.js frontend/src/components/Login.js.bak
+
+# 3. Editar o arquivo Login.js
+nano frontend/src/components/Login.js
+
+# 4. Procure esta linha (aproximadamente linha 74):
+const response = await axios.post('http://localhost:8000/api/v1/auth/login', payload);
+
+# 5. Substitua por estas DUAS linhas:
+const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');
+const response = await axios.post(`${API_URL}/api/v1/auth/login`, payload);
+
+# 6. Salvar: Ctrl+X, Y, Enter
+
+# 7. Rebuild do frontend
+docker compose build --no-cache frontend
+
+# 8. Reiniciar frontend
+docker compose up -d frontend
+
+# 9. Aguardar 30 segundos
+sleep 30
+
+# 10. Testar
+curl http://192.168.31.161:3000
+
+================================================================================
+  OU USE O SCRIPT AUTOMÁTICO
+================================================================================
+
+# Tornar executável
+chmod +x corrigir_login_linux.sh
+
+# Executar
+./corrigir_login_linux.sh
+
+================================================================================
+  ALTERNATIVA: Edição Manual Rápida
+================================================================================
+
+Se preferir editar manualmente:
+
+1. No servidor Linux, execute:
+   nano frontend/src/components/Login.js
+
+2. Procure a linha 74 que tem:
+   'http://localhost:8000/api/v1/auth/login'
+
+3. Mude para:
+   `${window.location.origin.replace(':3000', ':8000')}/api/v1/auth/login`
+
+4. Salve e saia (Ctrl+X, Y, Enter)
+
+5. Rebuild:
+   docker compose build --no-cache frontend
+   docker compose up -d frontend
+
+================================================================================
+  VERIFICAR SE FUNCIONOU
+================================================================================
+
+# Testar login via API
+curl -X POST http://192.168.31.161:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin@coruja.com","password":"admin123"}'
+
+# Deve retornar: {"access_token":"..."}
+
+# Testar no navegador
+Acesse: http://192.168.31.161:3000
+Email: admin@coruja.com
+Senha: admin123
+
+================================================================================
+  RESUMO DA MUDANÇA
+================================================================================
+
+ANTES (linha 74 do Login.js):
+const response = await axios.post('http://localhost:8000/api/v1/auth/login', payload);
+
+DEPOIS (linhas 74-75 do Login.js):
+const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');
+const response = await axios.post(`${API_URL}/api/v1/auth/login`, payload);
+
+EXPLICAÇÃO:
+- window.location.origin pega o IP que você está acessando (192.168.31.161:3000)
+- replace(':3000', ':8000') troca a porta 3000 por 8000
+- Resultado: http://192.168.31.161:8000
+
+================================================================================
+
+Data: 05/03/2026
+Servidor Linux: 192.168.31.161
+Servidor Local: 192.168.31.245

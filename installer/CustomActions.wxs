@@ -104,13 +104,26 @@
       ]]>
     </CustomAction>
     
-    <!-- Criar serviço Windows -->
-    <CustomAction Id="SetCreateServiceCmd"
-                  Property="CreateServiceCmd"
-                  Value="&quot;[System64Folder]sc.exe&quot; create CorujaProbe binPath= \&quot;[System64Folder]cmd.exe /c cd /d [INSTALLFOLDER] &amp;&amp; python probe_core.py\&quot; start= auto DisplayName= \&quot;Coruja Monitor Probe\&quot;"
+    <!-- Instalar serviço via Task Scheduler (mais confiável) -->
+    <CustomAction Id="SetInstallServiceCmd"
+                  Property="InstallServiceCmd"
+                  Value="&quot;[System64Folder]schtasks.exe&quot; /create /tn \&quot;CorujaMonitorProbe\&quot; /tr \&quot;python [INSTALLFOLDER]probe_core.py\&quot; /sc onstart /delay 0000:30 /rl highest /f"
                   Execute="immediate" />
     
-    <CustomAction Id="CreateServiceCmd"
+    <CustomAction Id="InstallServiceCmd"
+                  BinaryKey="WixCA"
+                  DllEntry="CAQuietExec"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="no" />
+    
+    <!-- Configurar recuperação automática -->
+    <CustomAction Id="SetConfigRecoveryCmd"
+                  Property="ConfigRecoveryCmd"
+                  Value="&quot;[System64Folder]schtasks.exe&quot; /change /tn \&quot;CorujaMonitorProbe\&quot; /enable"
+                  Execute="immediate" />
+    
+    <CustomAction Id="ConfigRecoveryCmd"
                   BinaryKey="WixCA"
                   DllEntry="CAQuietExec"
                   Execute="deferred"
@@ -120,7 +133,7 @@
     <!-- Iniciar serviço -->
     <CustomAction Id="SetStartServiceCmd"
                   Property="StartServiceCmd"
-                  Value="&quot;[System64Folder]sc.exe&quot; start CorujaProbe"
+                  Value="&quot;[System64Folder]schtasks.exe&quot; /run /tn \&quot;CorujaMonitorProbe\&quot;"
                   Execute="immediate" />
     
     <CustomAction Id="StartServiceCmd"
@@ -133,7 +146,7 @@
     <!-- Parar serviço na desinstalação -->
     <CustomAction Id="SetStopServiceCmd"
                   Property="StopServiceCmd"
-                  Value="&quot;[System64Folder]sc.exe&quot; stop CorujaProbe"
+                  Value="&quot;[System64Folder]taskkill.exe&quot; /f /im python.exe"
                   Execute="immediate" />
     
     <CustomAction Id="StopServiceCmd"
@@ -146,7 +159,7 @@
     <!-- Remover serviço na desinstalação -->
     <CustomAction Id="SetDeleteServiceCmd"
                   Property="DeleteServiceCmd"
-                  Value="&quot;[System64Folder]sc.exe&quot; delete CorujaProbe"
+                  Value="&quot;[System64Folder]schtasks.exe&quot; /delete /tn \&quot;CorujaMonitorProbe\&quot; /f"
                   Execute="immediate" />
     
     <CustomAction Id="DeleteServiceCmd"

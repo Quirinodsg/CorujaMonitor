@@ -1,0 +1,161 @@
+================================================================================
+  RESOLVER ERRO: ERR_SSL_PROTOCOL_ERROR
+================================================================================
+
+ERRO ATUAL:
+  ❌ ERR_SSL_PROTOCOL_ERROR
+  ❌ localhost sent an invalid response
+
+CAUSA:
+  O Nginx não está rodando OU o certificado não foi gerado corretamente.
+
+================================================================================
+  SOLUÇÃO RÁPIDA
+================================================================================
+
+Execute este comando:
+  .\corrigir-https.ps1
+
+Este script irá:
+  1. Parar todos os containers
+  2. Limpar configurações antigas
+  3. Gerar novo certificado
+  4. Iniciar tudo novamente
+  5. Verificar se está funcionando
+
+Tempo: 2-3 minutos
+
+================================================================================
+  SOLUÇÃO MANUAL (se o script não funcionar)
+================================================================================
+
+PASSO 1: Parar tudo
+  docker-compose down
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml down
+
+PASSO 2: Limpar
+  Remove-Item -Recurse -Force certbot
+
+PASSO 3: Criar diretórios
+  New-Item -ItemType Directory -Force -Path "certbot/conf/live/localhost"
+  New-Item -ItemType Directory -Force -Path "certbot/www"
+
+PASSO 4: Gerar certificado
+  docker run --rm -v "${PWD}/certbot/conf:/etc/letsencrypt" alpine/openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout "/etc/letsencrypt/live/localhost/privkey.pem" -out "/etc/letsencrypt/live/localhost/fullchain.pem" -subj "/C=BR/ST=State/L=City/O=Coruja Monitor/CN=localhost"
+  
+  Copy-Item "certbot/conf/live/localhost/fullchain.pem" "certbot/conf/live/localhost/chain.pem"
+
+PASSO 5: Iniciar
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml up -d
+
+PASSO 6: Aguardar 1-2 minutos
+
+PASSO 7: Testar
+  https://localhost
+
+================================================================================
+  ALTERNATIVA: USAR HTTP (SEM HTTPS)
+================================================================================
+
+Se HTTPS não for essencial agora, você pode voltar para HTTP:
+
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml down
+  docker-compose up -d
+
+Acesso: http://localhost:3000
+
+================================================================================
+  VERIFICAR STATUS
+================================================================================
+
+Ver containers rodando:
+  docker ps
+
+Deve mostrar:
+  - coruja-nginx (se HTTPS ativo)
+  - coruja-frontend
+  - coruja-api
+  - coruja-postgres
+  - coruja-redis
+  - coruja-worker
+  - coruja-ai-agent
+  - coruja-ollama
+  - coruja-certbot (se HTTPS ativo)
+
+Ver logs do Nginx:
+  docker logs coruja-nginx
+
+Ver logs do Frontend:
+  docker logs coruja-frontend
+
+Ver logs da API:
+  docker logs coruja-api
+
+================================================================================
+  TROUBLESHOOTING ADICIONAL
+================================================================================
+
+ERRO: "Nginx não está rodando"
+  → Ver logs: docker logs coruja-nginx
+  → Verificar se nginx.conf existe
+  → Verificar se certificado foi gerado
+
+ERRO: "Certificado inválido"
+  → Verificar se arquivos existem:
+    - certbot/conf/live/localhost/privkey.pem
+    - certbot/conf/live/localhost/fullchain.pem
+    - certbot/conf/live/localhost/chain.pem
+  → Regenerar certificado
+
+ERRO: "Porta 443 em uso"
+  → Ver o que está usando: netstat -ano | findstr :443
+  → Parar o processo ou usar outra porta
+
+ERRO: "Frontend não carrega"
+  → Verificar se frontend está rodando: docker ps | findstr frontend
+  → Ver logs: docker logs coruja-frontend
+  → Verificar se API está respondendo: curl http://localhost:8000/health
+
+================================================================================
+  COMANDOS ÚTEIS
+================================================================================
+
+Reiniciar tudo:
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml restart
+
+Parar HTTPS e voltar para HTTP:
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml down
+  docker-compose up -d
+
+Ver todos os containers:
+  docker ps -a
+
+Ver logs de todos os containers:
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml logs
+
+Remover tudo e começar do zero:
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml down -v
+  Remove-Item -Recurse -Force certbot
+  .\corrigir-https.ps1
+
+================================================================================
+  RESUMO
+================================================================================
+
+SOLUÇÃO RECOMENDADA:
+  .\corrigir-https.ps1
+
+ALTERNATIVA (voltar para HTTP):
+  docker-compose -f docker-compose.yml -f docker-compose.https.yml down
+  docker-compose up -d
+  Acesso: http://localhost:3000
+
+SUPORTE:
+  Ver logs: docker logs coruja-nginx
+  Ver status: docker ps
+
+================================================================================
+
+Execute: .\corrigir-https.ps1
+
+================================================================================

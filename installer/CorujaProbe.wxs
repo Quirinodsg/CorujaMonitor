@@ -167,6 +167,34 @@
                   Execute="deferred" 
                   Return="ignore" 
                   Impersonate="no" />
+    
+    <CustomAction Id="InstallService" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="StartService" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="StopService" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
+    
+    <CustomAction Id="DeleteService" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" />
 
     <!-- Sequência de instalação -->
     <InstallExecuteSequence>
@@ -174,6 +202,12 @@
       <Custom Action="ConfigureWMI" After="CreateMonitorUser">NOT Installed</Custom>
       <Custom Action="ConfigureFirewall" After="ConfigureWMI">NOT Installed</Custom>
       <Custom Action="InstallPythonDeps" After="ConfigureFirewall">NOT Installed</Custom>
+      <Custom Action="InstallService" After="InstallPythonDeps">NOT Installed</Custom>
+      <Custom Action="StartService" After="InstallService">NOT Installed</Custom>
+      
+      <!-- Desinstalação -->
+      <Custom Action="StopService" Before="RemoveFiles">Installed AND NOT REINSTALL</Custom>
+      <Custom Action="DeleteService" After="StopService">Installed AND NOT REINSTALL</Custom>
     </InstallExecuteSequence>
 
     <!-- Features -->

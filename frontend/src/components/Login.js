@@ -5,6 +5,8 @@ import './Login.css';
 function Login({ onLogin }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [mfaCode, setMfaCode] = useState('');
+  const [mfaRequired, setMfaRequired] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
@@ -58,16 +60,34 @@ function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      const response = await axios.post('http://localhost:8000/api/v1/auth/login', {
+      // Preparar payload
+      const payload = {
         username,
         password
-      });
+      };
+      
+      // Adicionar mfa_code apenas se estiver preenchido
+      if (mfaCode && mfaCode.trim()) {
+        payload.mfa_code = mfaCode.trim();
+      }
+      
+      const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');
+      const response = await axios.post(`${API_URL}/api/v1/auth/login`, payload);
 
-      // Chamar onLogin com token e user data
-      onLogin(response.data.access_token, response.data.user);
+      // Verificar se MFA é necessário
+      if (response.data.mfa_required) {
+        setMfaRequired(true);
+        setError('');
+        setLoading(false);
+        return;
+      }
+
+      // Login bem-sucedido
+      if (response.data.access_token) {
+        onLogin(response.data.access_token, response.data.user);
+      }
     } catch (err) {
       setError(err.response?.data?.detail || 'Erro ao fazer login');
-    } finally {
       setLoading(false);
     }
   };
@@ -149,11 +169,35 @@ function Login({ onLogin }) {
                 required
                 className="login-input"
                 autoComplete="current-password"
+                disabled={mfaRequired}
               />
               <span className="input-icon-right">🔒</span>
               <div className="input-line"></div>
             </div>
           </div>
+
+          {mfaRequired && (
+            <div className="form-group">
+              <label className="input-label">Código MFA</label>
+              <div className="input-wrapper">
+                <input
+                  type="text"
+                  value={mfaCode}
+                  onChange={(e) => setMfaCode(e.target.value)}
+                  placeholder="Digite o código de 6 dígitos"
+                  required
+                  className="login-input"
+                  maxLength="6"
+                  autoFocus
+                />
+                <span className="input-icon-right">🔐</span>
+                <div className="input-line"></div>
+              </div>
+              <small style={{ color: '#888', fontSize: '12px', marginTop: '5px', display: 'block' }}>
+                Digite o código do seu aplicativo autenticador ou um código de backup
+              </small>
+            </div>
+          )}
 
           {error && (
             <div className="error-message">

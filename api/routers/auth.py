@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from pydantic import BaseModel, EmailStr, field_validator
-from typing import Annotated
+from typing import Annotated, Optional
 
 from database import get_db
 from models import User
@@ -12,6 +12,7 @@ router = APIRouter()
 class LoginRequest(BaseModel):
     username: str  # Can be email or username
     password: str
+    mfa_code: Optional[str] = None  # Código MFA (opcional)
     
     @field_validator('username')
     @classmethod
@@ -19,9 +20,11 @@ class LoginRequest(BaseModel):
         return v.lower().strip()
 
 class LoginResponse(BaseModel):
-    access_token: str
-    token_type: str
-    user: dict
+    access_token: str = None
+    token_type: str = "bearer"
+    user: dict = None
+    mfa_required: bool = False
+    message: str = None
 
 @router.post("/login", response_model=LoginResponse)
 async def login(request: LoginRequest, db: Session = Depends(get_db)):
@@ -37,6 +40,32 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     if not user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     
+    # Verificar se MFA está habilitado
+    if user.mfa_enabled:
+        # Se MFA está habilitado mas código não foi fornecido
+        if not request.mfa_code:
+            return {
+                "mfa_required": True,
+                "message": "MFA code required"
+            }
+        
+        # Verificar código MFA
+        import pyotp
+        totp = pyotp.TOTP(user.mfa_secret)
+        
+        # Verificar TOTP
+        if not totp.verify(request.mfa_code, valid_window=1):
+            # Verificar backup code
+            if not (user.mfa_backup_codes and request.mfa_code in user.mfa_backup_codes):
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid MFA code"
+                )
+            
+            # Remover backup code usado
+            user.mfa_backup_codes.remove(request.mfa_code)
+            db.commit()
+    
     # Pass user_id as string for JWT 'sub' claim
     access_token = create_access_token(data={"sub": str(user.id), "tenant_id": user.tenant_id})
     
@@ -49,7 +78,8 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
             "full_name": user.full_name,
             "role": user.role,
             "tenant_id": user.tenant_id,
-            "language": user.language
+            "language": user.language,
+            "mfa_enabled": user.mfa_enabled
         }
     }
 

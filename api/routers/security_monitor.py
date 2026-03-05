@@ -27,10 +27,26 @@ async def get_security_status(current_user: dict = Depends(get_current_user)):
     Retorna status geral de segurança
     """
     
+    # Verificar se WAF está realmente ativo
+    waf_active = False
+    try:
+        # Verificar se WAF está habilitado no main.py
+        import sys
+        from pathlib import Path
+        main_path = Path(__file__).parent.parent / "main.py"
+        with open(main_path, 'r', encoding='utf-8') as f:
+            main_content = f.read()
+            # Verificar se a linha do WAF não está comentada
+            if 'app.add_middleware(WAFMiddleware)' in main_content and \
+               not '# app.add_middleware(WAFMiddleware)' in main_content:
+                waf_active = True
+    except:
+        pass
+    
     status = {
         "timestamp": datetime.now().isoformat(),
         "waf": {
-            "status": "active",
+            "status": "active" if waf_active else "disabled",
             "protections": [
                 "SQL Injection",
                 "XSS",

@@ -307,8 +307,26 @@ echo.
 echo 2. Instale dependencias:
 echo    pip install -r requirements.txt
 echo.
-echo 3. Inicie a probe:
-echo    python probe_core.py
+echo 3. ESCOLHA UMA OPCAO:
+echo.
+echo    A) Instalar como SERVICO (Recomendado)
+echo       - Inicia automaticamente com o Windows
+echo       - Execute: install_service.bat
+echo.
+echo    B) Iniciar manualmente
+echo       - Execute: python probe_core.py
+echo.
+echo ========================================
+echo INSTALAR COMO SERVICO AGORA?
+echo ========================================
+echo.
+set /p INSTALL_SVC="Deseja instalar como servico agora? (S/N): "
+if /i "%INSTALL_SVC%"=="S" (
+    echo.
+    echo Iniciando instalacao do servico...
+    echo.
+    call install_service.bat
+)
 echo.
 pause
 exit /b 0

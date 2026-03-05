@@ -1,0 +1,75 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                                                                              ║
+║                    ⚠️  PARE DE USAR O POWERSHELL  ⚠️                         ║
+║                                                                              ║
+║                  USE APENAS O GITHUB DESKTOP (INTERFACE GRÁFICA)             ║
+║                                                                              ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+PROBLEMA:
+- Git NÃO está no PATH do PowerShell
+- Por isso todos os scripts .ps1 falham
+- Você está perdendo tempo tentando usar o PowerShell
+
+SOLUÇÃO:
+- Use o GitHub Desktop (aplicativo com janelas e botões)
+- NÃO digite NADA no PowerShell
+- NÃO execute NENHUM script .ps1
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PASSO A PASSO NO GITHUB DESKTOP:
+
+1. Feche o PowerShell
+
+2. Abra o aplicativo "GitHub Desktop"
+   (Procure no menu Iniciar por "GitHub Desktop")
+
+3. Na janela do GitHub Desktop:
+   - Canto superior esquerdo: clique em "Current Repository"
+   - Selecione: "CorujaMonitor"
+
+4. No lado esquerdo, você verá arquivos modificados
+   - Marque TODOS os arquivos (ou pelo menos Login.js)
+
+5. Na parte inferior esquerda, digite no campo "Summary":
+   fix: Corrigir URL da API no Login
+
+6. Clique no botão azul "Commit to master"
+
+7. No topo da janela, clique em "Push origin"
+
+8. Aguarde a barra de progresso terminar
+
+PRONTO! Mudanças enviadas para o GitHub.
+
+═══════════════════════════════════════════════════════════════════════════════
+
+DEPOIS NO SERVIDOR LINUX (192.168.31.161):
+
+Abra o terminal SSH e execute:
+
+cd ~/CorujaMonitor && docker compose down && git pull origin master && docker compose build --no-cache && docker compose up -d && sleep 30
+
+Aguarde 5-10 minutos
+
+═══════════════════════════════════════════════════════════════════════════════
+
+TESTAR:
+
+Abra o navegador:
+  http://192.168.31.161:3000
+  admin@coruja.com
+  admin123
+
+═══════════════════════════════════════════════════════════════════════════════
+
+IMPORTANTE:
+✅ Use GitHub Desktop (interface gráfica)
+❌ NÃO use PowerShell
+❌ NÃO execute scripts .ps1
+❌ NÃO digite comandos Git no PowerShell
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Data: 05/03/2026

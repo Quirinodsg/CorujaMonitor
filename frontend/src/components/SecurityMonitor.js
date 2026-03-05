@@ -144,7 +144,9 @@ const SecurityMonitor = () => {
             <div className="security-card">
               <div className="card-header">
                 <h3>{getStatusIcon(status.waf.status)} WAF (Firewall)</h3>
-                <span className="status-badge active">ATIVO</span>
+                <span className={`status-badge ${status.waf.status === 'active' ? 'active' : 'disabled'}`}>
+                  {status.waf.status === 'active' ? 'ATIVO' : 'DESABILITADO'}
+                </span>
               </div>
               <div className="card-body">
                 <p><strong>Proteções Ativas:</strong></p>

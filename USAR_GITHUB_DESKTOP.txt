@@ -1,0 +1,110 @@
+================================================================================
+  COMO USAR O GITHUB DESKTOP - Passo a Passo Visual
+================================================================================
+
+NÃO DIGITE NADA NO POWERSHELL!
+Use apenas a interface gráfica do GitHub Desktop.
+
+================================================================================
+  PASSO 1: Abrir GitHub Desktop
+================================================================================
+
+1. Abra o aplicativo "GitHub Desktop"
+2. No canto superior esquerdo, clique em "Current Repository"
+3. Selecione: "CorujaMonitor" ou "Coruja Monitor"
+
+================================================================================
+  PASSO 2: Ver as Mudanças
+================================================================================
+
+No lado esquerdo, você verá uma lista de arquivos modificados:
+✅ frontend/src/components/Login.js  <-- PRINCIPAL
+📄 GUIA_GITHUB_DESKTOP.md
+📄 SOLUCAO_FINAL_LOGIN.md
+📄 E outros...
+
+Marque TODOS os arquivos (ou pelo menos o Login.js)
+
+================================================================================
+  PASSO 3: Fazer Commit
+================================================================================
+
+Na parte inferior esquerda, você verá dois campos:
+
+┌─────────────────────────────────────────────┐
+│ Summary (required)                          │
+│ ┌─────────────────────────────────────────┐ │
+│ │ Digite aqui:                            │ │
+│ │ fix: Corrigir URL da API no Login      │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│ Description                                 │
+│ ┌─────────────────────────────────────────┐ │
+│ │ (opcional - pode deixar em branco)      │ │
+│ └─────────────────────────────────────────┘ │
+│                                             │
+│  [Commit to master]  <-- CLIQUE AQUI       │
+└─────────────────────────────────────────────┘
+
+================================================================================
+  PASSO 4: Fazer Push
+================================================================================
+
+Após o commit, no topo da janela aparecerá:
+
+┌─────────────────────────────────────────────┐
+│  [Push origin]  <-- CLIQUE AQUI             │
+└─────────────────────────────────────────────┘
+
+Aguarde a barra de progresso terminar.
+
+================================================================================
+  PASSO 5: Confirmar no GitHub (Opcional)
+================================================================================
+
+1. Abra seu navegador
+2. Acesse: https://github.com/SEU_USUARIO/CorujaMonitor
+3. Veja se o último commit aparece
+4. Clique em "frontend/src/components/Login.js"
+5. Verifique se a linha 74 tem "API_URL"
+
+================================================================================
+  PASSO 6: Atualizar no Servidor Linux
+================================================================================
+
+Agora SIM, vá para o terminal do servidor Linux e execute:
+
+cd ~/CorujaMonitor && \
+docker compose down && \
+git pull origin master && \
+docker compose build --no-cache && \
+docker compose up -d && \
+sleep 30 && \
+echo "✅ PRONTO! Teste: http://192.168.31.161:3000"
+
+================================================================================
+  RESUMO VISUAL
+================================================================================
+
+GitHub Desktop:
+1. Abrir app
+2. Selecionar repositório
+3. Marcar arquivos
+4. Digitar mensagem no campo "Summary"
+5. Clicar "Commit to master"
+6. Clicar "Push origin"
+7. Aguardar upload
+
+Servidor Linux:
+8. Executar comando de atualização
+9. Aguardar rebuild (3-5 minutos)
+10. Testar no navegador
+
+================================================================================
+
+Data: 05/03/2026
+
+IMPORTANTE: Não digite comandos no PowerShell!
+Use apenas a interface gráfica do GitHub Desktop.
+
+================================================================================

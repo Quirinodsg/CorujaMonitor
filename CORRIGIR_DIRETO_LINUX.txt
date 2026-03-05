@@ -1,0 +1,75 @@
+================================================================================
+  CORREÇÃO DIRETA NO LINUX - Copie e Cole
+================================================================================
+
+Execute NO SERVIDOR LINUX (192.168.31.161):
+
+================================================================================
+  COMANDO ÚNICO (Copie tudo de uma vez)
+================================================================================
+
+cd ~/CorujaMonitor && \
+cp frontend/src/components/Login.js frontend/src/components/Login.js.backup && \
+python3 << 'EOF'
+with open('frontend/src/components/Login.js', 'r') as f:
+    lines = f.readlines()
+
+# Substituir linha 74
+if len(lines) >= 74:
+    lines[73] = "      const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');\n"
+    lines[73] += "      const response = await axios.post(`${API_URL}/api/v1/auth/login`, payload);\n"
+    
+    # Remover a linha 75 antiga (que agora é 74)
+    if len(lines) > 74 and 'axios.post' in lines[74]:
+        del lines[74]
+
+with open('frontend/src/components/Login.js', 'w') as f:
+    f.writelines(lines)
+
+print("✅ Arquivo corrigido!")
+EOF
+
+echo "" && \
+echo "Verificando mudança..." && \
+grep -n "API_URL" frontend/src/components/Login.js && \
+echo "" && \
+echo "Reiniciando frontend..." && \
+docker compose restart frontend && \
+sleep 30 && \
+echo "" && \
+echo "✅ PRONTO! Teste: http://192.168.31.161:3000"
+
+================================================================================
+  OU EDITE MANUALMENTE (Mais seguro)
+================================================================================
+
+1. Abrir editor:
+   nano ~/CorujaMonitor/frontend/src/components/Login.js
+
+2. Ir para linha 74 (Ctrl+_ depois digite 74 e Enter)
+
+3. Apagar a linha 74 (Ctrl+K)
+
+4. Digitar estas DUAS linhas:
+      const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');
+      const response = await axios.post(`${API_URL}/api/v1/auth/login`, payload);
+
+5. Salvar: Ctrl+X, Y, Enter
+
+6. Reiniciar:
+   cd ~/CorujaMonitor
+   docker compose restart frontend
+   sleep 30
+
+================================================================================
+  VERIFICAR
+================================================================================
+
+grep -n "API_URL" ~/CorujaMonitor/frontend/src/components/Login.js
+
+# Deve mostrar:
+# 74:      const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');
+
+================================================================================
+
+Data: 05/03/2026

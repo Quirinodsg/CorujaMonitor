@@ -1,0 +1,74 @@
+================================================================================
+  COMANDOS CORRETOS - Servidor Linux (Branch: master)
+================================================================================
+
+O repositório usa branch "master" (não "main")
+
+================================================================================
+  OPÇÃO 1: Comando único (copie tudo)
+================================================================================
+
+cd ~/CorujaMonitor && \
+docker compose down && \
+git pull origin master && \
+docker compose build --no-cache && \
+docker compose up -d && \
+sleep 30 && \
+echo "" && \
+echo "✅ ATUALIZAÇÃO CONCLUÍDA!" && \
+echo "" && \
+echo "Teste: http://192.168.31.161:3000"
+
+================================================================================
+  OPÇÃO 2: Passo a passo
+================================================================================
+
+# 1. Ir para o diretório
+cd ~/CorujaMonitor
+
+# 2. Parar containers
+docker compose down
+
+# 3. Atualizar código (branch master)
+git pull origin master
+
+# 4. Rebuild completo
+docker compose build --no-cache
+
+# 5. Subir containers
+docker compose up -d
+
+# 6. Aguardar
+sleep 30
+
+# 7. Verificar
+docker compose ps
+
+# 8. Testar API
+curl -X POST http://192.168.31.161:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin@coruja.com","password":"admin123"}'
+
+================================================================================
+  SE DER CONFLITO NO GIT
+================================================================================
+
+cd ~/CorujaMonitor
+git reset --hard HEAD
+git pull origin master
+docker compose build --no-cache
+docker compose up -d
+
+================================================================================
+  VERIFICAR SE LOGIN.JS FOI ATUALIZADO
+================================================================================
+
+grep -n "API_URL" ~/CorujaMonitor/frontend/src/components/Login.js
+
+# Deve mostrar:
+# 74:      const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');
+
+================================================================================
+
+Data: 05/03/2026
+Branch: master (não main)

@@ -1,0 +1,111 @@
+================================================================================
+  COMO RESOLVER: Google Authenticator com Código Fixo
+================================================================================
+
+PROBLEMA:
+O Google Authenticator está mostrando sempre o mesmo número e não está 
+rotacionando a cada 30 segundos.
+
+DIAGNÓSTICO:
+✅ Servidor funcionando corretamente
+✅ TOTP gerando códigos corretamente
+✅ QR Code no formato correto
+❌ Problema: QR Code antigo ou duplicado no Google Authenticator
+
+================================================================================
+  SOLUÇÃO RÁPIDA (3 opções)
+================================================================================
+
+OPÇÃO 1: Script Interativo (RECOMENDADO)
+-----------------------------------------
+Execute no PowerShell:
+
+    .\resolver_mfa_codigo_fixo.ps1
+
+O script irá guiá-lo passo a passo pelo processo de correção.
+
+
+OPÇÃO 2: Solução Manual Rápida
+-------------------------------
+1. No Google Authenticator:
+   - Remova TODAS as contas "CorujaMonitor"
+
+2. No PowerShell:
+   - Execute: .\desabilitar_mfa_todos.ps1
+
+3. No navegador (http://localhost:3000):
+   - Login → Configurações → Segurança
+   - Clique em "Habilitar MFA"
+   - Escaneie o NOVO QR Code
+   - Verifique se o código está MUDANDO a cada 30s
+   - Ative o MFA
+
+4. Teste o login com MFA
+
+
+OPÇÃO 3: Guia Completo
+-----------------------
+Leia o arquivo:
+
+    SOLUCAO_CODIGO_FIXO_PASSO_A_PASSO.md
+
+Contém 11 passos detalhados com troubleshooting completo.
+
+================================================================================
+  Scripts Úteis
+================================================================================
+
+# Desabilitar MFA de todos os usuários
+.\desabilitar_mfa_todos.ps1
+
+# Verificar código atual do servidor
+.\verificar_codigo_mfa.ps1
+
+# Script interativo de correção
+.\resolver_mfa_codigo_fixo.ps1
+
+================================================================================
+  Checklist Rápido
+================================================================================
+
+Antes de ativar o MFA, verifique:
+
+[ ] Removi TODAS as contas antigas do Google Authenticator
+[ ] Sincronizei o relógio do smartphone
+[ ] Desabilitei o MFA atual no sistema
+[ ] Habilitei o MFA novamente (novo QR Code)
+[ ] Escaneei o NOVO QR Code
+[ ] O código está MUDANDO a cada 30 segundos
+[ ] O código do app coincide com o código do servidor
+[ ] Salvei os códigos de backup
+
+================================================================================
+  Resultado Esperado
+================================================================================
+
+Após seguir os passos:
+
+✅ Google Authenticator mostra código MUDANDO a cada 30s
+✅ Código do app = código do servidor
+✅ Login funciona com código MFA
+✅ Códigos de backup salvos
+✅ MFA funcionando perfeitamente
+
+================================================================================
+  Precisa de Ajuda?
+================================================================================
+
+Documentação completa:
+- SOLUCAO_CODIGO_FIXO_PASSO_A_PASSO.md (guia detalhado)
+- DIAGNOSTICO_MFA_COMPLETO_04MAR.md (diagnóstico técnico)
+- RESUMO_FINAL_MFA_04MAR.md (resumo da implementação)
+
+Scripts:
+- resolver_mfa_codigo_fixo.ps1 (interativo)
+- desabilitar_mfa_todos.ps1 (emergência)
+- verificar_codigo_mfa.ps1 (diagnóstico)
+
+================================================================================
+
+Data: 04/03/2026
+Status: ✅ SOLUÇÃO DOCUMENTADA

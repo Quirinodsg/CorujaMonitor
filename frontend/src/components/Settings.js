@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import ThresholdConfig from './ThresholdConfig';
 import SecurityMonitor from './SecurityMonitor';
+import MFASetup from './MFASetup';
 import './Management.css';
 import './Settings.css';
 
@@ -1470,6 +1471,11 @@ function Settings({ onNavigate }) {
 
       {/* Security Monitor Component */}
       <SecurityMonitor />
+
+      {/* MFA Setup Component */}
+      <div style={{ marginTop: '30px' }}>
+        <MFASetup />
+      </div>
 
       <div className="info-banner" style={{ marginBottom: '20px', background: '#e3f2fd', padding: '15px', borderRadius: '8px', border: '1px solid #2196f3' }}>
         <p style={{ margin: 0, color: '#1976d2' }}>

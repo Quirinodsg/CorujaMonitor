@@ -31,6 +31,12 @@ class User(Base):
     role = Column(String(50), default="user")  # admin, user, viewer
     is_active = Column(Boolean, default=True)
     language = Column(String(10), default="pt-BR")
+    
+    # MFA (Multi-Factor Authentication)
+    mfa_enabled = Column(Boolean, default=False)
+    mfa_secret = Column(String(255), nullable=True)  # TOTP secret
+    mfa_backup_codes = Column(JSON, nullable=True)  # Lista de códigos de backup
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     tenant = relationship("Tenant", back_populates="users")
