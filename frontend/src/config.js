@@ -25,7 +25,7 @@ const getApiUrl = () => {
 export const API_URL = getApiUrl();
 
 // CACHE BUSTER - Forçar atualização
-const CACHE_VERSION = 'v3.0-' + Date.now();
+const CACHE_VERSION = 'v4.0-REBUILD-' + Date.now();
 
 // Log para debug (sempre ativo para verificar cache)
 console.log('🔧 [CONFIG ' + CACHE_VERSION + '] API URL configurada:', API_URL);
