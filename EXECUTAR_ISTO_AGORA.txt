@@ -1,0 +1,32 @@
+═══════════════════════════════════════════════════════════════
+              🔥 EXECUTAR ISTO AGORA - CORS 🔥
+═══════════════════════════════════════════════════════════════
+
+NO SERVIDOR LINUX:
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x corrigir_cors_agora.sh
+./corrigir_cors_agora.sh
+
+═══════════════════════════════════════════════════════════════
+
+O script vai:
+1. Verificar usuário admin
+2. Resetar senha
+3. Verificar config.js no container
+4. Verificar CORS na API
+5. Testar API
+6. Adicionar REACT_APP_API_URL no .env
+7. Rebuild frontend
+8. Testar
+
+═══════════════════════════════════════════════════════════════
+
+DEPOIS ACESSE:
+http://192.168.31.161:3000
+
+Email: admin@coruja.com
+Senha: admin123
+
+═══════════════════════════════════════════════════════════════
