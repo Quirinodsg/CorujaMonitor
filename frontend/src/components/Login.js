@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_URL } from '../config';
 import './Login.css';
 
 function Login({ onLogin }) {
@@ -71,8 +72,8 @@ function Login({ onLogin }) {
         payload.mfa_code = mfaCode.trim();
       }
       
-      const API_URL = process.env.REACT_APP_API_URL || window.location.origin.replace(':3000', ':8000');
-      const response = await axios.post(`${API_URL}/api/v1/auth/login`, payload);
+      // Usar API_URL do config.js (já inclui /api/v1)
+      const response = await axios.post(`${API_URL}/auth/login`, payload);
 
       // Verificar se MFA é necessário
       if (response.data.mfa_required) {
