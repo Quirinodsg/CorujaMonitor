@@ -1,0 +1,97 @@
+========================================
+LIMPAR CACHE AGRESSIVO - PASSO A PASSO
+========================================
+
+O cache está muito persistente. Vamos forçar limpeza total:
+
+MÉTODO 1 - Hard Refresh com DevTools:
+======================================
+
+1. Pressione F12 (abrir DevTools)
+
+2. Clique com BOTÃO DIREITO no ícone de Atualizar (🔄)
+   (ao lado da barra de endereço)
+
+3. Selecione: "Esvaziar cache e atualizar forçadamente"
+
+4. Aguarde a página recarregar
+
+5. Se ainda mostrar as empresas, vá para MÉTODO 2
+
+
+MÉTODO 2 - Limpar Application Storage:
+=======================================
+
+1. Pressione F12 (abrir DevTools)
+
+2. Vá na aba "Application" (ou "Aplicativo")
+
+3. No menu esquerdo, clique em "Storage"
+
+4. Clique no botão "Clear site data"
+
+5. Confirme e feche a aba
+
+6. Abra nova aba anônima: Ctrl+Shift+N
+
+7. Acesse: http://192.168.31.161:3000
+
+
+MÉTODO 3 - Limpar tudo manualmente:
+====================================
+
+1. Pressione F12 (abrir DevTools)
+
+2. Vá na aba "Application"
+
+3. Limpe CADA item:
+   - Local Storage → Clique direito → Clear
+   - Session Storage → Clique direito → Clear
+   - IndexedDB → Delete database
+   - Cookies → Clear all
+
+4. Vá na aba "Network"
+
+5. Marque "Disable cache"
+
+6. Recarregue a página: Ctrl+F5
+
+
+MÉTODO 4 - Último recurso (GARANTIDO):
+=======================================
+
+1. FECHE o navegador completamente
+
+2. Abra o navegador novamente
+
+3. Pressione: Ctrl+Shift+N (aba anônima)
+
+4. Acesse: http://192.168.31.161:3000
+
+5. Pressione F12
+
+6. Vá em "Network" e marque "Disable cache"
+
+7. Faça login
+
+
+VERIFICAÇÃO:
+============
+
+Após limpar o cache, a página deve:
+- Estar vazia (sem empresas)
+- OU mostrar erro ao carregar
+
+Isso é NORMAL porque o banco está vazio!
+
+
+RECRIAR EMPRESA DEFAULT:
+=========================
+
+No servidor Linux, execute:
+
+docker compose exec -T postgres psql -U coruja -d coruja_monitor -c "INSERT INTO tenants (name, slug, is_active, created_at) VALUES ('Default', 'default', true, NOW());"
+
+Depois recarregue e a empresa Default aparecerá.
+
+========================================

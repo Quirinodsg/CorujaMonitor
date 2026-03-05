@@ -1,0 +1,68 @@
+========================================
+COMANDOS FINAIS PARA RESOLVER TECHBIZ
+========================================
+
+1. NO GIT BASH (WINDOWS):
+==========================
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+chmod +x commit_techbiz.sh
+./commit_techbiz.sh
+
+
+2. NO SERVIDOR LINUX (192.168.31.161):
+=======================================
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x rebuild_frontend_completo_linux.sh
+./rebuild_frontend_completo_linux.sh
+
+
+3. AGUARDE 3-5 MINUTOS
+=======================
+
+O script vai:
+- Parar todos os containers
+- Remover todas as imagens antigas
+- Limpar todo o cache do Docker
+- Reconstruir tudo do zero
+- Subir os containers novamente
+
+
+4. NO NAVEGADOR:
+================
+
+OPÇÃO A - Aba Anônima (RECOMENDADO):
+- Pressione: Ctrl+Shift+N
+- Acesse: http://192.168.31.161:3000
+- Login: admin@coruja.com / admin123
+
+OPÇÃO B - Limpar cache forçadamente:
+- Abra: http://192.168.31.161:3000
+- Pressione F12
+- Clique com BOTÃO DIREITO no botão Atualizar
+- Selecione "Esvaziar cache e atualizar forçadamente"
+
+
+5. VERIFICAR SE FUNCIONOU:
+===========================
+
+No Console do navegador (F12), procure:
+✅ "API URL configurada: http://192.168.31.161:8000/api/v1"
+✅ "Hostname detectado: 192.168.31.161"
+
+Se ainda mostrar "localhost", feche TODAS as abas e abra em aba anônima novamente.
+
+
+6. TESTAR EXCLUSÃO:
+===================
+
+- Vá em "Empresas"
+- Clique em "Excluir" na empresa Techbiz
+- Digite o nome para confirmar
+- Deve excluir sem erro!
+
+========================================
+PROBLEMA RESOLVIDO!
+========================================
