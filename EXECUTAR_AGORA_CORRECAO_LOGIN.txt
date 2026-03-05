@@ -1,0 +1,59 @@
+========================================
+CORREÇÃO DO LOGIN - EXECUTAR AGORA
+========================================
+
+PROBLEMA IDENTIFICADO:
+✗ Frontend usa localhost:8000 ao invés do IP do servidor
+✗ Script anterior usava coluna errada (password_hash ao invés de hashed_password)
+
+CORREÇÕES APLICADAS:
+✓ Login.js agora importa e usa API_URL do config.js
+✓ config.js detecta automaticamente o IP do servidor (192.168.31.161)
+✓ Script corrigido usa coluna correta (hashed_password)
+✓ Commit enviado para GitHub
+
+========================================
+EXECUTAR NO SERVIDOR LINUX (192.168.31.161):
+========================================
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x corrigir_login_final.sh
+./corrigir_login_final.sh
+
+========================================
+O QUE O SCRIPT FAZ:
+========================================
+
+1. Reseta senha do admin (coluna CORRETA: hashed_password)
+2. Testa login via API
+3. Para o frontend
+4. Remove container e imagem antiga
+5. Limpa cache do Docker
+6. Reconstrói frontend com código corrigido (2-3 minutos)
+7. Inicia frontend
+
+========================================
+APÓS EXECUÇÃO:
+========================================
+
+Aguarde 30 segundos e acesse em ABA ANÔNIMA:
+http://192.168.31.161:3000
+
+Credenciais:
+  Email: admin@coruja.com
+  Senha: admin123
+
+IMPORTANTE: Use aba anônima para evitar cache!
+  Chrome: Ctrl+Shift+N
+  Firefox: Ctrl+Shift+P
+
+========================================
+SE AINDA NÃO FUNCIONAR:
+========================================
+
+1. Ver logs: docker compose logs frontend
+2. Verificar API: docker compose logs api
+3. Reiniciar tudo: docker compose restart
+
+========================================
