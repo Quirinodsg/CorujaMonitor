@@ -1,0 +1,72 @@
+═══════════════════════════════════════════════════════════════
+                    🦉 LEIA ISTO PRIMEIRO 🦉
+═══════════════════════════════════════════════════════════════
+
+🚨 PROBLEMA DO LOGIN - CORRIGIDO ✅
+
+O login não funcionava porque o frontend usava localhost ao invés
+do IP do servidor. Isso foi corrigido!
+
+═══════════════════════════════════════════════════════════════
+                  EXECUTAR NO SERVIDOR LINUX
+═══════════════════════════════════════════════════════════════
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x corrigir_login_final.sh
+./corrigir_login_final.sh
+
+Aguarde 3 minutos e acesse em aba anônima:
+http://192.168.31.161:3000
+
+Email: admin@coruja.com
+Senha: admin123
+
+═══════════════════════════════════════════════════════════════
+                        MSI PRONTO ✅
+═══════════════════════════════════════════════════════════════
+
+✅ MSI Básico com Auto-Start: installer/output/CorujaProbe_Basico.msi
+
+Funcionalidades:
+- Instalação automática
+- Auto-start com Windows
+- Interface gráfica
+- Atalhos no Menu Iniciar
+
+Como usar:
+1. Baixar do Git
+2. Executar: msiexec /i CorujaProbe_Basico.msi
+3. Editar config.py após instalação
+
+═══════════════════════════════════════════════════════════════
+                    MSI COM AD (OPCIONAL)
+═══════════════════════════════════════════════════════════════
+
+⚠️ Código pronto mas não pode ser gerado no Windows
+
+Arquivo: installer/CorujaProbe_AD_Simple.wxs
+
+Opções:
+A) Copiar arquivos da probe para Windows e gerar
+B) Usar MSI Básico + configuração manual (RECOMENDADO)
+C) Gerar no servidor Linux
+
+═══════════════════════════════════════════════════════════════
+                      DOCUMENTAÇÃO
+═══════════════════════════════════════════════════════════════
+
+📋 EXECUTAR_AGORA_URGENTE.txt - Guia visual completo
+📋 RESUMO_FINAL_05MAR.md - Resumo detalhado
+📋 MSI_COM_AD_PRONTO.md - Detalhes dos MSIs
+
+═══════════════════════════════════════════════════════════════
+                         STATUS
+═══════════════════════════════════════════════════════════════
+
+✅ Login corrigido
+✅ MSI Básico pronto
+⚠️ MSI com AD (código pronto)
+✅ Tudo no GitHub
+
+Data: 05/03/2026 14:30
