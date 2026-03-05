@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Coruja Monitor Probe" 
+           Language="1046" 
+           Version="1.0.1.0" 
+           Manufacturer="Coruja Monitor" 
+           UpgradeCode="12345678-1234-1234-1234-123456789012">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="Agente de monitoramento Coruja Monitor com Auto-Start"
+             Comments="Sistema de monitoramento agentless para Windows" />
+
+    <MajorUpgrade DowngradeErrorMessage="Uma versão mais recente já está instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Propriedades customizadas -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+
+    <!-- Verificar privilégios de administrador -->
+    <Condition Message="Este instalador requer privilégios de administrador.">
+      Privileged
+    </Condition>
+
+    <!-- Estrutura de diretórios -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="CorujaMonitor">
+          <Directory Id="ProbeFolder" Name="Probe" />
+          <Directory Id="CollectorsFolder" Name="collectors" />
+          <Directory Id="LogsFolder" Name="logs" />
+        </Directory>
+      </Directory>
+      
+      <!-- Menu Iniciar -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Coruja Monitor" />
+      </Directory>
+    </Directory>
+
+    <!-- Componentes principais -->
+    <DirectoryRef Id="ProbeFolder">
+      <Component Id="ProbeCore" Guid="A1B2C3D4-E5F6-4A5B-8C9D-1E2F3A4B5C6D">
+        <File Id="probe_core.py" Source="..\probe\probe_core.py" KeyPath="yes" />
+      </Component>
+      <Component Id="ProbeConfig" Guid="B2C3D4E5-F6A7-4B5C-9D1E-2F3A4B5C6D7E">
+        <File Id="config.py" Source="..\probe\config.py" KeyPath="yes" />
+      </Component>
+      <Component Id="ProbeRequirements" Guid="C3D4E5F6-A7B8-4C5D-9E1F-3A4B5C6D7E8F">
+        <File Id="requirements.txt" Source="..\probe\requirements.txt" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="CollectorsFolder">
+      <Component Id="SystemCollector" Guid="D4E5F6A7-B8C9-4D5E-9F1A-4B5C6D7E8F9A">
+        <File Id="system_collector.py" Source="..\probe\collectors\system_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="PingCollector" Guid="E5F6A7B8-C9D1-4E5F-9A1B-5C6D7E8F9A1B">
+        <File Id="ping_collector.py" Source="..\probe\collectors\ping_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="DockerCollector" Guid="F6A7B8C9-D1E2-4F5A-9B1C-6D7E8F9A1B2C">
+        <File Id="docker_collector.py" Source="..\probe\collectors\docker_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="SnmpCollector" Guid="A7B8C9D1-E2F3-4A5B-9C1D-7E8F9A1B2C3D">
+        <File Id="snmp_collector.py" Source="..\probe\collectors\snmp_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="KubernetesCollector" Guid="B8C9D1E2-F3A4-4B5C-9D1E-8F9A1B2C3D4E">
+        <File Id="kubernetes_collector.py" Source="..\probe\collectors\kubernetes_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="WmiCollector" Guid="C9D1E2F3-A4B5-4C5D-9E1F-9A1B2C3D4E5F">
+        <File Id="wmi_remote_collector.py" Source="..\probe\collectors\wmi_remote_collector.py" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalhos -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcuts" Guid="D1E2F3A4-B5C6-4D5E-9F1A-2B3C4D5E6F7A">
+        <Shortcut Id="StartProbeShortcut"
+                  Name="Iniciar Coruja Probe"
+                  Description="Inicia o agente de monitoramento"
+                  Target="[System64Folder]cmd.exe"
+                  Arguments='/k cd /d "[ProbeFolder]" &amp;&amp; python probe_core.py'
+                  WorkingDirectory="ProbeFolder" />
+        
+        <Shortcut Id="ConfigProbeShortcut"
+                  Name="Configurar Probe"
+                  Description="Abre o arquivo de configuração"
+                  Target="[System64Folder]notepad.exe"
+                  Arguments='"[ProbeFolder]config.py"'
+                  WorkingDirectory="ProbeFolder" />
+        
+        <Shortcut Id="UninstallShortcut"
+                  Name="Desinstalar Coruja Probe"
+                  Description="Remove o Coruja Monitor Probe"
+                  Target="[System64Folder]msiexec.exe"
+                  Arguments="/x [ProductCode]" />
+        
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Custom Actions para Auto-Start -->
+    <Property Id="INSTALLPYTHONDEPS">
+      <![CDATA[cmd.exe /c "cd /d "[ProbeFolder]" && pip install -r requirements.txt"]]>
+    </Property>
+    
+    <Property Id="CREATETASK">
+      <![CDATA[schtasks /create /tn "CorujaMonitorProbe" /tr "cmd /c cd /d \"[ProbeFolder]\" && python probe_core.py" /sc onstart /delay 0000:30 /rl highest /f]]>
+    </Property>
+    
+    <Property Id="STARTTASK">
+      <![CDATA[schtasks /run /tn "CorujaMonitorProbe"]]>
+    </Property>
+    
+    <Property Id="STOPTASK">
+      <![CDATA[taskkill /f /im python.exe]]>
+    </Property>
+    
+    <Property Id="DELETETASK">
+      <![CDATA[schtasks /delete /tn "CorujaMonitorProbe" /f]]>
+    </Property>
+
+    <CustomAction Id="InstallPythonDeps" 
+                  Property="INSTALLPYTHONDEPS" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  ExeCommand="[INSTALLPYTHONDEPS]" />
+    
+    <CustomAction Id="CreateAutoStartTask" 
+                  Property="CREATETASK" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  ExeCommand="[CREATETASK]" />
+    
+    <CustomAction Id="StartProbeTask" 
+                  Property="STARTTASK" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  ExeCommand="[STARTTASK]" />
+    
+    <CustomAction Id="StopProbeTask" 
+                  Property="STOPTASK" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  ExeCommand="[STOPTASK]" />
+    
+    <CustomAction Id="DeleteAutoStartTask" 
+                  Property="DELETETASK" 
+                  Execute="deferred" 
+                  Return="ignore" 
+                  Impersonate="no" 
+                  ExeCommand="[DELETETASK]" />
+
+    <!-- Sequência de instalação -->
+    <InstallExecuteSequence>
+      <Custom Action="InstallPythonDeps" After="InstallFiles">NOT Installed</Custom>
+      <Custom Action="CreateAutoStartTask" After="InstallPythonDeps">NOT Installed</Custom>
+      <Custom Action="StartProbeTask" After="CreateAutoStartTask">NOT Installed</Custom>
+      
+      <!-- Desinstalação -->
+      <Custom Action="StopProbeTask" Before="RemoveFiles">Installed AND NOT REINSTALL</Custom>
+      <Custom Action="DeleteAutoStartTask" After="StopProbeTask">Installed AND NOT REINSTALL</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="Coruja Monitor Probe" Level="1">
+      <ComponentRef Id="ProbeCore" />
+      <ComponentRef Id="ProbeConfig" />
+      <ComponentRef Id="ProbeRequirements" />
+      <ComponentRef Id="SystemCollector" />
+      <ComponentRef Id="PingCollector" />
+      <ComponentRef Id="DockerCollector" />
+      <ComponentRef Id="SnmpCollector" />
+      <ComponentRef Id="KubernetesCollector" />
+      <ComponentRef Id="WmiCollector" />
+      <ComponentRef Id="ApplicationShortcuts" />
+    </Feature>
+
+    <!-- Interface do instalador -->
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+    </UI>
+  </Product>
+</Wix>

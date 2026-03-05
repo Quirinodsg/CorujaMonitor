@@ -43,13 +43,13 @@ Write-Host "   ✓ Diretório criado" -ForegroundColor Green
 
 # Compilar WXS para WIXOBJ
 Write-Host ""
-Write-Host "3. Compilando WXS..." -ForegroundColor Yellow
+Write-Host "3. Compilando WXS com AUTO-START..." -ForegroundColor Yellow
 Set-Location installer
 
 $candleExe = "$wixBinDir\candle.exe"
 $lightExe = "$wixBinDir\light.exe"
 
-& $candleExe CorujaProbe.wxs -out output\CorujaProbe.wixobj
+& $candleExe CorujaProbe_AutoStart.wxs -out output\CorujaProbe.wixobj
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "   ✗ Erro ao compilar WXS" -ForegroundColor Red
@@ -60,7 +60,7 @@ Write-Host "   ✓ WXS compilado" -ForegroundColor Green
 
 # Linkar WIXOBJ para MSI
 Write-Host ""
-Write-Host "4. Gerando MSI com interface gráfica..." -ForegroundColor Yellow
+Write-Host "4. Gerando MSI com interface gráfica e AUTO-START..." -ForegroundColor Yellow
 
 & $lightExe output\CorujaProbe.wixobj `
     -ext WixUIExtension `
