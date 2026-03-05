@@ -1,25 +1,13 @@
 /**
  * Configuração centralizada da API
- * Detecta automaticamente o IP do host
+ * HARDCODED para 192.168.31.161
  */
 
-// Função para detectar o IP automaticamente
-const getApiUrl = () => {
-  // Se REACT_APP_API_URL está definido, usa ele
-  if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
-  }
-  
-  // SEMPRE usa o IP do host atual na porta 8000
-  // Isso garante que funcione tanto em localhost quanto em rede
-  const hostname = window.location.hostname;
-  return `http://${hostname}:8000/api/v1`;
-};
-
-export const API_URL = getApiUrl();
+// HARDCODED - Não depende de variáveis de ambiente
+export const API_URL = 'http://192.168.31.161:8000/api/v1';
 
 // CACHE BUSTER - Forçar atualização
-const CACHE_VERSION = 'v5.0-FIX-LOCALHOST-' + Date.now();
+const CACHE_VERSION = 'v6.0-HARDCODED-IP-' + Date.now();
 
 // Log para debug (sempre ativo para verificar cache)
 console.log('🔧 [CONFIG ' + CACHE_VERSION + '] API URL configurada:', API_URL);
