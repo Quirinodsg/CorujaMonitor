@@ -4,10 +4,11 @@
  */
 
 // HARDCODED - Não depende de variáveis de ambiente
-export const API_URL = 'http://192.168.31.161:8000/api/v1';
+// IMPORTANTE: Não incluir /api/v1 aqui pois os componentes já adicionam
+export const API_URL = 'http://192.168.31.161:8000';
 
 // CACHE BUSTER - Forçar atualização
-const CACHE_VERSION = 'v6.0-HARDCODED-IP-' + Date.now();
+const CACHE_VERSION = 'v7.0-FIX-DOUBLE-API-' + Date.now();
 
 // Log para debug (sempre ativo para verificar cache)
 console.log('🔧 [CONFIG ' + CACHE_VERSION + '] API URL configurada:', API_URL);
