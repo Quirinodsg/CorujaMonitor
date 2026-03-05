@@ -1,0 +1,91 @@
+========================================
+🚨 RESOLVER LOGIN TRAVADO - AGORA!
+========================================
+
+PROBLEMA: Não consigo entrar no sistema após rebuild
+
+SOLUÇÃO RÁPIDA (NO SERVIDOR LINUX):
+========================================
+
+1. FAZER PULL DO GIT:
+   cd ~/CorujaMonitor
+   git pull origin master
+
+2. DAR PERMISSÃO AOS SCRIPTS:
+   chmod +x recriar_admin.sh
+   chmod +x resetar_senha_admin.sh
+   chmod +x CORRIGIR_LOGIN_URGENTE.sh
+
+3. EXECUTAR CORREÇÃO:
+   ./recriar_admin.sh
+
+4. TESTAR LOGIN:
+   - Acesse: http://192.168.31.161:3000
+   - Email: admin@coruja.com
+   - Senha: admin123
+
+========================================
+SE NÃO FUNCIONAR:
+========================================
+
+OPÇÃO A - Resetar apenas senha:
+   ./resetar_senha_admin.sh
+
+OPÇÃO B - Diagnóstico completo:
+   ./CORRIGIR_LOGIN_URGENTE.sh
+
+OPÇÃO C - Recriar banco (CUIDADO - apaga dados):
+   docker compose down -v
+   docker compose up -d
+   sleep 30
+   docker compose exec api python init_admin.py
+
+========================================
+VERIFICAR LOGS:
+========================================
+
+Ver logs da API:
+   docker compose logs --tail=100 api
+
+Ver se containers estão rodando:
+   docker compose ps
+
+Testar API diretamente:
+   curl -X POST http://localhost:8000/api/v1/auth/login \
+     -H "Content-Type: application/json" \
+     -d '{"email":"admin@coruja.com","password":"admin123"}'
+
+========================================
+CAUSA PROVÁVEL:
+========================================
+
+Após rebuild do frontend, pode ter ocorrido:
+1. Banco de dados foi resetado
+2. Usuário admin foi apagado
+3. Senha foi alterada
+4. API não está respondendo
+
+========================================
+SOLUÇÃO DEFINITIVA:
+========================================
+
+Os scripts criados vão:
+1. Verificar se admin existe
+2. Recriar se necessário
+3. Resetar senha para admin123
+4. Testar login via API
+5. Confirmar funcionamento
+
+========================================
+CREDENCIAIS PADRÃO:
+========================================
+
+Email: admin@coruja.com
+Senha: admin123
+
+(Após login, troque a senha!)
+
+========================================
+Data: 05/03/2026 14:30
+Status: 🚨 URGENTE
+========================================
