@@ -1,0 +1,56 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║          🔧 CORRIGIR ERROS NAS PÁGINAS - INÍCIO             ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+📌 PROBLEMA IDENTIFICADO:
+   → Páginas dão erro 404 (Empresas, Incidentes, KB, IA)
+   → Docker build falhou com erro de cache
+
+✅ SOLUÇÃO PRONTA!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PASSO 1: ENVIAR PARA O GIT (WINDOWS)
+
+   1. Abra o Git Bash
+   2. Abra o arquivo: COMANDOS_GIT_BASH_AGORA.txt
+   3. Copie TODOS os comandos
+   4. Cole no Git Bash
+   5. Pressione Enter
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PASSO 2: EXECUTAR NO LINUX
+
+   1. Conecte no servidor Linux (SSH)
+   2. Abra o arquivo: RESOLVER_ERRO_DOCKER_BUILD.txt
+   3. Copie os comandos
+   4. Cole no terminal Linux
+   5. Aguarde 5 minutos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 PASSO 3: TESTAR
+
+   1. Abra navegador em modo anônimo (Ctrl+Shift+N)
+   2. Acesse: http://192.168.31.161:3000
+   3. Login: admin@coruja.com / admin123
+   4. Teste as páginas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️  TEMPO TOTAL: ~7 minutos
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📖 DOCUMENTAÇÃO COMPLETA:
+   → SOLUCAO_COMPLETA_AGORA.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 COMECE AGORA!
+   Abra: COMANDOS_GIT_BASH_AGORA.txt
+
+╚══════════════════════════════════════════════════════════════╝

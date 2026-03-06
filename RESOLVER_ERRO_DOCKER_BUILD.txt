@@ -1,0 +1,59 @@
+==========================================
+RESOLVER ERRO NO BUILD DO DOCKER
+==========================================
+
+ERRO ENCONTRADO:
+"failed to prepare extraction snapshot"
+"parent snapshot does not exist: not found"
+
+CAUSA:
+Cache corrompido do Docker BuildKit
+
+SOLUÇÃO:
+==========================================
+
+COPIE E COLE NO TERMINAL LINUX:
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x rebuild_frontend_limpo.sh
+./rebuild_frontend_limpo.sh
+
+==========================================
+O QUE O SCRIPT FAZ:
+==========================================
+
+1. Para o frontend
+2. Remove container antigo
+3. LIMPA CACHE DO DOCKER (builder prune)
+4. Remove imagens antigas
+5. Reconstrói do zero
+6. Sobe o frontend
+7. Aguarda 30 segundos
+8. Testa se está funcionando
+
+==========================================
+TEMPO ESTIMADO: 3-5 minutos
+==========================================
+
+Após executar:
+→ Acesse http://192.168.31.161:3000
+→ Use modo anônimo (Ctrl+Shift+N)
+→ Faça login: admin@coruja.com / admin123
+→ Teste as páginas
+
+==========================================
+SE AINDA DER ERRO:
+==========================================
+
+Execute este comando para limpar TUDO:
+
+docker system prune -af --volumes
+
+ATENÇÃO: Isso vai parar TODOS os containers!
+Depois execute:
+
+cd ~/CorujaMonitor
+docker-compose up -d
+
+==========================================

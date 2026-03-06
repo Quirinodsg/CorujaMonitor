@@ -1,4 +1,8 @@
-#!/bin/bash
+==========================================
+COMANDOS PARA O GIT BASH
+==========================================
+
+ABRA O GIT BASH E COLE ESTES COMANDOS:
 
 cd "/c/Users/andre.quirino/Coruja Monitor"
 
@@ -8,9 +12,6 @@ git add rebuild_frontend_limpo.sh
 git add EXECUTAR_NO_LINUX_AGORA.txt
 git add RESOLVER_ERRO_DOCKER_BUILD.txt
 git add COMANDOS_GIT_BASH_AGORA.txt
-git add COMECE_AQUI_AGORA.txt
-git add SOLUCAO_COMPLETA_AGORA.md
-git add git_push_agora.sh
 git add frontend/src/config.js
 
 git commit -m "fix: Corrigir erros nas páginas + resolver erro Docker build
@@ -30,11 +31,27 @@ Solução 2: Limpar cache do Docker BuildKit antes do rebuild
 
 git push origin master
 
-echo ""
-echo "✓ Enviado para o Git!"
-echo ""
-echo "Agora execute no servidor Linux:"
-echo "cd ~/CorujaMonitor"
-echo "git pull origin master"
-echo "chmod +x rebuild_frontend_limpo.sh"
-echo "./rebuild_frontend_limpo.sh"
+==========================================
+DEPOIS DE ENVIAR PARA O GIT:
+==========================================
+
+Vá para o servidor Linux e execute:
+
+cd ~/CorujaMonitor
+git pull origin master
+chmod +x rebuild_frontend_limpo.sh
+./rebuild_frontend_limpo.sh
+
+==========================================
+O QUE VAI ACONTECER:
+==========================================
+
+1. Git vai baixar os arquivos corrigidos
+2. Script vai limpar cache do Docker
+3. Frontend será reconstruído do zero
+4. Tabelas do banco serão criadas
+5. Sistema vai funcionar!
+
+TEMPO ESTIMADO: 5 minutos
+
+==========================================

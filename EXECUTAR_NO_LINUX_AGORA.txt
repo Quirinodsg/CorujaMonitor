@@ -1,44 +1,42 @@
 ==========================================
-EXECUTAR NO SERVIDOR LINUX - AGORA
+EXECUTAR NO SERVIDOR LINUX - PASSO A PASSO
 ==========================================
 
-Conecte via SSH no servidor Linux e execute:
+COPIE E COLE ESTES COMANDOS NO TERMINAL LINUX:
 
+# 1. Baixar arquivos do Git
 cd ~/CorujaMonitor
 git pull origin master
-chmod +x corrigir_tabelas_banco.sh
+
+# 2. Dar permissão de execução
+chmod +x corrigir_tabelas_banco.sh rebuild_frontend_limpo.sh
+
+# 3. Executar correção das tabelas
 ./corrigir_tabelas_banco.sh
 
-==========================================
-O QUE O SCRIPT VAI FAZER:
-==========================================
+# 4. Rebuild do frontend (LIMPA CACHE DO DOCKER)
+./rebuild_frontend_limpo.sh
 
-1. Verificar tabelas existentes no banco
-2. Criar TODAS as tabelas necessárias
-3. Popular Knowledge Base com 5 entradas
-4. Reiniciar API
-5. Testar endpoints
+# 5. Aguardar 3-5 minutos e testar
+# Acesse: http://192.168.31.161:3000
+# Faça login: admin@coruja.com / admin123
+# Teste as páginas: Empresas, Incidentes, Relatórios, KB, IA
 
 ==========================================
-APÓS EXECUTAR:
+O QUE CADA COMANDO FAZ:
 ==========================================
 
-1. Recarregue o navegador (Ctrl+Shift+R)
-2. Acesse: http://192.168.31.161:3000
-3. Faça login: admin@coruja.com / admin123
-4. Teste as páginas:
-   ✓ Empresas
-   ✓ Incidentes
-   ✓ Relatórios
-   ✓ Base de Conhecimento
-   ✓ Atividades IA
-   ✓ Configuração
+1. git pull → Baixa os arquivos corrigidos do GitHub
+2. chmod +x → Dá permissão para executar o script
+3. ./corrigir_tabelas_banco.sh → Cria tabelas faltantes no banco
+4. docker-compose rebuild → Reconstrói frontend com config.js correto
+5. Teste → Verifica se tudo funciona
 
 ==========================================
-SE DER ERRO:
+SE DER ERRO "jq: command not found":
 ==========================================
 
-Execute o diagnóstico:
-./diagnostico_login_completo.sh
+Ignore! O script funciona mesmo sem o jq.
+O importante é que as tabelas sejam criadas.
 
 ==========================================
