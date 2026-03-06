@@ -7,8 +7,8 @@ const api = axios.create({
 });
 
 // Log para verificar baseURL
-console.log('🔗 [API v2.0] Axios baseURL configurado:', API_URL);
-console.log('🕐 [API v2.0] Timestamp:', new Date().toISOString());
+console.log('🔗 [API v3.0] Axios baseURL configurado:', API_URL);
+console.log('🕐 [API v3.0] Timestamp:', new Date().toISOString());
 
 // Request interceptor to always include token
 api.interceptors.request.use(
@@ -16,9 +16,9 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
-      console.log('🚀 [REQUEST v2.0] URL completa:', config.baseURL + config.url);
-      console.log('🚀 [REQUEST v2.0] baseURL:', config.baseURL);
-      console.log('🚀 [REQUEST v2.0] url relativa:', config.url);
+      console.log('🚀 [REQUEST v3.0] URL completa:', config.baseURL + config.url);
+      console.log('🚀 [REQUEST v3.0] baseURL:', config.baseURL);
+      console.log('🚀 [REQUEST v3.0] url relativa:', config.url);
     } else {
       console.warn('Request to:', config.url, 'WITHOUT token');
     }
