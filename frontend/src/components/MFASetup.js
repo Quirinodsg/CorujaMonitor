@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import './MFASetup.css';
 
 const MFASetup = () => {
@@ -17,15 +18,8 @@ const MFASetup = () => {
 
   const loadMFAStatus = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/mfa/status', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setMfaStatus(data);
-      }
+      const response = await api.get('/mfa/status');
+      setMfaStatus(response.data);
     } catch (err) {
       console.error('Error loading MFA status:', err);
     }
@@ -36,25 +30,11 @@ const MFASetup = () => {
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/mfa/setup', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setSetupData(data);
-        setStep('setup');
-      } else {
-        const error = await response.json();
-        setError(error.detail || 'Failed to setup MFA');
-      }
+      const response = await api.post('/mfa/setup');
+      setSetupData(response.data);
+      setStep('setup');
     } catch (err) {
-      setError('Error setting up MFA');
+      setError(err.response?.data?.detail || 'Failed to setup MFA');
     } finally {
       setLoading(false);
     }
@@ -70,28 +50,14 @@ const MFASetup = () => {
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/mfa/enable', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ password, code })
-      });
-      
-      if (response.ok) {
-        setSuccess('MFA enabled successfully!');
-        setPassword('');
-        setCode('');
-        setStep('status');
-        loadMFAStatus();
-      } else {
-        const error = await response.json();
-        setError(error.detail || 'Failed to enable MFA');
-      }
+      const response = await api.post('/mfa/enable', { password, code });
+      setSuccess('MFA enabled successfully!');
+      setPassword('');
+      setCode('');
+      setStep('status');
+      loadMFAStatus();
     } catch (err) {
-      setError('Error enabling MFA');
+      setError(err.response?.data?.detail || 'Failed to enable MFA');
     } finally {
       setLoading(false);
     }
@@ -107,28 +73,14 @@ const MFASetup = () => {
     setError('');
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/mfa/disable', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ password, code })
-      });
-      
-      if (response.ok) {
-        setSuccess('MFA disabled successfully!');
-        setPassword('');
-        setCode('');
-        setStep('status');
-        loadMFAStatus();
-      } else {
-        const error = await response.json();
-        setError(error.detail || 'Failed to disable MFA');
-      }
+      const response = await api.post('/mfa/disable', { password, code });
+      setSuccess('MFA disabled successfully!');
+      setPassword('');
+      setCode('');
+      setStep('status');
+      loadMFAStatus();
     } catch (err) {
-      setError('Error disabling MFA');
+      setError(err.response?.data?.detail || 'Failed to disable MFA');
     } finally {
       setLoading(false);
     }

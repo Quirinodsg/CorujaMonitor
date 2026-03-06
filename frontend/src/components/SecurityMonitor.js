@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import './SecurityMonitor.css';
 
 const SecurityMonitor = () => {
@@ -18,33 +19,25 @@ const SecurityMonitor = () => {
 
   const loadSecurityData = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = { 'Authorization': `Bearer ${token}` };
-
       // Carregar status geral
-      const statusRes = await fetch('http://localhost:8000/api/v1/security/status', { headers });
-      const statusData = await statusRes.json();
-      setStatus(statusData);
+      const statusRes = await api.get('/security/status');
+      setStatus(statusRes.data);
 
       // Carregar estatísticas do WAF
-      const wafRes = await fetch('http://localhost:8000/api/v1/security/waf/stats', { headers });
-      const wafData = await wafRes.json();
-      setWafStats(wafData);
+      const wafRes = await api.get('/security/waf/stats');
+      setWafStats(wafRes.data);
 
       // Carregar status de integridade
-      const integrityRes = await fetch('http://localhost:8000/api/v1/security/integrity/status', { headers });
-      const integrityData = await integrityRes.json();
-      setIntegrityStatus(integrityData);
+      const integrityRes = await api.get('/security/integrity/status');
+      setIntegrityStatus(integrityRes.data);
 
       // Carregar vulnerabilidades
-      const vulnRes = await fetch('http://localhost:8000/api/v1/security/vulnerabilities/status', { headers });
-      const vulnData = await vulnRes.json();
-      setVulnerabilities(vulnData);
+      const vulnRes = await api.get('/security/vulnerabilities/status');
+      setVulnerabilities(vulnRes.data);
 
       // Carregar recomendações
-      const recRes = await fetch('http://localhost:8000/api/v1/security/recommendations', { headers });
-      const recData = await recRes.json();
-      setRecommendations(recData.recommendations || []);
+      const recRes = await api.get('/security/recommendations');
+      setRecommendations(recRes.data.recommendations || []);
 
       setLoading(false);
     } catch (error) {

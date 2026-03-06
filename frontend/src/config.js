@@ -7,7 +7,7 @@
 export const API_URL = 'http://192.168.31.161:8000/api/v1';
 
 // CACHE BUSTER - Forçar atualização
-const CACHE_VERSION = 'v9.0-SEM-API-V1-' + Date.now();
+const CACHE_VERSION = 'v11.0-SEGURANCA-MFA-' + Date.now();
 
 // Log para debug (sempre ativo para verificar cache)
 console.log('🔧 [CONFIG ' + CACHE_VERSION + '] API URL configurada:', API_URL);

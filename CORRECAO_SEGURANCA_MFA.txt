@@ -1,0 +1,79 @@
+========================================
+🔧 CORREÇÃO - SEGURANÇA E MFA
+========================================
+
+PROBLEMAS CORRIGIDOS:
+1. SecurityMonitor.js - Usando localhost ao invés de 192.168.31.161
+2. MFASetup.js - Usando localhost ao invés de 192.168.31.161
+3. Servidores - Erro 500 em /sensor-groups/ (tabela não existe)
+
+SOLUÇÃO:
+1. SecurityMonitor.js e MFASetup.js agora usam api do axios
+2. Script para criar tabela sensor_groups no banco
+
+========================================
+📋 COMANDOS PARA EXECUTAR NO WINDOWS
+========================================
+
+OPÇÃO 1 - Git Bash:
+-------------------
+git add frontend/src/components/SecurityMonitor.js frontend/src/components/MFASetup.js frontend/src/config.js corrigir_seguranca_e_grupos.sh CORRECAO_SEGURANCA_MFA.txt
+git commit -m "fix: Corrigir SecurityMonitor e MFASetup usando localhost + criar tabela sensor_groups"
+git push origin master
+
+
+OPÇÃO 2 - GitHub Desktop:
+--------------------------
+1. Selecionar arquivos modificados
+2. Commit: "fix: Corrigir SecurityMonitor e MFASetup + sensor_groups"
+3. Push origin
+
+
+========================================
+📋 COMANDOS PARA EXECUTAR NO LINUX
+========================================
+
+cd /home/administrador/CorujaMonitor
+chmod +x corrigir_seguranca_e_grupos.sh
+./corrigir_seguranca_e_grupos.sh
+
+
+========================================
+⚠️  IMPORTANTE APÓS O SCRIPT
+========================================
+
+1. ABRIR NAVEGADOR EM MODO ANÔNIMO:
+   - Chrome/Edge: Ctrl+Shift+N
+   - Firefox: Ctrl+Shift+P
+
+2. ACESSAR:
+   http://192.168.31.161:3000
+
+3. FAZER LOGIN:
+   Email: admin@coruja.com
+   Senha: admin123
+
+4. TESTAR PÁGINAS CORRIGIDAS:
+   ✓ Configurações > Segurança
+   ✓ Configurações > MFA
+   ✓ Servidores (grupos)
+
+
+========================================
+🔍 VERIFICAR SE FUNCIONOU
+========================================
+
+1. Console do Navegador (F12):
+   ✅ "[CONFIG v11.0-SEGURANCA-MFA-...]"
+   ✅ Sem erros "ERR_CONNECTION_REFUSED"
+   ✅ Sem erros "localhost:8000"
+
+2. Aba Network (F12):
+   ✅ URLs devem ser: http://192.168.31.161:8000/api/v1/...
+   ❌ NÃO devem ter: localhost:8000
+
+3. Páginas Funcionando:
+   ✓ Configurações > Segurança carrega dados
+   ✓ Configurações > MFA carrega status
+   ✓ Servidores carrega sem erro 500
+
