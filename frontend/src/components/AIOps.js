@@ -29,7 +29,7 @@ function AIOps() {
 
   const loadSensors = async () => {
     try {
-      const response = await api.get('/api/v1/sensors/');
+      const response = await api.get('/sensors/');
       setSensors(response.data);
     } catch (error) {
       console.error('Erro ao carregar sensores:', error);
@@ -49,7 +49,7 @@ function AIOps() {
   const detectAnomalies = async (sensorId) => {
     setLoading(true);
     try {
-      const response = await api.post('/api/v1/aiops/anomaly-detection', {
+      const response = await api.post('/aiops/anomaly-detection', {
         sensor_id: sensorId,
         lookback_hours: 24
       });
@@ -71,7 +71,7 @@ function AIOps() {
   const correlateEvents = async () => {
     setLoading(true);
     try {
-      const response = await api.post('/api/v1/aiops/event-correlation', {
+      const response = await api.post('/aiops/event-correlation', {
         time_window_minutes: 30,
         severity_filter: ['critical', 'warning']
       });
@@ -93,7 +93,7 @@ function AIOps() {
   const analyzeRootCause = async (incidentId) => {
     setLoading(true);
     try {
-      const response = await api.post('/api/v1/aiops/root-cause-analysis', {
+      const response = await api.post('/aiops/root-cause-analysis', {
         incident_id: incidentId
       });
       
@@ -110,7 +110,7 @@ function AIOps() {
   const createActionPlan = async (incidentId) => {
     setLoading(true);
     try {
-      const response = await api.post(`/api/v1/aiops/action-plan/${incidentId}?include_correlation=true`);
+      const response = await api.post(`/aiops/action-plan/${incidentId}?include_correlation=true`);
       
       setActionPlans(prev => [...prev, {
         ...response.data,

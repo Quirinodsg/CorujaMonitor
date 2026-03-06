@@ -27,7 +27,7 @@ function Users() {
 
   const loadUsers = async () => {
     try {
-      const response = await api.get('/api/v1/users');
+      const response = await api.get('/users');
       setUsers(response.data);
     } catch (error) {
       console.error('Erro ao carregar usuários:', error);
@@ -39,7 +39,7 @@ function Users() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/v1/users', formData);
+      await api.post('/users', formData);
       setShowModal(false);
       setFormData({ email: '', full_name: '', password: '', role: 'viewer' });
       loadUsers();
@@ -62,7 +62,7 @@ function Users() {
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/api/v1/users/${editingUser.id}`, {
+      await api.put(`/users/${editingUser.id}`, {
         full_name: editingUser.full_name,
         role: editingUser.role
       });
@@ -82,7 +82,7 @@ function Users() {
     }
 
     try {
-      await api.patch(`/api/v1/users/${user.id}/toggle-active`);
+      await api.patch(`/users/${user.id}/toggle-active`);
       loadUsers();
       alert(`Usuário ${action === 'desativar' ? 'desativado' : 'ativado'} com sucesso!`);
     } catch (error) {
@@ -96,7 +96,7 @@ function Users() {
     }
 
     try {
-      await api.delete(`/api/v1/users/${user.id}`);
+      await api.delete(`/users/${user.id}`);
       loadUsers();
       alert('Usuário excluído com sucesso!');
     } catch (error) {

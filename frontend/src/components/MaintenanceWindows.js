@@ -27,8 +27,8 @@ function MaintenanceWindows() {
   const loadData = async () => {
     try {
       const [windowsRes, serversRes] = await Promise.all([
-        api.get('/api/v1/maintenance/'),
-        api.get('/api/v1/servers/')
+        api.get('/maintenance/'),
+        api.get('/servers/')
       ]);
       
       setWindows(windowsRes.data);
@@ -47,7 +47,7 @@ function MaintenanceWindows() {
     }
 
     try {
-      await api.post('/api/v1/maintenance/', {
+      await api.post('/maintenance/', {
         server_id: newWindow.server_id || null,
         title: newWindow.title,
         description: newWindow.description,
@@ -84,7 +84,7 @@ function MaintenanceWindows() {
     if (!editingWindow) return;
 
     try {
-      await api.put(`/api/v1/maintenance/${editingWindow.id}`, {
+      await api.put(`/maintenance/${editingWindow.id}`, {
         title: editingWindow.title,
         description: editingWindow.description,
         start_time: new Date(editingWindow.start_time).toISOString(),
@@ -108,7 +108,7 @@ function MaintenanceWindows() {
     }
 
     try {
-      await api.delete(`/api/v1/maintenance/${windowId}`);
+      await api.delete(`/maintenance/${windowId}`);
       loadData();
       alert('Janela de manutenção removida com sucesso!');
     } catch (error) {

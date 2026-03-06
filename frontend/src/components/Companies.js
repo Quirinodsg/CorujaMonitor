@@ -22,14 +22,14 @@ function Companies({ onNavigate }) {
 
   const loadCompanies = async () => {
     try {
-      const response = await api.get('/api/v1/tenants');
+      const response = await api.get('/tenants');
       setCompanies(response.data);
       
       // Load probes for each company
       const probesData = {};
       for (const company of response.data) {
         try {
-          const probesResponse = await api.get(`/api/v1/probes?tenant_id=${company.id}`);
+          const probesResponse = await api.get(`/probes?tenant_id=${company.id}`);
           probesData[company.id] = probesResponse.data;
         } catch (error) {
           console.error(`Erro ao carregar probes da empresa ${company.id}:`, error);
@@ -47,7 +47,7 @@ function Companies({ onNavigate }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.post('/api/v1/tenants', formData);
+      await api.post('/tenants', formData);
       setShowModal(false);
       setFormData({ name: '', slug: '' });
       loadCompanies();
@@ -65,7 +65,7 @@ function Companies({ onNavigate }) {
   const handleUpdateSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api.put(`/api/v1/tenants/${editingCompany.id}`, {
+      await api.put(`/tenants/${editingCompany.id}`, {
         name: editingCompany.name,
         slug: editingCompany.slug
       });
@@ -85,7 +85,7 @@ function Companies({ onNavigate }) {
     }
 
     try {
-      await api.patch(`/api/v1/tenants/${company.id}/toggle-active`);
+      await api.patch(`/tenants/${company.id}/toggle-active`);
       loadCompanies();
       alert(`Empresa ${action === 'desativar' ? 'desativada' : 'ativada'} com sucesso!`);
     } catch (error) {
@@ -106,7 +106,7 @@ function Companies({ onNavigate }) {
     }
 
     try {
-      await api.delete(`/api/v1/tenants/${company.id}`);
+      await api.delete(`/tenants/${company.id}`);
       loadCompanies();
       alert('Empresa excluída com sucesso!');
     } catch (error) {
@@ -131,7 +131,7 @@ function Companies({ onNavigate }) {
     if (!selectedCompany) return;
 
     try {
-      await api.post('/api/v1/probes', {
+      await api.post('/probes', {
         tenant_id: selectedCompany.id,
         name: probeFormData.name
       });
@@ -152,7 +152,7 @@ function Companies({ onNavigate }) {
     }
 
     try {
-      await api.delete(`/api/v1/probes/${probe.id}`);
+      await api.delete(`/probes/${probe.id}`);
       loadCompanies();
       alert('Probe excluída com sucesso!');
     } catch (error) {

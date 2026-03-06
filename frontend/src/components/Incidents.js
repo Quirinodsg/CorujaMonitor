@@ -22,12 +22,12 @@ function Incidents({ onNavigateToServer, onNavigate }) {
   const loadIncidents = async () => {
     try {
       // Load incidents
-      const incidentsResponse = await api.get('/api/v1/incidents/?limit=500');
+      const incidentsResponse = await api.get('/incidents/?limit=500');
       setIncidents(incidentsResponse.data);
 
       // Load sensors and servers
-      const sensorsResponse = await api.get('/api/v1/sensors/');
-      const serversResponse = await api.get('/api/v1/servers/');
+      const sensorsResponse = await api.get('/sensors/');
+      const serversResponse = await api.get('/servers/');
 
       const sensorsMap = {};
       sensorsResponse.data.forEach(sensor => {
@@ -53,7 +53,7 @@ function Incidents({ onNavigateToServer, onNavigate }) {
     
     // Load remediation logs
     try {
-      const response = await api.get(`/api/v1/incidents/${incident.id}/remediation`);
+      const response = await api.get(`/incidents/${incident.id}/remediation`);
       setRemediationLogs(response.data);
     } catch (error) {
       console.error('Erro ao carregar logs de remediação:', error);

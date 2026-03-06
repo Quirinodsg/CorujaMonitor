@@ -98,7 +98,7 @@ function Settings({ onNavigate }) {
   const loadBackups = async () => {
     setLoadingBackups(true);
     try {
-      const response = await api.get('/api/v1/backup/list');
+      const response = await api.get('/backup/list');
       setBackups(response.data.backups);
     } catch (error) {
       console.error('Erro ao carregar backups:', error);
@@ -113,7 +113,7 @@ function Settings({ onNavigate }) {
     
     setCreatingBackup(true);
     try {
-      const response = await api.post('/api/v1/backup/create');
+      const response = await api.post('/backup/create');
       alert(response.data.message);
       loadBackups();
     } catch (error) {
@@ -129,7 +129,7 @@ function Settings({ onNavigate }) {
     
     setRestoringBackup(true);
     try {
-      const response = await api.post(`/api/v1/backup/restore/${filename}`);
+      const response = await api.post(`/backup/restore/${filename}`);
       alert(response.data.message + '\n\nA página será recarregada em 3 segundos...');
       setTimeout(() => window.location.reload(), 3000);
     } catch (error) {
@@ -141,14 +141,14 @@ function Settings({ onNavigate }) {
   };
 
   const downloadBackup = (filename) => {
-    window.open(`/api/v1/backup/download/${filename}`, '_blank');
+    window.open(`/backup/download/${filename}`, '_blank');
   };
 
   const deleteBackup = async (filename) => {
     if (!window.confirm(`Deseja deletar o backup "${filename}"?`)) return;
     
     try {
-      const response = await api.delete(`/api/v1/backup/delete/${filename}`);
+      const response = await api.delete(`/backup/delete/${filename}`);
       alert(response.data.message);
       loadBackups();
     } catch (error) {
@@ -160,7 +160,7 @@ function Settings({ onNavigate }) {
   const loadSettings = async () => {
     try {
       // Load notification config
-      const notifResponse = await api.get('/api/v1/notifications/config');
+      const notifResponse = await api.get('/notifications/config');
       if (notifResponse.data.notification_config) {
         setNotificationConfig({
           email: notifResponse.data.notification_config.email || { enabled: false, smtp_server: '', smtp_port: 587, smtp_user: '', smtp_password: '', from_email: '', to_emails: [], use_tls: true },
@@ -176,11 +176,11 @@ function Settings({ onNavigate }) {
       }
 
       // Load users
-      const usersResponse = await api.get('/api/v1/users');
+      const usersResponse = await api.get('/users');
       setUsers(usersResponse.data);
       
       // Load maintenance mode status
-      const maintenanceResponse = await api.get('/api/v1/admin/maintenance-mode/status');
+      const maintenanceResponse = await api.get('/admin/maintenance-mode/status');
       setMaintenanceMode(maintenanceResponse.data.enabled || false);
 
       // Load advanced settings from localStorage
@@ -202,7 +202,7 @@ function Settings({ onNavigate }) {
 
       // Load authentication/security config
       try {
-        const authResponse = await api.get('/api/v1/auth-config');
+        const authResponse = await api.get('/auth-config');
         if (authResponse.data) {
           setAuthConfig({
             ldap: authResponse.data.ldap || authConfig.ldap,
@@ -258,7 +258,7 @@ function Settings({ onNavigate }) {
       addProgressMessage('Verificando permissões...');
       
       await new Promise(resolve => setTimeout(resolve, 500));
-      const response = await api.post('/api/v1/admin/maintenance-mode', {
+      const response = await api.post('/admin/maintenance-mode', {
         enabled: newMode,
         message: 'Sistema em manutenção. Voltamos em breve.'
       });
@@ -290,7 +290,7 @@ function Settings({ onNavigate }) {
       await new Promise(resolve => setTimeout(resolve, 500));
       addProgressMessage('Limpando heartbeats...');
       
-      const response = await api.post('/api/v1/admin/reset-probes');
+      const response = await api.post('/admin/reset-probes');
       
       addProgressMessage(response.data.message);
       addProgressMessage('✅ Probes resetadas! Aguarde reconexão...');
@@ -316,7 +316,7 @@ function Settings({ onNavigate }) {
       await new Promise(resolve => setTimeout(resolve, 500));
       addProgressMessage('Agendando reinício dos containers...');
       
-      const response = await api.post('/api/v1/admin/restart-system');
+      const response = await api.post('/admin/restart-system');
       
       addProgressMessage(response.data.message);
       addProgressMessage('⏳ Sistema reiniciando...');
@@ -347,7 +347,7 @@ function Settings({ onNavigate }) {
       await new Promise(resolve => setTimeout(resolve, 1000));
       addProgressMessage('Exportando dados...');
       
-      const response = await api.post('/api/v1/admin/backup-database');
+      const response = await api.post('/admin/backup-database');
       
       addProgressMessage(`✅ Backup criado: ${response.data.backup_file}`);
       addProgressMessage(`Tamanho: ${response.data.size_mb} MB`);
@@ -370,7 +370,7 @@ function Settings({ onNavigate }) {
       await new Promise(resolve => setTimeout(resolve, 500));
       addProgressMessage('Executando FLUSHDB...');
       
-      const response = await api.post('/api/v1/admin/clear-cache');
+      const response = await api.post('/admin/clear-cache');
       
       addProgressMessage(response.data.message);
       addProgressMessage('✅ Cache limpo com sucesso!');
@@ -390,7 +390,7 @@ function Settings({ onNavigate }) {
     
     try {
       await new Promise(resolve => setTimeout(resolve, 500));
-      const response = await api.get('/api/v1/admin/logs?service=api&lines=50');
+      const response = await api.get('/admin/logs?service=api&lines=50');
       
       addProgressMessage('✅ Logs carregados!');
       addProgressMessage('');
@@ -410,7 +410,7 @@ function Settings({ onNavigate }) {
   const handleSaveNotifications = async () => {
     setSaving(true);
     try {
-      await api.put('/api/v1/notifications/config', notificationConfig);
+      await api.put('/notifications/config', notificationConfig);
       alert('Configurações de notificação salvas com sucesso!');
     } catch (error) {
       alert('Erro ao salvar configurações: ' + (error.response?.data?.detail || error.message));
@@ -436,7 +436,7 @@ function Settings({ onNavigate }) {
     }
     
     try {
-      const response = await api.post(`/api/v1/notifications/test/${channel}`);
+      const response = await api.post(`/notifications/test/${channel}`);
       alert(`✅ Sucesso!\n\n${response.data.message || `Notificação de teste enviada via ${channel}!`}`);
     } catch (error) {
       const errorMsg = error.response?.data?.detail || error.message;
@@ -475,7 +475,7 @@ function Settings({ onNavigate }) {
   const handleSaveAuthConfig = async () => {
     setSaving(true);
     try {
-      await api.put('/api/v1/auth-config', authConfig);
+      await api.put('/auth-config', authConfig);
       alert('Configurações de segurança salvas com sucesso!');
     } catch (error) {
       alert('Erro ao salvar configurações de segurança: ' + (error.response?.data?.detail || error.message));
@@ -486,7 +486,7 @@ function Settings({ onNavigate }) {
 
   const handleTestAuthConfig = async (provider) => {
     try {
-      const response = await api.post(`/api/v1/auth-config/test/${provider}`);
+      const response = await api.post(`/auth-config/test/${provider}`);
       alert(`✅ Teste bem-sucedido!\n\n${response.data.message || `Conexão com ${provider} funcionando corretamente.`}`);
     } catch (error) {
       alert(`❌ Erro ao testar ${provider}:\n\n${error.response?.data?.detail || error.message}`);

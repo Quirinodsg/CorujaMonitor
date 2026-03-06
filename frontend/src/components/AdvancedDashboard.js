@@ -37,10 +37,10 @@ function AdvancedDashboard({ user, onNavigate }) {
     try {
       // Usar endpoints existentes do dashboard normal
       const [overview, healthSummary, incidents, servers] = await Promise.all([
-        api.get('/api/v1/dashboard/overview'),
-        api.get('/api/v1/dashboard/health-summary'),
-        api.get('/api/v1/incidents?limit=10'),
-        api.get('/api/v1/servers/')
+        api.get('/dashboard/overview'),
+        api.get('/dashboard/health-summary'),
+        api.get('/incidents?limit=10'),
+        api.get('/servers/')
       ]);
 
       // Processar dados para o formato do dashboard avançado

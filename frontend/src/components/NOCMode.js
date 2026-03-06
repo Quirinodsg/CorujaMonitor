@@ -18,10 +18,10 @@ function NOCMode({ onExit }) {
   const loadNOCData = useCallback(async () => {
     try {
       const [global, heatmap, incidents, kpis] = await Promise.all([
-        api.get('/api/v1/noc/global-status'),
-        api.get('/api/v1/noc/heatmap'),
-        api.get('/api/v1/noc/active-incidents'),
-        api.get('/api/v1/noc/kpis')
+        api.get('/noc/global-status'),
+        api.get('/noc/heatmap'),
+        api.get('/noc/active-incidents'),
+        api.get('/noc/kpis')
       ]);
 
       setData({

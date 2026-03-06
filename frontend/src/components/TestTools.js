@@ -33,7 +33,7 @@ function TestTools() {
 
   const loadServers = async () => {
     try {
-      const response = await api.get('/api/v1/servers/');
+      const response = await api.get('/servers/');
       setServers(response.data);
     } catch (error) {
       console.error('Erro ao carregar servidores:', error);
@@ -42,7 +42,7 @@ function TestTools() {
 
   const loadSensors = async (serverId) => {
     try {
-      const response = await api.get(`/api/v1/sensors?server_id=${serverId}`);
+      const response = await api.get(`/sensors?server_id=${serverId}`);
       setSensors(response.data);
     } catch (error) {
       console.error('Erro ao carregar sensores:', error);
@@ -52,7 +52,7 @@ function TestTools() {
   const loadActiveFailures = async () => {
     try {
       console.log('🔍 Carregando falhas ativas...');
-      const response = await api.get('/api/v1/test-tools/simulated-failures');
+      const response = await api.get('/test-tools/simulated-failures');
       console.log('📊 Resposta do servidor:', response.data);
       console.log('📋 Falhas encontradas:', response.data.failures);
       setActiveFailures(response.data.failures || []);
@@ -82,7 +82,7 @@ function TestTools() {
       }
 
       console.log('⚡ Simulando falha com payload:', payload);
-      const response = await api.post('/api/v1/test-tools/simulate-failure', payload);
+      const response = await api.post('/test-tools/simulate-failure', payload);
       console.log('✅ Resposta:', response.data);
       
       alert('Falha simulada com sucesso! Verifique os alertas e notificações.');
@@ -110,7 +110,7 @@ function TestTools() {
     setLoading(true);
     try {
       console.log('🧹 Limpando todas as falhas...');
-      const response = await api.post('/api/v1/test-tools/clear-simulated-failures');
+      const response = await api.post('/test-tools/clear-simulated-failures');
       console.log('✅ Resposta:', response.data);
       
       alert(`Limpeza concluída!\n${response.data.metrics_deleted} métricas removidas\n${response.data.incidents_resolved} incidentes resolvidos`);
@@ -132,7 +132,7 @@ function TestTools() {
 
     try {
       console.log(`🔧 Resolvendo incidente ${incidentId}...`);
-      await api.post(`/api/v1/incidents/${incidentId}/resolve`, {
+      await api.post(`/incidents/${incidentId}/resolve`, {
         resolution_notes: 'Falha simulada resolvida manualmente pelo administrador'
       });
       alert('Falha resolvida com sucesso!');

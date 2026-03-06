@@ -33,7 +33,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
 
   const loadSensorIncidents = async () => {
     try {
-      const response = await api.get('/api/v1/incidents/?status=open');
+      const response = await api.get('/incidents/?status=open');
       const incidentsMap = {};
       response.data.forEach(incident => {
         incidentsMap[incident.sensor_id] = incident;
@@ -47,7 +47,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
   const loadAllSensors = async () => {
     try {
       // Load all servers first
-      const serversResponse = await api.get('/api/v1/servers/');
+      const serversResponse = await api.get('/servers/');
       const serversMap = {};
       serversResponse.data.forEach(server => {
         serversMap[server.id] = server;
@@ -55,7 +55,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       setServers(serversMap);
 
       // Load all sensors
-      const sensorsResponse = await api.get('/api/v1/sensors/');
+      const sensorsResponse = await api.get('/sensors/');
       setSensors(sensorsResponse.data);
 
       // Load incidents
@@ -65,7 +65,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       const metricsData = {};
       for (const sensor of sensorsResponse.data) {
         try {
-          const metricsResponse = await api.get(`/api/v1/metrics/?sensor_id=${sensor.id}&limit=1`);
+          const metricsResponse = await api.get(`/metrics/?sensor_id=${sensor.id}&limit=1`);
           if (metricsResponse.data.length > 0) {
             metricsData[sensor.id] = metricsResponse.data[0];
           }
@@ -261,7 +261,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
     if (notes === null) return; // User cancelled
     
     try {
-      await api.post(`/api/v1/incidents/${incident.id}/resolve`, {
+      await api.post(`/incidents/${incident.id}/resolve`, {
         resolution_notes: notes || 'Incidente resolvido manualmente pelo administrador'
       });
       

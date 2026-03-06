@@ -32,19 +32,19 @@ const MetricsViewer = () => {
     try {
       switch (activeTab) {
         case 'servers':
-          const serversRes = await api.get(`/api/v1/metrics/dashboard/servers?range=${timeRange}`);
+          const serversRes = await api.get(`/metrics/dashboard/servers?range=${timeRange}`);
           setServersData(serversRes.data);
           break;
         case 'network':
-          const networkRes = await api.get(`/api/v1/metrics/dashboard/network?range=${timeRange}`);
+          const networkRes = await api.get(`/metrics/dashboard/network?range=${timeRange}`);
           setNetworkData(networkRes.data);
           break;
         case 'webapps':
-          const webappsRes = await api.get(`/api/v1/metrics/dashboard/webapps?range=${timeRange}`);
+          const webappsRes = await api.get(`/metrics/dashboard/webapps?range=${timeRange}`);
           setWebappsData(webappsRes.data);
           break;
         case 'kubernetes':
-          const k8sRes = await api.get(`/api/v1/metrics/dashboard/kubernetes?range=${timeRange}`);
+          const k8sRes = await api.get(`/metrics/dashboard/kubernetes?range=${timeRange}`);
           setKubernetesData(k8sRes.data);
           break;
       }

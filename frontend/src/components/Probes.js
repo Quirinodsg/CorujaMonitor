@@ -18,7 +18,7 @@ function Probes() {
 
   const loadProbes = async () => {
     try {
-      const response = await api.get('/api/v1/probes');
+      const response = await api.get('/probes');
       setProbes(response.data);
     } catch (error) {
       console.error('Erro ao carregar probes:', error);
@@ -30,7 +30,7 @@ function Probes() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await api.post('/api/v1/probes', formData);
+      const response = await api.post('/probes', formData);
       setNewProbe(response.data);
       setShowModal(false);
       setShowTokenModal(true);
@@ -53,7 +53,7 @@ function Probes() {
 
   const handleDeleteConfirm = async () => {
     try {
-      await api.delete(`/api/v1/probes/${probeToDelete.id}`);
+      await api.delete(`/probes/${probeToDelete.id}`);
       setShowDeleteModal(false);
       setProbeToDelete(null);
       loadProbes();

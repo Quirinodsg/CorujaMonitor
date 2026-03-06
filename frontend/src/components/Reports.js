@@ -43,7 +43,7 @@ function Reports() {
 
   const loadTemplates = async () => {
     try {
-      const response = await api.get('/api/v1/reports/templates');
+      const response = await api.get('/reports/templates');
       setTemplates(response.data);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
@@ -53,7 +53,7 @@ function Reports() {
   const loadCustomTemplates = async () => {
     try {
       console.log('Carregando templates personalizados...');
-      const response = await api.get('/api/v1/custom-reports/templates');
+      const response = await api.get('/custom-reports/templates');
       console.log('Templates personalizados carregados:', response.data);
       setCustomTemplates(response.data);
     } catch (error) {
@@ -65,7 +65,7 @@ function Reports() {
   const loadMyReports = async () => {
     try {
       console.log('Carregando meus relatórios...');
-      const response = await api.get('/api/v1/custom-reports/');
+      const response = await api.get('/custom-reports/');
       console.log('Meus relatórios carregados:', response.data);
       setMyReports(response.data);
     } catch (error) {
@@ -97,17 +97,17 @@ function Reports() {
       
       if (templateId.startsWith('availability_')) {
         const period = templateId.replace('availability_', '');
-        response = await api.get(`/api/v1/reports/generate/availability/${period}`);
+        response = await api.get(`/reports/generate/availability/${period}`);
       } else if (templateId.startsWith('problems_')) {
         const period = templateId.replace('problems_', '');
-        response = await api.get(`/api/v1/reports/generate/problems/${period}`);
+        response = await api.get(`/reports/generate/problems/${period}`);
       } else if (templateId.startsWith('ai_resolution_')) {
         const period = templateId.replace('ai_resolution_', '');
-        response = await api.get(`/api/v1/reports/generate/ai-resolution/${period}`);
+        response = await api.get(`/reports/generate/ai-resolution/${period}`);
       } else if (templateId === 'cpu_utilization_monthly') {
-        response = await api.get('/api/v1/reports/generate/cpu-utilization/monthly');
+        response = await api.get('/reports/generate/cpu-utilization/monthly');
       } else if (templateId === 'memory_utilization_monthly') {
-        response = await api.get('/api/v1/reports/generate/memory-utilization/monthly');
+        response = await api.get('/reports/generate/memory-utilization/monthly');
       }
 
       setReportData(response.data);
@@ -132,11 +132,11 @@ function Reports() {
     try {
       // Se for um relatório salvo (ID numérico), usar endpoint de geração
       if (typeof template.id === 'number') {
-        const response = await api.post(`/api/v1/custom-reports/${template.id}/generate`);
+        const response = await api.post(`/custom-reports/${template.id}/generate`);
         setReportData(response.data);
       } else {
         // É um template, gerar com filtros atuais
-        const response = await api.post('/api/v1/custom-reports/generate-template', {
+        const response = await api.post('/custom-reports/generate-template', {
           template_id: template.id,
           filters: template.filters || {}
         });
@@ -157,11 +157,11 @@ function Reports() {
     try {
       // Se for um relatório salvo (ID numérico), usar endpoint de geração
       if (typeof selectedReport === 'number') {
-        const response = await api.post(`/api/v1/custom-reports/${selectedReport}/generate`);
+        const response = await api.post(`/custom-reports/${selectedReport}/generate`);
         setReportData(response.data);
       } else {
         // É um template, gerar com filtros atuais
-        const response = await api.post('/api/v1/custom-reports/generate-template', {
+        const response = await api.post('/custom-reports/generate-template', {
           template_id: selectedReport,
           filters: filters
         });
@@ -231,12 +231,12 @@ function Reports() {
 
       if (editingReport) {
         // Atualizar relatório existente
-        await api.put(`/api/v1/custom-reports/${editingReport.id}`, reportData);
+        await api.put(`/custom-reports/${editingReport.id}`, reportData);
         alert('Relatório atualizado com sucesso!');
         setShowEditModal(false);
       } else {
         // Criar novo relatório
-        await api.post('/api/v1/custom-reports/', reportData);
+        await api.post('/custom-reports/', reportData);
         alert('Relatório criado com sucesso!');
         setShowCreateModal(false);
       }
@@ -255,7 +255,7 @@ function Reports() {
     }
 
     try {
-      await api.delete(`/api/v1/custom-reports/${reportId}`);
+      await api.delete(`/custom-reports/${reportId}`);
       alert('Relatório excluído com sucesso!');
       loadMyReports();
       if (selectedReport === reportId) {

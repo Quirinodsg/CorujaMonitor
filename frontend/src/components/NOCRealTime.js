@@ -38,7 +38,7 @@ function NOCRealTime({ onExit }) {
   // Carregar dados do dashboard
   const loadDashboard = useCallback(async () => {
     try {
-      const response = await api.get('/api/v1/noc-realtime/realtime/dashboard');
+      const response = await api.get('/noc-realtime/realtime/dashboard');
       
       // Detectar novos incidentes críticos
       if (data && response.data.incidents) {

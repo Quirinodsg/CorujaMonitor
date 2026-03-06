@@ -26,7 +26,7 @@ function CustomReports() {
 
   const loadTemplates = async () => {
     try {
-      const response = await api.get('/api/v1/custom-reports/templates');
+      const response = await api.get('/custom-reports/templates');
       setTemplates(response.data);
     } catch (error) {
       console.error('Erro ao carregar templates:', error);
@@ -35,7 +35,7 @@ function CustomReports() {
 
   const loadMyReports = async () => {
     try {
-      const response = await api.get('/api/v1/custom-reports/');
+      const response = await api.get('/custom-reports/');
       setMyReports(response.data);
     } catch (error) {
       console.error('Erro ao carregar meus relatórios:', error);
@@ -61,14 +61,14 @@ function CustomReports() {
       // Se for um template, gerar diretamente
       if (selectedTemplate.id && !selectedTemplate.id.toString().match(/^\d+$/)) {
         // É um template pré-definido, usar endpoint específico
-        const response = await api.post('/api/v1/custom-reports/generate-template', {
+        const response = await api.post('/custom-reports/generate-template', {
           template_id: selectedTemplate.id,
           filters: filters
         });
         setReportData(response.data);
       } else {
         // É um relatório salvo, usar endpoint de geração
-        const response = await api.post(`/api/v1/custom-reports/${selectedTemplate.id}/generate`);
+        const response = await api.post(`/custom-reports/${selectedTemplate.id}/generate`);
         setReportData(response.data);
       }
     } catch (error) {
@@ -98,7 +98,7 @@ function CustomReports() {
         is_favorite: false
       };
 
-      await api.post('/api/v1/custom-reports/', reportData);
+      await api.post('/custom-reports/', reportData);
       alert('Relatório salvo com sucesso!');
       setShowSaveModal(false);
       loadMyReports();
@@ -114,7 +114,7 @@ function CustomReports() {
     }
 
     try {
-      await api.delete(`/api/v1/custom-reports/${reportId}`);
+      await api.delete(`/custom-reports/${reportId}`);
       alert('Relatório excluído com sucesso!');
       loadMyReports();
       if (selectedTemplate?.id === reportId) {

@@ -55,7 +55,7 @@ function SensorLibrary() {
 
   const loadProbes = async () => {
     try {
-      const response = await api.get('/api/v1/probes');
+      const response = await api.get('/probes');
       setProbes(response.data);
     } catch (error) {
       console.error('Erro ao carregar probes:', error);
@@ -65,7 +65,7 @@ function SensorLibrary() {
   const loadSensors = async () => {
     try {
       // Carregar sensores independentes (sem server_id)
-      const response = await api.get('/api/v1/sensors/standalone');
+      const response = await api.get('/sensors/standalone');
       setSensors(response.data);
       setLoading(false);
     } catch (error) {
@@ -81,7 +81,7 @@ function SensorLibrary() {
     }
 
     try {
-      await api.post('/api/v1/sensors/standalone', {
+      await api.post('/sensors/standalone', {
         probe_id: parseInt(newSensor.probe_id),
         name: newSensor.name,
         sensor_type: newSensor.sensor_type,
@@ -118,7 +118,7 @@ function SensorLibrary() {
     if (!editingSensor) return;
 
     try {
-      await api.put(`/api/v1/sensors/${editingSensor.id}`, {
+      await api.put(`/sensors/${editingSensor.id}`, {
         name: editingSensor.name,
         threshold_warning: parseFloat(editingSensor.threshold_warning),
         threshold_critical: parseFloat(editingSensor.threshold_critical),
@@ -141,7 +141,7 @@ function SensorLibrary() {
     }
 
     try {
-      await api.delete(`/api/v1/sensors/${sensorId}`);
+      await api.delete(`/sensors/${sensorId}`);
       loadSensors();
       alert('Sensor removido com sucesso!');
     } catch (error) {
@@ -243,7 +243,7 @@ function SensorLibrary() {
       }
 
       // Chamar endpoint de teste
-      const response = await api.post('/api/v1/sensors/test-connection', testData);
+      const response = await api.post('/sensors/test-connection', testData);
       
       setConnectionTestResult({
         success: true,

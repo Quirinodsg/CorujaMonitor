@@ -37,10 +37,10 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const loadDashboardData = async () => {
     try {
       const [overviewRes, healthRes, incidentsRes, serversRes] = await Promise.all([
-        api.get('/api/v1/dashboard/overview'),
-        api.get('/api/v1/dashboard/health-summary'),
-        api.get('/api/v1/incidents?limit=10'),
-        api.get('/api/v1/servers/')
+        api.get('/dashboard/overview'),
+        api.get('/dashboard/health-summary'),
+        api.get('/incidents?limit=10'),
+        api.get('/servers/')
       ]);
 
       setOverview(overviewRes.data);

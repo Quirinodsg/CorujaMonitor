@@ -228,7 +228,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const loadProbes = async () => {
     try {
-      const response = await api.get('/api/v1/probes');
+      const response = await api.get('/probes');
       setProbes(response.data);
     } catch (error) {
       console.error('Erro ao carregar probes:', error);
@@ -237,7 +237,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const loadServerGroups = async () => {
     try {
-      const response = await api.get('/api/v1/sensor-groups');
+      const response = await api.get('/sensor-groups');
       setServerGroups(response.data);
     } catch (error) {
       console.error('Erro ao carregar grupos:', error);
@@ -251,7 +251,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.post('/api/v1/sensor-groups', newGroup);
+      await api.post('/sensor-groups', newGroup);
       setShowCreateGroupModal(false);
       setNewGroup({
         name: '',
@@ -274,7 +274,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.delete(`/api/v1/sensor-groups/${groupId}`);
+      await api.delete(`/sensor-groups/${groupId}`);
       loadServerGroups();
       alert('Grupo excluído com sucesso!');
     } catch (error) {
@@ -287,7 +287,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     if (!selectedGroup) return;
 
     try {
-      await api.post(`/api/v1/sensor-groups/${selectedGroup.id}/move`, {
+      await api.post(`/sensor-groups/${selectedGroup.id}/move`, {
         new_parent_id: newGroup.parent_id
       });
       setShowMoveGroupModal(false);
@@ -326,7 +326,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const loadServers = async () => {
     try {
-      const response = await api.get('/api/v1/servers/');
+      const response = await api.get('/servers/');
       setServers(response.data);
       setLoading(false);
     } catch (error) {
@@ -363,7 +363,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const loadSensors = async (serverId) => {
     try {
-      const response = await api.get(`/api/v1/sensors/?server_id=${serverId}`);
+      const response = await api.get(`/sensors/?server_id=${serverId}`);
       
       // Sort sensors by defined order
       const sortedSensors = response.data.sort((a, b) => {
@@ -376,7 +376,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
       const metricsData = {};
       for (const sensor of sortedSensors) {
         try {
-          const metricsResponse = await api.get(`/api/v1/metrics/?sensor_id=${sensor.id}&limit=1`);
+          const metricsResponse = await api.get(`/metrics/?sensor_id=${sensor.id}&limit=1`);
           if (metricsResponse.data.length > 0) {
             metricsData[sensor.id] = metricsResponse.data[0];
           }
@@ -929,7 +929,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.delete(`/api/v1/sensors/${sensorId}`);
+      await api.delete(`/sensors/${sensorId}`);
       loadSensors(selectedServer.id);
       alert('Sensor removido com sucesso!');
     } catch (error) {
@@ -946,7 +946,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.delete(`/api/v1/servers/${serverId}`);
+      await api.delete(`/servers/${serverId}`);
       
       // Clear selection if deleted server was selected
       if (selectedServer && selectedServer.id === serverId) {
@@ -970,7 +970,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.post('/api/v1/servers/', {
+      await api.post('/servers/', {
         probe_id: parseInt(newServer.probe_id),
         hostname: newServer.hostname,
         ip_address: newServer.ip_address,
@@ -1012,7 +1012,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.post('/api/v1/sensors/', {
+      await api.post('/sensors/', {
         server_id: selectedServer.id,
         sensor_type: sensorData.sensor_type,
         name: sensorData.name,
@@ -1034,7 +1034,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     
     setLoadingServices(true);
     try {
-      const response = await api.get(`/api/v1/probe-commands/services/${selectedServer.id}`);
+      const response = await api.get(`/probe-commands/services/${selectedServer.id}`);
       setAvailableServices(response.data.services || []);
     } catch (error) {
       console.error('Erro ao carregar serviços:', error);
@@ -1058,7 +1058,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     
     setLoadingDisks(true);
     try {
-      const response = await api.get(`/api/v1/probe-commands/disks/${selectedServer.id}`);
+      const response = await api.get(`/probe-commands/disks/${selectedServer.id}`);
       setAvailableDisks(response.data.disks || []);
     } catch (error) {
       console.error('Erro ao carregar discos:', error);
@@ -1120,11 +1120,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
     try {
       // Load AI analysis
-      const analysisResponse = await api.get(`/api/v1/ai-analysis/sensor/${sensor.id}`);
+      const analysisResponse = await api.get(`/ai-analysis/sensor/${sensor.id}`);
       setAiAnalysis(analysisResponse.data.ai_analysis);
 
       // Load sensor notes
-      const notesResponse = await api.get(`/api/v1/sensor-notes/sensor/${sensor.id}`);
+      const notesResponse = await api.get(`/sensor-notes/sensor/${sensor.id}`);
       setSensorNotes(notesResponse.data);
     } catch (error) {
       console.error('Erro ao carregar detalhes do sensor:', error);
@@ -1140,14 +1140,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.post('/api/v1/sensor-notes/', {
+      await api.post('/sensor-notes/', {
         sensor_id: selectedSensorDetails.id,
         note: newNote.note,
         status: newNote.status
       });
 
       // Reload notes
-      const notesResponse = await api.get(`/api/v1/sensor-notes/sensor/${selectedSensorDetails.id}`);
+      const notesResponse = await api.get(`/sensor-notes/sensor/${selectedSensorDetails.id}`);
       setSensorNotes(notesResponse.data);
       setNewNote({ note: '', status: 'pending' });
       alert('Nota adicionada com sucesso!');
@@ -1161,7 +1161,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     if (!editingSensor) return;
 
     try {
-      await api.put(`/api/v1/sensors/${editingSensor.id}`, {
+      await api.put(`/sensors/${editingSensor.id}`, {
         name: editingSensor.display_name,
         threshold_warning: parseFloat(editingSensor.threshold_warning),
         threshold_critical: parseFloat(editingSensor.threshold_critical)
@@ -1192,7 +1192,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     if (!editingServer) return;
 
     try {
-      await api.put(`/api/v1/servers/${editingServer.id}`, {
+      await api.put(`/servers/${editingServer.id}`, {
         group_name: editingServer.group_name,
         tags: editingServer.tags
       });
@@ -1226,7 +1226,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.put(`/api/v1/sensors/${movingSensor.id}`, {
+      await api.put(`/sensors/${movingSensor.id}`, {
         sensor_type: targetCategory
       });
 
@@ -1606,7 +1606,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             // Atualizar todos os servidores deste grupo
                             Promise.all(
                               groupServers.map(server => 
-                                api.put(`/api/v1/servers/${server.id}`, { group_name: newName })
+                                api.put(`/servers/${server.id}`, { group_name: newName })
                               )
                             ).then(() => {
                               loadServers();
@@ -1642,7 +1642,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                               // Mover servidor existente
                               const serverToMove = groupServers[0]; // Pega o primeiro servidor
                               if (serverToMove) {
-                                api.put(`/api/v1/servers/${serverToMove.id}`, { 
+                                api.put(`/servers/${serverToMove.id}`, { 
                                   group_name: newGroupName 
                                 }).then(() => {
                                   loadServers();
@@ -1687,7 +1687,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           if (window.confirm(`Excluir pasta "${groupName}"?\n\nOs ${groupServers.length} servidor(es) ficarão sem pasta.`)) {
                             Promise.all(
                               groupServers.map(server => 
-                                api.put(`/api/v1/servers/${server.id}`, { group_name: null })
+                                api.put(`/servers/${server.id}`, { group_name: null })
                               )
                             ).then(() => {
                               loadServers();
@@ -1817,7 +1817,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     onClick={async () => {
                       if (window.confirm('Deseja corrigir automaticamente as categorias de todos os sensores baseado no nome?\n\nExemplo: Sensores com "Docker" no nome serão movidos para categoria Docker.')) {
                         try {
-                          const response = await api.post('/api/v1/sensors/fix-categories');
+                          const response = await api.post('/sensors/fix-categories');
                           alert(`✅ Correção concluída!\n\nTotal: ${response.data.total_sensors} sensores\nCorrigidos: ${response.data.fixed_count} sensores\n\nRecarregando...`);
                           loadSensors(selectedServer.id);
                         } catch (error) {
