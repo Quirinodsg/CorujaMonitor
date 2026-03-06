@@ -1,0 +1,44 @@
+========================================
+🚀 EXECUTAR AGORA NO LINUX (SEM GIT)
+========================================
+
+COPIE E COLE ESTES COMANDOS NO LINUX:
+--------------------------------------
+
+cd /home/administrador/CorujaMonitor
+
+# 1. Criar tabela sensor_groups
+docker-compose exec -T api python migrate_sensor_groups.py
+
+# 2. Parar frontend
+docker-compose stop frontend
+
+# 3. Remover container
+docker-compose rm -f frontend
+
+# 4. Limpar cache Docker
+docker builder prune -af
+
+# 5. Rebuild frontend
+docker-compose build --no-cache frontend
+
+# 6. Subir frontend
+docker-compose up -d frontend
+
+# 7. Ver logs
+docker-compose logs --tail=30 frontend
+
+
+========================================
+⚠️  IMPORTANTE:
+========================================
+
+1. Abrir navegador em MODO ANÔNIMO: Ctrl+Shift+N
+2. Acessar: http://192.168.31.161:3000
+3. Login: admin@coruja.com / admin123
+4. Testar Servidores (deve funcionar agora)
+
+NOTA: Segurança e MFA ainda vão usar localhost
+      até você fazer o commit no Windows e
+      executar git pull no Linux
+

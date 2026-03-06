@@ -1,0 +1,16 @@
+========================================
+📋 COPIAR E COLAR NO LINUX AGORA
+========================================
+
+cd /home/administrador/CorujaMonitor && docker-compose exec -T api python migrate_sensor_groups.py && docker-compose stop frontend && docker-compose rm -f frontend && docker builder prune -af && docker-compose build --no-cache frontend && docker-compose up -d frontend && sleep 10 && docker-compose logs --tail=30 frontend
+
+
+========================================
+✅ DEPOIS:
+========================================
+
+1. Modo anônimo: Ctrl+Shift+N
+2. http://192.168.31.161:3000
+3. admin@coruja.com / admin123
+4. Testar Servidores
+
