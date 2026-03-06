@@ -1,0 +1,63 @@
+========================================
+📚 POPULAR BASE COMPLETA - TODOS OS ITENS
+========================================
+
+SCRIPTS DISPONÍVEIS:
+1. seed_knowledge_base.py - 10 itens (JÁ EXECUTADO)
+2. seed_knowledge_base_extended.py - Mais itens
+3. seed_kb_30_items.py - 32 itens
+4. kb_entries_part2.py - Mais itens
+5. create_kb_80_items.py - Script de criação
+
+========================================
+📋 COMANDO COMPLETO (COPIAR E COLAR)
+========================================
+
+cd /home/administrador/CorujaMonitor && echo "📚 Adicionando mais itens..." && docker-compose exec -T api python seed_knowledge_base_extended.py && docker-compose exec -T api python seed_kb_30_items.py && docker-compose exec -T api python kb_entries_part2.py && echo "" && echo "✅ BASE COMPLETA! Verificando total..." && docker-compose exec -T db psql -U coruja_user -d coruja_monitor -c "SELECT COUNT(*) as total_itens FROM knowledge_base_entries;"
+
+
+========================================
+OU EXECUTAR UM POR VEZ:
+========================================
+
+# 1. Extended (mais itens Windows/Linux)
+docker-compose exec -T api python seed_knowledge_base_extended.py
+
+# 2. 30+ itens (Windows Server, Linux, Azure, AKS)
+docker-compose exec -T api python seed_kb_30_items.py
+
+# 3. Part 2 (itens adicionais)
+docker-compose exec -T api python kb_entries_part2.py
+
+# 4. Verificar total
+docker-compose exec -T db psql -U coruja_user -d coruja_monitor -c "SELECT COUNT(*) as total_itens FROM knowledge_base_entries;"
+
+
+========================================
+✅ RESULTADO ESPERADO
+========================================
+
+Total de itens: 100+ itens
+
+Categorias:
+- Windows Server (serviços, disco, memória, CPU, rede)
+- Linux (Apache, Nginx, MySQL, PostgreSQL, SSH)
+- Docker (containers, volumes, redes, imagens)
+- Azure (VMs, Storage, SQL, App Service)
+- AKS (Kubernetes no Azure)
+- Banco de Dados (SQL Server, MySQL, PostgreSQL)
+- Rede (DNS, DHCP, Firewall, VPN)
+- Segurança (Certificados, Firewall, Antivírus)
+- Hardware (Temperatura, RAID, UPS, Discos)
+
+
+========================================
+🔍 VERIFICAR NO NAVEGADOR
+========================================
+
+1. Acessar: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Base de Conhecimento
+4. Deve mostrar 100+ itens
+5. Filtrar por categoria, severidade, OS, etc.
+

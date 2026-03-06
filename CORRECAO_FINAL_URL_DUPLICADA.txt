@@ -1,70 +1,90 @@
-==========================================
-CORREÇÃO FINAL - URL DUPLICADA RESOLVIDA
-==========================================
+========================================
+🔧 CORREÇÃO FINAL - URLs DUPLICADAS
+========================================
 
-PROBLEMA ENCONTRADO:
-Vários componentes estavam usando:
-  ${API_URL}/api/v1/endpoint
+PROBLEMA:
+- Páginas com erro 404
+- URLs duplicadas: /api/v1/api/v1/...
+- Causa: Cache do navegador servindo código antigo
 
-Como API_URL já tem /api/v1, resultava em:
-  /api/v1/api/v1/endpoint ❌
+SOLUÇÃO:
+1. Aumentado CACHE_VERSION para v10.0
+2. Script para rebuild completo do frontend
 
-ARQUIVOS CORRIGIDOS:
-✅ frontend/src/components/AIActivities.js
-✅ frontend/src/components/KnowledgeBase.js  
-✅ frontend/src/components/ThresholdConfig.js
-
-CORREÇÃO APLICADA:
-Removido /api/v1 duplicado, agora usam:
-  ${API_URL}/endpoint ✅
-
-==========================================
-EXECUTAR NO GIT BASH (WINDOWS):
-==========================================
-
-cd "/c/Users/andre.quirino/Coruja Monitor"
-git add frontend/src/components/AIActivities.js
-git add frontend/src/components/KnowledgeBase.js
-git add frontend/src/components/ThresholdConfig.js
-git add CORRECAO_FINAL_URL_DUPLICADA.txt
-git commit -m "fix: Remover /api/v1 duplicado de todos os componentes"
-git push origin master
-
-==========================================
-EXECUTAR NO LINUX:
-==========================================
+========================================
+📋 COMANDOS PARA EXECUTAR NO LINUX
+========================================
 
 cd /home/administrador/CorujaMonitor
-git pull origin master
-./rebuild_frontend_limpo.sh
+chmod +x corrigir_urls_duplicadas.sh
+./corrigir_urls_duplicadas.sh
 
-==========================================
-AGUARDAR 3 MINUTOS E TESTAR:
-==========================================
+========================================
+⚠️  IMPORTANTE APÓS O SCRIPT
+========================================
 
-1. Feche TODOS os navegadores
-2. Abra modo anônimo (Ctrl+Shift+N)
-3. Acesse: http://192.168.31.161:3000
-4. Login: admin@coruja.com / admin123
-5. Teste TODAS as páginas:
-   ✅ Dashboard
-   ✅ Empresas
-   ✅ Incidentes
-   ✅ Relatórios
-   ✅ Base de Conhecimento
-   ✅ Atividades da IA
-   ✅ Configurações
+1. ABRIR NAVEGADOR EM MODO ANÔNIMO:
+   - Chrome/Edge: Ctrl+Shift+N
+   - Firefox: Ctrl+Shift+P
 
-==========================================
-VERIFICAR NO CONSOLE (F12):
-==========================================
+2. OU LIMPAR CACHE DO NAVEGADOR:
+   - Pressionar: Ctrl+Shift+Delete
+   - Selecionar: "Imagens e arquivos em cache"
+   - Período: "Todo o período"
+   - Clicar: "Limpar dados"
 
-✅ CORRETO:
-http://192.168.31.161:8000/api/v1/dashboard/overview
-http://192.168.31.161:8000/api/v1/knowledge-base/
-http://192.168.31.161:8000/api/v1/ai-activities/
+3. ACESSAR:
+   http://192.168.31.161:3000
 
-❌ ERRADO (não deve aparecer):
-http://192.168.31.161:8000/api/v1/api/v1/...
+4. FAZER LOGIN:
+   Email: admin@coruja.com
+   Senha: admin123
 
-==========================================
+5. TESTAR TODAS AS PÁGINAS:
+   ✓ Dashboard
+   ✓ Empresas
+   ✓ Servidores
+   ✓ Sensores
+   ✓ Incidentes
+   ✓ Relatórios
+   ✓ Base de Conhecimento
+   ✓ Atividades IA
+   ✓ Configurações
+
+========================================
+🔍 VERIFICAR SE FUNCIONOU
+========================================
+
+1. Abrir Console do Navegador (F12)
+2. Ir para aba "Console"
+3. Procurar por:
+   ✅ "[CONFIG v10.0-CORRECAO-FINAL-...]"
+   ✅ "[API v3.0] Axios baseURL configurado: http://192.168.31.161:8000/api/v1"
+
+4. Verificar requisições (aba Network):
+   ✅ URLs devem ser: http://192.168.31.161:8000/api/v1/dashboard/overview
+   ❌ NÃO devem ter: /api/v1/api/v1/
+
+========================================
+❓ SE AINDA NÃO FUNCIONAR
+========================================
+
+1. Fechar TODAS as abas do navegador
+2. Fechar o navegador completamente
+3. Abrir novamente em modo anônimo
+4. Acessar o sistema
+
+OU
+
+1. Usar outro navegador (Chrome, Firefox, Edge)
+2. Testar em modo anônimo
+
+========================================
+📞 SUPORTE
+========================================
+
+Se o problema persistir, envie:
+1. Screenshot do Console (F12)
+2. Screenshot da aba Network mostrando as URLs
+3. Logs do script: ./corrigir_urls_duplicadas.sh
+

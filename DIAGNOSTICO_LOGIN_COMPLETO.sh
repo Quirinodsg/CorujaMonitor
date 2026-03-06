@@ -1,77 +1,113 @@
 #!/bin/bash
 
 echo "=========================================="
-echo "  DIAGNÓSTICO COMPLETO - Login"
+echo "DIAGNÓSTICO COMPLETO DE LOGIN"
 echo "=========================================="
-echo ""
 
-echo "1️⃣  Verificando código do Login.js..."
-echo "----------------------------------------"
-if grep -q "API_URL" ~/CorujaMonitor/frontend/src/components/Login.js; then
-    echo "✅ Correção ENCONTRADA no código"
-    echo ""
-    echo "Linhas com API_URL:"
-    grep -n "API_URL" ~/CorujaMonitor/frontend/src/components/Login.js
+echo ""
+echo "1. Verificando se API está rodando..."
+if curl -s http://localhost:8000/health > /dev/null; then
+    echo "✓ API está rodando"
 else
-    echo "❌ Correção NÃO ENCONTRADA no código"
-    echo ""
-    echo "Linha 74 atual:"
-    sed -n '74p' ~/CorujaMonitor/frontend/src/components/Login.js
+    echo "✗ API NÃO está rodando"
+    exit 1
 fi
-echo ""
 
-echo "2️⃣  Verificando último commit do Git..."
-echo "----------------------------------------"
-cd ~/CorujaMonitor
-git log --oneline -1
 echo ""
+echo "2. Verificando usuário admin no banco..."
+docker-compose exec -T db psql -U postgres -d coruja_monitor -c "
+SELECT id, email, is_active, tenant_id, role, 
+       CASE WHEN mfa_enabled THEN 'SIM' ELSE 'NÃO' END as mfa_ativo,
+       LENGTH(hashed_password) as tamanho_hash
+FROM users 
+WHERE email = 'admin@coruja.com';
+"
 
-echo "3️⃣  Verificando status dos containers..."
-echo "----------------------------------------"
-docker compose ps
 echo ""
+echo "3. Testando hash da senha 'admin123'..."
+docker-compose exec -T api python3 << 'PYTHON'
+from auth import get_password_hash, verify_password
 
-echo "4️⃣  Testando API..."
-echo "----------------------------------------"
-curl -s -X POST http://192.168.31.161:8000/api/v1/auth/login \
+# Gerar hash correto
+correct_hash = get_password_hash("admin123")
+print(f"Hash correto para 'admin123':")
+print(correct_hash[:50] + "...")
+
+# Buscar hash do banco
+from database import SessionLocal
+from models import User
+
+db = SessionLocal()
+user = db.query(User).filter(User.email == "admin@coruja.com").first()
+
+if user:
+    print(f"\nHash no banco:")
+    print(user.hashed_password[:50] + "...")
+    
+    # Testar verificação
+    is_valid = verify_password("admin123", user.hashed_password)
+    print(f"\nSenha 'admin123' é válida? {is_valid}")
+    
+    if not is_valid:
+        print("\n⚠️  SENHA INCORRETA NO BANCO!")
+        print("Atualizando senha...")
+        user.hashed_password = correct_hash
+        db.commit()
+        print("✓ Senha atualizada!")
+else:
+    print("\n✗ Usuário não encontrado!")
+
+db.close()
+PYTHON
+
+echo ""
+echo "4. Testando login via API (localhost)..."
+RESPONSE=$(curl -s -X POST http://localhost:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"username":"admin@coruja.com","password":"admin123"}' | head -c 100
-echo ""
-echo ""
+  -d '{"username":"admin@coruja.com","password":"admin123"}')
 
-echo "5️⃣  Verificando logs do frontend (últimas 10 linhas)..."
-echo "----------------------------------------"
-docker logs coruja-frontend --tail 10
-echo ""
-
-echo "=========================================="
-echo "  CONCLUSÃO"
-echo "=========================================="
-echo ""
-
-if grep -q "API_URL" ~/CorujaMonitor/frontend/src/components/Login.js; then
-    echo "✅ Código está correto"
-    echo ""
-    echo "Teste no navegador:"
-    echo "  http://192.168.31.161:3000"
-    echo "  Email: admin@coruja.com"
-    echo "  Senha: admin123"
-    echo ""
-    echo "Se ainda não funcionar:"
-    echo "  1. Limpe o cache do navegador (Ctrl+Shift+Delete)"
-    echo "  2. Abra aba anônima"
-    echo "  3. Tente novamente"
+if echo "$RESPONSE" | grep -q "access_token"; then
+    echo "✓ LOGIN FUNCIONOU via localhost!"
+    echo "Token: $(echo $RESPONSE | grep -o '"access_token":"[^"]*' | cut -d'"' -f4 | cut -c1-30)..."
 else
-    echo "❌ Código NÃO foi atualizado"
-    echo ""
-    echo "SOLUÇÃO:"
-    echo "  1. No Windows, faça o commit:"
-    echo "     cd \"C:\\Users\\andre.quirino\\Coruja Monitor\""
-    echo "     .\\commit_correcao_login.ps1"
-    echo ""
-    echo "  2. No Linux, atualize:"
-    echo "     cd ~/CorujaMonitor"
-    echo "     git pull origin master"
-    echo "     docker compose restart frontend"
+    echo "✗ LOGIN FALHOU via localhost"
+    echo "Resposta: $RESPONSE"
 fi
+
+echo ""
+echo "5. Testando login via API (IP 192.168.31.161)..."
+RESPONSE=$(curl -s -X POST http://192.168.31.161:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin@coruja.com","password":"admin123"}')
+
+if echo "$RESPONSE" | grep -q "access_token"; then
+    echo "✓ LOGIN FUNCIONOU via IP!"
+    echo "Token: $(echo $RESPONSE | grep -o '"access_token":"[^"]*' | cut -d'"' -f4 | cut -c1-30)..."
+else
+    echo "✗ LOGIN FALHOU via IP"
+    echo "Resposta: $RESPONSE"
+fi
+
+echo ""
+echo "6. Verificando CORS no container API..."
+docker-compose logs api | grep -i cors | tail -5
+
+echo ""
+echo "7. Verificando logs recentes da API..."
+docker-compose logs api | tail -20
+
+echo ""
+echo "=========================================="
+echo "CONCLUSÃO"
+echo "=========================================="
+echo ""
+echo "Se login funcionou via curl mas não no navegador:"
+echo "  → Problema é CORS ou cache do navegador"
+echo ""
+echo "Se login NÃO funcionou via curl:"
+echo "  → Problema é senha incorreta no banco"
+echo ""
+echo "Credenciais para teste:"
+echo "  Email: admin@coruja.com"
+echo "  Senha: admin123"
 echo ""

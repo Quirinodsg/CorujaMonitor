@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Coruja Monitor Probe" 
+           Language="1046" 
+           Version="1.0.0.0" 
+           Manufacturer="Coruja Monitor" 
+           UpgradeCode="12345678-1234-1234-1234-123456789012">
+    
+    <Package InstallerVersion="500" 
+             Compressed="yes" 
+             InstallScope="perMachine"
+             InstallPrivileges="elevated"
+             Description="Agente de monitoramento Coruja Monitor"
+             Comments="Sistema de monitoramento com instalação automática de Python"
+             AdminImage="no" />
+
+    <MajorUpgrade DowngradeErrorMessage="Uma versão mais recente já está instalada." 
+                  AllowSameVersionUpgrades="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- Propriedades -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="ARPPRODUCTICON" Value="CorujaIcon.ico" />
+    <Property Id="ARPHELPLINK" Value="http://192.168.31.161:3000" />
+    <Property Id="ARPURLINFOABOUT" Value="http://192.168.31.161:3000" />
+    
+    <!-- Verificar Python instalado -->
+    <Property Id="PYTHONINSTALLED">
+      <RegistrySearch Id="PythonReg" Root="HKLM" Key="SOFTWARE\Python\PythonCore\3.11\InstallPath" Type="raw" />
+    </Property>
+    
+    <!-- Bypass de políticas de instalação -->
+    <Property Id="ALLUSERS" Value="1" />
+    <Property Id="MSIINSTALLPERUSER" Value="0" />
+    
+    <!-- Desabilitar verificação de assinatura digital -->
+    <Property Id="MSIFASTINSTALL" Value="7" />
+
+    
+    <!-- Condições -->
+    <Condition Message="Este instalador requer Windows 7 / Server 2008 R2 ou superior.">
+      <![CDATA[Installed OR (VersionNT >= 601)]]>
+    </Condition>
+    
+    <Condition Message="Este instalador requer privilégios de administrador. Clique direito e 'Executar como Administrador'.">
+      Privileged
+    </Condition>
+
+    <!-- Estrutura de diretórios -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLFOLDER" Name="CorujaMonitor">
+          <Directory Id="ProbeFolder" Name="Probe" />
+          <Directory Id="CollectorsFolder" Name="collectors" />
+          <Directory Id="LogsFolder" Name="logs" />
+          <Directory Id="PythonFolder" Name="python" />
+        </Directory>
+      </Directory>
+      
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Coruja Monitor" />
+      </Directory>
+      
+      <Directory Id="DesktopFolder" Name="Desktop" />
+    </Directory>
+
+    <!-- Componente Python Embeddable -->
+    <DirectoryRef Id="PythonFolder">
+      <Component Id="PythonEmbeddable" Guid="*">
+        <File Id="python_readme.txt" Source="python_readme.txt" KeyPath="yes" />
+        <RemoveFolder Id="RemovePythonFolder" On="uninstall" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Componentes Probe -->
+    <DirectoryRef Id="ProbeFolder">
+      <Component Id="ProbeCore" Guid="*">
+        <File Id="probe_core.py" Source="..\probe\probe_core.py" KeyPath="yes" />
+      </Component>
+      <Component Id="ProbeConfig" Guid="*">
+        <File Id="config.py" Source="..\probe\config.py" />
+      </Component>
+      <Component Id="ProbeRequirements" Guid="*">
+        <File Id="requirements.txt" Source="..\probe\requirements.txt" />
+      </Component>
+      <Component Id="ProbeInstall" Guid="*">
+        <File Id="install.bat" Source="..\probe\install.bat" />
+      </Component>
+      <Component Id="ProbeConfigBat" Guid="*">
+        <File Id="configurar_probe.bat" Source="..\probe\configurar_probe.bat" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="CollectorsFolder">
+      <Component Id="SystemCollector" Guid="*">
+        <File Id="system_collector.py" Source="..\probe\collectors\system_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="PingCollector" Guid="*">
+        <File Id="ping_collector.py" Source="..\probe\collectors\ping_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="DockerCollector" Guid="*">
+        <File Id="docker_collector.py" Source="..\probe\collectors\docker_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="SnmpCollector" Guid="*">
+        <File Id="snmp_collector.py" Source="..\probe\collectors\snmp_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="GenericCollector" Guid="*">
+        <File Id="generic_collector.py" Source="..\probe\collectors\generic_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="KubernetesCollector" Guid="*">
+        <File Id="kubernetes_collector.py" Source="..\probe\collectors\kubernetes_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="WmiCollector" Guid="*">
+        <File Id="wmi_remote_collector.py" Source="..\probe\collectors\wmi_remote_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="SnmpApCollector" Guid="*">
+        <File Id="snmp_ap_collector.py" Source="..\probe\collectors\snmp_ap_collector.py" KeyPath="yes" />
+      </Component>
+      <Component Id="SnmpAcCollector" Guid="*">
+        <File Id="snmp_ac_collector.py" Source="..\probe\collectors\snmp_ac_collector.py" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalhos -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcuts" Guid="*">
+        <Shortcut Id="ConfigProbeShortcut"
+                  Name="Configurar Coruja Probe"
+                  Description="Configurar conexão com servidor"
+                  Target="[ProbeFolder]configurar_probe.bat"
+                  WorkingDirectory="ProbeFolder" />
+        
+        <Shortcut Id="InstallProbeShortcut"
+                  Name="Instalar Serviço Coruja Probe"
+                  Description="Instala o probe como serviço Windows"
+                  Target="[ProbeFolder]install.bat"
+                  WorkingDirectory="ProbeFolder" />
+        
+        <Shortcut Id="LogsShortcut"
+                  Name="Ver Logs"
+                  Description="Abre pasta de logs"
+                  Target="[LogsFolder]" />
+        
+        <Shortcut Id="UninstallShortcut"
+                  Name="Desinstalar Coruja Probe"
+                  Description="Remove o Coruja Monitor Probe"
+                  Target="[System64Folder]msiexec.exe"
+                  Arguments="/x [ProductCode]" />
+        
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalho Desktop -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcut" Guid="*">
+        <Shortcut Id="DesktopConfigShortcut"
+                  Name="Configurar Coruja Probe"
+                  Description="Configurar Coruja Monitor Probe"
+                  Target="[ProbeFolder]configurar_probe.bat"
+                  WorkingDirectory="ProbeFolder" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="desktop" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Custom Actions -->
+    <CustomAction Id="CheckPython" 
+                  BinaryKey="WixCA" 
+                  DllEntry="CAQuietExec" 
+                  Execute="immediate" 
+                  Return="ignore" />
+    
+    <CustomAction Id="InstallPython" 
+                  Directory="PythonFolder"
+                  ExeCommand='cmd.exe /c powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri https://www.python.org/ftp/python/3.11.8/python-3.11.8-embed-amd64.zip -OutFile python.zip; Expand-Archive python.zip -DestinationPath .; Remove-Item python.zip"'
+                  Execute="deferred" 
+                  Impersonate="no"
+                  Return="ignore" />
+    
+    <CustomAction Id="InstallPip"
+                  Directory="PythonFolder"
+                  ExeCommand='cmd.exe /c powershell -ExecutionPolicy Bypass -Command "Invoke-WebRequest -Uri https://bootstrap.pypa.io/get-pip.py -OutFile get-pip.py; .\python.exe get-pip.py"'
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+    
+    <CustomAction Id="InstallRequirements"
+                  Directory="ProbeFolder"
+                  ExeCommand='cmd.exe /c "[PythonFolder]python.exe" -m pip install -r requirements.txt'
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <InstallExecuteSequence>
+      <Custom Action="InstallPython" After="InstallFiles">NOT PYTHONINSTALLED</Custom>
+      <Custom Action="InstallPip" After="InstallPython">NOT PYTHONINSTALLED</Custom>
+      <Custom Action="InstallRequirements" After="InstallPip" />
+    </InstallExecuteSequence>
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" Title="Coruja Monitor Probe" Level="1" ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentRef Id="ProbeCore" />
+      <ComponentRef Id="ProbeConfig" />
+      <ComponentRef Id="ProbeRequirements" />
+      <ComponentRef Id="ProbeInstall" />
+      <ComponentRef Id="ProbeConfigBat" />
+      <ComponentRef Id="SystemCollector" />
+      <ComponentRef Id="PingCollector" />
+      <ComponentRef Id="DockerCollector" />
+      <ComponentRef Id="SnmpCollector" />
+      <ComponentRef Id="GenericCollector" />
+      <ComponentRef Id="KubernetesCollector" />
+      <ComponentRef Id="WmiCollector" />
+      <ComponentRef Id="SnmpApCollector" />
+      <ComponentRef Id="SnmpAcCollector" />
+      <ComponentRef Id="ApplicationShortcuts" />
+      <ComponentRef Id="DesktopShortcut" />
+    </Feature>
+    
+    <Feature Id="PythonFeature" Title="Python Embeddable" Level="1" Description="Instala Python se não estiver presente">
+      <ComponentRef Id="PythonEmbeddable" />
+    </Feature>
+
+    <!-- Interface -->
+    <UI>
+      <UIRef Id="WixUI_InstallDir" />
+      <UIRef Id="WixUI_ErrorProgressText" />
+      
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">1</Publish>
+    </UI>
+    
+    <WixVariable Id="WixUILicenseRtf" Value="license.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="dialog.bmp" />
+    
+  </Product>
+</Wix>

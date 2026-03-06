@@ -1,0 +1,19 @@
+========================================
+📋 COPIAR E COLAR - BASE DE CONHECIMENTO
+========================================
+
+COMANDO ÚNICO PARA LINUX:
+--------------------------
+
+cd /home/administrador/CorujaMonitor && docker-compose exec -T api python migrate_knowledge_base.py && docker-compose exec -T api python seed_kb_80_items.py && echo "" && echo "✅ BASE POPULADA! Verificando..." && docker-compose exec -T db psql -U coruja_user -d coruja_monitor -c "SELECT COUNT(*) as total_itens FROM knowledge_base_entries;"
+
+
+========================================
+✅ DEPOIS:
+========================================
+
+1. Acessar: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Base de Conhecimento
+4. Deve mostrar 80 itens
+

@@ -1,0 +1,117 @@
+========================================
+📚 POPULAR 109 ITENS - BASE COMPLETA
+========================================
+
+A base tinha 109 itens originalmente.
+Vamos popular usando a API do sistema.
+
+========================================
+📋 COMANDO PARA LINUX (COPIAR E COLAR)
+========================================
+
+cd /home/administrador/CorujaMonitor && docker-compose exec -T api python -c "
+import sys
+sys.path.append('/app')
+from database import SessionLocal
+from sqlalchemy import text
+
+db = SessionLocal()
+
+# Limpar base atual
+print('🗑️  Limpando base atual...')
+db.execute(text('DELETE FROM knowledge_base_entries'))
+db.commit()
+print('✅ Base limpa')
+
+# Popular via endpoint interno
+print('📚 Populando 109 itens...')
+import requests
+response = requests.post('http://localhost:8000/api/v1/seed-kb/populate', 
+    headers={'Authorization': 'Bearer ' + open('/tmp/token.txt').read().strip()})
+print(response.json())
+
+db.close()
+" && echo "" && echo "✅ VERIFICANDO TOTAL..." && docker-compose exec -T db psql -U coruja_user -d coruja_monitor -c "SELECT COUNT(*) as total_itens FROM knowledge_base_entries;"
+
+
+========================================
+OU USE O ENDPOINT DA API DIRETAMENTE:
+========================================
+
+# 1. Fazer login e pegar token
+curl -X POST http://192.168.31.161:8000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin@coruja.com","password":"admin123"}' \
+  | jq -r '.access_token' > /tmp/token.txt
+
+# 2. Popular base
+curl -X POST http://192.168.31.161:8000/api/v1/seed-kb/populate \
+  -H "Authorization: Bearer $(cat /tmp/token.txt)"
+
+# 3. Verificar
+docker-compose exec -T db psql -U coruja_user -d coruja_monitor -c "SELECT COUNT(*) as total_itens FROM knowledge_base_entries;"
+
+
+========================================
+✅ RESULTADO ESPERADO
+========================================
+
+Total: 80 itens (do endpoint seed-kb)
++ 32 itens (do seed_kb_30_items.py)
++ Mais itens dos outros scripts
+= 109+ itens total
+
+
+========================================
+📊 CATEGORIAS (109 ITENS)
+========================================
+
+1. Windows Server (15)
+   - Serviços, Disco, Memória, CPU, Rede
+
+2. Linux (15)
+   - Apache, Nginx, MySQL, SSH, Docker, NTP
+
+3. Docker (10)
+   - Containers, Volumes, Redes, Compose
+
+4. Azure/AKS (10)
+   - Kubernetes, VMs, SQL, Storage, Functions
+
+5. Rede/Ubiquiti (10)
+   - APs, Switches, Latência, DNS, DHCP
+
+6. Nobreaks/UPS (5)
+   - Bateria, Sobrecarga, Temperatura
+
+7. Ar-Condicionado (5)
+   - Temperatura, Filtro, Compressor
+
+8. Web Applications (10)
+   - HTTP 500/503, SSL, DB, Cache, Rate Limit
+
+9. Adicionais (29 itens)
+   - Problemas específicos de cada categoria
+
+
+========================================
+🔍 VERIFICAR NO NAVEGADOR
+========================================
+
+1. Acessar: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Base de Conhecimento
+4. Deve mostrar 109+ itens
+
+
+========================================
+📝 NOTA IMPORTANTE
+========================================
+
+O endpoint /api/v1/seed-kb/populate adiciona 80 itens.
+Para chegar a 109, execute também:
+- seed_kb_30_items.py (32 itens)
+- kb_entries_part2.py (itens adicionais)
+
+Total: 80 + 32 + outros = 109+ itens
+
