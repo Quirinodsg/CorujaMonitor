@@ -24,11 +24,11 @@ function AIActivities() {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [activitiesRes, statsRes, pendingRes, ollamaRes, configRes] = await Promise.all([
-        axios.get(`${API_URL}/api/v1/ai-activities/`, { headers }),
-        axios.get(`${API_URL}/api/v1/ai-activities/stats`, { headers }),
-        axios.get(`${API_URL}/api/v1/ai-activities/pending`, { headers }),
-        axios.get(`${API_URL}/api/v1/ai/status`, { headers }),
-        axios.get(`${API_URL}/api/v1/ai/auto-resolution/config`, { headers })
+        axios.get(`${API_URL}/ai-activities/`, { headers }),
+        axios.get(`${API_URL}/ai-activities/stats`, { headers }),
+        axios.get(`${API_URL}/ai-activities/pending`, { headers }),
+        axios.get(`${API_URL}/ai/status`, { headers }),
+        axios.get(`${API_URL}/ai/auto-resolution/config`, { headers })
       ]);
 
       setActivities(activitiesRes.data);
@@ -47,7 +47,7 @@ function AIActivities() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/v1/ai-activities/${attemptId}/approve`,
+        `${API_URL}/ai-activities/${attemptId}/approve`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -66,7 +66,7 @@ function AIActivities() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        `${API_URL}/api/v1/ai-activities/${attemptId}/reject`,
+        `${API_URL}/ai-activities/${attemptId}/reject`,
         { reason },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -82,7 +82,7 @@ function AIActivities() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_URL}/api/v1/ai/test`,
+        `${API_URL}/ai/test`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

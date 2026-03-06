@@ -25,7 +25,7 @@ function ThresholdConfig() {
   const loadConfig = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/v1/thresholds/config`, {
+      const response = await axios.get(`${API_URL}/thresholds/config`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setConfig(response.data);
@@ -40,7 +40,7 @@ function ThresholdConfig() {
   const loadPresets = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/v1/thresholds/presets`, {
+      const response = await axios.get(`${API_URL}/thresholds/presets`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setPresets(response.data.presets);
@@ -74,7 +74,7 @@ function ThresholdConfig() {
     setSaving(true);
     try {
       const token = localStorage.getItem('token');
-      await axios.put(`${API_URL}/api/v1/thresholds/config`, config, {
+      await axios.put(`${API_URL}/thresholds/config`, config, {
         headers: { Authorization: `Bearer ${token}` }
       });
       alert('✅ Configuração salva com sucesso!');
@@ -95,7 +95,7 @@ function ThresholdConfig() {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.post(
-        `${API_URL}/api/v1/thresholds/apply-preset/${presetName.toLowerCase().replace(/\s+/g, '-')}`,
+        `${API_URL}/thresholds/apply-preset/${presetName.toLowerCase().replace(/\s+/g, '-')}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

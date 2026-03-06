@@ -21,11 +21,11 @@ function KnowledgeBase() {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [entriesRes, statsRes] = await Promise.all([
-        axios.get(`${API_URL}/api/v1/knowledge-base/`, {
+        axios.get(`${API_URL}/knowledge-base/`, {
           headers,
           params: filterType !== 'all' ? { sensor_type: filterType } : {}
         }),
-        axios.get(`${API_URL}/api/v1/knowledge-base/stats`, { headers })
+        axios.get(`${API_URL}/knowledge-base/stats`, { headers })
       ]);
 
       setEntries(entriesRes.data);
@@ -40,7 +40,7 @@ function KnowledgeBase() {
   const viewDetails = async (entryId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/v1/knowledge-base/${entryId}`, {
+      const response = await axios.get(`${API_URL}/knowledge-base/${entryId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setSelectedEntry(response.data);
@@ -53,7 +53,7 @@ function KnowledgeBase() {
     try {
       const token = localStorage.getItem('token');
       await axios.put(
-        `${API_URL}/api/v1/knowledge-base/${entryId}`,
+        `${API_URL}/knowledge-base/${entryId}`,
         { auto_resolution_enabled: !currentValue },
         { headers: { Authorization: `Bearer ${token}` } }
       );

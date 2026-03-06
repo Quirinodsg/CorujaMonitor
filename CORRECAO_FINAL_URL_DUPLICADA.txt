@@ -1,0 +1,70 @@
+==========================================
+CORREÇÃO FINAL - URL DUPLICADA RESOLVIDA
+==========================================
+
+PROBLEMA ENCONTRADO:
+Vários componentes estavam usando:
+  ${API_URL}/api/v1/endpoint
+
+Como API_URL já tem /api/v1, resultava em:
+  /api/v1/api/v1/endpoint ❌
+
+ARQUIVOS CORRIGIDOS:
+✅ frontend/src/components/AIActivities.js
+✅ frontend/src/components/KnowledgeBase.js  
+✅ frontend/src/components/ThresholdConfig.js
+
+CORREÇÃO APLICADA:
+Removido /api/v1 duplicado, agora usam:
+  ${API_URL}/endpoint ✅
+
+==========================================
+EXECUTAR NO GIT BASH (WINDOWS):
+==========================================
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+git add frontend/src/components/AIActivities.js
+git add frontend/src/components/KnowledgeBase.js
+git add frontend/src/components/ThresholdConfig.js
+git add CORRECAO_FINAL_URL_DUPLICADA.txt
+git commit -m "fix: Remover /api/v1 duplicado de todos os componentes"
+git push origin master
+
+==========================================
+EXECUTAR NO LINUX:
+==========================================
+
+cd /home/administrador/CorujaMonitor
+git pull origin master
+./rebuild_frontend_limpo.sh
+
+==========================================
+AGUARDAR 3 MINUTOS E TESTAR:
+==========================================
+
+1. Feche TODOS os navegadores
+2. Abra modo anônimo (Ctrl+Shift+N)
+3. Acesse: http://192.168.31.161:3000
+4. Login: admin@coruja.com / admin123
+5. Teste TODAS as páginas:
+   ✅ Dashboard
+   ✅ Empresas
+   ✅ Incidentes
+   ✅ Relatórios
+   ✅ Base de Conhecimento
+   ✅ Atividades da IA
+   ✅ Configurações
+
+==========================================
+VERIFICAR NO CONSOLE (F12):
+==========================================
+
+✅ CORRETO:
+http://192.168.31.161:8000/api/v1/dashboard/overview
+http://192.168.31.161:8000/api/v1/knowledge-base/
+http://192.168.31.161:8000/api/v1/ai-activities/
+
+❌ ERRADO (não deve aparecer):
+http://192.168.31.161:8000/api/v1/api/v1/...
+
+==========================================
