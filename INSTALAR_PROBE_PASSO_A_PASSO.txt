@@ -1,0 +1,146 @@
+========================================
+INSTALAÇÃO DA PROBE - PASSO A PASSO
+========================================
+
+SITUAÇÃO ATUAL:
+✓ Empresa criada
+✗ Probe NÃO criada ainda
+✗ Token NÃO existe ainda
+
+VOCÊ PRECISA CRIAR A PROBE PRIMEIRO!
+
+========================================
+PASSO 1: CRIAR PROBE NO DASHBOARD
+========================================
+
+1. Acesse: http://192.168.31.161:3000
+
+2. Login:
+   Email: admin@coruja.com
+   Senha: admin123
+
+3. Menu lateral → PROBES
+
+4. Clique em: + Nova Probe
+
+5. Preencha:
+   Nome: WIN-15GM8UTRS4K
+   Empresa: [Selecione sua empresa]
+   Descrição: Probe Windows Server
+
+6. Clique em: SALVAR
+
+7. ⚠️ IMPORTANTE: COPIE O TOKEN que aparece!
+   Exemplo: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8
+   
+   GUARDE ESTE TOKEN! Você vai precisar dele!
+
+========================================
+PASSO 2: CONFIGURAR PROBE NO WINDOWS
+========================================
+
+Agora que você tem o TOKEN, execute:
+
+probe\configurar_probe.bat
+
+Quando pedir:
+1. Digite o TOKEN que você copiou
+2. Digite o nome: WIN-15GM8UTRS4K
+3. Digite o IP do servidor: 192.168.31.161
+4. Digite a porta: 3000
+
+========================================
+PASSO 3: INICIAR A PROBE
+========================================
+
+Execute:
+
+iniciar_probe.bat
+
+Ou:
+
+cd probe
+python probe_core.py
+
+========================================
+PASSO 4: ADICIONAR SERVIDOR
+========================================
+
+No dashboard:
+
+1. Menu → SERVIDORES
+
+2. Clique em: + Novo Servidor
+
+3. Preencha:
+   Nome: WIN-15GM8UTRS4K
+   IP: 127.0.0.1 (ou IP da máquina)
+   Empresa: [Sua empresa]
+   Probe: WIN-15GM8UTRS4K
+
+4. Salvar
+
+========================================
+VERIFICAR SE ESTÁ FUNCIONANDO
+========================================
+
+1. Menu → PROBES
+   Status deve estar: 🟢 Ativo
+
+2. Menu → SERVIDORES
+   Status deve estar: 🟢 Online
+
+3. Menu → DASHBOARD
+   Deve mostrar métricas (CPU, Memória, Disco)
+
+========================================
+ALTERNATIVA: SCRIPT INTERATIVO
+========================================
+
+Se preferir um script que pergunta tudo:
+
+probe\configurar_probe.bat
+
+Ele vai perguntar:
+- Token da probe
+- Nome da probe
+- IP do servidor
+- Porta
+
+E criar o config.yaml automaticamente.
+
+========================================
+RESUMO DO FLUXO CORRETO
+========================================
+
+1️⃣ Dashboard → Criar Probe → Copiar TOKEN
+2️⃣ Windows → Configurar probe com TOKEN
+3️⃣ Windows → Iniciar probe
+4️⃣ Dashboard → Adicionar Servidor
+5️⃣ Dashboard → Verificar métricas
+
+========================================
+IMPORTANTE
+========================================
+
+⚠️ O TOKEN só aparece UMA VEZ quando você cria a probe!
+⚠️ Se perder o token, precisa criar uma nova probe!
+⚠️ Cada probe tem seu próprio token único!
+
+========================================
+ARQUIVOS IMPORTANTES
+========================================
+
+probe\configurar_probe.bat
+  → Configura a probe (pede token)
+
+probe\config.yaml
+  → Arquivo de configuração (criado automaticamente)
+
+iniciar_probe.bat
+  → Inicia a probe
+
+probe\probe_core.py
+  → Código principal da probe
+
+========================================

@@ -82,6 +82,9 @@ class ProbeCore:
         # Send initial heartbeat
         self._send_heartbeat()
         
+        # Auto-register this server
+        self._auto_register_server()
+        
         # Main collection loop
         last_heartbeat = time.time()
         last_collection = time.time()
@@ -456,6 +459,69 @@ class ProbeCore:
             # Keep buffer for retry, but limit size
             if len(self.buffer) > self.max_buffer_size:
                 self.buffer = self.buffer[-self.max_buffer_size:]
+    
+    def _auto_register_server(self):
+        """Auto-register this server if it doesn't exist"""
+        try:
+            import socket
+            import platform
+            
+            # Get machine information
+            hostname = socket.gethostname()
+            
+            # Try to get IP address
+            try:
+                ip_address = socket.gethostbyname(hostname)
+            except:
+                ip_address = "127.0.0.1"
+            
+            # Get OS info
+            os_info = f"{platform.system()} {platform.release()}"
+            
+            logger.info(f"🔍 Checking if server '{hostname}' is registered...")
+            
+            with httpx.Client(timeout=10.0, verify=False) as client:
+                # Check if server already exists
+                check_response = client.get(
+                    f"{self.config.api_url}/api/v1/servers/check",
+                    params={
+                        "probe_token": self.config.probe_token,
+                        "hostname": hostname
+                    }
+                )
+                
+                if check_response.status_code == 200:
+                    data = check_response.json()
+                    if data.get("exists"):
+                        logger.info(f"✓ Server '{hostname}' already registered (ID: {data.get('server_id')})")
+                        return
+                
+                # Server doesn't exist, register it
+                logger.info(f"📝 Auto-registering server '{hostname}'...")
+                
+                register_response = client.post(
+                    f"{self.config.api_url}/api/v1/servers/auto-register",
+                    params={"probe_token": self.config.probe_token},
+                    json={
+                        "hostname": hostname,
+                        "ip_address": ip_address,
+                        "os_info": os_info,
+                        "description": f"Auto-registered by probe on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                    }
+                )
+                
+                if register_response.status_code == 200:
+                    server_data = register_response.json()
+                    logger.info(f"✅ Server '{hostname}' registered successfully! (ID: {server_data.get('id')})")
+                    logger.info(f"   IP: {ip_address}")
+                    logger.info(f"   OS: {os_info}")
+                else:
+                    logger.warning(f"⚠️ Failed to auto-register server: {register_response.status_code}")
+                    logger.warning(f"   Response: {register_response.text}")
+                    
+        except Exception as e:
+            logger.error(f"❌ Error in auto-register: {e}")
+            # Don't fail the probe if auto-register fails
     
     def _send_heartbeat(self):
         """Send heartbeat to API"""

@@ -1,0 +1,64 @@
+========================================
+  INSTALAR PROBE - GUIA SIMPLES
+========================================
+
+✨ SERVIDOR É CRIADO AUTOMATICAMENTE! ✨
+
+========================================
+PASSO 1: CRIAR PROBE (Dashboard)
+========================================
+
+http://192.168.31.161:3000
+
+Menu → Probes → + Nova Probe
+
+Nome: WIN-15GM8UTRS4K
+Empresa: [Sua empresa]
+
+Salvar → COPIAR O TOKEN!
+
+========================================
+PASSO 2: CONFIGURAR (Windows)
+========================================
+
+Execute:
+
+probe\configurar_probe.bat
+
+Cole o token quando pedir
+
+========================================
+PASSO 3: INICIAR (Windows)
+========================================
+
+Execute:
+
+iniciar_probe.bat
+
+========================================
+PRONTO! ✅
+========================================
+
+O servidor será criado AUTOMATICAMENTE!
+
+Verifique no dashboard:
+Menu → Servidores → WIN-15GM8UTRS4K
+
+========================================
+LOGS DA PROBE
+========================================
+
+Você verá:
+"🔍 Checking if server 'WIN-15GM8UTRS4K' is registered..."
+"📝 Auto-registering server 'WIN-15GM8UTRS4K'..."
+"✅ Server 'WIN-15GM8UTRS4K' registered successfully!"
+
+========================================
+IMPORTANTE
+========================================
+
+⚠️ Você PRECISA criar a probe no dashboard primeiro!
+⚠️ O token só aparece UMA VEZ ao criar a probe!
+✅ Mas o servidor é criado AUTOMATICAMENTE!
+
+========================================

@@ -1,0 +1,182 @@
+========================================
+INSTALAÇÃO DA PROBE COM AUTO-REGISTRO
+========================================
+
+✨ NOVIDADE: Servidor é criado AUTOMATICAMENTE!
+
+Agora quando você instala a probe, ela:
+1. Conecta no servidor
+2. Verifica se o servidor já existe
+3. Se não existir, CRIA AUTOMATICAMENTE
+4. Começa a enviar métricas
+
+VOCÊ NÃO PRECISA MAIS CRIAR O SERVIDOR MANUALMENTE!
+
+========================================
+PASSO 1: CRIAR PROBE NO DASHBOARD
+========================================
+
+Acesse: http://192.168.31.161:3000
+
+Login: admin@coruja.com / admin123
+
+Menu → Probes → + Nova Probe
+
+Preencha:
+┌─────────────────────────────────┐
+│ Nome: WIN-15GM8UTRS4K           │
+│ Empresa: [Sua empresa]          │
+│ Descrição: Probe Windows        │
+└─────────────────────────────────┘
+
+Clique: SALVAR
+
+⚠️ COPIE O TOKEN QUE APARECE!
+┌─────────────────────────────────────────────────┐
+│ Token: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFu... │
+└─────────────────────────────────────────────────┘
+
+========================================
+PASSO 2: CONFIGURAR PROBE NO WINDOWS
+========================================
+
+Execute:
+
+probe\configurar_probe.bat
+
+Quando pedir:
+1. Token: [Cole o token]
+2. Nome: WIN-15GM8UTRS4K
+3. IP: 192.168.31.161
+4. Porta: 3000
+
+========================================
+PASSO 3: INICIAR PROBE
+========================================
+
+Execute:
+
+iniciar_probe.bat
+
+A probe irá:
+✓ Conectar no servidor
+✓ Enviar heartbeat
+✓ CRIAR O SERVIDOR AUTOMATICAMENTE
+✓ Começar a coletar métricas
+
+Você verá no log:
+"🔍 Checking if server 'WIN-15GM8UTRS4K' is registered..."
+"📝 Auto-registering server 'WIN-15GM8UTRS4K'..."
+"✅ Server 'WIN-15GM8UTRS4K' registered successfully!"
+
+========================================
+PASSO 4: VERIFICAR NO DASHBOARD
+========================================
+
+Acesse: http://192.168.31.161:3000
+
+Menu → Servidores
+
+Você verá:
+✓ WIN-15GM8UTRS4K (criado automaticamente!)
+✓ Status: Online
+✓ IP: [IP da máquina]
+✓ OS: Windows [versão]
+
+Menu → Dashboard
+
+Você verá:
+✓ Métricas de CPU
+✓ Métricas de Memória
+✓ Métricas de Disco
+
+========================================
+RESUMO DO FLUXO NOVO
+========================================
+
+ANTES (manual):
+1. Criar probe no dashboard
+2. Copiar token
+3. Configurar probe
+4. Iniciar probe
+5. CRIAR SERVIDOR MANUALMENTE ❌
+6. Aguardar métricas
+
+AGORA (automático):
+1. Criar probe no dashboard
+2. Copiar token
+3. Configurar probe
+4. Iniciar probe
+5. ✨ SERVIDOR CRIADO AUTOMATICAMENTE! ✨
+6. Métricas aparecem imediatamente
+
+========================================
+VANTAGENS
+========================================
+
+✓ Menos passos manuais
+✓ Menos erros
+✓ Mais rápido
+✓ Funciona sempre
+✓ Não precisa lembrar de criar servidor
+
+========================================
+O QUE FOI IMPLEMENTADO
+========================================
+
+Backend (API):
+- Endpoint: GET /api/v1/servers/check
+  → Verifica se servidor existe
+  
+- Endpoint: POST /api/v1/servers/auto-register
+  → Cria servidor automaticamente
+
+Probe (Python):
+- Método: _auto_register_server()
+  → Chamado ao iniciar probe
+  → Detecta hostname e IP
+  → Verifica se existe
+  → Cria se não existir
+
+========================================
+ARQUIVOS MODIFICADOS
+========================================
+
+probe/probe_core.py
+  → Adicionado _auto_register_server()
+  → Chamado no start()
+
+api/routers/servers.py
+  → Adicionado /check endpoint
+  → Adicionado /auto-register endpoint
+
+========================================
+COMMIT E DEPLOY
+========================================
+
+Para ativar no servidor Linux:
+
+1. Commit no Windows:
+   git add .
+   git commit -m "Auto-registro de servidor implementado"
+   git push origin master
+
+2. Atualizar no Linux:
+   cd /home/administrador/CorujaMonitor
+   git pull origin master
+   docker-compose restart
+
+3. Testar no Windows:
+   iniciar_probe.bat
+
+========================================
+IMPORTANTE
+========================================
+
+⚠️ Você ainda precisa CRIAR A PROBE no dashboard!
+⚠️ O TOKEN é gerado ao criar a probe!
+⚠️ Sem probe criada, não tem token!
+
+Mas o SERVIDOR é criado automaticamente! 🎉
+
+========================================

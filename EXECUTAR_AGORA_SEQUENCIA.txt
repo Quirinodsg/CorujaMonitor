@@ -1,0 +1,94 @@
+========================================
+SEQUÊNCIA DE COMANDOS - EXECUTE AGORA
+========================================
+
+VOCÊ ESTÁ AQUI:
+✅ Commit feito (9 arquivos)
+⏳ Falta fazer PUSH
+⏳ Falta atualizar Linux
+⏳ Falta testar reset
+
+========================================
+COMANDO 1: PUSH PARA GITHUB (Git Bash)
+========================================
+
+git push origin master
+
+========================================
+COMANDO 2: ATUALIZAR LINUX (Terminal Linux)
+========================================
+
+Copie e cole TUDO de uma vez:
+
+cd /home/administrador/CorujaMonitor && git fetch origin && git checkout master && git pull origin master && docker-compose restart
+
+========================================
+AGUARDE 30 SEGUNDOS
+========================================
+
+Os containers precisam reiniciar:
+- API (backend)
+- Frontend (React)
+- PostgreSQL (banco)
+- Redis (cache)
+
+========================================
+COMANDO 3: ACESSAR DASHBOARD
+========================================
+
+Abra no navegador:
+http://192.168.31.161:3000
+
+Login: admin@coruja.com
+Senha: admin123
+
+========================================
+COMANDO 4: TESTAR RESET
+========================================
+
+No dashboard:
+1. Menu lateral → Configurações
+2. Aba superior → Ferramentas Admin
+3. Encontre o card "Reset do Sistema"
+4. Clique em "🗑️ Reset Completo"
+5. Digite: RESETAR
+6. Clique em "Confirmar Reset"
+
+========================================
+COMANDO 5: REINSTALAR PROBE (Windows)
+========================================
+
+Execute no Windows:
+CONFIGURAR_TUDO_AUTOMATICO.bat
+
+Isso irá:
+✓ Corrigir config.yaml
+✓ Adicionar servidor
+✓ Iniciar probe
+
+========================================
+VERIFICAÇÃO FINAL
+========================================
+
+Verifique no dashboard:
+✓ Probes → WIN-15GM8UTRS4K (Status: Ativo)
+✓ Servidores → WIN-15GM8UTRS4K (Status: Online)
+✓ Dashboard → Métricas aparecendo
+
+========================================
+RESUMO DOS ARQUIVOS
+========================================
+
+Leia se tiver dúvidas:
+- RESUMO_FINAL_09MAR.md (resumo completo)
+- LEIA_ISTO_PRIMEIRO_RESET.txt (instruções rápidas)
+- GUIA_COMPLETO_RESET_E_REINSTALACAO.md (guia detalhado)
+
+========================================
+PRONTO!
+========================================
+
+Execute os comandos na ordem acima.
+Qualquer problema, consulte os arquivos de documentação.
+
+========================================

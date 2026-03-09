@@ -1,0 +1,134 @@
+========================================
+  CRIAR PROBE - GUIA RÁPIDO
+========================================
+
+📍 VOCÊ ESTÁ AQUI:
+------------------
+✓ Sistema resetado
+✓ Empresa criada
+✗ Probe não existe
+✗ Token não existe
+
+========================================
+🎯 PASSO 1: CRIAR PROBE (Dashboard)
+========================================
+
+Acesse: http://192.168.31.161:3000
+
+Login: admin@coruja.com / admin123
+
+Menu → Probes → + Nova Probe
+
+Preencha:
+┌─────────────────────────────────┐
+│ Nome: WIN-15GM8UTRS4K           │
+│ Empresa: [Sua empresa]          │
+│ Descrição: Probe Windows        │
+└─────────────────────────────────┘
+
+Clique: SALVAR
+
+⚠️ COPIE O TOKEN QUE APARECE!
+┌─────────────────────────────────────────────────┐
+│ Token: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFu... │
+└─────────────────────────────────────────────────┘
+
+GUARDE ESTE TOKEN!
+
+========================================
+🎯 PASSO 2: CONFIGURAR (Windows)
+========================================
+
+Execute no Windows:
+
+probe\configurar_probe.bat
+
+Quando pedir, digite:
+
+1. Token: [Cole o token que você copiou]
+2. Nome: WIN-15GM8UTRS4K
+3. IP: 192.168.31.161
+4. Porta: 3000
+
+========================================
+🎯 PASSO 3: INICIAR PROBE
+========================================
+
+Execute:
+
+iniciar_probe.bat
+
+Deve aparecer:
+"Probe iniciada com sucesso!"
+
+========================================
+🎯 PASSO 4: ADICIONAR SERVIDOR
+========================================
+
+No dashboard:
+
+Menu → Servidores → + Novo Servidor
+
+Preencha:
+┌─────────────────────────────────┐
+│ Nome: WIN-15GM8UTRS4K           │
+│ IP: 127.0.0.1                   │
+│ Empresa: [Sua empresa]          │
+│ Probe: WIN-15GM8UTRS4K          │
+└─────────────────────────────────┘
+
+Salvar
+
+========================================
+✅ VERIFICAR
+========================================
+
+Dashboard → Probes
+Status: 🟢 Ativo
+
+Dashboard → Servidores  
+Status: 🟢 Online
+
+Dashboard → Dashboard
+Métricas aparecendo
+
+========================================
+❓ PERGUNTAS FREQUENTES
+========================================
+
+P: Onde pego o token?
+R: Ao criar a probe no dashboard. Aparece UMA VEZ só!
+
+P: Perdi o token, e agora?
+R: Crie uma nova probe no dashboard.
+
+P: A probe não conecta?
+R: Verifique se o token está correto no config.yaml
+
+P: Onde fica o config.yaml?
+R: probe\config.yaml
+
+========================================
+📁 ARQUIVOS
+========================================
+
+probe\configurar_probe.bat
+  → Configura a probe (EXECUTE ESTE!)
+
+probe\config.yaml
+  → Configuração (criado automaticamente)
+
+iniciar_probe.bat
+  → Inicia a probe
+
+========================================
+🚀 COMECE AQUI
+========================================
+
+1. Abra: http://192.168.31.161:3000
+2. Crie a probe
+3. Copie o token
+4. Execute: probe\configurar_probe.bat
+5. Execute: iniciar_probe.bat
+
+========================================

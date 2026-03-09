@@ -1,96 +1,48 @@
-╔══════════════════════════════════════════════════════════════╗
-║                                                              ║
-║          📚 BIBLIOTECA DE SENSORES - INSTALAÇÃO             ║
-║                                                              ║
-╚══════════════════════════════════════════════════════════════╝
+========================================
+  COMECE AQUI - SISTEMA DE RESET
+========================================
 
-┌──────────────────────────────────────────────────────────────┐
-│  ⚡ PASSO 1: INSTALAR                                        │
-└──────────────────────────────────────────────────────────────┘
+✅ COMMIT FEITO COM SUCESSO!
 
-   Abra o PowerShell e execute:
+9 arquivos alterados
+770+ linhas adicionadas
+Sistema de reset completo implementado
 
-   .\instalar_biblioteca_sensores.ps1
+========================================
+PRÓXIMOS 3 PASSOS:
+========================================
 
+1️⃣ PUSH (Git Bash):
+   git push origin master
 
-┌──────────────────────────────────────────────────────────────┐
-│  🔄 PASSO 2: REINICIAR SERVIÇOS                             │
-└──────────────────────────────────────────────────────────────┘
+2️⃣ LINUX (Terminal):
+   cd /home/administrador/CorujaMonitor && \
+   git fetch origin && \
+   git checkout master && \
+   git pull origin master && \
+   docker-compose restart
 
-   API:
-   cd api
-   uvicorn main:app --reload
+3️⃣ TESTAR (Navegador):
+   http://192.168.31.161:3000
+   Configurações → Ferramentas Admin → Reset do Sistema
 
-   Frontend (outro terminal):
-   cd frontend
-   npm start
+========================================
+ARQUIVOS IMPORTANTES:
+========================================
 
+📄 EXECUTAR_AGORA_SEQUENCIA.txt
+   → Comandos detalhados passo a passo
 
-┌──────────────────────────────────────────────────────────────┐
-│  ✅ PASSO 3: TESTAR                                          │
-└──────────────────────────────────────────────────────────────┘
+📄 STATUS_ATUAL.txt
+   → Status do que foi feito
 
-   1. Acesse: http://localhost:3000
-   2. Login: admin@coruja.com / admin123
-   3. Clique em "📚 Biblioteca de Sensores"
-   4. Adicione seu primeiro sensor!
+📄 RESUMO_FINAL_09MAR.md
+   → Documentação completa
 
+========================================
+DÚVIDAS?
+========================================
 
-╔══════════════════════════════════════════════════════════════╗
-║  📖 DOCUMENTAÇÃO                                             ║
-╚══════════════════════════════════════════════════════════════╝
+Leia: LEIA_ISTO_PRIMEIRO_RESET.txt
 
-   ⭐ LEIA_ISTO_PRIMEIRO.md       - Comece aqui
-   ⭐ EXECUTAR_AGORA.md            - 3 passos simples
-   📘 INSTALAR_BIBLIOTECA_AGORA.md - Guia detalhado
-   📗 BIBLIOTECA_SENSORES_IMPLEMENTADA.md - Doc completa
-   📙 INDICE_BIBLIOTECA_SENSORES.md - Índice de arquivos
-
-
-╔══════════════════════════════════════════════════════════════╗
-║  🎯 O QUE VOCÊ PODE MONITORAR                                ║
-╚══════════════════════════════════════════════════════════════╝
-
-   📡 Access Points WiFi
-   ❄️  Ar-Condicionado do Datacenter
-   🔋 Nobreaks e UPS
-   🖨️  Impressoras de Rede
-   ☁️  Serviços Azure (VMs, Web Apps, SQL, etc.)
-   🌐 URLs HTTP/HTTPS
-   💾 Storage (SAN/NAS)
-
-
-╔══════════════════════════════════════════════════════════════╗
-║  🔌 TESTE DE CONEXÃO                                         ║
-╚══════════════════════════════════════════════════════════════╝
-
-   ✅ Valida credenciais ANTES de salvar
-   ✅ Suporte para Azure, SNMP e HTTP
-   ✅ Feedback visual imediato
-   ✅ Detalhes técnicos da conexão
-
-
-╔══════════════════════════════════════════════════════════════╗
-║  ❌ SE DER ERRO                                              ║
-╚══════════════════════════════════════════════════════════════╝
-
-   Python não encontrado:
-   → Instale Python 3.8+ e adicione ao PATH
-
-   Banco não está rodando:
-   → docker ps
-   → docker-compose up -d db
-
-   Dependências não instalaram:
-   → cd api
-   → python -m pip install sqlalchemy psycopg2-binary
-
-
-╔══════════════════════════════════════════════════════════════╗
-║  🎉 PRONTO!                                                  ║
-╚══════════════════════════════════════════════════════════════╝
-
-   Execute agora:
-   .\instalar_biblioteca_sensores.ps1
-
-   Tudo pronto para começar! 🚀
+========================================

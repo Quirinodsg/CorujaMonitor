@@ -390,3 +390,97 @@ async def delete_server(
     db.commit()
     
     return {"message": f"Server '{server.hostname}' and all associated data deleted successfully"}
+
+
+# Auto-registration endpoints for probes
+@router.get("/check")
+async def check_server_exists(
+    probe_token: str,
+    hostname: str,
+    db: Session = Depends(get_db)
+):
+    """
+    Check if a server with given hostname already exists for this probe
+    Used by probe for auto-registration
+    """
+    # Find probe by token
+    probe = db.query(Probe).filter(Probe.token == probe_token).first()
+    if not probe:
+        raise HTTPException(status_code=404, detail="Probe not found")
+    
+    # Check if server exists
+    server = db.query(Server).filter(
+        Server.probe_id == probe.id,
+        Server.hostname == hostname
+    ).first()
+    
+    if server:
+        return {
+            "exists": True,
+            "server_id": server.id,
+            "hostname": server.hostname,
+            "ip_address": server.ip_address
+        }
+    else:
+        return {
+            "exists": False
+        }
+
+
+@router.post("/auto-register")
+async def auto_register_server(
+    probe_token: str,
+    server_data: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Auto-register a server when probe starts
+    Used by probe to automatically create its server entry
+    """
+    # Find probe by token
+    probe = db.query(Probe).filter(Probe.token == probe_token).first()
+    if not probe:
+        raise HTTPException(status_code=404, detail="Probe not found")
+    
+    hostname = server_data.get("hostname")
+    ip_address = server_data.get("ip_address", "127.0.0.1")
+    os_info = server_data.get("os_info", "Unknown")
+    description = server_data.get("description", "Auto-registered server")
+    
+    # Check if server already exists
+    existing_server = db.query(Server).filter(
+        Server.probe_id == probe.id,
+        Server.hostname == hostname
+    ).first()
+    
+    if existing_server:
+        return {
+            "id": existing_server.id,
+            "hostname": existing_server.hostname,
+            "message": "Server already exists"
+        }
+    
+    # Create new server
+    new_server = Server(
+        probe_id=probe.id,
+        tenant_id=probe.tenant_id,
+        hostname=hostname,
+        ip_address=ip_address,
+        os_type=os_info.split()[0] if os_info else "Unknown",
+        os_version=os_info,
+        device_type="server",
+        monitoring_protocol="local",
+        environment="production",
+        is_active=True
+    )
+    
+    db.add(new_server)
+    db.commit()
+    db.refresh(new_server)
+    
+    return {
+        "id": new_server.id,
+        "hostname": new_server.hostname,
+        "ip_address": new_server.ip_address,
+        "message": "Server registered successfully"
+    }
