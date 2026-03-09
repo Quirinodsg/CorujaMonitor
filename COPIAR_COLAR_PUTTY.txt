@@ -1,0 +1,49 @@
+═══════════════════════════════════════════════════════════════════
+  COPIAR E COLAR NO PUTTY - DELETAR DISCO D
+═══════════════════════════════════════════════════════════════════
+
+VOCÊ JÁ ESTÁ CONECTADO VIA PUTTY
+
+COPIE E COLE ESTE COMANDO:
+---------------------------
+
+docker-compose exec postgres psql -U coruja -d coruja
+
+
+DEPOIS COPIE E COLE ESTES COMANDOS SQL:
+----------------------------------------
+
+DELETE FROM metrics WHERE sensor_id IN (
+  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
+);
+
+DELETE FROM incidents WHERE sensor_id IN (
+  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
+);
+
+DELETE FROM sensor_notes WHERE sensor_id IN (
+  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
+);
+
+DELETE FROM sensors WHERE name LIKE '%DISCO D%';
+
+
+PARA SAIR DO POSTGRES:
+----------------------
+
+\q
+
+
+VERIFICAR:
+----------
+
+1. Aguarde 60 segundos
+2. Recarregue dashboard no navegador (Ctrl+F5)
+3. DISCO D não deve aparecer mais
+
+
+═══════════════════════════════════════════════════════════════════
+
+PRONTO! Sensor deletado!
+
+═══════════════════════════════════════════════════════════════════

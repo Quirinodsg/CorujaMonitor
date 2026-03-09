@@ -1,108 +1,78 @@
-╔════════════════════════════════════════════════════════════════╗
-║                                                                ║
-║   SOLUÇÃO COMPLETA - PROBE FUNCIONANDO AUTOMATICAMENTE        ║
-║                                                                ║
-╚════════════════════════════════════════════════════════════════╝
+════════════════════════════════════════════════════════════════════
+  EXECUTAR ISTO AGORA - MÁQUINA DE PRODUÇÃO
+════════════════════════════════════════════════════════════════════
 
-PROBLEMA CORRIGIDO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✓ Porta corrigida: 3000 (não 8000)
-✓ config.yaml será criado automaticamente
-✓ Servidor será adicionado automaticamente
-✓ Probe iniciará automaticamente
+🎯 OBJETIVO:
+------------
+- Remover DISCO D (CD-ROM) do dashboard
+- Probe iniciar automaticamente quando máquina ligar
+- Probe rodar em segundo plano (sem janela)
 
 
-EXECUTE APENAS 1 ARQUIVO:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 PASSO A PASSO:
+-----------------
 
-1. Clique com botão DIREITO em:
+1. Copie este arquivo para a máquina de produção:
    
-   CONFIGURAR_TUDO_AUTOMATICO.bat
-
-2. Escolha: "Executar como administrador"
-
-3. Aguarde o script fazer tudo automaticamente:
-   ✓ Detecta Python
-   ✓ Corrige config.yaml
-   ✓ Adiciona servidor no dashboard
-   ✓ Inicia a probe
-
-4. Mantenha a janela ABERTA
+   RESOLVER_TUDO_AGORA_PRODUCAO.bat
 
 
-O QUE VAI ACONTECER:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-[1/4] Verificando Python...
-      [OK] Python encontrado
-
-[2/4] Corrigindo config.yaml...
-      [OK] config.yaml criado com:
-      - IP: 192.168.31.161
-      - Porta: 3000
-      - Token: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8
-      - Nome: WIN-15GM8UTRS4K
-
-[3/4] Adicionando servidor no dashboard...
-      [OK] Servidor adicionado automaticamente
-
-[4/4] Iniciando probe...
-      A probe está rodando!
-      Logs aparecem na tela
+2. Na máquina de produção, clique com BOTÃO DIREITO no arquivo
 
 
-VERIFICAR SE FUNCIONOU:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-1. Na janela da probe, você deve ver:
-   [INFO] Collecting metrics...
-   [INFO] Sent 15 metrics successfully
-   [INFO] Heartbeat sent successfully
-
-2. Aguarde 60-90 segundos
-
-3. Acesse: http://192.168.31.161:3000
-
-4. Login: admin@coruja.com / admin123
-
-5. Menu: Servidores > WIN-15GM8UTRS4K
-
-6. Você verá:
-   - CPU %
-   - Memória %
-   - Disco %
-   - Gráficos com dados
+3. Escolha: "Executar como administrador"
 
 
-ALTERNATIVA (se preferir passo a passo):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Se quiser fazer manualmente:
-
-1. CORRIGIR_CONFIG_PROBE.bat (como admin)
-2. ADICIONAR_SERVIDOR_AGORA.bat
-3. EXECUTAR_PROBE_DIRETO.bat (como admin)
+4. Aguarde o script terminar (vai aparecer "TUDO RESOLVIDO!")
 
 
-ARQUIVOS CRIADOS:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-✓ CONFIGURAR_TUDO_AUTOMATICO.bat - FAZ TUDO (recomendado)
-✓ CORRIGIR_CONFIG_PROBE.bat - Só corrige config.yaml
-✓ ADICIONAR_SERVIDOR_AGORA.bat - Só adiciona servidor
-✓ adicionar_servidor_automatico.py - Script Python usado
-✓ VERIFICAR_SERVIDOR_CADASTRADO.bat - Verifica se servidor existe
+5. Aguarde 60 segundos
 
 
-IMPORTANTE:
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+6. Recarregue o dashboard (Ctrl+F5)
 
-• Mantenha a janela da probe ABERTA
-• Se fechar, execute novamente: EXECUTAR_PROBE_DIRETO.bat
-• Dashboard: http://192.168.31.161:3000 (porta 3000!)
-• API: http://192.168.31.161:3000 (mesma porta)
 
-╔════════════════════════════════════════════════════════════════╗
-║  TUDO SERÁ FEITO AUTOMATICAMENTE - SEM INTERVENÇÃO MANUAL     ║
-╚════════════════════════════════════════════════════════════════╝
+7. Verifique:
+   ✓ DISCO D não aparece mais
+   ✓ Apenas discos reais (C:, etc)
+
+
+8. Reinicie a máquina para testar auto-start:
+   
+   shutdown /r /t 60
+
+
+9. Após reiniciar, verifique:
+   ✓ Probe iniciou automaticamente
+   ✓ Métricas aparecem no dashboard
+   ✓ Não precisou executar .bat manualmente
+
+
+✅ PRONTO!
+----------
+
+Sistema 100% funcional e autônomo!
+
+
+🔍 VERIFICAR STATUS:
+--------------------
+
+nssm status CorujaProbe
+
+(deve mostrar: SERVICE_RUNNING)
+
+
+📊 DASHBOARD:
+-------------
+
+http://192.168.31.161:3000
+
+Usuário: admin@coruja.com
+Senha: admin123
+
+
+════════════════════════════════════════════════════════════════════
+
+RESUMO: Execute RESOLVER_TUDO_AGORA_PRODUCAO.bat como administrador!
+
+════════════════════════════════════════════════════════════════════

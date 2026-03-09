@@ -1,0 +1,69 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║              APLICAR CORREÇÕES - EXECUTAR AGORA                ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+CORREÇÕES FEITAS:
+-----------------
+✅ Filtrar CD-ROM (não monitorar mais)
+✅ Melhor erro ao excluir sensor
+
+
+PASSO 1: COMMIT E PUSH (Git Bash)
+----------------------------------
+
+git add probe/collectors/disk_collector.py
+git add frontend/src/components/Servers.js
+git commit -m "Filtrar CD-ROM e melhorar erro ao excluir sensor"
+git push origin master
+
+
+PASSO 2: ATUALIZAR LINUX (SSH)
+-------------------------------
+
+ssh root@192.168.31.161
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker-compose restart
+sleep 30
+
+
+PASSO 3: ATUALIZAR PROBE NO WINDOWS
+------------------------------------
+
+Copie o arquivo:
+  C:\Users\andre.quirino\Coruja\probe\collectors\disk_collector.py
+
+Para:
+  C:\Program Files\CorujaMonitor\Probe\collectors\disk_collector.py
+
+
+PASSO 4: REINICIAR PROBE
+-------------------------
+
+C:\Program Files\CorujaMonitor\Probe\INICIAR_PROBE.bat
+
+
+PASSO 5: VERIFICAR
+------------------
+
+1. Aguarde 60 segundos
+
+2. Abra dashboard: http://192.168.31.161:3000
+
+3. Verifique sensores:
+   ✅ Disco C deve aparecer
+   ❌ Disco D (CD-ROM) NÃO deve aparecer
+
+4. Teste excluir um sensor:
+   - Abra console (F12)
+   - Clique em excluir
+   - Veja os logs no console
+
+
+═══════════════════════════════════════════════════════════════════
+
+PRONTO! Correções aplicadas!
+
+═══════════════════════════════════════════════════════════════════

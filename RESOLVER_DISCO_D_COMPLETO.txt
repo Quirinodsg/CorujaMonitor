@@ -1,0 +1,86 @@
+════════════════════════════════════════════════════════════════════
+  RESOLVER DISCO D - SOLUÇÃO COMPLETA
+════════════════════════════════════════════════════════════════════
+
+🎯 OBJETIVO:
+------------
+Remover DISCO D (CD-ROM) do dashboard permanentemente
+
+
+📋 PASSO A PASSO:
+-----------------
+
+
+PARTE 1: DELETAR DO BANCO (Servidor Linux)
+-------------------------------------------
+
+1. Conecte no servidor Linux via PuTTY
+
+2. Execute:
+
+   docker-compose exec postgres psql -U coruja -d coruja_monitor
+
+3. Cole estes comandos SQL:
+
+   DELETE FROM metrics WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%');
+   DELETE FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%');
+   DELETE FROM sensor_notes WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%');
+   DELETE FROM sensors WHERE name LIKE '%DISCO D%';
+
+4. Saia do banco:
+
+   \q
+
+
+PARTE 2: APLICAR FILTRO (Máquina Windows)
+------------------------------------------
+
+1. Na máquina Windows (SRVSONDA001)
+
+2. Execute como ADMINISTRADOR:
+
+   RESOLVER_DISCO_D_URGENTE.bat
+
+3. Aguarde o script terminar
+
+
+PARTE 3: VERIFICAR
+------------------
+
+1. Aguarde 60 segundos
+
+2. Recarregue dashboard (Ctrl+F5)
+
+3. DISCO D não deve aparecer mais
+
+
+✅ PRONTO!
+----------
+
+DISCO D não vai mais aparecer porque:
+- Foi deletado do banco
+- Probe não vai mais coletar métricas de CD-ROM
+
+
+🔍 SE DISCO D VOLTAR:
+---------------------
+
+Significa que o filtro não foi aplicado corretamente.
+
+Verifique:
+
+1. Arquivo foi copiado?
+   dir "C:\Program Files\CorujaMonitor\Probe\collectors\disk_collector.py"
+
+2. Probe foi reiniciada?
+   tasklist | find "python"
+
+3. Veja logs:
+   type "C:\Program Files\CorujaMonitor\Probe\logs\probe.log"
+
+
+════════════════════════════════════════════════════════════════════
+
+RESUMO: Delete do banco + Aplique filtro na probe
+
+════════════════════════════════════════════════════════════════════

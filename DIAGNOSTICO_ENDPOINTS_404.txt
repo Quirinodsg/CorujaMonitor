@@ -1,0 +1,88 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║           DIAGNOSTICO: ENDPOINTS RETORNANDO 404                ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+PROBLEMA:
+---------
+Probe conecta na API mas recebe 404 em:
+  ❌ POST /api/v1/probes/heartbeat
+  ❌ GET /api/v1/servers/check
+  ❌ POST /api/v1/servers/auto-register
+  ❌ POST /api/v1/metrics/probe/bulk
+
+CAUSA PROVÁVEL:
+---------------
+Docker não carregou o código novo corretamente
+
+SOLUÇÃO:
+--------
+
+1. PARAR TUDO
+   ----------
+   ssh root@192.168.31.161
+   cd /home/administrador/CorujaMonitor
+   docker-compose down
+
+2. LIMPAR CACHE DO DOCKER
+   -----------------------
+   docker system prune -f
+
+3. REBUILD COMPLETO
+   -----------------
+   docker-compose build --no-cache api
+   docker-compose build --no-cache frontend
+
+4. SUBIR TUDO DE NOVO
+   -------------------
+   docker-compose up -d
+
+5. AGUARDAR 60 SEGUNDOS
+   --------------------
+   sleep 60
+
+6. VERIFICAR LOGS
+   --------------
+   docker-compose logs api | tail -50
+
+7. TESTAR ENDPOINT
+   ---------------
+   curl -X POST "http://192.168.31.161:3000/api/v1/probes/heartbeat?probe_token=V-PTetiHvbNsZgrkY14PFGRfyv6jPBZxdTb76Z2M7YY&version=1.0.0"
+
+   Deve retornar:
+   {"status":"ok","probe_id":1}
+
+   Se retornar 404, o problema persiste.
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  COMANDOS PRONTOS PARA COPIAR                                  ║
+╚════════════════════════════════════════════════════════════════╝
+
+ssh root@192.168.31.161
+cd /home/administrador/CorujaMonitor
+docker-compose down
+docker system prune -f
+docker-compose build --no-cache api
+docker-compose build --no-cache frontend
+docker-compose up -d
+sleep 60
+docker-compose logs api | tail -50
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  SE AINDA DER 404                                              ║
+╚════════════════════════════════════════════════════════════════╝
+
+Verifique se o arquivo main.py tem os routers registrados:
+
+docker-compose exec api cat /app/main.py | grep "probes.router"
+
+Deve aparecer:
+app.include_router(probes.router, prefix="/api/v1/probes", tags=["Probes"])
+
+Se NÃO aparecer, o código não foi copiado para o container.
+
+
+═══════════════════════════════════════════════════════════════════

@@ -1,0 +1,80 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║                    LEIA ISTO AGORA - URGENTE                   ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+
+O QUE ACONTECEU:
+----------------
+
+✅ Git pull funcionou (34 arquivos baixados)
+✅ docker-compose restart executado
+❌ MAS... restart NÃO recarrega código novo!
+
+
+O PROBLEMA:
+-----------
+
+"docker-compose restart" apenas REINICIA containers.
+NÃO copia código novo para dentro do container.
+
+Container está rodando código ANTIGO (sem os endpoints novos).
+
+
+A SOLUCAO:
+----------
+
+Fazer REBUILD completo do Docker.
+Isso cria container NOVO com código NOVO.
+
+
+QUANTO TEMPO:
+-------------
+
+5-10 minutos (depende da internet)
+
+
+O QUE FAZER AGORA:
+------------------
+
+1. Abra: COPIAR_COLAR_LINUX_REBUILD.txt
+
+2. Copie os comandos
+
+3. Cole no Linux (SSH)
+
+4. Aguarde 10 minutos
+
+5. Teste a probe no Windows
+
+
+ARQUIVOS IMPORTANTES:
+---------------------
+
+📄 COPIAR_COLAR_LINUX_REBUILD.txt
+   → Comandos prontos para copiar
+
+📄 STATUS_ATUAL_09MAR_FINAL.md
+   → Explicação completa do problema
+
+📄 RESOLVER_404_AGORA.txt
+   → Guia detalhado da solução
+
+📄 rebuild_docker_completo.sh
+   → Script automático (opcional)
+
+
+PROGRESSO:
+----------
+
+[████████████████████░░] 90% COMPLETO
+
+Falta apenas: Rebuild do Docker
+
+
+═══════════════════════════════════════════════════════════════════
+
+COMECE AQUI: COPIAR_COLAR_LINUX_REBUILD.txt
+
+═══════════════════════════════════════════════════════════════════

@@ -153,6 +153,7 @@ class SensorUpdate(BaseModel):
     threshold_warning: Optional[float] = None
     threshold_critical: Optional[float] = None
     sensor_type: Optional[str] = None  # Para mover entre categorias
+    is_active: Optional[bool] = None  # Para ativar/desativar sensor
 
 
 @router.put("/{sensor_id}", response_model=SensorResponse)
@@ -184,6 +185,10 @@ async def update_sensor(
         sensor.threshold_warning = sensor_update.threshold_warning
     if sensor_update.threshold_critical is not None:
         sensor.threshold_critical = sensor_update.threshold_critical
+    
+    # Update is_active (for enabling/disabling sensor)
+    if sensor_update.is_active is not None:
+        sensor.is_active = sensor_update.is_active
     
     db.commit()
     db.refresh(sensor)

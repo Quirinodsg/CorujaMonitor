@@ -1,0 +1,25 @@
+════════════════════════════════════════════════════════════════════
+  FAZER AGORA - RESOLVER DISCO D
+════════════════════════════════════════════════════════════════════
+
+✅ LINUX: Concluído (DELETE 0 = sensor já estava deletado)
+
+
+🚀 WINDOWS: Executar agora
+---------------------------
+
+1. Vá para a máquina SRVSONDA001 (Windows)
+
+2. Execute como ADMINISTRADOR:
+   
+   RESOLVER_DISCO_D_URGENTE.bat
+
+3. Aguarde 60 segundos
+
+4. Recarregue dashboard (Ctrl+F5)
+
+
+✅ PRONTO! DISCO D não aparece mais.
+
+
+════════════════════════════════════════════════════════════════════

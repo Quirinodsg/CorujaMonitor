@@ -1,0 +1,117 @@
+════════════════════════════════════════════════════════════════════
+  RESOLVER TUDO - MÁQUINA DE PRODUÇÃO
+════════════════════════════════════════════════════════════════════
+
+📋 O QUE VAI SER RESOLVIDO:
+----------------------------
+
+✓ DISCO D (CD-ROM) não vai mais aparecer no dashboard
+✓ Probe vai iniciar automaticamente quando a máquina ligar
+✓ Probe vai rodar em segundo plano (sem janela)
+
+
+🚀 EXECUTAR AGORA:
+------------------
+
+1. Copie este arquivo para a máquina de produção:
+   RESOLVER_TUDO_AGORA_PRODUCAO.bat
+
+2. Na máquina de produção, clique com botão direito no arquivo:
+   RESOLVER_TUDO_AGORA_PRODUCAO.bat
+
+3. Escolha: "Executar como administrador"
+
+4. Aguarde o script terminar
+
+5. Aguarde 60 segundos
+
+6. Recarregue o dashboard (Ctrl+F5)
+
+7. Verifique que DISCO D não aparece mais
+
+8. Reinicie a máquina para testar auto-start
+
+
+📍 ONDE EXECUTAR:
+-----------------
+
+Máquina: SRVSONDA001 (máquina de produção)
+Pasta: C:\Program Files\CorujaMonitor\Probe
+
+
+⚠️ IMPORTANTE:
+--------------
+
+- Execute como ADMINISTRADOR
+- Aguarde o script terminar completamente
+- Não feche a janela antes do script terminar
+
+
+✅ COMO VERIFICAR SE DEU CERTO:
+-------------------------------
+
+1. DISCO D não aparece mais no dashboard
+
+2. Serviço instalado:
+   nssm status CorujaProbe
+   (deve mostrar: SERVICE_RUNNING)
+
+3. Após reiniciar máquina:
+   - Probe inicia automaticamente
+   - Não precisa executar .bat manualmente
+   - Métricas aparecem no dashboard
+
+
+🔧 COMANDOS ÚTEIS:
+------------------
+
+Ver status do serviço:
+  nssm status CorujaProbe
+
+Parar serviço:
+  nssm stop CorujaProbe
+
+Iniciar serviço:
+  nssm start CorujaProbe
+
+Reiniciar serviço:
+  nssm restart CorujaProbe
+
+Ver logs:
+  type "C:\Program Files\CorujaMonitor\Probe\logs\probe.log"
+
+
+🆘 SE DER ERRO:
+---------------
+
+1. Verifique se executou como administrador
+
+2. Verifique se Python está instalado:
+   python --version
+
+3. Verifique logs:
+   type "C:\Program Files\CorujaMonitor\Probe\logs\service_stderr.log"
+
+4. Teste manualmente:
+   cd "C:\Program Files\CorujaMonitor\Probe"
+   python probe_core.py
+
+
+📊 DASHBOARD:
+-------------
+
+Acesse: http://192.168.31.161:3000
+
+Vá em: Gerenciamento → Probes
+
+Verifique:
+- Probe SRVSONDA001 está "Online"
+- Sensores aparecem (CPU, Memória, Disco C, etc)
+- DISCO D NÃO aparece
+
+
+════════════════════════════════════════════════════════════════════
+
+RESUMO: Execute RESOLVER_TUDO_AGORA_PRODUCAO.bat como administrador!
+
+════════════════════════════════════════════════════════════════════

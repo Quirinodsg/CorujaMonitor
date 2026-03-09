@@ -1,0 +1,50 @@
+═══════════════════════════════════════════════════════════════════
+  DELETAR SENSOR DISCO D - COMANDO CORRETO
+═══════════════════════════════════════════════════════════════════
+
+O BANCO SE CHAMA: coruja_monitor (não "coruja")
+
+
+PASSO 1: ENTRAR NO POSTGRES
+----------------------------
+
+docker-compose exec postgres psql -U coruja -d coruja_monitor
+
+
+PASSO 2: DELETAR SENSOR DISCO D
+--------------------------------
+
+DELETE FROM metrics WHERE sensor_id IN (
+  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
+);
+
+DELETE FROM incidents WHERE sensor_id IN (
+  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
+);
+
+DELETE FROM sensor_notes WHERE sensor_id IN (
+  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
+);
+
+DELETE FROM sensors WHERE name LIKE '%DISCO D%';
+
+
+PASSO 3: SAIR
+-------------
+
+\q
+
+
+VERIFICAR:
+----------
+
+1. Aguarde 60 segundos
+2. Recarregue dashboard (Ctrl+F5)
+3. DISCO D não deve aparecer mais
+
+
+═══════════════════════════════════════════════════════════════════
+
+PRONTO! Agora vai funcionar!
+
+═══════════════════════════════════════════════════════════════════
