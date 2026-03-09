@@ -1,0 +1,115 @@
+========================================
+DIAGNÓSTICO DO SERVIDOR LINUX
+========================================
+
+Execute estes comandos no servidor Linux
+e cole os resultados aqui para análise.
+
+========================================
+COMANDO 1: STATUS DOS CONTAINERS
+========================================
+
+ssh root@192.168.31.161
+cd /home/administrador/CorujaMonitor
+docker-compose ps
+
+========================================
+COMANDO 2: LOGS DA API (últimas 50 linhas)
+========================================
+
+docker-compose logs --tail=50 api
+
+========================================
+COMANDO 3: LOGS DO FRONTEND (últimas 50 linhas)
+========================================
+
+docker-compose logs --tail=50 frontend
+
+========================================
+COMANDO 4: LOGS DO POSTGRES
+========================================
+
+docker-compose logs --tail=30 postgres
+
+========================================
+COMANDO 5: VERIFICAR PORTAS
+========================================
+
+netstat -tulpn | grep -E ':(3000|5432|6379)'
+
+========================================
+COMANDO 6: ESPAÇO EM DISCO
+========================================
+
+df -h
+
+========================================
+COMANDO 7: MEMÓRIA
+========================================
+
+free -h
+
+========================================
+COMANDO 8: STATUS DO GIT
+========================================
+
+git status
+git log --oneline -5
+
+========================================
+COMANDO 9: TESTAR API
+========================================
+
+curl http://localhost:3000/health
+
+========================================
+COMANDO 10: TESTAR FRONTEND
+========================================
+
+curl -I http://localhost:3000
+
+========================================
+SCRIPT COMPLETO (copie tudo de uma vez)
+========================================
+
+cd /home/administrador/CorujaMonitor && \
+echo "=== STATUS CONTAINERS ===" && \
+docker-compose ps && \
+echo "" && \
+echo "=== LOGS API (últimas 30 linhas) ===" && \
+docker-compose logs --tail=30 api && \
+echo "" && \
+echo "=== LOGS FRONTEND (últimas 20 linhas) ===" && \
+docker-compose logs --tail=20 frontend && \
+echo "" && \
+echo "=== PORTAS ===" && \
+netstat -tulpn | grep -E ':(3000|5432|6379)' && \
+echo "" && \
+echo "=== ESPAÇO DISCO ===" && \
+df -h && \
+echo "" && \
+echo "=== MEMÓRIA ===" && \
+free -h && \
+echo "" && \
+echo "=== GIT STATUS ===" && \
+git status && \
+echo "" && \
+echo "=== TESTE API ===" && \
+curl http://localhost:3000/health
+
+========================================
+COMO USAR
+========================================
+
+1. Conecte no servidor:
+   ssh root@192.168.31.161
+
+2. Execute o script completo acima
+
+3. Copie TODA a saída
+
+4. Cole aqui no chat
+
+5. Eu analiso e digo o que está errado!
+
+========================================

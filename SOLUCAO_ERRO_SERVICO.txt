@@ -1,161 +1,111 @@
 ========================================
-  SOLUCAO ERRO 2186 - SERVICO
-  Probe Coruja Monitor
+SOLUÇÃO - ERRO AO INICIAR PROBE
 ========================================
 
-PROBLEMA:
----------
-Erro 2186: "The service is not responding"
+ERRO:
+The service name is invalid.
+More help is available by typing NET HELPMSG 2185.
 
-O serviço foi criado com cmd.exe, que não funciona
-bem como serviço do Windows.
+CAUSA:
+O serviço Windows "CorujaProbe" não está instalado.
 
+========================================
+SOLUÇÃO RÁPIDA
+========================================
 
-SOLUCAO 1 - EXECUTAR DIRETO (RAPIDO):
---------------------------------------
+Use o script que NÃO precisa de serviço:
 
-Execute como Administrador:
+INICIAR_PROBE_DIRETO.bat
 
-   EXECUTAR_PROBE_DIRETO.bat
+Este script inicia a probe diretamente sem serviço Windows.
 
-Isso executa a probe diretamente, sem serviço.
+========================================
+COMO FUNCIONA
+========================================
 
-VANTAGENS:
-✓ Funciona imediatamente
-✓ Vê os logs em tempo real
-✓ Fácil de parar (Ctrl+C)
+O script INICIAR_PROBE_DIRETO.bat:
 
-DESVANTAGENS:
-✗ Precisa manter a janela aberta
-✗ Não inicia automaticamente
-✗ Para quando você faz logoff
+1. Verifica se Python está instalado
+2. Verifica se config.yaml existe
+3. Inicia probe_core.py diretamente
+4. Mantém janela aberta mostrando logs
 
+========================================
+VANTAGENS
+========================================
 
-SOLUCAO 2 - TASK SCHEDULER (RECOMENDADO):
-------------------------------------------
+✅ Não precisa instalar serviço
+✅ Vê os logs em tempo real
+✅ Mais fácil de debugar
+✅ Funciona imediatamente
 
-Execute como Administrador:
+========================================
+DESVANTAGENS
+========================================
 
-   RECRIAR_SERVICO_PROBE.bat
+❌ Precisa manter janela aberta
+❌ Não inicia automaticamente com Windows
+❌ Para quando fecha a janela
 
-Isso cria uma tarefa agendada que:
-✓ Inicia automaticamente com o Windows
-✓ Roda em segundo plano
-✓ Não precisa de janela aberta
-✓ Continua rodando após logoff
+========================================
+INSTALAR COMO SERVIÇO (OPCIONAL)
+========================================
 
-COMANDOS:
-
-Iniciar:
-   schtasks /Run /TN "CorujaProbe"
-
-Parar:
-   taskkill /F /IM python.exe
-
-Ver status:
-   schtasks /Query /TN "CorujaProbe"
-
-
-SOLUCAO 3 - EXECUTAR MANUALMENTE:
-----------------------------------
-
-Se preferir controle total:
+Se quiser instalar como serviço Windows:
 
 1. Abra PowerShell como Administrador
 
-2. Execute:
-   cd "C:\Program Files\CorujaMonitor\Probe"
-   python probe_core.py
+2. Vá para pasta probe:
+   cd "C:\Users\andre.quirino\Coruja Monitor\probe"
 
-3. Mantenha a janela aberta
+3. Execute:
+   python install_service.py install
 
-4. Para parar: Ctrl+C
-
-
-QUAL ESCOLHER?
---------------
-
-Para TESTAR:
-→ Use SOLUCAO 1 (EXECUTAR_PROBE_DIRETO.bat)
-  Veja os logs em tempo real
-
-Para PRODUCAO:
-→ Use SOLUCAO 2 (RECRIAR_SERVICO_PROBE.bat)
-  Inicia automaticamente
-
-
-DEPOIS DE INICIAR:
-------------------
-
-1. Aguarde 60 segundos (primeira coleta)
-
-2. Acesse: http://192.168.31.161:8000
-
-3. Menu: Servidores > + Novo Servidor
-
-4. Preencha:
-   Nome: WIN-15GM8UTRS4K
-   IP: 127.0.0.1
-   Tenant: Techbiz
-   Probe: WIN-15GM8UTRS4K
-
-5. Salvar
-
-6. Aguardar 60 segundos
-
-7. Atualizar página
-
-8. Dados devem aparecer!
-
-
-VERIFICAR SE ESTA RODANDO:
----------------------------
-
-Execute:
-   tasklist | findstr python
-
-Deve mostrar:
-   python.exe
-
-
-VER LOGS:
----------
-
-PowerShell:
-   Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\probe.log" -Wait
-
-Ou abra o arquivo:
-   C:\Program Files\CorujaMonitor\Probe\logs\probe.log
-
-
-REMOVER SERVICO ANTIGO:
------------------------
-
-Se quiser limpar o serviço quebrado:
-
-   sc delete CorujaProbe
-
+4. Inicie o serviço:
+   net start CorujaProbe
 
 ========================================
-  RESUMO RAPIDO
+VERIFICAR SE SERVIÇO EXISTE
 ========================================
 
-PARA TESTAR AGORA:
+sc query CorujaProbe
 
-1. Execute: EXECUTAR_PROBE_DIRETO.bat
-2. Mantenha janela aberta
-3. Acesse dashboard
-4. Adicione servidor
-5. Aguarde 60 segundos
-6. Veja os dados!
+Se retornar erro, o serviço não está instalado.
 
+========================================
+REMOVER SERVIÇO (SE NECESSÁRIO)
+========================================
 
-PARA PRODUCAO:
+python install_service.py remove
 
-1. Execute: RECRIAR_SERVICO_PROBE.bat
-2. Probe inicia automaticamente
-3. Roda em segundo plano
-4. Pronto!
+========================================
+RECOMENDAÇÃO
+========================================
 
+Para testes: Use INICIAR_PROBE_DIRETO.bat
+Para produção: Instale como serviço
+
+========================================
+PRÓXIMOS PASSOS
+========================================
+
+1. Execute: EXECUTAR_TUDO_SEQUENCIA.bat
+   
+   Isso vai:
+   - Fazer commit e push
+   - Atualizar Linux
+   - Preparar para iniciar probe
+
+2. Após Linux atualizado, execute:
+   INICIAR_PROBE_DIRETO.bat
+
+3. Verifique logs:
+   Deve aparecer:
+   "✅ Server 'SRVSONDA001' registered successfully!"
+
+4. Acesse dashboard:
+   http://192.168.31.161:3000
+   Menu → Servidores
+   Deve aparecer: SRVSONDA001
 
 ========================================

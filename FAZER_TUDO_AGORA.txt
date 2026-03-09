@@ -1,0 +1,66 @@
+========================================
+FAZER TUDO AGORA - SEQUÊNCIA RÁPIDA
+========================================
+
+PASSO 1: COMMIT E PUSH
+========================
+
+Abra Git Bash e execute:
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+git add .
+git commit -m "Auto-registro de servidor e correcao de copia de token"
+git push origin master
+
+========================================
+
+PASSO 2: ATUALIZAR LINUX
+========================
+
+Conecte via SSH:
+
+ssh root@192.168.31.161
+
+Depois execute:
+
+cd /home/administrador/CorujaMonitor && git pull origin master && docker-compose restart
+
+Aguarde 30 segundos
+
+Digite: exit
+
+========================================
+
+PASSO 3: INICIAR PROBE
+========================
+
+Clique duas vezes em:
+
+INICIAR_PROBE_DIRETO.bat
+
+Aguarde aparecer:
+
+"✅ Server 'SRVSONDA001' registered successfully!"
+
+========================================
+
+PASSO 4: VERIFICAR DASHBOARD
+========================
+
+Acesse:
+
+http://192.168.31.161:3000
+
+Login:
+admin@coruja.com
+admin123
+
+Menu → Servidores
+
+Deve aparecer: SRVSONDA001
+
+========================================
+
+PRONTO! 🎉
+
+========================================

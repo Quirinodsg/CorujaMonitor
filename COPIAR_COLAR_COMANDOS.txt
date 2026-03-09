@@ -1,0 +1,175 @@
+========================================
+COMANDOS PRONTOS - COPIAR E COLAR
+========================================
+
+═══════════════════════════════════════
+1. GIT BASH (Windows)
+═══════════════════════════════════════
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+
+git add .
+
+git commit -m "Auto-registro de servidor e correcao de copia de token - Probe cria servidor automaticamente ao iniciar - Detecta hostname, IP e OS automaticamente - Endpoints /check e /auto-register na API - Corrigido erro ao copiar token em HTTP - Fallback para document.execCommand quando clipboard nao disponivel - Config.yaml corrigido com porta 3000"
+
+git push origin master
+
+
+═══════════════════════════════════════
+2. SSH LINUX (Conectar)
+═══════════════════════════════════════
+
+ssh root@192.168.31.161
+
+
+═══════════════════════════════════════
+3. LINUX (Atualizar código)
+═══════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor && git fetch origin && git checkout master && git pull origin master && docker-compose restart
+
+
+═══════════════════════════════════════
+4. LINUX (Verificar containers)
+═══════════════════════════════════════
+
+docker-compose ps
+
+
+═══════════════════════════════════════
+5. LINUX (Ver logs da API)
+═══════════════════════════════════════
+
+docker-compose logs -f api
+
+
+═══════════════════════════════════════
+6. LINUX (Sair do SSH)
+═══════════════════════════════════════
+
+exit
+
+
+═══════════════════════════════════════
+7. WINDOWS (Iniciar probe)
+═══════════════════════════════════════
+
+Clique duas vezes em:
+INICIAR_PROBE_DIRETO.bat
+
+
+═══════════════════════════════════════
+SEQUÊNCIA COMPLETA (COPIAR TUDO)
+═══════════════════════════════════════
+
+# 1. Git Bash
+cd "/c/Users/andre.quirino/Coruja Monitor"
+git add .
+git commit -m "Auto-registro de servidor e correcao de copia de token"
+git push origin master
+
+# 2. PowerShell/CMD
+ssh root@192.168.31.161
+
+# 3. No Linux (após conectar)
+cd /home/administrador/CorujaMonitor && git pull origin master && docker-compose restart
+
+# 4. Aguardar 30 segundos
+
+# 5. Sair
+exit
+
+# 6. Windows - Clique em:
+# INICIAR_PROBE_DIRETO.bat
+
+
+═══════════════════════════════════════
+VERIFICAR SUCESSO
+═══════════════════════════════════════
+
+Dashboard:
+http://192.168.31.161:3000
+
+Login:
+admin@coruja.com
+admin123
+
+Menu → Servidores
+Deve aparecer: SRVSONDA001
+
+
+═══════════════════════════════════════
+LOGS ESPERADOS NA PROBE
+═══════════════════════════════════════
+
+🔍 Checking if server 'SRVSONDA001' is registered...
+📝 Auto-registering server 'SRVSONDA001'...
+✅ Server 'SRVSONDA001' registered successfully! (ID: 1)
+   IP: 192.168.31.161
+   OS: Windows 10
+
+
+═══════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════
+
+# Verificar se API está rodando
+curl http://192.168.31.161:3000/api/v1/health
+
+# Verificar logs da API no Linux
+docker-compose logs -f api
+
+# Verificar se probe existe no dashboard
+Menu → Probes → Deve ter "Datacenter"
+
+# Verificar config.yaml
+notepad probe\config.yaml
+
+
+═══════════════════════════════════════
+COMANDOS ÚTEIS LINUX
+═══════════════════════════════════════
+
+# Ver status dos containers
+docker-compose ps
+
+# Reiniciar tudo
+docker-compose restart
+
+# Ver logs de todos os containers
+docker-compose logs -f
+
+# Ver logs só da API
+docker-compose logs -f api
+
+# Ver logs só do Frontend
+docker-compose logs -f frontend
+
+# Parar tudo
+docker-compose down
+
+# Iniciar tudo
+docker-compose up -d
+
+# Ver uso de recursos
+docker stats
+
+
+═══════════════════════════════════════
+COMANDOS ÚTEIS WINDOWS
+═══════════════════════════════════════
+
+# Ver processos Python
+tasklist | findstr python
+
+# Matar processo Python
+taskkill /F /IM python.exe
+
+# Ver porta 3000
+netstat -ano | findstr :3000
+
+# Testar conexão com API
+curl http://192.168.31.161:3000/api/v1/health
+
+
+═══════════════════════════════════════

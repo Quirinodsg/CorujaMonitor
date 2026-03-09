@@ -1,21 +1,21 @@
 # ========================================
-# CONFIGURAÇÃO CORUJA MONITOR PROBE
+# CONFIGURACAO CORUJA MONITOR PROBE
 # ========================================
 
 # Servidor Coruja Monitor
 server:
   host: "192.168.31.161"
-  port: 8000
+  port: 3000
   protocol: "http"
-  
-# Token de autenticação (gerado no servidor)
-token: ""
 
-# Identificação da Probe
+# Token de autenticacao
+token: "V-PTetiHvbNsZgrkY14PFGRfyv6jPBZxdTb76Z2M7YY"
+
+# Identificacao da Probe
 probe:
-  name: ""
+  name: "SRVSONDA001"
   location: ""
-  
+
 # Intervalo de coleta (segundos)
 collection_interval: 60
 
