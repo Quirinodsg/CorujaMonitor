@@ -943,6 +943,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
       });
       
       // Se DELETE falhar, tentar desativar o sensor
+      // CORRECAO 09MAR: Fallback para quando sensor nao existe no banco mas probe continua enviando
       if (error.response && error.response.status === 404) {
         console.log('Sensor não encontrado no banco, tentando desativar...');
         try {

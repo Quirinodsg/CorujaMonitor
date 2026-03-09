@@ -3,19 +3,25 @@ from typing import List, Dict, Any
 
 class DiskCollector:
     def collect(self) -> List[Dict[str, Any]]:
-        """Collect disk metrics"""
+        """Collect disk metrics
+        
+        CORRECAO 09MAR: Filtros adicionados para ignorar CD-ROM, DVD e unidades vazias
+        """
         metrics = []
         
         for partition in psutil.disk_partitions():
             try:
                 # Skip CD-ROM, DVD, and removable drives
+                # CORRECAO 09MAR: Previne monitoramento de unidades opticas
                 if 'cdrom' in partition.opts.lower() or partition.fstype == '':
                     continue
                 
                 # Skip if no disk in drive (common for CD/DVD drives)
+                # CORRECAO 09MAR: Trata erro quando CD-ROM esta vazio
                 usage = psutil.disk_usage(partition.mountpoint)
                 
                 # Skip drives with 0 total space (empty CD/DVD drives)
+                # CORRECAO 09MAR: Ignora unidades sem espaco (CD-ROM vazio)
                 if usage.total == 0:
                     continue
                 

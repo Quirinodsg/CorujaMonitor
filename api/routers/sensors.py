@@ -153,7 +153,7 @@ class SensorUpdate(BaseModel):
     threshold_warning: Optional[float] = None
     threshold_critical: Optional[float] = None
     sensor_type: Optional[str] = None  # Para mover entre categorias
-    is_active: Optional[bool] = None  # Para ativar/desativar sensor
+    is_active: Optional[bool] = None  # CORRECAO 09MAR: Campo para ativar/desativar sensor via API
 
 
 @router.put("/{sensor_id}", response_model=SensorResponse)
@@ -187,6 +187,7 @@ async def update_sensor(
         sensor.threshold_critical = sensor_update.threshold_critical
     
     # Update is_active (for enabling/disabling sensor)
+    # CORRECAO 09MAR: Permite desativar sensor sem deletar do banco
     if sensor_update.is_active is not None:
         sensor.is_active = sensor_update.is_active
     
