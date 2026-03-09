@@ -11,16 +11,9 @@ cd /home/administrador/CorujaMonitor
 echo "[1/5] Inicializando repositório Git..."
 git init
 
-# 2. Adicionar remote (substitua pela URL do seu repositório)
+# 2. Adicionar remote
 echo "[2/5] Adicionando remote origin..."
-echo ""
-echo "Qual é a URL do seu repositório Git?"
-echo "Exemplo: https://github.com/usuario/coruja-monitor.git"
-echo "Ou: git@github.com:usuario/coruja-monitor.git"
-echo ""
-read -p "URL do repositório: " REPO_URL
-
-git remote add origin "$REPO_URL"
+git remote add origin https://github.com/Quirinodsg/CorujaMonitor.git
 
 # 3. Configurar usuário Git
 echo ""

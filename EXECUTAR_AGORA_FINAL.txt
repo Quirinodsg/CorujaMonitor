@@ -1,43 +1,214 @@
-═══════════════════════════════════════════════════════════════
-         🔥 EXECUTAR AGORA - SOLUÇÃO DEFINITIVA 🔥
-═══════════════════════════════════════════════════════════════
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║   GUIA DEFINITIVO: GIT + RESET + PROBE                        ║
+║   Repositório: https://github.com/Quirinodsg/CorujaMonitor    ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
 
-NO SERVIDOR LINUX (192.168.31.161):
+█████████████████████████████████████████████████████████████████
+█  PASSO 1: COMMIT NO WINDOWS (Git Bash)                        █
+█████████████████████████████████████████████████████████████████
 
-cd ~/CorujaMonitor && git pull origin master && chmod +x rebuild_definitivo.sh && ./rebuild_definitivo.sh
+Abra Git Bash e execute:
 
-═══════════════════════════════════════════════════════════════
+cd "/c/Users/andre.quirino/Coruja Monitor"
 
-AGUARDAR 5 MINUTOS (rebuild completo)
+git add .
 
-═══════════════════════════════════════════════════════════════
+git commit -m "feat: Sistema de Reset Completo + Correções Probe
 
-DEPOIS:
+- Endpoint /api/v1/system/reset para apagar tudo
+- Componente SystemReset.js no frontend  
+- Script reset_sistema.py para linha de comando
+- Corrigida porta 3000 em todos os scripts
+- CONFIGURAR_TUDO_AUTOMATICO.bat faz tudo automaticamente
+- Mantém apenas usuário admin após reset"
 
-1. FECHAR TODAS AS ABAS DO NAVEGADOR
-2. LIMPAR CACHE (Ctrl+Shift+Del)
-3. ABRIR ABA ANÔNIMA (Ctrl+Shift+N)
-4. ACESSAR: http://192.168.31.161:3000
+git push origin main
 
-═══════════════════════════════════════════════════════════════
 
-CREDENCIAIS:
-Email: admin@coruja.com
-Senha: admin123
+█████████████████████████████████████████████████████████████████
+█  PASSO 2: CONFIGURAR GIT NO LINUX                             █
+█████████████████████████████████████████████████████████████████
 
-═══════════════════════════════════════════════════════════════
+No servidor Linux, execute:
 
-O QUE FOI CORRIGIDO:
+cd /home/administrador/CorujaMonitor
 
-✅ config.js não usa mais localhost hardcoded
-✅ SEMPRE usa o IP do host atual
-✅ CACHE_VERSION aumentado para v5.0
+# Inicializar Git
+git init
 
-═══════════════════════════════════════════════════════════════
+# Adicionar remote (repositório público - sem senha!)
+git remote add origin https://github.com/Quirinodsg/CorujaMonitor.git
 
-VERIFICAR NO CONSOLE (F12):
+# Configurar usuário
+git config user.name "Quirinodsg"
+git config user.email "seu@email.com"
 
-✅ CORRETO: http://192.168.31.161:8000/api/v1/auth/login
-❌ ERRADO:  http://localhost:8000/api/v1/auth/login
+# Baixar dados
+git fetch origin
 
-═══════════════════════════════════════════════════════════════
+# Fazer checkout
+git checkout -b main origin/main
+
+
+█████████████████████████████████████████████████████████████████
+█  PASSO 3: BAIXAR ATUALIZAÇÕES                                 █
+█████████████████████████████████████████████████████████████████
+
+No Linux:
+
+cd /home/administrador/CorujaMonitor
+git pull origin main
+
+
+█████████████████████████████████████████████████████████████████
+█  PASSO 4: RESETAR O SISTEMA                                   █
+█████████████████████████████████████████████████████████████████
+
+Opção A: Via Script Python (Recomendado)
+
+cd /home/administrador/CorujaMonitor/api
+python reset_sistema.py
+
+
+Opção B: Via Interface Web
+
+1. Acesse: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Menu: Ferramentas Administrativas
+4. Clique: Reset do Sistema
+5. Digite: RESETAR
+6. Confirme
+
+
+█████████████████████████████████████████████████████████████████
+█  PASSO 5: REINICIAR SERVIÇOS                                  █
+█████████████████████████████████████████████████████████████████
+
+No Linux:
+
+cd /home/administrador/CorujaMonitor
+docker-compose restart
+
+
+█████████████████████████████████████████████████████████████████
+█  PASSO 6: INSTALAR PROBE NO WINDOWS                           █
+█████████████████████████████████████████████████████████████████
+
+Execute como Administrador:
+
+CONFIGURAR_TUDO_AUTOMATICO.bat
+
+Aguarde 60-90 segundos.
+
+
+█████████████████████████████████████████████████████████████████
+█  PASSO 7: VERIFICAR SE FUNCIONOU                              █
+█████████████████████████████████████████████████████████████████
+
+1. Janela da probe deve mostrar:
+   [INFO] Sent 15 metrics successfully
+   [INFO] Heartbeat sent successfully
+
+2. Dashboard deve mostrar:
+   http://192.168.31.161:3000
+   Menu: Servidores > WIN-15GM8UTRS4K
+   CPU, Memória, Disco com dados
+
+
+█████████████████████████████████████████████████████████████████
+█  COMANDOS RÁPIDOS                                              █
+█████████████████████████████████████████████████████████████████
+
+Windows (Git Bash):
+  cd "/c/Users/andre.quirino/Coruja Monitor"
+  git add .
+  git commit -m "mensagem"
+  git push origin main
+
+Linux (Servidor):
+  cd /home/administrador/CorujaMonitor
+  git pull origin main
+  docker-compose restart
+
+
+█████████████████████████████████████████████████████████████████
+█  INFORMAÇÕES IMPORTANTES                                       █
+█████████████████████████████████████████████████████████████████
+
+✓ Repositório: https://github.com/Quirinodsg/CorujaMonitor
+✓ Repositório PÚBLICO - não precisa de senha
+✓ Porta do dashboard: 3000 (não 8000)
+✓ Porta da API: 3000 (mesma porta)
+✓ Reset mantém apenas usuário admin
+✓ Probe precisa rodar continuamente (janela aberta)
+
+
+█████████████████████████████████████████████████████████████████
+█  ARQUIVOS CRIADOS                                              █
+█████████████████████████████████████████████████████████████████
+
+Backend:
+  ✓ api/reset_sistema.py
+  ✓ api/routers/system_reset.py
+  ✓ api/main.py (atualizado)
+
+Frontend:
+  ✓ frontend/src/components/SystemReset.js
+  ✓ frontend/src/components/SystemReset.css
+
+Scripts Windows:
+  ✓ CONFIGURAR_TUDO_AUTOMATICO.bat
+  ✓ CORRIGIR_CONFIG_PROBE.bat
+  ✓ ADICIONAR_SERVIDOR_AGORA.bat
+
+Documentação:
+  ✓ GUIA_RESET_E_REINSTALACAO.md
+  ✓ CONFIGURAR_GIT_LINUX.sh
+  ✓ EXECUTAR_AGORA_FINAL.txt (este arquivo)
+
+
+█████████████████████████████████████████████████████████████████
+█  SCRIPT AUTOMÁTICO PARA LINUX                                 █
+█████████████████████████████████████████████████████████████████
+
+Ou use o script automático:
+
+chmod +x CONFIGURAR_GIT_LINUX.sh
+./CONFIGURAR_GIT_LINUX.sh
+
+
+█████████████████████████████████████████████████████████████████
+█  CHECKLIST                                                     █
+█████████████████████████████████████████████████████████████████
+
+Windows:
+  [ ] Git add + commit + push
+  [ ] Verificar no GitHub se commit apareceu
+
+Linux:
+  [ ] git init
+  [ ] git remote add origin
+  [ ] git fetch origin
+  [ ] git checkout -b main origin/main
+  [ ] git pull origin main
+  [ ] python api/reset_sistema.py
+  [ ] docker-compose restart
+
+Windows (Probe):
+  [ ] CONFIGURAR_TUDO_AUTOMATICO.bat
+  [ ] Aguardar 60-90 segundos
+  [ ] Verificar logs na janela
+  [ ] Acessar dashboard
+
+Dashboard:
+  [ ] http://192.168.31.161:3000
+  [ ] Login: admin@coruja.com / admin123
+  [ ] Menu: Servidores > WIN-15GM8UTRS4K
+  [ ] Verificar métricas
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  TUDO PRONTO! Siga os passos na ordem e vai funcionar!        ║
+╚════════════════════════════════════════════════════════════════╝
