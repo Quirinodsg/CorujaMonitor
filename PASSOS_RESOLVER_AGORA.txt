@@ -1,0 +1,126 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║   RESOLVER PROBLEMA - DASHBOARD SEM MÉTRICAS                  ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+PROBLEMA IDENTIFICADO:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+O arquivo config.yaml está com campos VAZIOS (token e name).
+Por isso a probe não consegue enviar métricas para o servidor.
+
+
+PASSO 1: FECHAR A PROBE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Na janela preta onde a probe está rodando:
+
+   1. Pressione: Ctrl + C
+   2. Aguarde a probe parar
+   3. Feche a janela
+
+
+PASSO 2: CORRIGIR CONFIG.YAML
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Clique com botão DIREITO em:
+      CORRIGIR_CONFIG_PROBE.bat
+
+   2. Escolha: "Executar como administrador"
+
+   3. Confirme os dados quando perguntado (digite S)
+
+   4. Aguarde a mensagem: [OK] Configuração corrigida!
+
+
+PASSO 3: INICIAR PROBE NOVAMENTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Clique com botão DIREITO em:
+      EXECUTAR_PROBE_DIRETO.bat
+
+   2. Escolha: "Executar como administrador"
+
+   3. Aguarde aparecer: "A probe esta rodando!"
+
+   4. DEIXE A JANELA ABERTA
+
+
+PASSO 4: VERIFICAR LOGS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Na janela da probe, você deve ver mensagens como:
+
+   ✓ [INFO] Collecting metrics...
+   ✓ [INFO] Sent 15 metrics successfully
+   ✓ [INFO] Heartbeat sent successfully
+
+Se aparecer ERRO, anote a mensagem e me mostre.
+
+
+PASSO 5: VERIFICAR SERVIDOR CADASTRADO
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. Execute: VERIFICAR_SERVIDOR_CADASTRADO.bat
+
+   2. Verifique se aparece: WIN-15GM8UTRS4K
+
+   3. Se NÃO aparecer, adicione o servidor:
+
+      a) Acesse: http://192.168.31.161:8000
+      b) Login: admin@coruja.com / admin123
+      c) Menu: Servidores
+      d) Clique: + Novo Servidor
+      e) Preencha:
+         Nome: WIN-15GM8UTRS4K
+         IP: 127.0.0.1
+         Tenant: Techbiz
+         Probe: WIN-15GM8UTRS4K (selecione da lista)
+      f) Salvar
+
+
+PASSO 6: AGUARDAR E VERIFICAR
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+   1. AGUARDE 60-90 segundos
+
+   2. Acesse o dashboard: http://192.168.31.161:8000
+
+   3. Menu: Servidores
+
+   4. Clique em: WIN-15GM8UTRS4K
+
+   5. Verifique se aparecem:
+      - CPU %
+      - Memória %
+      - Disco %
+      - Gráficos com dados
+
+
+O QUE ESPERAR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+ANTES (problema):
+   • config.yaml com campos vazios
+   • Probe rodando mas sem autenticação
+   • Dashboard vazio
+
+DEPOIS (corrigido):
+   • config.yaml com token e nome corretos
+   • Probe autenticada e enviando métricas
+   • Dashboard mostrando dados em tempo real
+
+
+SE AINDA NÃO FUNCIONAR:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Me mostre:
+
+   1. Mensagens de ERRO na janela da probe
+   2. Resultado do VERIFICAR_SERVIDOR_CADASTRADO.bat
+   3. Nome da probe que aparece no dashboard (menu Probes)
+
+╔════════════════════════════════════════════════════════════════╗
+║  DICA: Mantenha a janela da probe ABERTA para ver os logs     ║
+╚════════════════════════════════════════════════════════════════╝

@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 
 from database import engine, Base
-from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, security_monitor, mfa
+from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, security_monitor, mfa, system_reset
 
 # Importar WAF Middleware
 try:
@@ -96,6 +96,7 @@ app.include_router(threshold_config.router, prefix="/api/v1/thresholds", tags=["
 app.include_router(kubernetes.router)  # Já tem prefix no router
 app.include_router(kubernetes_alerts.router)  # Alertas Kubernetes
 app.include_router(security_monitor.router, prefix="/api/v1", tags=["Security Monitor"])
+app.include_router(system_reset.router)  # System Reset
 
 @app.get("/")
 async def root():

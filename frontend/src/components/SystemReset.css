@@ -1,0 +1,203 @@
+.system-reset {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.system-reset-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.system-reset-header h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.system-reset-header p {
+  color: #666;
+  font-size: 16px;
+}
+
+.system-stats {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.system-stats h3 {
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #007bff;
+  margin-bottom: 5px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.reset-warning {
+  background: #fff3cd;
+  border: 2px solid #ffc107;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 30px;
+}
+
+.reset-warning h3 {
+  color: #856404;
+  margin-bottom: 15px;
+}
+
+.reset-warning ul {
+  list-style: none;
+  padding: 0;
+  margin: 15px 0;
+}
+
+.reset-warning li {
+  padding: 8px 0;
+  font-size: 15px;
+}
+
+.warning-text {
+  background: #dc3545;
+  color: white;
+  padding: 15px;
+  border-radius: 6px;
+  text-align: center;
+  margin-top: 15px;
+  font-size: 16px;
+}
+
+.message {
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.message.success {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+}
+
+.message.error {
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+}
+
+.btn-reset-danger {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-reset-danger:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-reset-danger:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.confirm-box {
+  background: #f8f9fa;
+  border: 2px solid #dc3545;
+  border-radius: 8px;
+  padding: 25px;
+}
+
+.confirm-box h3 {
+  color: #dc3545;
+  margin-bottom: 15px;
+}
+
+.confirm-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  margin: 15px 0;
+  text-align: center;
+  font-weight: bold;
+}
+
+.confirm-input:focus {
+  outline: none;
+  border-color: #dc3545;
+}
+
+.confirm-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.btn-confirm-reset,
+.btn-cancel {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-confirm-reset {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-confirm-reset:hover:not(:disabled) {
+  background: #c82333;
+}
+
+.btn-confirm-reset:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-cancel {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-cancel:hover:not(:disabled) {
+  background: #5a6268;
+}

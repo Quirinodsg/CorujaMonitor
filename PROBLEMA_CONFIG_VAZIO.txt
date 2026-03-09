@@ -1,0 +1,67 @@
+========================================
+  PROBLEMA IDENTIFICADO
+========================================
+
+O config.yaml da probe está com campos VAZIOS:
+- token: ""
+- name: ""
+
+Por isso a probe não consegue enviar métricas!
+
+========================================
+  CAUSA DO PROBLEMA
+========================================
+
+Quando você executou configurar_probe.bat e digitou
+o token, a janela fechou antes de salvar.
+
+O arquivo foi criado mas ficou com campos vazios.
+
+========================================
+  SOLUÇÃO RÁPIDA
+========================================
+
+1. FECHE a janela da probe (Ctrl+C)
+
+2. EXECUTE como Administrador:
+   CORRIGIR_CONFIG_PROBE.bat
+
+3. Confirme os dados:
+   - IP: 192.168.31.161
+   - Token: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8
+   - Nome: WIN-15GM8UTRS4K
+
+4. EXECUTE novamente:
+   EXECUTAR_PROBE_DIRETO.bat
+
+5. AGUARDE 60-90 segundos
+
+6. VERIFIQUE no dashboard
+
+========================================
+  O QUE VAI ACONTECER
+========================================
+
+Após corrigir o config.yaml:
+
+✓ Probe vai se autenticar com o token correto
+✓ Probe vai coletar métricas do sistema
+✓ Probe vai enviar para o servidor
+✓ Dashboard vai mostrar os dados
+
+========================================
+  VERIFICAR SE FUNCIONOU
+========================================
+
+Na janela da probe você deve ver:
+
+[INFO] Sent 15 metrics successfully
+[INFO] Heartbeat sent successfully
+
+No dashboard:
+
+Menu Servidores > WIN-15GM8UTRS4K
+- CPU, Memória, Disco aparecendo
+- Gráficos com dados
+
+========================================
