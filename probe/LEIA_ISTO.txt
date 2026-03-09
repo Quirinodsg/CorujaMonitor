@@ -1,47 +1,38 @@
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║              🚀 EXECUTAR AGORA - FINAL                    ║
+║              INICIAR PROBE CORUJA                         ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
 
-PROBLEMA IDENTIFICADO:
+VOCÊ ESTÁ NA PASTA CERTA!
 ═══════════════════════════════════════════════════════════
 
-Você estava na pasta ERRADA!
-
-❌ C:\Program Files\CorujaMonitor\Probe (instalador MSI - vazio)
-✅ C:\Users\andre.quirino\Coruja Monitor\probe (código-fonte)
+Esta é a pasta probe onde está o probe_core.py
 
 
-SOLUÇÃO RÁPIDA:
+EXECUTE AGORA:
 ═══════════════════════════════════════════════════════════
 
-OPÇÃO 1: Clique duas vezes em:
+Clique duas vezes em:
 
-   INICIAR_PROBE_DESENVOLVIMENTO.bat
-
-   (Este arquivo está na raiz do projeto)
-
-
-OPÇÃO 2: CMD/PowerShell:
-
-cd "C:\Users\andre.quirino\Coruja Monitor\probe"
-python probe_core.py
-
-
-OPÇÃO 3: Navegue até a pasta correta:
-
-1. Abra o Explorador de Arquivos
-
-2. Cole na barra de endereço:
-   C:\Users\andre.quirino\Coruja Monitor\probe
-
-3. Clique duas vezes em:
    INICIAR_PROBE.bat
 
 
+OU via linha de comando:
 ═══════════════════════════════════════════════════════════
+
+INICIAR_PROBE.bat
+
+
+O QUE VAI ACONTECER:
+═══════════════════════════════════════════════════════════
+
+✅ Probe vai iniciar
+✅ Vai criar servidor SRVSONDA001 automaticamente
+✅ Vai criar 7 sensores automaticamente
+✅ Vai começar a coletar métricas
+
 
 AGUARDE APARECER:
 ═══════════════════════════════════════════════════════════
@@ -59,6 +50,14 @@ Login: admin@coruja.com
 Senha: admin123
 
 Menu → Servidores → SRVSONDA001
+
+
+IMPORTANTE:
+═══════════════════════════════════════════════════════════
+
+⚠️  Mantenha a janela ABERTA enquanto a probe estiver rodando
+
+⚠️  Para parar: Pressione Ctrl+C
 
 
 ═══════════════════════════════════════════════════════════

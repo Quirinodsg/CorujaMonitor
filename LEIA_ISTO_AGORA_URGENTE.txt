@@ -1,53 +1,46 @@
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║              🚀 EXECUTAR AGORA - FINAL                    ║
+║              ⚠️  LEIA ISTO AGORA  ⚠️                      ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
 
-PROBLEMA IDENTIFICADO:
+PROBLEMA RESOLVIDO!
 ═══════════════════════════════════════════════════════════
 
-Você estava na pasta ERRADA!
-
-❌ C:\Program Files\CorujaMonitor\Probe (instalador MSI - vazio)
-✅ C:\Users\andre.quirino\Coruja Monitor\probe (código-fonte)
+O erro "probe_core.py not found" foi corrigido.
 
 
-SOLUÇÃO RÁPIDA:
+EXECUTE AGORA:
 ═══════════════════════════════════════════════════════════
 
-OPÇÃO 1: Clique duas vezes em:
+1. Abra esta pasta no Explorador:
+   C:\Users\andre.quirino\Coruja Monitor
 
-   INICIAR_PROBE_DESENVOLVIMENTO.bat
-
-   (Este arquivo está na raiz do projeto)
-
-
-OPÇÃO 2: CMD/PowerShell:
-
-cd "C:\Users\andre.quirino\Coruja Monitor\probe"
-python probe_core.py
+2. Clique duas vezes em:
+   INICIAR_PROBE_AQUI.bat
 
 
-OPÇÃO 3: Navegue até a pasta correta:
-
-1. Abra o Explorador de Arquivos
-
-2. Cole na barra de endereço:
-   C:\Users\andre.quirino\Coruja Monitor\probe
-
-3. Clique duas vezes em:
-   INICIAR_PROBE.bat
-
-
+OU via CMD/PowerShell:
 ═══════════════════════════════════════════════════════════
+
+cd "C:\Users\andre.quirino\Coruja Monitor"
+INICIAR_PROBE_AQUI.bat
+
+
+O QUE VAI ACONTECER:
+═══════════════════════════════════════════════════════════
+
+✅ Probe vai iniciar
+✅ Vai criar servidor SRVSONDA001 automaticamente
+✅ Vai criar 7 sensores automaticamente
+✅ Vai começar a coletar métricas
+
 
 AGUARDE APARECER:
 ═══════════════════════════════════════════════════════════
 
 ✅ Server 'SRVSONDA001' registered successfully!
-Sent 7 metrics successfully
 
 
 DEPOIS VERIFIQUE:
@@ -59,6 +52,24 @@ Login: admin@coruja.com
 Senha: admin123
 
 Menu → Servidores → SRVSONDA001
+
+
+IMPORTANTE:
+═══════════════════════════════════════════════════════════
+
+⚠️  ANTES de iniciar a probe, certifique-se que o código
+    está atualizado no servidor Linux!
+
+    Veja: COPIAR_COLAR_COMANDOS.txt
+
+
+ARQUIVOS ÚTEIS:
+═══════════════════════════════════════════════════════════
+
+📄 EXECUTAR_AGORA_CORRIGIDO.txt - Instruções visuais
+📄 ERRO_PROBE_SOLUCAO.txt - Detalhes do erro
+📄 SITUACAO_ATUAL_COMPLETA.md - Status completo
+📄 COPIAR_COLAR_COMANDOS.txt - Comandos prontos
 
 
 ═══════════════════════════════════════════════════════════

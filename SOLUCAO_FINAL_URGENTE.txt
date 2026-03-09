@@ -1,68 +1,77 @@
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║              🚀 EXECUTAR AGORA - FINAL                    ║
+║         ⚠️  SOLUÇÃO FINAL - URGENTE  ⚠️                   ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
 
-PROBLEMA IDENTIFICADO:
+PROBLEMA:
 ═══════════════════════════════════════════════════════════
 
-Você estava na pasta ERRADA!
+O config.py NÃO foi copiado ainda!
 
-❌ C:\Program Files\CorujaMonitor\Probe (instalador MSI - vazio)
-✅ C:\Users\andre.quirino\Coruja Monitor\probe (código-fonte)
+Ele ainda está procurando: probe_config.json
+Deveria procurar: config.yaml
 
 
-SOLUÇÃO RÁPIDA:
+SOLUÇÃO:
 ═══════════════════════════════════════════════════════════
 
-OPÇÃO 1: Clique duas vezes em:
+1. Pare a probe (Ctrl+C)
 
-   INICIAR_PROBE_DESENVOLVIMENTO.bat
+2. Copie o config.py atualizado:
+   
+   DE (Desenvolvimento):
+   C:\Users\andre.quirino\Coruja\probe\config.py
+   
+   PARA (Produção):
+   C:\Program Files\CorujaMonitor\Probe\config.py
 
-   (Este arquivo está na raiz do projeto)
+3. Apague o arquivo antigo:
+   del "C:\Program Files\CorujaMonitor\Probe\probe_config.json"
 
-
-OPÇÃO 2: CMD/PowerShell:
-
-cd "C:\Users\andre.quirino\Coruja Monitor\probe"
-python probe_core.py
-
-
-OPÇÃO 3: Navegue até a pasta correta:
-
-1. Abra o Explorador de Arquivos
-
-2. Cole na barra de endereço:
-   C:\Users\andre.quirino\Coruja Monitor\probe
-
-3. Clique duas vezes em:
+4. Inicie novamente:
    INICIAR_PROBE.bat
 
 
+VERIFICAR SE COPIOU CERTO:
 ═══════════════════════════════════════════════════════════
 
-AGUARDE APARECER:
+Abra o config.py na produção e verifique se tem:
+
+import yaml  ← DEVE TER ISSO (não json)
+
+class ProbeConfig:
+    def __init__(self, config_file: str = "config.yaml"):  ← DEVE SER config.yaml
+
+
+SE AINDA TIVER "probe_config.json":
 ═══════════════════════════════════════════════════════════
 
+O arquivo NÃO foi copiado corretamente!
+
+Copie novamente com atenção.
+
+
+RESULTADO ESPERADO:
+═══════════════════════════════════════════════════════════
+
+Após copiar e iniciar, deve aparecer:
+
+✅ Configuração encontrada: config.yaml
+📡 API URL: http://192.168.31.161:3000
+🔑 Token: V-PTetiHvb...
+✅ API acessível em http://192.168.31.161:3000
 ✅ Server 'SRVSONDA001' registered successfully!
-Sent 7 metrics successfully
-
-
-DEPOIS VERIFIQUE:
-═══════════════════════════════════════════════════════════
-
-http://192.168.31.161:3000
-
-Login: admin@coruja.com
-Senha: admin123
-
-Menu → Servidores → SRVSONDA001
 
 
 ═══════════════════════════════════════════════════════════
 
-COMECE AGORA! 🚀
+EXECUTE AGORA! 🚀
+
+1. Pare probe (Ctrl+C)
+2. Copie config.py
+3. del probe_config.json
+4. INICIAR_PROBE.bat
 
 ═══════════════════════════════════════════════════════════

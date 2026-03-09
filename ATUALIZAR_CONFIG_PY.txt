@@ -1,68 +1,67 @@
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║              🚀 EXECUTAR AGORA - FINAL                    ║
+║         🔧 ATUALIZAR CONFIG.PY NA PRODUÇÃO                ║
 ║                                                           ║
 ╚═══════════════════════════════════════════════════════════╝
 
 
-PROBLEMA IDENTIFICADO:
+PROBLEMA:
 ═══════════════════════════════════════════════════════════
 
-Você estava na pasta ERRADA!
-
-❌ C:\Program Files\CorujaMonitor\Probe (instalador MSI - vazio)
-✅ C:\Users\andre.quirino\Coruja Monitor\probe (código-fonte)
+O config.py na produção está lendo probe_config.json (antigo)
+em vez de config.yaml (novo).
 
 
-SOLUÇÃO RÁPIDA:
+SOLUÇÃO:
 ═══════════════════════════════════════════════════════════
 
-OPÇÃO 1: Clique duas vezes em:
-
-   INICIAR_PROBE_DESENVOLVIMENTO.bat
-
-   (Este arquivo está na raiz do projeto)
+Copiar o config.py atualizado para a produção.
 
 
-OPÇÃO 2: CMD/PowerShell:
+PASSO A PASSO:
+═══════════════════════════════════════════════════════════
 
-cd "C:\Users\andre.quirino\Coruja Monitor\probe"
-python probe_core.py
+1. Na máquina de DESENVOLVIMENTO (Kiro):
+   
+   Copie o arquivo:
+   C:\Users\andre.quirino\Coruja\probe\config.py
+
+2. Na máquina de PRODUÇÃO:
+   
+   a) Pare a probe (Ctrl+C)
+   
+   b) Cole o arquivo em:
+      C:\Program Files\CorujaMonitor\Probe\config.py
+      (Sobrescrever o existente)
+   
+   c) Apague o arquivo antigo:
+      del probe_config.json
+   
+   d) Inicie novamente:
+      INICIAR_PROBE.bat
 
 
-OPÇÃO 3: Navegue até a pasta correta:
+VERIFICAR:
+═══════════════════════════════════════════════════════════
 
-1. Abra o Explorador de Arquivos
+Após iniciar, deve aparecer:
 
-2. Cole na barra de endereço:
-   C:\Users\andre.quirino\Coruja Monitor\probe
+✅ Configuração encontrada: config.yaml
+📡 API URL: http://192.168.31.161:3000
+🔑 Token: qozrs7hP8Z...
+✅ API acessível em http://192.168.31.161:3000
 
-3. Clique duas vezes em:
-   INICIAR_PROBE.bat
+
+COMANDOS RÁPIDOS (na produção):
+═══════════════════════════════════════════════════════════
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+del probe_config.json
+INICIAR_PROBE.bat
 
 
 ═══════════════════════════════════════════════════════════
 
-AGUARDE APARECER:
-═══════════════════════════════════════════════════════════
-
-✅ Server 'SRVSONDA001' registered successfully!
-Sent 7 metrics successfully
-
-
-DEPOIS VERIFIQUE:
-═══════════════════════════════════════════════════════════
-
-http://192.168.31.161:3000
-
-Login: admin@coruja.com
-Senha: admin123
-
-Menu → Servidores → SRVSONDA001
-
-
-═══════════════════════════════════════════════════════════
-
-COMECE AGORA! 🚀
+EXECUTE AGORA! 🚀
 
 ═══════════════════════════════════════════════════════════

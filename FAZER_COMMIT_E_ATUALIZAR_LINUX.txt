@@ -1,0 +1,123 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║     ENVIAR CODIGO PARA GITHUB E ATUALIZAR SERVIDOR LINUX      ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+QUANDO FAZER ISTO:
+------------------
+Quando a probe conectar mas der erro 404:
+  ❌ Endpoint /probes/heartbeat retorna 404
+  ❌ Endpoint /servers/auto-register retorna 404
+
+Isso significa que o código NÃO está no servidor Linux ainda.
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  PARTE 1: ENVIAR PARA GITHUB (Máquina Windows/Kiro)           ║
+╚════════════════════════════════════════════════════════════════╝
+
+1. Abra Git Bash nesta pasta:
+   C:\Users\andre.quirino\Coruja
+
+2. Execute ESTES comandos (copie e cole):
+
+   git add .
+   git commit -m "Auto-registro de servidor e correcao config.py"
+   git push origin master
+
+3. Aguarde terminar (pode pedir senha do GitHub)
+
+4. Deve aparecer:
+   ✓ Enumerating objects...
+   ✓ Writing objects: 100%
+   ✓ To https://github.com/Quirinodsg/CorujaMonitor.git
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  PARTE 2: ATUALIZAR SERVIDOR LINUX                             ║
+╚════════════════════════════════════════════════════════════════╝
+
+1. Conecte no servidor Linux via SSH:
+   
+   ssh root@192.168.31.161
+
+2. Entre na pasta do projeto:
+   
+   cd /root/CorujaMonitor
+
+3. Baixe as atualizações:
+   
+   git pull origin master
+
+4. Reinicie os containers:
+   
+   docker-compose restart
+
+5. Aguarde 30 segundos
+
+6. Verifique se subiu:
+   
+   docker-compose ps
+   
+   Deve mostrar:
+   ✓ coruja-api       Up
+   ✓ coruja-frontend  Up
+   ✓ coruja-postgres  Up
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  PARTE 3: TESTAR PROBE NOVAMENTE                               ║
+╚════════════════════════════════════════════════════════════════╝
+
+1. Volte para a máquina de produção Windows
+
+2. Abra: C:\Program Files\CorujaMonitor\Probe
+
+3. Execute: INICIAR_PROBE.bat
+
+4. Agora DEVE funcionar:
+   ✅ Heartbeat sent successfully
+   ✅ Server 'SRVSONDA001' registered successfully!
+   ✅ Sent 7 metrics successfully
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  VERIFICAR NO DASHBOARD                                        ║
+╚════════════════════════════════════════════════════════════════╝
+
+1. Abra navegador: http://192.168.31.161:3000
+
+2. Login:
+   Email: admin@coruja.com
+   Senha: admin123
+
+3. Menu → Servidores
+
+4. Deve aparecer: SRVSONDA001
+   ✓ Status: Online
+   ✓ Última atualização: agora
+   ✓ Métricas: CPU, Memória, Disco, etc.
+
+
+╔════════════════════════════════════════════════════════════════╗
+║  COMANDOS PRONTOS PARA COPIAR                                  ║
+╚════════════════════════════════════════════════════════════════╝
+
+GIT BASH (Windows):
+-------------------
+git add .
+git commit -m "Auto-registro de servidor e correcao config.py"
+git push origin master
+
+
+SSH LINUX:
+----------
+ssh root@192.168.31.161
+cd /root/CorujaMonitor
+git pull origin master
+docker-compose restart
+docker-compose ps
+
+
+═══════════════════════════════════════════════════════════════════

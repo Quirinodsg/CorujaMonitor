@@ -1,0 +1,88 @@
+╔═══════════════════════════════════════════════════════════╗
+║                                                           ║
+║         ⚠️  ERRO: DEPENDÊNCIAS FALTANDO  ⚠️               ║
+║                                                           ║
+╚═══════════════════════════════════════════════════════════╝
+
+
+ERRO:
+═══════════════════════════════════════════════════════════
+
+ModuleNotFoundError: No module named 'requests'
+
+
+CAUSA:
+═══════════════════════════════════════════════════════════
+
+As bibliotecas Python necessárias não estão instaladas
+na máquina de produção.
+
+
+SOLUÇÃO RÁPIDA:
+═══════════════════════════════════════════════════════════
+
+Execute este script:
+
+   INSTALAR_DEPENDENCIAS_PROBE.bat
+
+
+OU instale manualmente:
+═══════════════════════════════════════════════════════════
+
+python -m pip install requests httpx psutil pyyaml wmi pywin32
+
+
+DEPENDÊNCIAS NECESSÁRIAS:
+═══════════════════════════════════════════════════════════
+
+✅ requests - Para fazer requisições HTTP
+✅ httpx - Cliente HTTP moderno
+✅ psutil - Para coletar métricas do sistema
+✅ pyyaml - Para ler config.yaml
+✅ wmi - Para monitoramento Windows (opcional)
+✅ pywin32 - Para serviços Windows (opcional)
+
+
+PASSO A PASSO:
+═══════════════════════════════════════════════════════════
+
+1. Na máquina de PRODUÇÃO, execute:
+   INSTALAR_DEPENDENCIAS_PROBE.bat
+
+2. Aguarde a instalação terminar
+
+3. Execute novamente:
+   INICIAR_PROBE.bat
+
+4. Aguarde aparecer:
+   "✅ Server 'SRVSONDA001' registered successfully!"
+
+
+VERIFICAR SE ESTÁ INSTALADO:
+═══════════════════════════════════════════════════════════
+
+python -m pip list | findstr requests
+python -m pip list | findstr httpx
+python -m pip list | findstr psutil
+
+
+TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════
+
+Erro: pip não encontrado
+Solução: python -m ensurepip --upgrade
+
+Erro: Permissão negada
+Solução: Execute como Administrador
+
+Erro: Timeout ao baixar
+Solução: Verifique conexão com internet
+
+
+═══════════════════════════════════════════════════════════
+
+EXECUTE AGORA! 🚀
+
+INSTALAR_DEPENDENCIAS_PROBE.bat
+
+═══════════════════════════════════════════════════════════

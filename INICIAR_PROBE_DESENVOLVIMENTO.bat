@@ -2,15 +2,38 @@
 chcp 65001 >nul
 cls
 echo ========================================
-echo   INICIAR PROBE CORUJA - MODO DIRETO
+echo   INICIAR PROBE - DESENVOLVIMENTO
 echo ========================================
 echo.
 
-echo Localizacao do script: %~dp0
+REM Ir para a pasta do código-fonte
+cd /d "C:\Users\andre.quirino\Coruja Monitor\probe"
+
+echo Pasta atual: %CD%
 echo.
 
-cd /d "%~dp0"
-cd probe
+echo Verificando arquivos...
+if not exist "probe_core.py" (
+    echo [ERRO] probe_core.py nao encontrado!
+    echo.
+    echo Verifique se esta na pasta correta:
+    echo C:\Users\andre.quirino\Coruja Monitor\probe
+    echo.
+    pause
+    exit /b 1
+)
+
+if not exist "config.yaml" (
+    echo [ERRO] config.yaml nao encontrado!
+    echo.
+    echo Execute primeiro: configurar_probe.bat
+    echo.
+    pause
+    exit /b 1
+)
+
+echo [OK] Arquivos encontrados
+echo.
 
 echo Detectando Python...
 where python >nul 2>&1
@@ -25,7 +48,7 @@ if %errorlevel% equ 0 (
         echo [OK] Python encontrado: py
         py --version
     ) else (
-        echo [ERRO] Python não encontrado!
+        echo [ERRO] Python nao encontrado!
         echo.
         echo Instale Python 3.8+ de: https://www.python.org/downloads/
         echo.
@@ -39,7 +62,7 @@ echo ========================================
 echo   INICIANDO PROBE...
 echo ========================================
 echo.
-echo A probe está rodando
+echo A probe esta rodando
 echo Mantenha esta janela ABERTA
 echo Para parar: Pressione Ctrl+C
 echo.

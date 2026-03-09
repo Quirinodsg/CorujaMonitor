@@ -1,11 +1,11 @@
-import json
+import yaml
 import socket
 import httpx
 from pathlib import Path
 from typing import List, Dict, Optional
 
 class ProbeConfig:
-    def __init__(self, config_file: str = "probe_config.json"):
+    def __init__(self, config_file: str = "config.yaml"):
         # Try to find config file in multiple locations
         possible_paths = [
             Path(config_file),  # Current directory
@@ -82,15 +82,17 @@ class ProbeConfig:
         print(f"🔍 Procurando configuração em: {self.config_file}")
         if self.config_file.exists():
             print(f"✅ Configuração encontrada: {self.config_file}")
-            with open(self.config_file, 'r') as f:
-                config = json.load(f)
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f)
         else:
             print(f"⚠️  Configuração não encontrada, criando padrão em: {self.config_file}")
             config = self.get_default_config()
             self.save_config(config)
         
-        self.api_url = config.get('api_url', 'http://localhost:8000')
-        self.probe_token = config.get('probe_token', '')
+        # Read from YAML structure
+        server_config = config.get('server', {})
+        self.api_url = f"{server_config.get('protocol', 'http')}://{server_config.get('host', 'localhost')}:{server_config.get('port', 8000)}"
+        self.probe_token = config.get('token', '')
         self.collection_interval = config.get('collection_interval', 60)
         self.monitored_services = config.get('monitored_services', [])
         self.udm_targets = config.get('udm_targets', [])
@@ -104,7 +106,13 @@ class ProbeConfig:
                 if discovered_url and discovered_url != self.api_url:
                     print(f"🔄 Atualizando URL de {self.api_url} para {discovered_url}")
                     self.api_url = discovered_url
-                    config['api_url'] = discovered_url
+                    # Update config
+                    from urllib.parse import urlparse
+                    parsed = urlparse(discovered_url)
+                    server_config['protocol'] = parsed.scheme
+                    server_config['host'] = parsed.hostname
+                    server_config['port'] = parsed.port or 8000
+                    config['server'] = server_config
                     self.save_config(config)
             else:
                 print(f"✅ API acessível em {self.api_url}")
@@ -115,15 +123,37 @@ class ProbeConfig:
     
     def save_config(self, config: Dict):
         """Save configuration to file"""
-        with open(self.config_file, 'w') as f:
-            json.dump(config, f, indent=2)
+        with open(self.config_file, 'w', encoding='utf-8') as f:
+            yaml.dump(config, f, default_flow_style=False, allow_unicode=True)
     
     def get_default_config(self) -> Dict:
         """Get default configuration"""
         return {
-            "api_url": "http://localhost:8000",
-            "probe_token": "",
+            "server": {
+                "host": "localhost",
+                "port": 8000,
+                "protocol": "http"
+            },
+            "token": "",
+            "probe": {
+                "name": "PROBE001",
+                "location": ""
+            },
             "collection_interval": 60,
-            "monitored_services": [],  # Empty by default - services must be added manually
+            "logging": {
+                "level": "INFO",
+                "file": "logs/probe.log",
+                "max_size_mb": 10,
+                "backup_count": 5
+            },
+            "collectors": {
+                "system": True,
+                "ping": True,
+                "snmp": True,
+                "docker": False,
+                "kubernetes": False,
+                "wmi_remote": False
+            },
+            "monitored_services": [],
             "udm_targets": []
         }
