@@ -3,6 +3,7 @@ import api from '../services/api';
 import ThresholdConfig from './ThresholdConfig';
 import SecurityMonitor from './SecurityMonitor';
 import MFASetup from './MFASetup';
+import SystemReset from './SystemReset';
 import './Management.css';
 import './Settings.css';
 
@@ -40,6 +41,7 @@ function Settings({ onNavigate }) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [actionInProgress, setActionInProgress] = useState(false);
   const [actionModal, setActionModal] = useState({ show: false, title: '', message: '', progress: [] });
+  const [showSystemReset, setShowSystemReset] = useState(false);
 
   // Backup state
   const [backups, setBackups] = useState([]);
@@ -2195,7 +2197,23 @@ function Settings({ onNavigate }) {
     </div>
   );
 
-  const renderAdminTools = () => (
+  const renderAdminTools = () => {
+    if (showSystemReset) {
+      return (
+        <div className="settings-section">
+          <button 
+            className="btn-secondary"
+            onClick={() => setShowSystemReset(false)}
+            style={{ marginBottom: '20px' }}
+          >
+            ← Voltar para Ferramentas Admin
+          </button>
+          <SystemReset />
+        </div>
+      );
+    }
+
+    return (
     <div className="settings-section">
       <h2>🔧 Ferramentas Administrativas</h2>
       <p className="section-description">
@@ -2203,6 +2221,22 @@ function Settings({ onNavigate }) {
       </p>
 
       <div className="admin-tools-grid">
+        {/* Reset do Sistema */}
+        <div className="admin-tool-card">
+          <div className="tool-icon">🔄</div>
+          <h3>Reset do Sistema</h3>
+          <p>Apague TODOS os dados: empresas, probes, servidores, sensores, métricas</p>
+          <div className="tool-status">
+            <strong style={{ color: '#dc3545' }}>⚠️ AÇÃO IRREVERSÍVEL</strong>
+          </div>
+          <button 
+            className="btn-danger"
+            onClick={() => setShowSystemReset(true)}
+          >
+            🗑️ Reset Completo
+          </button>
+        </div>
+
         {/* Modo Manutenção */}
         <div className="admin-tool-card">
           <div className="tool-icon">🚧</div>
@@ -2291,7 +2325,8 @@ function Settings({ onNavigate }) {
         </div>
       </div>
     </div>
-  );
+    );
+  };
 
   const renderBackup = () => {
     return (

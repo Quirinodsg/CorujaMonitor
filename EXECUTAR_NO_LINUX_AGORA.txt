@@ -1,42 +1,66 @@
-==========================================
-EXECUTAR NO SERVIDOR LINUX - PASSO A PASSO
-==========================================
+========================================
+COMANDOS PARA EXECUTAR NO LINUX
+========================================
 
-COPIE E COLE ESTES COMANDOS NO TERMINAL LINUX:
+COPIE E COLE TUDO DE UMA VEZ:
 
-# 1. Baixar arquivos do Git
-cd ~/CorujaMonitor
-git pull origin master
+cd /home/administrador/CorujaMonitor && \
+git fetch origin && \
+git checkout master && \
+git pull origin master && \
+docker-compose restart
 
-# 2. Dar permissão de execução
-chmod +x corrigir_tabelas_banco.sh rebuild_frontend_limpo.sh
+========================================
+EXPLICAÇÃO
+========================================
 
-# 3. Executar correção das tabelas
-./corrigir_tabelas_banco.sh
+1. cd /home/administrador/CorujaMonitor
+   → Entra na pasta do projeto
 
-# 4. Rebuild do frontend (LIMPA CACHE DO DOCKER)
-./rebuild_frontend_limpo.sh
+2. git fetch origin
+   → Busca atualizações do GitHub
 
-# 5. Aguardar 3-5 minutos e testar
-# Acesse: http://192.168.31.161:3000
-# Faça login: admin@coruja.com / admin123
-# Teste as páginas: Empresas, Incidentes, Relatórios, KB, IA
+3. git checkout master
+   → Muda para o branch MASTER (não main!)
 
-==========================================
-O QUE CADA COMANDO FAZ:
-==========================================
+4. git pull origin master
+   → Baixa as alterações do branch master
 
-1. git pull → Baixa os arquivos corrigidos do GitHub
-2. chmod +x → Dá permissão para executar o script
-3. ./corrigir_tabelas_banco.sh → Cria tabelas faltantes no banco
-4. docker-compose rebuild → Reconstrói frontend com config.js correto
-5. Teste → Verifica se tudo funciona
+5. docker-compose restart
+   → Reinicia os containers
 
-==========================================
-SE DER ERRO "jq: command not found":
-==========================================
+========================================
+APÓS EXECUTAR
+========================================
 
-Ignore! O script funciona mesmo sem o jq.
-O importante é que as tabelas sejam criadas.
+Aguarde 30 segundos e acesse:
+http://192.168.31.161:3000
 
-==========================================
+Login: admin@coruja.com / admin123
+
+Vá em: Configurações → Ferramentas Admin
+
+Você verá o card "Reset do Sistema"
+
+========================================
+TESTAR O RESET
+========================================
+
+1. Clique no card "Reset do Sistema"
+2. Veja as estatísticas atuais
+3. Clique em "Resetar Sistema"
+4. Digite: RESETAR (em maiúsculas)
+5. Clique em "Confirmar Reset"
+
+O sistema irá apagar:
+✗ Todas as métricas
+✗ Todos os incidentes
+✗ Todos os sensores
+✗ Todos os servidores
+✗ Todas as probes
+✗ Todas as empresas (exceto Admin)
+
+Mantém:
+✓ Usuário admin
+
+========================================

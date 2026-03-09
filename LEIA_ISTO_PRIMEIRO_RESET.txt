@@ -1,0 +1,158 @@
+========================================
+  SISTEMA DE RESET COMPLETO
+  IMPLEMENTADO E PRONTO PARA USO
+========================================
+
+O QUE FOI IMPLEMENTADO:
+========================
+
+✓ Endpoint API: /api/v1/system/reset (POST)
+✓ Componente React: SystemReset.js
+✓ Integrado em: Settings → Ferramentas Admin
+✓ Script Python: api/reset_sistema.py
+✓ Confirmação: Digite "RESETAR" em maiúsculas
+✓ Mostra estatísticas antes de resetar
+
+O QUE O RESET APAGA:
+====================
+
+✗ TODAS as métricas
+✗ TODOS os incidentes
+✗ TODOS os sensores
+✗ TODOS os servidores
+✗ TODAS as probes
+✗ TODAS as empresas (exceto Admin)
+
+O QUE O RESET MANTÉM:
+======================
+
+✓ Usuário admin (admin@coruja.com)
+✓ Empresa Admin
+✓ Estrutura do banco de dados
+
+COMO USAR:
+==========
+
+PASSO 1: COMMIT NO WINDOWS
+---------------------------
+Execute: FAZER_COMMIT_AGORA.bat
+
+Ou manualmente no Git Bash:
+  cd /c/Users/Administrador/CorujaMonitor
+  git add .
+  git commit -m "Sistema de Reset implementado"
+  git push origin master
+
+PASSO 2: ATUALIZAR NO LINUX
+----------------------------
+Copie e cole no terminal Linux:
+
+cd /home/administrador/CorujaMonitor && \
+git fetch origin && \
+git checkout master && \
+git pull origin master && \
+docker-compose restart
+
+Aguarde 30 segundos!
+
+PASSO 3: USAR O RESET
+----------------------
+1. Acesse: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Menu: Configurações
+4. Aba: Ferramentas Admin
+5. Card: Reset do Sistema
+6. Clique: Reset Completo
+7. Digite: RESETAR
+8. Confirme
+
+PASSO 4: REINSTALAR PROBE
+--------------------------
+No Windows, execute:
+  CONFIGURAR_TUDO_AUTOMATICO.bat
+
+Isso irá:
+✓ Corrigir config.yaml
+✓ Adicionar servidor via API
+✓ Iniciar a probe
+
+ARQUIVOS IMPORTANTES:
+=====================
+
+Windows:
+--------
+FAZER_COMMIT_AGORA.bat          → Faz commit e push
+CONFIGURAR_TUDO_AUTOMATICO.bat  → Reinstala probe
+GUIA_COMPLETO_RESET_E_REINSTALACAO.md → Guia detalhado
+
+Linux:
+------
+EXECUTAR_NO_LINUX_AGORA.txt     → Comandos para atualizar
+api/reset_sistema.py            → Script de reset direto
+
+Frontend:
+---------
+frontend/src/components/SystemReset.js → Interface de reset
+frontend/src/components/Settings.js    → Integração no menu
+
+Backend:
+--------
+api/routers/system_reset.py     → Endpoint de reset
+api/main.py                     → Router registrado
+
+INFORMAÇÕES DO SISTEMA:
+=======================
+
+Servidor: 192.168.31.161
+Dashboard: http://192.168.31.161:3000
+Login: admin@coruja.com / admin123
+Branch Git: master (NÃO main!)
+Token Probe: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8
+Nome Probe: WIN-15GM8UTRS4K
+
+SOLUÇÃO DE PROBLEMAS:
+=====================
+
+Problema: Empresa não foi apagada
+Solução: Execute no Linux:
+  cd /home/administrador/CorujaMonitor/api
+  python reset_sistema.py
+  cd ..
+  docker-compose restart
+
+Problema: Reset não aparece no menu
+Solução: 
+  1. Limpe cache do navegador (Ctrl+Shift+Del)
+  2. Recarregue a página (Ctrl+F5)
+  3. Verifique se está na aba "Ferramentas Admin"
+
+Problema: Probe não conecta após reset
+Solução: Execute no Windows:
+  CONFIGURAR_TUDO_AUTOMATICO.bat
+
+PRÓXIMOS PASSOS:
+================
+
+1. Execute: FAZER_COMMIT_AGORA.bat
+2. Aguarde o push para GitHub
+3. Execute comandos no Linux (veja EXECUTAR_NO_LINUX_AGORA.txt)
+4. Aguarde 30 segundos
+5. Acesse o dashboard
+6. Teste o reset
+7. Reinstale a probe
+
+IMPORTANTE:
+===========
+
+⚠️ O RESET É IRREVERSÍVEL!
+⚠️ FAÇA BACKUP ANTES SE NECESSÁRIO!
+⚠️ TODOS OS DADOS SERÃO APAGADOS!
+
+Use a aba "Backup" em Configurações para criar
+um backup antes de resetar, se necessário.
+
+========================================
+  TUDO PRONTO PARA USO!
+========================================
+
+Dúvidas? Veja: GUIA_COMPLETO_RESET_E_REINSTALACAO.md
