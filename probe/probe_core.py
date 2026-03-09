@@ -281,11 +281,13 @@ class ProbeCore:
             metrics = []
             
             if version == '2c':
-                metrics = collector.collect_snmp_v2c(
-                    hostname=hostname,
+                result = collector.collect_snmp_v2c(
+                    host=hostname,
                     community=community,
                     port=port
                 )
+                # Converter resultado SNMP em métricas
+                metrics = self._parse_snmp_metrics(result, server)
             elif version == '3':
                 metrics = collector.collect_snmp_v3(
                     hostname=hostname,
@@ -313,6 +315,102 @@ class ProbeCore:
             logger.error(f"SNMP collection failed for {server.get('hostname')}: {e}")
             # Fallback to PING
             self._collect_ping_only(server)
+    
+    def _parse_snmp_metrics(self, snmp_result, server):
+        """Parse SNMP raw data into metrics format"""
+        metrics = []
+        
+        if snmp_result.get('status') != 'success':
+            logger.error(f"SNMP collection failed: {snmp_result.get('error')}")
+            return metrics
+        
+        data = snmp_result.get('data', {})
+        server_id = server.get('id')
+        
+        # OIDs padrão para Linux
+        OID_CPU_IDLE = '1.3.6.1.4.1.2021.11.11.0'
+        OID_MEM_TOTAL = '1.3.6.1.4.1.2021.4.5.0'
+        OID_MEM_AVAIL = '1.3.6.1.4.1.2021.4.6.0'
+        OID_DISK_PERCENT = '1.3.6.1.4.1.2021.9.1.9'
+        
+        # CPU
+        for oid, value in data.items():
+            if OID_CPU_IDLE in oid:
+                try:
+                    cpu_idle = float(value)
+                    cpu_usage = 100 - cpu_idle
+                    metrics.append({
+                        'type': 'cpu',
+                        'name': 'CPU',
+                        'value': cpu_usage,
+                        'unit': 'percent',
+                        'status': 'critical' if cpu_usage > 95 else ('warning' if cpu_usage > 80 else 'ok'),
+                        'server_id': server_id
+                    })
+                except ValueError:
+                    pass
+        
+        # Memória
+        mem_total = None
+        mem_avail = None
+        for oid, value in data.items():
+            if OID_MEM_TOTAL in oid:
+                try:
+                    mem_total = float(value)
+                except ValueError:
+                    pass
+            elif OID_MEM_AVAIL in oid:
+                try:
+                    mem_avail = float(value)
+                except ValueError:
+                    pass
+        
+        if mem_total and mem_avail:
+            mem_used_percent = ((mem_total - mem_avail) / mem_total) * 100
+            metrics.append({
+                'type': 'memory',
+                'name': 'Memória',
+                'value': mem_used_percent,
+                'unit': 'percent',
+                'status': 'critical' if mem_used_percent > 95 else ('warning' if mem_used_percent > 80 else 'ok'),
+                'server_id': server_id
+            })
+        
+        # Discos
+        for oid, value in data.items():
+            if OID_DISK_PERCENT in oid:
+                try:
+                    disk_percent = float(value)
+                    metrics.append({
+                        'type': 'disk',
+                        'name': 'Disco',
+                        'value': disk_percent,
+                        'unit': 'percent',
+                        'status': 'critical' if disk_percent > 95 else ('warning' if disk_percent > 85 else 'ok'),
+                        'server_id': server_id
+                    })
+                    break
+                except ValueError:
+                    pass
+        
+        # Uptime
+        for oid, value in data.items():
+            if '1.3.6.1.2.1.1.3.0' in oid:
+                try:
+                    timeticks = int(value)
+                    uptime_days = timeticks / (100 * 60 * 60 * 24)
+                    metrics.append({
+                        'type': 'system',
+                        'name': 'Uptime',
+                        'value': uptime_days,
+                        'unit': 'days',
+                        'status': 'ok',
+                        'server_id': server_id
+                    })
+                except ValueError:
+                    pass
+        
+        return metrics
     
     def _collect_ping_only(self, server):
         """Collect only PING metric for servers without credentials"""
@@ -365,6 +463,108 @@ class ProbeCore:
             
         except Exception as e:
             logger.error(f"PING failed for {server.get('hostname')}: {e}")
+    def _parse_snmp_metrics(self, snmp_result, server):
+        """Parse SNMP raw data into metrics format"""
+        metrics = []
+
+        if snmp_result.get('status') != 'success':
+            logger.error(f"SNMP collection failed: {snmp_result.get('error')}")
+            return metrics
+
+        data = snmp_result.get('data', {})
+        server_id = server.get('id')
+
+        # OIDs padrão para Linux
+        OID_CPU_IDLE = '1.3.6.1.4.1.2021.11.11.0'  # ssCpuIdle
+        OID_MEM_TOTAL = '1.3.6.1.4.1.2021.4.5.0'   # memTotalReal
+        OID_MEM_AVAIL = '1.3.6.1.4.1.2021.4.6.0'   # memAvailReal
+        OID_DISK_PATH = '1.3.6.1.4.1.2021.9.1.2'   # dskPath
+        OID_DISK_PERCENT = '1.3.6.1.4.1.2021.9.1.9' # dskPercent
+        OID_LOAD_1MIN = '1.3.6.1.4.1.2021.10.1.3.1' # laLoad.1
+
+        # CPU (converter idle para usage)
+        for oid, value in data.items():
+            if OID_CPU_IDLE in oid:
+                try:
+                    cpu_idle = float(value)
+                    cpu_usage = 100 - cpu_idle
+                    metrics.append({
+                        'type': 'cpu',
+                        'name': 'CPU',
+                        'value': cpu_usage,
+                        'unit': 'percent',
+                        'status': 'critical' if cpu_usage > 95 else ('warning' if cpu_usage > 80 else 'ok'),
+                        'server_id': server_id
+                    })
+                except ValueError:
+                    pass
+
+        # Memória
+        mem_total = None
+        mem_avail = None
+        for oid, value in data.items():
+            if OID_MEM_TOTAL in oid:
+                try:
+                    mem_total = float(value)
+                except ValueError:
+                    pass
+            elif OID_MEM_AVAIL in oid:
+                try:
+                    mem_avail = float(value)
+                except ValueError:
+                    pass
+
+        if mem_total and mem_avail:
+            mem_used_percent = ((mem_total - mem_avail) / mem_total) * 100
+            metrics.append({
+                'type': 'memory',
+                'name': 'Memória',
+                'value': mem_used_percent,
+                'unit': 'percent',
+                'status': 'critical' if mem_used_percent > 95 else ('warning' if mem_used_percent > 80 else 'ok'),
+                'server_id': server_id
+            })
+
+        # Discos (simplificado - pegar primeiro disco)
+        for oid, value in data.items():
+            if OID_DISK_PERCENT in oid:
+                try:
+                    disk_percent = float(value)
+                    # Extrair path do disco se disponível
+                    disk_name = "Disco"
+                    metrics.append({
+                        'type': 'disk',
+                        'name': disk_name,
+                        'value': disk_percent,
+                        'unit': 'percent',
+                        'status': 'critical' if disk_percent > 95 else ('warning' if disk_percent > 85 else 'ok'),
+                        'server_id': server_id
+                    })
+                    break  # Apenas primeiro disco por enquanto
+                except ValueError:
+                    pass
+
+        # Network (simplificado - apenas uptime como proxy)
+        # Uptime
+        for oid, value in data.items():
+            if '1.3.6.1.2.1.1.3.0' in oid:  # sysUpTime
+                try:
+                    # Converter timeticks para dias
+                    timeticks = int(value)
+                    uptime_days = timeticks / (100 * 60 * 60 * 24)
+                    metrics.append({
+                        'type': 'system',
+                        'name': 'Uptime',
+                        'value': uptime_days,
+                        'unit': 'days',
+                        'status': 'ok',
+                        'server_id': server_id
+                    })
+                except ValueError:
+                    pass
+
+        return metrics
+
     
     def _reconnect_api(self):
         """Try to reconnect to API by auto-discovering new URL"""
