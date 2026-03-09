@@ -929,12 +929,32 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     try {
-      await api.delete(`/sensors/${sensorId}`);
+      console.log(`Tentando deletar sensor ${sensorId}...`);
+      const response = await api.delete(`/sensors/${sensorId}`);
+      console.log('Sensor deletado com sucesso:', response);
       loadSensors(selectedServer.id);
       alert('Sensor removido com sucesso!');
     } catch (error) {
       console.error('Erro ao remover sensor:', error);
-      alert('Erro ao remover sensor: ' + (error.response?.data?.detail || error.message));
+      console.error('Error details:', {
+        message: error.message,
+        response: error.response,
+        request: error.request
+      });
+      
+      let errorMessage = 'Erro desconhecido';
+      if (error.response) {
+        // Servidor respondeu com erro
+        errorMessage = error.response.data?.detail || `Erro ${error.response.status}`;
+      } else if (error.request) {
+        // Requisição foi feita mas sem resposta
+        errorMessage = 'Sem resposta do servidor. Verifique se a API está rodando.';
+      } else {
+        // Erro ao configurar requisição
+        errorMessage = error.message;
+      }
+      
+      alert('Erro ao remover sensor: ' + errorMessage);
     }
   };
 

@@ -8,7 +8,16 @@ class DiskCollector:
         
         for partition in psutil.disk_partitions():
             try:
+                # Skip CD-ROM, DVD, and removable drives
+                if 'cdrom' in partition.opts.lower() or partition.fstype == '':
+                    continue
+                
+                # Skip if no disk in drive (common for CD/DVD drives)
                 usage = psutil.disk_usage(partition.mountpoint)
+                
+                # Skip drives with 0 total space (empty CD/DVD drives)
+                if usage.total == 0:
+                    continue
                 
                 # Create a friendly sensor name for each partition
                 drive_letter = partition.device.replace(':', '').replace('\\', '')
@@ -29,7 +38,8 @@ class DiskCollector:
                         "free": usage.free
                     }
                 })
-            except PermissionError:
+            except (PermissionError, OSError):
+                # Skip drives that can't be accessed (CD-ROM without disk, etc)
                 continue
         
         return metrics
