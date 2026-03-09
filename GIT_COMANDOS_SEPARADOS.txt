@@ -1,0 +1,83 @@
+════════════════════════════════════════════════════════════════════
+  COMANDOS GIT - COPIAR E COLAR UM POR VEZ
+════════════════════════════════════════════════════════════════════
+
+📋 PASSO 1: Ver status dos arquivos
+------------------------------------
+
+git status
+
+
+📋 PASSO 2: Adicionar todos os arquivos modificados
+----------------------------------------------------
+
+git add .
+
+
+📋 PASSO 3: Criar commit (copie tudo de uma vez)
+-------------------------------------------------
+
+git commit -m "feat: Filtro CD-ROM, Auto-start probe e correcao exclusao sensores - 09/03/2026" -m "- Adicionado filtro para ignorar CD-ROM/DVD no disk_collector.py" -m "- Criado script para instalar probe como servico Windows (auto-start)" -m "- Corrigido exclusao de sensores via interface web (fallback para desativar)" -m "- Adicionado suporte para is_active no endpoint PUT /sensors/{id}" -m "- Melhorado tratamento de erros no frontend" -m "- Corrigida porta no config.yaml (8000 em vez de 3000)" -m "- Criados scripts de instalacao e documentacao"
+
+
+📋 PASSO 4: Enviar para GitHub
+-------------------------------
+
+git push origin master
+
+
+✅ PRONTO!
+----------
+
+Código enviado para: https://github.com/Quirinodsg/CorujaMonitor
+
+
+════════════════════════════════════════════════════════════════════
+
+ALTERNATIVA - COMMIT SIMPLES (se o comando acima der erro):
+------------------------------------------------------------
+
+git commit -m "feat: Filtro CD-ROM, Auto-start probe e correcao exclusao sensores"
+
+
+════════════════════════════════════════════════════════════════════
+
+SE DER ERRO "nothing to commit":
+---------------------------------
+
+Significa que não há alterações para enviar.
+Verifique se você está na pasta correta:
+
+cd C:\Users\andre.quirino\Coruja
+
+
+SE DER ERRO "failed to push":
+------------------------------
+
+Tente:
+
+git pull origin master
+git push origin master
+
+
+SE DER ERRO "authentication failed":
+-------------------------------------
+
+Configure suas credenciais:
+
+git config --global user.name "Seu Nome"
+git config --global user.email "seu@email.com"
+
+
+════════════════════════════════════════════════════════════════════
+
+RESUMO DOS 4 COMANDOS:
+-----------------------
+
+1. git status
+2. git add .
+3. git commit -m "feat: Filtro CD-ROM, Auto-start probe e correcao exclusao sensores"
+4. git push origin master
+
+
+════════════════════════════════════════════════════════════════════

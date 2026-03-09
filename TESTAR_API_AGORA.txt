@@ -1,0 +1,110 @@
+════════════════════════════════════════════════════════════════════
+  TESTAR SE API ESTÁ RESPONDENDO
+════════════════════════════════════════════════════════════════════
+
+🔍 TESTE 1: Ping no servidor
+-----------------------------
+
+ping 192.168.31.161
+
+Deve responder com tempo < 50ms
+
+
+🔍 TESTE 2: Verificar porta 8000 (API)
+---------------------------------------
+
+No navegador, abra:
+
+http://192.168.31.161:8000/docs
+
+Deve abrir a documentação da API (Swagger)
+
+
+🔍 TESTE 3: Verificar porta 3000 (Frontend)
+--------------------------------------------
+
+No navegador, abra:
+
+http://192.168.31.161:3000
+
+Deve abrir o dashboard
+
+
+🔍 TESTE 4: Verificar containers (Linux)
+-----------------------------------------
+
+docker-compose ps
+
+Deve mostrar:
+NAME                          STATUS
+corujamonitor-api-1          Up
+corujamonitor-frontend-1     Up
+corujamonitor-postgres-1     Up
+
+
+🔍 TESTE 5: Verificar logs da API (Linux)
+------------------------------------------
+
+docker-compose logs --tail=50 api
+
+Deve mostrar logs recentes sem erros
+
+
+🔍 TESTE 6: Testar endpoint DELETE (Console do navegador)
+----------------------------------------------------------
+
+1. Abra dashboard: http://192.168.31.161:3000
+2. Pressione F12 (abrir console)
+3. Vá na aba Console
+4. Cole este código:
+
+fetch('http://192.168.31.161:8000/api/v1/sensors/999', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer ' + localStorage.getItem('token')
+  }
+})
+.then(r => r.json())
+.then(d => console.log('Resposta:', d))
+.catch(e => console.error('Erro:', e))
+
+5. Veja a resposta:
+   - "Sensor not found": API está funcionando
+   - Network error: API não está respondendo
+
+
+📊 RESULTADOS:
+--------------
+
+✅ Todos os testes passaram:
+   - API está funcionando
+   - Problema é no código (precisa git pull)
+
+❌ Algum teste falhou:
+   - API não está rodando
+   - Containers precisam ser reiniciados
+   - Firewall bloqueando porta
+
+
+🔧 SOLUÇÃO RÁPIDA:
+------------------
+
+Se API não está respondendo:
+
+cd /home/administrador/CorujaMonitor
+docker-compose restart api
+docker-compose logs -f api
+
+
+Se ainda não funcionar:
+
+docker-compose down
+docker-compose up -d
+docker-compose logs -f
+
+
+════════════════════════════════════════════════════════════════════
+
+RESUMO: Teste http://192.168.31.161:8000/docs no navegador
+
+════════════════════════════════════════════════════════════════════

@@ -1,0 +1,125 @@
+════════════════════════════════════════════════════════════════════
+  DIAGNÓSTICO - ERRO AO EXCLUIR SENSOR VIA WEB
+════════════════════════════════════════════════════════════════════
+
+⚠️ ERRO:
+--------
+"Erro ao remover sensor: Sem resposta do servidor. Verifique se a API está rodando."
+
+
+🔍 CAUSA:
+---------
+O código que corrige a exclusão está apenas na máquina de desenvolvimento.
+O servidor Linux ainda não tem o código atualizado.
+
+
+✅ SOLUÇÃO:
+-----------
+
+PASSO 1: Enviar código para Git (Máquina de Desenvolvimento)
+-------------------------------------------------------------
+
+ENVIAR_PARA_GIT_AGORA.bat
+
+
+PASSO 2: Atualizar servidor Linux
+----------------------------------
+
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker-compose restart api frontend
+
+
+PASSO 3: Verificar se API está rodando
+---------------------------------------
+
+docker-compose ps
+
+Deve mostrar:
+- api: Up
+- frontend: Up
+- postgres: Up
+
+
+PASSO 4: Testar exclusão novamente
+-----------------------------------
+
+1. Abra o dashboard: http://192.168.31.161:3000
+2. Vá em Gerenciamento → Servidores
+3. Tente excluir um sensor
+4. Deve funcionar agora
+
+
+🔧 SE AINDA NÃO FUNCIONAR:
+--------------------------
+
+1. Verificar logs da API:
+
+   docker-compose logs -f api
+
+
+2. Verificar se containers estão rodando:
+
+   docker-compose ps
+
+
+3. Reiniciar tudo:
+
+   docker-compose down
+   docker-compose up -d
+
+
+4. Limpar cache do navegador:
+
+   Ctrl+Shift+Delete
+   Ou Ctrl+F5 para recarregar
+
+
+📊 VERIFICAR CONEXÃO:
+---------------------
+
+1. Abra console do navegador (F12)
+
+2. Vá em Network
+
+3. Tente excluir sensor
+
+4. Veja se requisição DELETE aparece
+
+5. Veja o status da requisição:
+   - 200: Sucesso
+   - 404: Sensor não encontrado (vai tentar desativar)
+   - 500: Erro no servidor
+   - (failed): Sem conexão com API
+
+
+🆘 TROUBLESHOOTING:
+-------------------
+
+Problema: git pull falha
+Solução: 
+  cd /home/administrador/CorujaMonitor
+  git stash
+  git pull origin master
+  docker-compose restart api frontend
+
+Problema: Containers não iniciam
+Solução:
+  docker-compose down
+  docker-compose up -d
+  docker-compose logs -f
+
+Problema: Porta 8000 não responde
+Solução:
+  netstat -tulpn | grep 8000
+  docker-compose restart api
+
+
+════════════════════════════════════════════════════════════════════
+
+RESUMO:
+1. Execute: ENVIAR_PARA_GIT_AGORA.bat
+2. No Linux: git pull && docker-compose restart api frontend
+3. Teste exclusão novamente
+
+════════════════════════════════════════════════════════════════════
