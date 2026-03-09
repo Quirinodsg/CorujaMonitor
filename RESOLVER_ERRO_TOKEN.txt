@@ -1,0 +1,86 @@
+========================================
+  RESOLVER ERRO TOKEN
+  Solucao Rapida
+========================================
+
+PROBLEMA:
+---------
+O configurador diz "Token obrigatorio" mesmo
+quando voce digita o token.
+
+
+SOLUCAO RAPIDA:
+---------------
+
+1. Copie este arquivo para o Windows:
+   CONFIGURAR_PROBE_MANUAL.bat
+
+2. Execute como Administrador
+
+3. Digite:
+   - IP: 192.168.31.161
+   - Token: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8
+
+4. Pronto!
+
+
+ALTERNATIVA - EDITAR MANUALMENTE:
+----------------------------------
+
+1. Abra o Bloco de Notas como Administrador
+
+2. Abra o arquivo:
+   C:\Program Files\CorujaMonitor\Probe\config.yaml
+
+3. Encontre a linha:
+   token: ""
+
+4. Substitua por:
+   token: "qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8"
+
+5. Salve o arquivo
+
+6. Pronto!
+
+
+TESTAR SE FUNCIONOU:
+--------------------
+
+1. Abra PowerShell como Administrador
+
+2. Execute:
+   cd "C:\Program Files\CorujaMonitor\Probe"
+   python probe_core.py
+
+3. Verifique se conecta ao servidor
+
+4. Acesse: http://192.168.31.161:8000
+
+5. Menu: Probes
+
+6. Sua probe deve aparecer ONLINE
+
+
+INSTALAR COMO SERVICO:
+----------------------
+
+Depois de testar e funcionar:
+
+1. Menu Iniciar > Procure:
+   "Instalar Servico Coruja"
+
+2. Execute como Administrador
+
+3. A probe iniciara automaticamente
+
+
+========================================
+  TOKEN DA SUA PROBE
+========================================
+
+IP: 192.168.31.161
+Token: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8
+Nome: SRVSONDA001
+
+
+========================================

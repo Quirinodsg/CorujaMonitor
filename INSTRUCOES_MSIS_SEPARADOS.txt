@@ -1,0 +1,332 @@
+========================================
+📦 INSTALADORES MSI SEPARADOS
+   Coruja Monitor Probe v1.0.0
+========================================
+
+ARQUIVOS CRIADOS:
+• SetupDependencias.msi - Python + Dependências
+• SetupProbe.msi - Arquivos da Probe
+
+
+========================================
+🎯 POR QUE SEPARAR?
+========================================
+
+✅ VANTAGENS:
+
+1. MODULAR:
+   • Instala só o que precisa
+   • Atualiza componentes separadamente
+   • Menor tamanho de cada arquivo
+
+2. FLEXÍVEL:
+   • Python pode já estar instalado
+   • Pode reinstalar só a Probe
+   • Pode atualizar só dependências
+
+3. COMPATÍVEL:
+   • Funciona em ambientes com AD
+   • Funciona em Workgroup
+   • Sem erro 8235
+
+4. MANUTENÇÃO:
+   • Atualizar Probe sem reinstalar Python
+   • Adicionar dependências sem reinstalar tudo
+   • Diagnóstico mais fácil
+
+
+========================================
+📋 ARQUIVO 1: SetupDependencias.msi
+========================================
+
+TAMANHO: ~30 MB (inclui Python 3.11.8)
+
+O QUE INSTALA:
+✅ Python 3.11.8 (se não estiver instalado)
+✅ pip (gerenciador de pacotes)
+✅ psutil (monitoramento de sistema)
+✅ httpx (comunicação HTTP/2)
+✅ pywin32 (APIs do Windows)
+✅ pysnmp (protocolo SNMP)
+✅ pyyaml (arquivos YAML)
+
+ONDE INSTALA:
+C:\Program Files\CorujaMonitor\Dependencies\
+├── Python\
+│   └── python-3.11.8-amd64.exe
+└── Scripts\
+    ├── install_dependencies.bat
+    └── verify_dependencies.bat
+
+ATALHOS CRIADOS:
+• Menu Iniciar > Verificar Dependências
+
+TEMPO DE INSTALAÇÃO: 3-5 minutos
+
+
+========================================
+📋 ARQUIVO 2: SetupProbe.msi
+========================================
+
+TAMANHO: ~2 MB (só arquivos Python)
+
+O QUE INSTALA:
+✅ Arquivos Python da Probe
+✅ Coletores (9 tipos)
+✅ Scripts BAT de configuração
+✅ Documentação
+✅ Atalhos
+
+ONDE INSTALA:
+C:\Program Files\CorujaMonitor\Probe\
+├── probe_core.py
+├── discovery_server.py
+├── configurar_probe.bat
+├── install.bat
+├── install_service.bat
+├── diagnostico_probe.bat
+├── verificar_instalacao.bat
+├── collectors\
+│   ├── system_collector.py
+│   ├── ping_collector.py
+│   ├── snmp_collector.py
+│   ├── docker_collector.py
+│   ├── kubernetes_collector.py
+│   └── ... (9 coletores)
+└── logs\
+
+ATALHOS CRIADOS:
+• Desktop: Configurar Coruja Probe
+• Menu Iniciar: Configurar Coruja Probe
+• Menu Iniciar: Instalar Serviço Coruja
+• Menu Iniciar: Diagnóstico Coruja Probe
+• Menu Iniciar: Verificar Instalação
+
+TEMPO DE INSTALAÇÃO: 1 minuto
+
+
+========================================
+🚀 COMO GERAR OS MSIS
+========================================
+
+REQUISITOS:
+✅ WiX Toolset v3.11 instalado
+✅ Windows PowerShell
+✅ Permissões de Administrador
+
+PASSO A PASSO:
+
+1. Abra PowerShell como Administrador
+
+2. Navegue até a pasta do projeto:
+   cd "C:\Users\andre.quirino\Coruja Monitor"
+
+3. Execute o script:
+   .\GERAR_MSIS_SEPARADOS.ps1
+
+4. Aguarde a compilação (2-3 minutos)
+
+5. Os MSIs estarão em:
+   installer\output\
+
+
+========================================
+📦 ORDEM DE INSTALAÇÃO
+========================================
+
+⚠️ IMPORTANTE: Instale nesta ordem!
+
+1️⃣ PRIMEIRO: SetupDependencias.msi
+   • Clique direito > Executar como Administrador
+   • Siga o assistente
+   • Python será instalado automaticamente
+   • Dependências serão instaladas
+   • Tempo: 3-5 minutos
+
+2️⃣ DEPOIS: SetupProbe.msi
+   • Clique direito > Executar como Administrador
+   • Siga o assistente
+   • Arquivos serão copiados
+   • Atalhos serão criados
+   • Tempo: 1 minuto
+
+3️⃣ CONFIGURAR:
+   • Desktop > Configurar Coruja Probe
+   • Digite IP: 192.168.31.161
+   • Digite token da probe
+
+4️⃣ INSTALAR SERVIÇO (Opcional):
+   • Menu Iniciar > Instalar Serviço Coruja
+   • Probe inicia automaticamente com Windows
+
+
+========================================
+✅ VERIFICAR INSTALAÇÃO
+========================================
+
+OPÇÃO 1: Menu Iniciar
+• Verificar Dependências (verifica Python)
+• Verificar Instalação (verifica Probe)
+
+OPÇÃO 2: Manualmente
+1. Abrir CMD como Administrador
+2. Testar Python:
+   python --version
+3. Testar dependências:
+   python -c "import psutil, httpx, win32api, pysnmp, yaml"
+4. Verificar arquivos:
+   dir "C:\Program Files\CorujaMonitor\Probe"
+
+
+========================================
+🔧 CENÁRIOS DE USO
+========================================
+
+CENÁRIO 1: Instalação Nova
+→ Instalar SetupDependencias.msi
+→ Instalar SetupProbe.msi
+→ Configurar
+
+CENÁRIO 2: Python Já Instalado
+→ Pular SetupDependencias.msi
+→ Instalar SetupProbe.msi
+→ Configurar
+
+CENÁRIO 3: Atualizar Probe
+→ Desinstalar SetupProbe.msi (Painel de Controle)
+→ Instalar nova versão SetupProbe.msi
+→ Configuração mantida
+
+CENÁRIO 4: Atualizar Python
+→ Desinstalar SetupDependencias.msi
+→ Instalar nova versão SetupDependencias.msi
+→ Probe continua funcionando
+
+CENÁRIO 5: Reinstalar Tudo
+→ Desinstalar SetupProbe.msi
+→ Desinstalar SetupDependencias.msi
+→ Instalar SetupDependencias.msi
+→ Instalar SetupProbe.msi
+
+
+========================================
+🎯 DISTRIBUIÇÃO
+========================================
+
+PARA CLIENTES:
+
+1. Envie AMBOS os arquivos:
+   • SetupDependencias.msi
+   • SetupProbe.msi
+
+2. Envie instruções:
+   • Instalar nesta ordem
+   • Executar como Administrador
+   • Configurar IP e token
+
+3. Crie um README.txt:
+   • Ordem de instalação
+   • IP do servidor
+   • Como obter token
+
+
+EXEMPLO DE README PARA CLIENTE:
+---
+INSTALAÇÃO CORUJA MONITOR PROBE
+
+1. Execute SetupDependencias.msi (como Admin)
+2. Execute SetupProbe.msi (como Admin)
+3. Desktop > Configurar Coruja Probe
+4. IP: 192.168.31.161
+5. Token: [solicite ao administrador]
+
+Suporte: admin@coruja.com
+---
+
+
+========================================
+⚠️ SOLUÇÃO DE PROBLEMAS
+========================================
+
+ERRO: "Python não encontrado"
+SOLUÇÃO:
+• Reinstale SetupDependencias.msi
+• Verifique: Menu Iniciar > Verificar Dependências
+
+ERRO: "Dependências faltando"
+SOLUÇÃO:
+• Execute: C:\Program Files\CorujaMonitor\Dependencies\Scripts\install_dependencies.bat
+• Ou reinstale SetupDependencias.msi
+
+ERRO: "Probe não encontrada"
+SOLUÇÃO:
+• Reinstale SetupProbe.msi
+• Verifique: C:\Program Files\CorujaMonitor\Probe
+
+ERRO: "Atalhos não funcionam"
+SOLUÇÃO:
+• Reinstale SetupProbe.msi
+• Verifique se arquivos BAT existem
+
+ERRO: "Serviço não inicia"
+SOLUÇÃO:
+• Verifique Python: python --version
+• Verifique dependências
+• Execute: diagnostico_probe.bat
+
+
+========================================
+📊 COMPARAÇÃO
+========================================
+
+INSTALADOR ÚNICO (BAT):
+✅ Tudo em um arquivo
+✅ Não precisa WiX
+❌ Maior tamanho
+❌ Reinstala tudo sempre
+❌ Menos profissional
+
+INSTALADORES SEPARADOS (MSI):
+✅ Modular
+✅ Profissional
+✅ Aparece no Painel de Controle
+✅ Atualização seletiva
+✅ Menor tamanho individual
+❌ Precisa WiX para compilar
+❌ Dois arquivos para distribuir
+
+
+========================================
+🎓 RECOMENDAÇÃO
+========================================
+
+USE INSTALADORES SEPARADOS QUANDO:
+✅ Distribuição para múltiplos clientes
+✅ Ambiente corporativo
+✅ Precisa atualizar componentes
+✅ Quer controle granular
+✅ Quer aparecer no Painel de Controle
+
+USE INSTALADOR ÚNICO QUANDO:
+✅ Instalação rápida
+✅ Teste interno
+✅ Não tem WiX instalado
+✅ Quer simplicidade máxima
+
+
+========================================
+📞 SUPORTE
+========================================
+
+Servidor: 192.168.31.161
+Web: http://192.168.31.161:3000
+Login: admin@coruja.com
+Senha: admin123
+
+
+========================================
+✅ INSTALADORES MSI PROFISSIONAIS!
+========================================
+
+Dois arquivos MSI separados para máxima flexibilidade!
+

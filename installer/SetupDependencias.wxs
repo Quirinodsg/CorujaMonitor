@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Coruja Monitor - Python e Dependências" 
+           Language="1033" 
+           Version="1.0.0" 
+           Manufacturer="Coruja Monitor" 
+           UpgradeCode="A1B2C3D4-E5F6-7890-ABCD-123456789ABC">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="Instala Python 3.11 e dependências necessárias para Coruja Monitor Probe"
+             Comments="Instalador de Dependências - Coruja Monitor v1.0.0" />
+
+    <MajorUpgrade DowngradeErrorMessage="Uma versão mais recente já está instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Ícone do instalador -->
+    <Icon Id="icon.ico" SourceFile="$(var.SourceDir)\probe\coruja-icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
+    <!-- Propriedades -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="PYTHON_INSTALLED">
+      <RegistrySearch Id="PythonInstalled" 
+                      Root="HKLM" 
+                      Key="SOFTWARE\Python\PythonCore\3.11\InstallPath" 
+                      Type="raw" />
+    </Property>
+
+    <!-- UI -->
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SourceDir)\installer\License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.SourceDir)\installer\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.SourceDir)\installer\dialog.bmp" />
+
+    <!-- Estrutura de diretórios -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="CompanyFolder" Name="CorujaMonitor">
+          <Directory Id="INSTALLFOLDER" Name="Dependencies">
+            <Directory Id="PythonInstallerFolder" Name="Python" />
+            <Directory Id="ScriptsFolder" Name="Scripts" />
+          </Directory>
+        </Directory>
+      </Directory>
+      
+      <!-- Menu Iniciar -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Coruja Monitor" />
+      </Directory>
+    </Directory>
+
+    <!-- Componentes -->
+    <DirectoryRef Id="PythonInstallerFolder">
+      <Component Id="PythonInstaller" Guid="B1C2D3E4-F5A6-7890-BCDE-234567890BCD">
+        <File Id="PythonExe" 
+              Source="$(var.SourceDir)\python-3.11.8-amd64.exe" 
+              KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="ScriptsFolder">
+      <Component Id="InstallScripts" Guid="C2D3E4F5-A6B7-8901-CDEF-345678901CDE">
+        <File Id="InstallDepsScript" 
+              Source="$(var.SourceDir)\installer\install_dependencies.bat" 
+              KeyPath="yes" />
+        <File Id="VerifyScript" 
+              Source="$(var.SourceDir)\installer\verify_dependencies.bat" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalhos Menu Iniciar -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="ApplicationShortcuts" Guid="D3E4F5A6-B7C8-9012-DEFG-456789012DEF">
+        <Shortcut Id="VerifyDepsShortcut"
+                  Name="Verificar Dependências"
+                  Description="Verifica se Python e dependências estão instalados"
+                  Target="[ScriptsFolder]verify_dependencies.bat"
+                  WorkingDirectory="ScriptsFolder" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Dependencies" 
+                       Name="installed" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Custom Actions -->
+    <CustomAction Id="InstallPython"
+                  Directory="PythonInstallerFolder"
+                  ExeCommand="[PythonInstallerFolder]python-3.11.8-amd64.exe /quiet InstallAllUsers=1 PrependPath=1 Include_pip=1"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <CustomAction Id="InstallDependencies"
+                  Directory="ScriptsFolder"
+                  ExeCommand="cmd.exe /c &quot;[ScriptsFolder]install_dependencies.bat&quot;"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="check" />
+
+    <CustomAction Id="SetInstallPythonCommand"
+                  Property="InstallPython"
+                  Value="[PythonInstallerFolder]python-3.11.8-amd64.exe"
+                  Execute="immediate" />
+
+    <CustomAction Id="SetInstallDepsCommand"
+                  Property="InstallDependencies"
+                  Value="[ScriptsFolder]install_dependencies.bat"
+                  Execute="immediate" />
+
+    <!-- Sequência de instalação -->
+    <InstallExecuteSequence>
+      <Custom Action="SetInstallPythonCommand" Before="InstallPython">NOT PYTHON_INSTALLED</Custom>
+      <Custom Action="InstallPython" After="InstallFiles">NOT PYTHON_INSTALLED</Custom>
+      <Custom Action="SetInstallDepsCommand" Before="InstallDependencies">NOT Installed</Custom>
+      <Custom Action="InstallDependencies" After="InstallPython">NOT Installed</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" 
+             Title="Coruja Monitor - Dependências" 
+             Level="1"
+             Description="Instala Python 3.11 e todas as dependências necessárias">
+      <ComponentRef Id="PythonInstaller" />
+      <ComponentRef Id="InstallScripts" />
+      <ComponentRef Id="ApplicationShortcuts" />
+    </Feature>
+
+    <!-- Propriedades do Painel de Controle -->
+    <Property Id="ARPURLINFOABOUT" Value="http://192.168.31.161:3000" />
+    <Property Id="ARPCONTACT" Value="admin@coruja.com" />
+    <Property Id="ARPCOMMENTS" Value="Python 3.11 e dependências para Coruja Monitor Probe" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+  </Product>
+</Wix>

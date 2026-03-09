@@ -1,0 +1,145 @@
+========================================
+  GUIA RAPIDO - PROBE INSTALADA
+  Proximos Passos
+========================================
+
+SITUACAO ATUAL:
+---------------
+✓ Python instalado (3.11.8)
+✓ Dependencias instaladas
+✓ Probe instalada em: C:\Program Files\CorujaMonitor\Probe
+✓ Probe aparece ONLINE no dashboard (SRVSONDA001)
+
+
+PASSO 1 - CONFIGURAR TOKEN:
+----------------------------
+
+Execute como Administrador:
+
+   CONFIGURAR_PROBE_MANUAL.bat
+
+Digite:
+- IP: 192.168.31.161
+- Token: qozrs7hP8ZcrzXc5odjHw60NVejB0RHIeTaFurorDE8
+
+
+PASSO 2 - ATIVAR COMO SERVICO:
+-------------------------------
+
+Execute como Administrador:
+
+   ATIVAR_PROBE_SERVICO.bat
+
+Isso faz a probe:
+✓ Iniciar automaticamente com o Windows
+✓ Reiniciar automaticamente se falhar
+✓ Executar em segundo plano
+
+
+PASSO 3 - VERIFICAR:
+---------------------
+
+1. Acesse: http://192.168.31.161:8000
+
+2. Login: admin@coruja.com / admin123
+
+3. Menu: Probes
+
+4. Verifique se SRVSONDA001 esta ONLINE
+
+
+COMANDOS UTEIS:
+---------------
+
+Parar probe:
+   net stop CorujaProbe
+
+Iniciar probe:
+   net start CorujaProbe
+
+Reiniciar probe:
+   net stop CorujaProbe && net start CorujaProbe
+
+Ver status:
+   sc query CorujaProbe
+
+Ver logs:
+   C:\Program Files\CorujaMonitor\Probe\logs\probe.log
+
+
+TESTAR MANUALMENTE (SEM SERVICO):
+----------------------------------
+
+1. Abra PowerShell como Administrador
+
+2. Execute:
+   cd "C:\Program Files\CorujaMonitor\Probe"
+   python probe_core.py
+
+3. Deixe rodando e verifique no dashboard
+
+
+DESINSTALAR:
+------------
+
+1. Parar servico:
+   net stop CorujaProbe
+
+2. Remover servico:
+   sc delete CorujaProbe
+
+3. Remover arquivos:
+   rd /s /q "C:\Program Files\CorujaMonitor"
+
+
+PROBLEMAS COMUNS:
+-----------------
+
+Probe nao aparece no dashboard:
+- Verifique o token no config.yaml
+- Verifique se o servico esta rodando
+- Verifique os logs
+
+Servico nao inicia:
+- Verifique se Python esta instalado
+- Verifique se as dependencias estao instaladas
+- Execute manualmente para ver erros
+
+Erro de conexao:
+- Verifique se o servidor esta acessivel
+- Ping 192.168.31.161
+- Verifique firewall
+
+
+SUPORTE:
+--------
+
+Logs da probe:
+C:\Program Files\CorujaMonitor\Probe\logs\probe.log
+
+Dashboard:
+http://192.168.31.161:8000
+
+Credenciais:
+admin@coruja.com / admin123
+
+
+========================================
+  RESUMO DOS ARQUIVOS
+========================================
+
+CONFIGURAR_PROBE_MANUAL.bat
+  - Configura IP e token da probe
+
+ATIVAR_PROBE_SERVICO.bat
+  - Instala probe como servico do Windows
+  - Inicia automaticamente
+
+RESOLVER_ERRO_TOKEN.txt
+  - Solucoes para erro de token
+
+COMO_INSTALAR_PROBE.txt
+  - Guia completo de instalacao
+
+
+========================================

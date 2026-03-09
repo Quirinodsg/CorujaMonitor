@@ -1,0 +1,210 @@
+========================================
+  INICIAR PROBE E VER METRICAS
+  Guia Completo Passo a Passo
+========================================
+
+PROBLEMA ATUAL:
+---------------
+✓ Probe instalada
+✓ Python instalado
+✓ Configuração OK
+✗ Probe NÃO está rodando
+✗ Site vazio (sem métricas)
+
+
+SOLUÇÃO COMPLETA:
+-----------------
+
+PASSO 1 - INICIAR A PROBE:
+---------------------------
+
+Execute como Administrador:
+
+   EXECUTAR_PROBE_DIRETO.bat
+
+Isso vai:
+- Iniciar a probe
+- Mostrar logs em tempo real
+- Manter janela aberta
+
+IMPORTANTE: NÃO FECHE A JANELA!
+
+
+PASSO 2 - AGUARDAR INICIALIZAÇÃO:
+----------------------------------
+
+Aguarde 10-15 segundos.
+
+Você verá mensagens como:
+- "Probe iniciando..."
+- "Conectando ao servidor..."
+- "Coletando métricas..."
+
+
+PASSO 3 - ADICIONAR SERVIDOR NO DASHBOARD:
+-------------------------------------------
+
+1. Abra navegador
+
+2. Acesse: http://192.168.31.161:8000
+
+3. Login:
+   Email: admin@coruja.com
+   Senha: admin123
+
+4. Menu lateral > "Servidores"
+
+5. Clique em "+ Novo Servidor" (botão azul)
+
+6. Preencha o formulário:
+   
+   Nome: WIN-15GM8UTRS4K
+   IP: 127.0.0.1
+   Descrição: Servidor de Sondas Windows
+   Tenant: Techbiz
+   Probe: WIN-15GM8UTRS4K
+   Ativo: Sim (marcado)
+
+7. Clique em "Salvar"
+
+
+PASSO 4 - AGUARDAR PRIMEIRA COLETA:
+------------------------------------
+
+A probe coleta métricas a cada 60 segundos.
+
+Aguarde 60-90 segundos após salvar o servidor.
+
+
+PASSO 5 - ATUALIZAR PÁGINA:
+----------------------------
+
+1. Pressione F5 ou clique em "Atualizar"
+
+2. Você deve ver:
+   - Nome: WIN-15GM8UTRS4K
+   - Status: Online (verde)
+   - CPU: XX%
+   - Memória: XX%
+   - Disco: XX%
+   - Última atualização: agora
+
+
+PASSO 6 - VER DETALHES:
+------------------------
+
+1. Clique no servidor WIN-15GM8UTRS4K
+
+2. Você verá:
+   - Gráficos de CPU
+   - Gráficos de Memória
+   - Gráficos de Disco
+   - Lista de processos
+   - Informações do sistema
+
+
+SE NÃO APARECER DADOS:
+-----------------------
+
+1. Verifique se a janela da probe está aberta
+
+2. Veja os logs na janela da probe
+
+3. Verifique se há erros em vermelho
+
+4. Execute: VERIFICAR_METRICAS.bat
+
+
+PARA DEIXAR RODANDO PERMANENTE:
+--------------------------------
+
+Depois de testar e funcionar:
+
+1. Feche a janela da probe (Ctrl+C)
+
+2. Execute: RECRIAR_SERVICO_PROBE.bat
+
+3. Isso configura para iniciar automaticamente
+
+
+COMANDOS RÁPIDOS:
+-----------------
+
+Ver se probe está rodando:
+   tasklist | findstr python
+
+Ver logs em tempo real:
+   powershell -Command "Get-Content 'C:\Program Files\CorujaMonitor\Probe\logs\probe.log' -Wait"
+
+Testar conectividade:
+   curl http://192.168.31.161:8000/health
+
+
+CHECKLIST COMPLETO:
+-------------------
+
+□ 1. Executar EXECUTAR_PROBE_DIRETO.bat
+□ 2. Aguardar 10 segundos
+□ 3. Acessar http://192.168.31.161:8000
+□ 4. Login: admin@coruja.com / admin123
+□ 5. Menu: Servidores > + Novo Servidor
+□ 6. Nome: WIN-15GM8UTRS4K
+□ 7. IP: 127.0.0.1
+□ 8. Probe: WIN-15GM8UTRS4K
+□ 9. Salvar
+□ 10. Aguardar 60 segundos
+□ 11. Atualizar página (F5)
+□ 12. Ver métricas!
+
+
+EXEMPLO DO QUE VOCÊ VERÁ:
+--------------------------
+
+Dashboard > Servidores:
+
+┌─────────────────────────────────────┐
+│ WIN-15GM8UTRS4K        ● Online     │
+│ 127.0.0.1                           │
+│                                     │
+│ CPU: 25%  ▓▓▓▓▓░░░░░               │
+│ RAM: 60%  ▓▓▓▓▓▓▓▓░░               │
+│ Disk: 45% ▓▓▓▓▓░░░░░               │
+│                                     │
+│ Última atualização: há 5 segundos  │
+└─────────────────────────────────────┘
+
+
+PROBLEMAS COMUNS:
+-----------------
+
+"Probe não inicia":
+→ Verifique se Python está instalado
+→ Execute: python --version
+
+"Servidor não aparece":
+→ Aguarde 60 segundos
+→ Atualize a página (F5)
+
+"Status Offline":
+→ Verifique se probe está rodando
+→ Veja logs da probe
+
+"Erro de conexão":
+→ Verifique se servidor está acessível
+→ ping 192.168.31.161
+
+
+========================================
+  EXECUTE AGORA
+========================================
+
+1. EXECUTAR_PROBE_DIRETO.bat (como Admin)
+2. Aguarde ver "Probe iniciando..."
+3. Acesse http://192.168.31.161:8000
+4. Adicione servidor
+5. Aguarde 60 segundos
+6. F5
+7. Pronto!
+
+
+========================================

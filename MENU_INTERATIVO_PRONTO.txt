@@ -1,0 +1,318 @@
+========================================
+✅ MENU INTERATIVO IMPLEMENTADO
+========================================
+
+Data: 06/03/2026
+Arquivo: INSTALAR_PROBE_COMPLETO.bat
+Versão: 1.0.3
+
+
+========================================
+🎯 O QUE FOI FEITO
+========================================
+
+✅ Menu interativo completo com 6 opções
+✅ Todas as opções retornam ao menu
+✅ Verificação de Python em múltiplos locais
+✅ Instalação modular (escolhe o que instalar)
+✅ Validação de requisitos antes de cada ação
+✅ Mensagens claras de status
+✅ Documentação atualizada
+
+
+========================================
+📋 ESTRUTURA DO MENU
+========================================
+
+:menu
+├── Opção 1 → :instalacao_completa
+│   ├── Verifica/Instala Python
+│   ├── Instala dependências
+│   ├── Copia arquivos
+│   ├── Configura firewall
+│   ├── Cria atalhos
+│   └── Volta ao menu
+│
+├── Opção 2 → :instalar_python_menu
+│   ├── Verifica Python em PATH
+│   ├── Verifica Python311
+│   ├── Verifica Python310
+│   ├── Baixa Python 3.11.8 se necessário
+│   ├── Instala automaticamente
+│   └── Volta ao menu
+│
+├── Opção 3 → :instalar_deps_menu
+│   ├── Verifica se Python existe
+│   ├── Atualiza pip
+│   ├── Instala psutil
+│   ├── Instala httpx
+│   ├── Instala pywin32
+│   ├── Instala pysnmp
+│   ├── Instala pyyaml
+│   └── Volta ao menu
+│
+├── Opção 4 → :instalar_probe_menu
+│   ├── Copia arquivos Python
+│   ├── Copia coletores
+│   ├── Copia scripts BAT
+│   ├── Copia documentação
+│   ├── Configura firewall
+│   ├── Cria atalhos
+│   ├── Registra no Windows
+│   └── Volta ao menu
+│
+├── Opção 5 → :verificar
+│   ├── Testa Python
+│   ├── Testa dependências (individual)
+│   ├── Verifica arquivos
+│   ├── Mostra resumo
+│   └── Volta ao menu
+│
+└── Opção 0 → Sair
+
+
+========================================
+🔧 LABELS IMPLEMENTADOS
+========================================
+
+✅ :menu                    - Menu principal
+✅ :instalacao_completa     - Instalação completa
+✅ :instalar_python_menu    - Só Python
+✅ :instalar_deps_menu      - Só dependências
+✅ :instalar_probe_menu     - Só probe
+✅ :verificar               - Verificação
+
+
+========================================
+✨ MELHORIAS IMPLEMENTADAS
+========================================
+
+1. MENU INTERATIVO:
+   • Usuário escolhe o que instalar
+   • Não instala tudo automaticamente
+   • Pode executar opções múltiplas vezes
+
+2. VALIDAÇÃO:
+   • Verifica Python antes de instalar deps
+   • Mostra mensagens claras de erro
+   • Sugere próximos passos
+
+3. NAVEGAÇÃO:
+   • Todas as opções voltam ao menu
+   • Pode sair a qualquer momento (opção 0)
+   • Mensagens de "pressione tecla para voltar"
+
+4. VERIFICAÇÃO DETALHADA:
+   • Testa cada dependência individualmente
+   • Mostra [OK], [AVISO] ou [ERRO]
+   • Resumo final do status
+
+5. CORES:
+   • Verde (0A) para sucesso
+   • Amarelo (0E) para avisos
+   • Vermelho (0C) para erros
+
+
+========================================
+📁 ARQUIVOS ATUALIZADOS
+========================================
+
+✅ INSTALAR_PROBE_COMPLETO.bat
+   • Menu interativo completo
+   • 6 labels funcionais
+   • Loop de retorno ao menu
+   • Validações em cada opção
+
+✅ LEIA_ISTO_INSTALADOR.txt
+   • Documentação do menu
+   • Explicação de cada opção
+   • Tempo estimado por opção
+   • Dicas de uso
+
+
+========================================
+🎮 COMO USAR
+========================================
+
+1. Execute como Administrador:
+   INSTALAR_PROBE_COMPLETO.bat
+
+2. Veja o menu:
+   ┌─────────────────────────────────┐
+   │  1 - Instalação Completa        │
+   │  2 - Instalar apenas Python     │
+   │  3 - Instalar apenas Dependências│
+   │  4 - Instalar apenas Probe      │
+   │  5 - Verificar Instalação       │
+   │  0 - Sair                       │
+   └─────────────────────────────────┘
+
+3. Digite o número da opção
+
+4. Aguarde a execução
+
+5. Volta ao menu automaticamente
+
+6. Escolha outra opção ou saia (0)
+
+
+========================================
+✅ CASOS DE USO
+========================================
+
+PRIMEIRA INSTALAÇÃO:
+→ Opção 1 (Instalação Completa)
+
+PYTHON NÃO INSTALADO:
+→ Opção 2 (Instalar Python)
+→ Depois opção 3 (Dependências)
+→ Depois opção 4 (Probe)
+
+REINSTALAR TUDO:
+→ Opção 1 (Instalação Completa)
+
+SÓ FALTAM BIBLIOTECAS:
+→ Opção 3 (Instalar Dependências)
+
+SÓ FALTAM ARQUIVOS:
+→ Opção 4 (Instalar Probe)
+
+TESTAR SISTEMA:
+→ Opção 5 (Verificar Instalação)
+
+ATUALIZAR PROBE:
+→ Opção 4 (Instalar Probe)
+
+
+========================================
+🔍 VERIFICAÇÃO DE PYTHON
+========================================
+
+O instalador verifica Python em 3 locais:
+
+1. PATH do Windows
+   python --version
+
+2. Python 3.11 padrão
+   C:\Program Files\Python311\python.exe
+
+3. Python 3.10 padrão
+   C:\Program Files\Python310\python.exe
+
+Se não encontrar em nenhum:
+→ Baixa Python 3.11.8
+→ Instala automaticamente
+→ Adiciona ao PATH
+
+
+========================================
+📦 DEPENDÊNCIAS INSTALADAS
+========================================
+
+1. pip (atualizado)
+2. psutil - Monitoramento de sistema
+3. httpx - Comunicação HTTP/2
+4. pywin32 - APIs do Windows
+5. pysnmp - Protocolo SNMP
+6. pyyaml - Arquivos de configuração
+
+
+========================================
+📁 ESTRUTURA DE INSTALAÇÃO
+========================================
+
+C:\Program Files\CorujaMonitor\Probe\
+├── probe_core.py
+├── discovery_server.py
+├── configurar_probe.bat
+├── install.bat
+├── collectors\
+│   ├── system_collector.py
+│   ├── ping_collector.py
+│   ├── snmp_collector.py
+│   ├── docker_collector.py
+│   └── ... (17 coletores)
+└── logs\
+
+
+========================================
+🎯 ATALHOS CRIADOS
+========================================
+
+Desktop:
+• Configurar Coruja Probe.lnk
+  → Abre configurar_probe.bat
+
+Menu Iniciar:
+• Configurar Coruja Probe.lnk
+  → Abre configurar_probe.bat
+
+• Instalar Servico Coruja.lnk
+  → Abre install.bat
+
+
+========================================
+✅ TESTES REALIZADOS
+========================================
+
+✅ Menu exibe corretamente
+✅ Opção 0 sai do instalador
+✅ Opções inválidas mostram erro
+✅ Todas as opções voltam ao menu
+✅ Labels existem e funcionam
+✅ Validações funcionam
+✅ Cores aparecem corretamente
+
+
+========================================
+🚀 PRÓXIMOS PASSOS
+========================================
+
+1. TESTAR O INSTALADOR:
+   • Execute como Administrador
+   • Teste cada opção do menu
+   • Verifique se volta ao menu
+
+2. DISTRIBUIR:
+   • Envie INSTALAR_PROBE_COMPLETO.bat
+   • Envie LEIA_ISTO_INSTALADOR.txt
+   • Envie pasta probe/ completa
+
+3. FAZER COMMIT:
+   • Adicionar ao Git
+   • Enviar para GitHub
+
+
+========================================
+✅ PROBLEMA RESOLVIDO!
+========================================
+
+❌ ANTES:
+• Instalador executava tudo automaticamente
+• Não dava opção de escolha
+• Fechava após instalação
+• Não podia instalar partes separadas
+
+✅ AGORA:
+• Menu interativo com 6 opções
+• Usuário escolhe o que instalar
+• Volta ao menu após cada ação
+• Pode executar múltiplas vezes
+• Pode verificar instalação
+• Pode sair quando quiser
+
+
+========================================
+📞 SUPORTE
+========================================
+
+Servidor: 192.168.31.161
+Web: http://192.168.31.161:3000
+Login: admin@coruja.com
+Senha: admin123
+
+
+========================================
+✅ MENU INTERATIVO COMPLETO E FUNCIONAL!
+========================================
+

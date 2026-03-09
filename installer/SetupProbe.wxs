@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" 
+           Name="Coruja Monitor Probe" 
+           Language="1033" 
+           Version="1.0.0" 
+           Manufacturer="Coruja Monitor" 
+           UpgradeCode="E5F6A7B8-C9D0-1234-EFGH-567890123EFG">
+    
+    <Package InstallerVersion="200" 
+             Compressed="yes" 
+             InstallScope="perMachine" 
+             Description="Agente de monitoramento Coruja Monitor Probe"
+             Comments="Instalador da Probe - Coruja Monitor v1.0.0" />
+
+    <MajorUpgrade DowngradeErrorMessage="Uma versão mais recente já está instalada." />
+    <MediaTemplate EmbedCab="yes" />
+
+    <!-- Ícone do instalador -->
+    <Icon Id="icon.ico" SourceFile="$(var.SourceDir)\probe\coruja-icon.ico" />
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
+    <!-- Propriedades -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLFOLDER" />
+    <Property Id="PYTHON_INSTALLED">
+      <RegistrySearch Id="PythonInstalled" 
+                      Root="HKLM" 
+                      Key="SOFTWARE\Python\PythonCore\3.11\InstallPath" 
+                      Type="raw" />
+    </Property>
+
+    <!-- UI -->
+    <UIRef Id="WixUI_InstallDir" />
+    <WixVariable Id="WixUILicenseRtf" Value="$(var.SourceDir)\installer\License.rtf" />
+    <WixVariable Id="WixUIBannerBmp" Value="$(var.SourceDir)\installer\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(var.SourceDir)\installer\dialog.bmp" />
+
+    <!-- Estrutura de diretórios -->
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="CompanyFolder" Name="CorujaMonitor">
+          <Directory Id="INSTALLFOLDER" Name="Probe">
+            <Directory Id="CollectorsFolder" Name="collectors" />
+            <Directory Id="LogsFolder" Name="logs" />
+          </Directory>
+        </Directory>
+      </Directory>
+      
+      <!-- Desktop -->
+      <Directory Id="DesktopFolder" Name="Desktop" />
+      
+      <!-- Menu Iniciar -->
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Coruja Monitor" />
+      </Directory>
+    </Directory>
+
+    <!-- Componentes - Arquivos Python principais -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="ProbeCore" Guid="F6A7B8C9-D0E1-2345-FGHI-678901234FGH">
+        <File Id="ProbeCoreFile" Source="$(var.SourceDir)\probe\probe_core.py" KeyPath="yes" />
+        <File Id="DiscoveryServer" Source="$(var.SourceDir)\probe\discovery_server.py" />
+        <File Id="ConfigFile" Source="$(var.SourceDir)\probe\config.yaml" />
+        <File Id="RequirementsFile" Source="$(var.SourceDir)\probe\requirements.txt" />
+      </Component>
+
+      <Component Id="ProbeScripts" Guid="A7B8C9D0-E1F2-3456-GHIJ-789012345GHI">
+        <File Id="ConfigureBat" Source="$(var.SourceDir)\probe\configurar_probe.bat" KeyPath="yes" />
+        <File Id="InstallBat" Source="$(var.SourceDir)\probe\install.bat" />
+        <File Id="InstallServiceBat" Source="$(var.SourceDir)\probe\install_service.bat" />
+        <File Id="DiagnosticoBat" Source="$(var.SourceDir)\probe\diagnostico_probe.bat" />
+        <File Id="VerificarBat" Source="$(var.SourceDir)\probe\verificar_instalacao.bat" />
+      </Component>
+
+      <Component Id="ProbeDocumentation" Guid="B8C9D0E1-F2A3-4567-HIJK-890123456HIJ">
+        <File Id="ReadmeFile" Source="$(var.SourceDir)\probe\README.md" KeyPath="yes" />
+        <File Id="InstalacaoFile" Source="$(var.SourceDir)\probe\INSTALACAO.md" />
+        <File Id="GuiaServicoFile" Source="$(var.SourceDir)\probe\GUIA_INSTALACAO_SERVICO.md" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Componentes - Coletores -->
+    <DirectoryRef Id="CollectorsFolder">
+      <Component Id="Collectors" Guid="C9D0E1F2-A3B4-5678-IJKL-901234567IJK">
+        <File Id="SystemCollector" Source="$(var.SourceDir)\probe\collectors\system_collector.py" KeyPath="yes" />
+        <File Id="PingCollector" Source="$(var.SourceDir)\probe\collectors\ping_collector.py" />
+        <File Id="SNMPCollector" Source="$(var.SourceDir)\probe\collectors\snmp_collector.py" />
+        <File Id="DockerCollector" Source="$(var.SourceDir)\probe\collectors\docker_collector.py" />
+        <File Id="GenericCollector" Source="$(var.SourceDir)\probe\collectors\generic_collector.py" />
+        <File Id="KubernetesCollector" Source="$(var.SourceDir)\probe\collectors\kubernetes_collector.py" />
+        <File Id="WMIRemoteCollector" Source="$(var.SourceDir)\probe\collectors\wmi_remote_collector.py" />
+        <File Id="SNMPACCollector" Source="$(var.SourceDir)\probe\collectors\snmp_ac_collector.py" />
+        <File Id="SNMPAPCollector" Source="$(var.SourceDir)\probe\collectors\snmp_ap_collector.py" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Pasta de logs (vazia) -->
+    <DirectoryRef Id="LogsFolder">
+      <Component Id="LogsFolder" Guid="D0E1F2A3-B4C5-6789-JKLM-012345678JKL">
+        <CreateFolder />
+        <RemoveFolder Id="RemoveLogsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="LogsFolder" 
+                       Type="string" 
+                       Value="[LogsFolder]" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalhos Desktop -->
+    <DirectoryRef Id="DesktopFolder">
+      <Component Id="DesktopShortcuts" Guid="E1F2A3B4-C5D6-7890-KLMN-123456789KLM">
+        <Shortcut Id="ConfigureDesktopShortcut"
+                  Name="Configurar Coruja Probe"
+                  Description="Configurar conexão com servidor Coruja Monitor"
+                  Target="[INSTALLFOLDER]configurar_probe.bat"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="DesktopFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="DesktopShortcut" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Atalhos Menu Iniciar -->
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="StartMenuShortcuts" Guid="F2A3B4C5-D6E7-8901-LMNO-234567890LMN">
+        <Shortcut Id="ConfigureStartMenuShortcut"
+                  Name="Configurar Coruja Probe"
+                  Description="Configurar conexão com servidor"
+                  Target="[INSTALLFOLDER]configurar_probe.bat"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="InstallServiceShortcut"
+                  Name="Instalar Serviço Coruja"
+                  Description="Instalar Probe como serviço do Windows"
+                  Target="[INSTALLFOLDER]install_service.bat"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="DiagnosticoShortcut"
+                  Name="Diagnóstico Coruja Probe"
+                  Description="Executar diagnóstico da Probe"
+                  Target="[INSTALLFOLDER]diagnostico_probe.bat"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <Shortcut Id="VerificarShortcut"
+                  Name="Verificar Instalação"
+                  Description="Verificar se a Probe está instalada corretamente"
+                  Target="[INSTALLFOLDER]verificar_instalacao.bat"
+                  WorkingDirectory="INSTALLFOLDER" />
+        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" 
+                       Key="Software\CorujaMonitor\Probe" 
+                       Name="StartMenuShortcuts" 
+                       Type="integer" 
+                       Value="1" 
+                       KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <!-- Registro Windows -->
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="RegistryEntries" Guid="A3B4C5D6-E7F8-9012-MNOP-345678901MNO">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\CorujaMonitor\Probe">
+          <RegistryValue Type="string" Name="InstallPath" Value="[INSTALLFOLDER]" KeyPath="yes" />
+          <RegistryValue Type="string" Name="Version" Value="1.0.0" />
+          <RegistryValue Type="string" Name="InstallDate" Value="[Date]" />
+        </RegistryKey>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Custom Actions -->
+    <CustomAction Id="ConfigureFirewall"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="cmd.exe /c netsh advfirewall firewall set rule group=&quot;Windows Management Instrumentation (WMI)&quot; new enable=yes"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <CustomAction Id="CheckPython"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="cmd.exe /c python --version"
+                  Execute="immediate"
+                  Return="ignore" />
+
+    <!-- Sequência de instalação -->
+    <InstallExecuteSequence>
+      <Custom Action="CheckPython" After="InstallInitialize">NOT Installed</Custom>
+      <Custom Action="ConfigureFirewall" After="InstallFiles">NOT Installed</Custom>
+    </InstallExecuteSequence>
+
+    <!-- Features -->
+    <Feature Id="ProductFeature" 
+             Title="Coruja Monitor Probe" 
+             Level="1"
+             Description="Agente de monitoramento completo">
+      <ComponentRef Id="ProbeCore" />
+      <ComponentRef Id="ProbeScripts" />
+      <ComponentRef Id="ProbeDocumentation" />
+      <ComponentRef Id="Collectors" />
+      <ComponentRef Id="LogsFolder" />
+      <ComponentRef Id="DesktopShortcuts" />
+      <ComponentRef Id="StartMenuShortcuts" />
+      <ComponentRef Id="RegistryEntries" />
+    </Feature>
+
+    <!-- Propriedades do Painel de Controle -->
+    <Property Id="ARPURLINFOABOUT" Value="http://192.168.31.161:3000" />
+    <Property Id="ARPCONTACT" Value="admin@coruja.com" />
+    <Property Id="ARPCOMMENTS" Value="Agente de monitoramento Coruja Monitor Probe" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+  </Product>
+</Wix>

@@ -1,0 +1,246 @@
+========================================
+  ADICIONAR SERVIDORES PARA MONITORAR
+  Guia Completo
+========================================
+
+SITUACAO ATUAL:
+---------------
+✓ Probe instalada e rodando
+✓ Probe conectada ao servidor (ONLINE)
+✗ Nenhum servidor sendo monitorado
+
+A probe está funcionando, mas precisa de servidores
+para monitorar!
+
+
+COMO FUNCIONA:
+--------------
+
+1. A PROBE coleta dados dos servidores
+2. Envia para o SERVIDOR CENTRAL (192.168.31.161)
+3. O DASHBOARD mostra os dados coletados
+
+Sem servidores configurados = sem dados no dashboard
+
+
+OPCAO 1 - ADICIONAR VIA DASHBOARD (RECOMENDADO):
+-------------------------------------------------
+
+1. Acesse: http://192.168.31.161:8000
+
+2. Login: admin@coruja.com / admin123
+
+3. Menu lateral > "Servidores"
+
+4. Clique em "+ Novo Servidor"
+
+5. Preencha:
+   - Nome: SRVSONDA001 (ou nome da maquina)
+   - IP: 192.168.31.XXX (IP da maquina Windows)
+   - Tenant: Techbiz
+   - Probe: SRVSONDA001
+
+6. Clique em "Salvar"
+
+7. Aguarde 1-2 minutos
+
+8. Atualize a pagina
+
+9. O servidor deve aparecer com metricas!
+
+
+OPCAO 2 - MONITORAR A PROPRIA MAQUINA:
+---------------------------------------
+
+A probe pode monitorar a propria maquina onde esta
+instalada:
+
+1. Dashboard > Servidores > + Novo Servidor
+
+2. Preencha:
+   - Nome: SRVSONDA001
+   - IP: 127.0.0.1 (localhost)
+   - Tenant: Techbiz
+   - Probe: SRVSONDA001
+
+3. Salvar
+
+4. A probe vai coletar:
+   - CPU
+   - Memoria
+   - Disco
+   - Rede
+   - Processos
+
+
+OPCAO 3 - MONITORAR OUTROS SERVIDORES:
+---------------------------------------
+
+Para monitorar outros servidores Windows na rede:
+
+REQUISITOS:
+- Servidor deve estar acessivel na rede
+- WMI deve estar habilitado
+- Firewall deve permitir WMI
+- Credenciais de administrador (se necessario)
+
+PASSOS:
+
+1. Dashboard > Servidores > + Novo Servidor
+
+2. Preencha:
+   - Nome: SERVIDOR-REMOTO
+   - IP: 192.168.31.XXX
+   - Tenant: Techbiz
+   - Probe: SRVSONDA001
+
+3. Salvar
+
+4. A probe tentara coletar dados via WMI
+
+
+ADICIONAR SENSORES CUSTOMIZADOS:
+---------------------------------
+
+Apos adicionar um servidor, voce pode adicionar
+sensores especificos:
+
+1. Dashboard > Servidores > Clique no servidor
+
+2. Aba "Sensores"
+
+3. Clique em "+ Adicionar Sensor"
+
+4. Escolha o tipo:
+   - Ping
+   - HTTP/HTTPS
+   - Porta TCP
+   - SNMP
+   - Servico Windows
+   - Processo
+   - Disco
+   - Etc.
+
+5. Configure e salve
+
+
+VERIFICAR SE ESTA FUNCIONANDO:
+-------------------------------
+
+1. Dashboard > Servidores
+
+2. Deve aparecer:
+   - Nome do servidor
+   - Status (Online/Offline)
+   - CPU %
+   - Memoria %
+   - Disco %
+   - Ultima atualizacao
+
+3. Clique no servidor para ver detalhes
+
+4. Graficos devem mostrar dados em tempo real
+
+
+DIAGNOSTICAR PROBLEMAS:
+-----------------------
+
+Se nao aparecer dados:
+
+1. Execute: DIAGNOSTICAR_PROBE.bat
+
+2. Verifique os logs:
+   C:\Program Files\CorujaMonitor\Probe\logs\probe.log
+
+3. Verifique se o servico esta rodando:
+   sc query CorujaProbe
+
+4. Reinicie o servico:
+   net stop CorujaProbe && net start CorujaProbe
+
+5. Verifique conectividade:
+   ping 192.168.31.161
+
+
+EXEMPLO PRATICO:
+----------------
+
+Vamos monitorar a propria maquina SRVSONDA001:
+
+1. http://192.168.31.161:8000
+
+2. Login: admin@coruja.com / admin123
+
+3. Menu: Servidores > + Novo Servidor
+
+4. Dados:
+   Nome: SRVSONDA001
+   IP: 127.0.0.1
+   Descricao: Servidor de Sondas
+   Tenant: Techbiz
+   Probe: SRVSONDA001
+   Ativo: Sim
+
+5. Salvar
+
+6. Aguardar 60 segundos (intervalo de coleta)
+
+7. Atualizar pagina
+
+8. Deve aparecer:
+   - CPU: XX%
+   - Memoria: XX%
+   - Disco: XX%
+   - Status: Online
+
+
+PROXIMOS PASSOS:
+----------------
+
+Depois de adicionar servidores:
+
+1. Configure alertas
+   - Dashboard > Configuracoes > Alertas
+
+2. Configure thresholds
+   - Dashboard > Configuracoes > Limites
+
+3. Adicione mais sensores
+   - Dashboard > Servidores > Sensores
+
+4. Configure notificacoes
+   - Dashboard > Configuracoes > Notificacoes
+
+
+COMANDOS UTEIS:
+---------------
+
+Ver logs em tempo real:
+   powershell -Command "Get-Content 'C:\Program Files\CorujaMonitor\Probe\logs\probe.log' -Wait"
+
+Reiniciar probe:
+   net stop CorujaProbe && net start CorujaProbe
+
+Testar conectividade:
+   curl http://192.168.31.161:8000/health
+
+Ver status do servico:
+   sc query CorujaProbe
+
+
+========================================
+  RESUMO RAPIDO
+========================================
+
+1. Acesse: http://192.168.31.161:8000
+2. Menu: Servidores > + Novo Servidor
+3. Nome: SRVSONDA001
+4. IP: 127.0.0.1
+5. Probe: SRVSONDA001
+6. Salvar
+7. Aguardar 60 segundos
+8. Atualizar pagina
+9. Pronto!
+
+
+========================================

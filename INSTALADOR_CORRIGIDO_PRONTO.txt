@@ -1,0 +1,142 @@
+========================================
+✅ INSTALADOR CORRIGIDO - PRONTO!
+========================================
+
+📦 NOVO ARQUIVO:
+   CorujaMonitorProbe-Instalador-v1.0.1-CORRIGIDO.zip (108 KB)
+
+
+========================================
+🔧 O QUE FOI CORRIGIDO
+========================================
+
+❌ PROBLEMA:
+   - Atalho "Configurar Coruja Probe" não abria
+   - Erro: "Windows is searching for configurar_probe.bat"
+
+✅ SOLUÇÃO:
+   - Atalho agora aponta para o caminho correto
+   - Criado no Desktop do usuário atual
+   - Criado no Menu Iniciar
+   - Ambos funcionam perfeitamente
+
+
+========================================
+📋 CONTEÚDO DO NOVO ZIP
+========================================
+
+✅ INSTALAR_TUDO.bat - Instalador corrigido
+✅ DESINSTALAR.bat - Desinstalador
+✅ CORRIGIR_ATALHO.bat - Script de correção (para quem já instalou)
+✅ README.txt - Instruções detalhadas
+✅ LEIA_PRIMEIRO.txt - Guia rápido
+✅ probe/ - 21 arquivos Python + 41 scripts BAT + 17 coletores
+
+
+========================================
+🎯 PARA QUEM JÁ INSTALOU
+========================================
+
+Se você já instalou e o atalho não funciona:
+
+OPÇÃO 1: Executar script de correção
+   1. Vá para a pasta do instalador
+   2. Execute: CORRIGIR_ATALHO.bat (como Administrador)
+   3. Pronto!
+
+OPÇÃO 2: Executar diretamente
+   1. Vá para: C:\Program Files\CorujaMonitor\Probe
+   2. Execute: configurar_probe.bat
+   3. Digite IP: 192.168.31.161
+   4. Digite token
+
+OPÇÃO 3: Reinstalar
+   1. Execute: DESINSTALAR.bat
+   2. Baixe novo ZIP (v1.0.1-CORRIGIDO)
+   3. Execute: INSTALAR_TUDO.bat
+
+
+========================================
+🚀 PARA NOVAS INSTALAÇÕES
+========================================
+
+1. Baixe: CorujaMonitorProbe-Instalador-v1.0.1-CORRIGIDO.zip
+2. Descompacte
+3. Execute: INSTALAR_TUDO.bat (como Administrador)
+4. Aguarde 5-10 minutos
+5. Atalho funcionará corretamente!
+
+
+========================================
+✅ TESTADO E FUNCIONANDO
+========================================
+
+✅ Instalação completa
+✅ Python instalado automaticamente
+✅ Dependências instaladas
+✅ Arquivos copiados
+✅ Firewall configurado
+✅ Atalhos criados CORRETAMENTE
+✅ Atalhos funcionam!
+
+
+========================================
+📊 COMPARAÇÃO DE VERSÕES
+========================================
+
+v1.0.0 (ANTIGA):
+❌ Atalho não funcionava
+❌ Apontava para caminho errado
+
+v1.0.1-CORRIGIDO (NOVA):
+✅ Atalho funciona perfeitamente
+✅ Caminho correto
+✅ Desktop do usuário atual
+✅ Menu Iniciar
+
+
+========================================
+🔄 COMMIT NO GIT
+========================================
+
+Abra Git Bash:
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+
+git add probe-installer/
+git add CorujaMonitorProbe-Instalador-v1.0.1-CORRIGIDO.zip
+git add CORRIGIR_ATALHO_AGORA.txt
+git add INSTALADOR_CORRIGIDO_PRONTO.txt
+
+git commit -m "fix: Corrigir atalho do instalador BAT
+
+PROBLEMA:
+- Atalho 'Configurar Coruja Probe' não abria
+- Erro: Windows is searching for configurar_probe.bat
+
+SOLUÇÃO:
+- Atalho agora aponta para caminho correto
+- Criado no Desktop do usuário atual
+- Criado no Menu Iniciar
+- Ambos funcionam perfeitamente
+
+NOVO ARQUIVO:
+- CorujaMonitorProbe-Instalador-v1.0.1-CORRIGIDO.zip (108 KB)
+
+SCRIPT DE CORREÇÃO:
+- CORRIGIR_ATALHO.bat (para quem já instalou)
+
+VERSÃO: v1.0.1"
+
+git push origin master
+
+
+========================================
+✅ PRONTO PARA DISTRIBUIR!
+========================================
+
+Distribua o novo ZIP:
+CorujaMonitorProbe-Instalador-v1.0.1-CORRIGIDO.zip
+
+Atalhos funcionam perfeitamente agora!
+

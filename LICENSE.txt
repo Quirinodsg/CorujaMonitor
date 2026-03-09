@@ -1,0 +1,26 @@
+CORUJA MONITOR - TERMOS DE USO
+
+Copyright (c) 2026 Coruja Monitor
+
+Este software é fornecido "como está", sem garantias de qualquer tipo, 
+expressas ou implícitas, incluindo, mas não se limitando a garantias de 
+comercialização, adequação a um propósito específico e não violação.
+
+Em nenhum caso os autores ou detentores de direitos autorais serão 
+responsáveis por qualquer reclamação, danos ou outra responsabilidade, 
+seja em ação de contrato, delito ou de outra forma, decorrente de, 
+fora de ou em conexão com o software ou o uso ou outras negociações 
+no software.
+
+PERMISSÕES:
+- Uso comercial e não comercial
+- Modificação do código
+- Distribuição
+
+CONDIÇÕES:
+- Manter este aviso de copyright
+- Não responsabilizar os autores por problemas
+
+SUPORTE:
+Email: admin@coruja.com
+Web: http://192.168.31.161:3000

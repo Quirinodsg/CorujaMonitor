@@ -1,0 +1,82 @@
+========================================
+  COPIAR ARQUIVOS PARA LINUX
+========================================
+
+O servidor Linux não tem Git configurado.
+Vamos copiar os arquivos manualmente.
+
+========================================
+  OPÇÃO 1: Via SCP (Recomendado)
+========================================
+
+No Git Bash do Windows, execute:
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+
+scp api/reset_sistema.py root@192.168.31.161:/home/administrador/CorujaMonitor/api/
+scp api/routers/system_reset.py root@192.168.31.161:/home/administrador/CorujaMonitor/api/routers/
+scp api/main.py root@192.168.31.161:/home/administrador/CorujaMonitor/api/
+scp frontend/src/components/SystemReset.js root@192.168.31.161:/home/administrador/CorujaMonitor/frontend/src/components/
+scp frontend/src/components/SystemReset.css root@192.168.31.161:/home/administrador/CorujaMonitor/frontend/src/components/
+
+========================================
+  OPÇÃO 2: Criar os Arquivos Manualmente
+========================================
+
+No servidor Linux, crie os arquivos:
+
+1. api/reset_sistema.py
+2. api/routers/system_reset.py
+3. Edite api/main.py (adicionar import e router)
+4. frontend/src/components/SystemReset.js
+5. frontend/src/components/SystemReset.css
+
+Copie o conteúdo dos arquivos do Windows.
+
+========================================
+  OPÇÃO 3: Usar WinSCP (Interface Gráfica)
+========================================
+
+1. Baixe WinSCP: https://winscp.net/
+2. Conecte em: 192.168.31.161
+3. Usuário: root
+4. Arraste os arquivos para as pastas corretas
+
+========================================
+  APÓS COPIAR OS ARQUIVOS
+========================================
+
+No servidor Linux:
+
+cd /home/administrador/CorujaMonitor
+
+# Reiniciar serviços
+docker-compose restart
+
+# Ou resetar o sistema
+cd api
+python reset_sistema.py
+
+========================================
+  TESTAR SE FUNCIONOU
+========================================
+
+1. Acesse: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Menu: Ferramentas Administrativas
+4. Deve aparecer: "Reset do Sistema"
+
+========================================
+  ARQUIVOS A COPIAR
+========================================
+
+API (Backend):
+  api/reset_sistema.py
+  api/routers/system_reset.py
+  api/main.py (editar)
+
+Frontend:
+  frontend/src/components/SystemReset.js
+  frontend/src/components/SystemReset.css
+
+========================================

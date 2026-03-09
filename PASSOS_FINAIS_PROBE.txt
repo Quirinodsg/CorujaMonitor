@@ -1,0 +1,191 @@
+========================================
+  PASSOS FINAIS - PROBE INSTALADA
+  Guia Completo
+========================================
+
+DIAGNOSTICO ATUAL:
+------------------
+✓ Probe instalada
+✓ Python instalado (3.11.8)
+✓ Dependências instaladas
+✓ Configuração OK (token configurado)
+✓ Servidor acessível
+✗ Serviço PARADO (precisa iniciar)
+
+
+PASSO 1 - INICIAR O SERVICO:
+-----------------------------
+
+Execute como Administrador:
+
+   INICIAR_PROBE.bat
+
+OU manualmente:
+
+   net start CorujaProbe
+
+
+PASSO 2 - VERIFICAR SE INICIOU:
+--------------------------------
+
+Execute:
+
+   sc query CorujaProbe
+
+Deve mostrar:
+   STATE: 4 RUNNING
+
+
+PASSO 3 - ADICIONAR SERVIDOR NO DASHBOARD:
+-------------------------------------------
+
+1. Acesse: http://192.168.31.161:8000
+
+2. Login: admin@coruja.com / admin123
+
+3. Menu lateral > "Servidores"
+
+4. Clique em "+ Novo Servidor"
+
+5. Preencha:
+   Nome: WIN-15GM8UTRS4K
+   IP: 127.0.0.1 (para monitorar a própria máquina)
+   Descrição: Servidor de Sondas
+   Tenant: Techbiz
+   Probe: WIN-15GM8UTRS4K
+   Ativo: Sim
+
+6. Clique em "Salvar"
+
+
+PASSO 4 - AGUARDAR COLETA:
+---------------------------
+
+A probe coleta dados a cada 60 segundos.
+
+Aguarde 1-2 minutos e atualize a página.
+
+
+PASSO 5 - VERIFICAR DADOS:
+---------------------------
+
+1. Dashboard > Servidores
+
+2. Deve aparecer:
+   - WIN-15GM8UTRS4K
+   - Status: Online
+   - CPU: XX%
+   - Memória: XX%
+   - Disco: XX%
+
+3. Clique no servidor para ver detalhes
+
+
+SE O SERVICO NAO INICIAR:
+--------------------------
+
+Tente iniciar manualmente para ver erros:
+
+1. Abra PowerShell como Administrador
+
+2. Execute:
+   cd "C:\Program Files\CorujaMonitor\Probe"
+   python probe_core.py
+
+3. Veja os erros no console
+
+4. Verifique os logs:
+   C:\Program Files\CorujaMonitor\Probe\logs\probe.log
+
+
+COMANDOS UTEIS:
+---------------
+
+Iniciar serviço:
+   net start CorujaProbe
+
+Parar serviço:
+   net stop CorujaProbe
+
+Reiniciar serviço:
+   net stop CorujaProbe && net start CorujaProbe
+
+Ver status:
+   sc query CorujaProbe
+
+Ver logs em tempo real:
+   powershell -Command "Get-Content 'C:\Program Files\CorujaMonitor\Probe\logs\probe.log' -Wait"
+
+Diagnosticar:
+   DIAGNOSTICAR_PROBE.bat
+
+
+PROXIMOS PASSOS APOS FUNCIONAR:
+--------------------------------
+
+1. Adicionar mais servidores para monitorar
+   - Dashboard > Servidores > + Novo Servidor
+
+2. Adicionar sensores customizados
+   - Dashboard > Servidores > Clique no servidor > Sensores
+
+3. Configurar alertas
+   - Dashboard > Configurações > Alertas
+
+4. Configurar notificações
+   - Dashboard > Configurações > Notificações
+
+
+RESUMO RAPIDO:
+--------------
+
+1. Execute: INICIAR_PROBE.bat (como Admin)
+2. Aguarde 10 segundos
+3. Acesse: http://192.168.31.161:8000
+4. Menu: Servidores > + Novo Servidor
+5. Nome: WIN-15GM8UTRS4K
+6. IP: 127.0.0.1
+7. Probe: WIN-15GM8UTRS4K
+8. Salvar
+9. Aguardar 60 segundos
+10. Atualizar página
+11. Pronto!
+
+
+ARQUIVOS CRIADOS:
+-----------------
+
+INICIAR_PROBE.bat
+  - Inicia o serviço da probe
+
+DIAGNOSTICAR_PROBE.bat
+  - Verifica instalação e configuração
+
+ADICIONAR_SERVIDORES_MONITORAMENTO.txt
+  - Guia para adicionar servidores
+
+CONFIGURAR_PROBE_MANUAL.bat
+  - Configura IP e token
+
+ATIVAR_PROBE_SERVICO.bat
+  - Instala probe como serviço
+
+
+SUPORTE:
+--------
+
+Dashboard: http://192.168.31.161:8000
+Login: admin@coruja.com / admin123
+Logs: C:\Program Files\CorujaMonitor\Probe\logs\probe.log
+
+
+========================================
+  EXECUTE AGORA
+========================================
+
+Como Administrador:
+
+   INICIAR_PROBE.bat
+
+
+========================================

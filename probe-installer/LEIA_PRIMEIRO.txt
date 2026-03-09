@@ -1,0 +1,51 @@
+========================================
+CORUJA MONITOR PROBE - INSTALADOR COMPLETO
+========================================
+
+INSTALACAO RAPIDA:
+1. Clique direito em "INSTALAR_TUDO.bat"
+2. Selecione "Executar como Administrador"
+3. Aguarde (5-10 minutos)
+4. Pronto!
+
+
+========================================
+O QUE SERA INSTALADO
+========================================
+
+✅ Python 3.11 (se necessario)
+✅ Dependencias Python
+✅ Coruja Monitor Probe
+✅ Atalhos no Desktop e Menu Iniciar
+✅ Configuracao de Firewall
+
+
+========================================
+APOS A INSTALACAO
+========================================
+
+1. Execute: "Configurar Coruja Probe" (Desktop)
+2. Digite IP: 192.168.31.161
+3. Digite token da probe
+4. Instale como servico (opcional)
+
+
+========================================
+REQUISITOS
+========================================
+
+✅ Windows 7+ (64-bit)
+✅ Privilegios de Administrador
+✅ Conexao com Internet
+✅ 100 MB de espaco
+
+
+========================================
+SUPORTE
+========================================
+
+Web: http://192.168.31.161:3000
+Login: admin@coruja.com
+Senha: admin123
+
+

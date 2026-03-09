@@ -1,0 +1,359 @@
+========================================
+📦 INSTALADORES INNO SETUP (.ISS)
+   Coruja Monitor Probe v1.0.0
+========================================
+
+ARQUIVOS CRIADOS:
+• SetupDependencias-v1.0.0.exe (~30 MB)
+• SetupProbe-v1.0.0.exe (~2 MB)
+
+
+========================================
+🚀 COMO GERAR OS INSTALADORES
+========================================
+
+REQUISITOS:
+✅ Inno Setup 6
+   Download: https://jrsoftware.org/isdl.php
+
+✅ Windows PowerShell
+
+✅ Permissões de Administrador
+
+PASSO A PASSO:
+
+1. Instale Inno Setup 6 (se ainda não tiver)
+   https://jrsoftware.org/isdl.php
+
+2. Abra PowerShell como Administrador
+
+3. Navegue até a pasta do projeto:
+   cd "C:\Users\andre.quirino\Coruja Monitor"
+
+4. Execute o script:
+   .\GERAR_INSTALADORES_ISS.ps1
+
+5. Aguarde a compilação (2-3 minutos)
+
+6. Os instaladores estarão em:
+   installer\output\
+
+
+========================================
+📋 ARQUIVO 1: SetupDependencias.exe
+========================================
+
+TAMANHO: ~30 MB (inclui Python 3.11.8)
+
+O QUE FAZ:
+✅ Instala Python 3.11.8 silenciosamente
+✅ Adiciona Python ao PATH
+✅ Instala pip automaticamente
+✅ Instala dependências:
+   • psutil (monitoramento)
+   • httpx (comunicação)
+   • pywin32 (APIs Windows)
+   • pysnmp (SNMP)
+   • pyyaml (configuração)
+
+INTERFACE:
+✅ Assistente gráfico em Português/Inglês
+✅ Barra de progresso
+✅ Mensagens claras
+✅ Verificação de Python existente
+
+ATALHOS CRIADOS:
+• Menu Iniciar > Verificar Dependências
+
+TEMPO: 3-5 minutos
+
+
+========================================
+📋 ARQUIVO 2: SetupProbe.exe
+========================================
+
+TAMANHO: ~2 MB (só arquivos Python)
+
+O QUE FAZ:
+✅ Verifica se Python está instalado
+✅ Copia arquivos da Probe
+✅ Copia 9 coletores
+✅ Copia scripts BAT
+✅ Copia documentação
+✅ Configura firewall (WMI)
+✅ Cria atalhos
+
+INTERFACE:
+✅ Assistente gráfico em Português/Inglês
+✅ Barra de progresso
+✅ Verificação de dependências
+✅ Opção de configurar ao final
+
+ATALHOS CRIADOS:
+• Desktop: Configurar Coruja Probe
+• Menu Iniciar: Configurar Coruja Probe
+• Menu Iniciar: Instalar Serviço Coruja
+• Menu Iniciar: Diagnóstico Coruja Probe
+• Menu Iniciar: Verificar Instalação
+
+TEMPO: 1 minuto
+
+
+========================================
+📦 ORDEM DE INSTALAÇÃO
+========================================
+
+⚠️ IMPORTANTE: Instale nesta ordem!
+
+1️⃣ SetupDependencias-v1.0.0.exe
+   • Clique direito > Executar como Administrador
+   • Siga o assistente
+   • Escolha idioma (Português/Inglês)
+   • Aceite a licença
+   • Aguarde instalação do Python
+   • Aguarde instalação das dependências
+   • Clique em Concluir
+
+2️⃣ SetupProbe-v1.0.0.exe
+   • Clique direito > Executar como Administrador
+   • Siga o assistente
+   • Escolha idioma (Português/Inglês)
+   • Aceite a licença
+   • Escolha pasta de instalação
+   • Aguarde cópia dos arquivos
+   • Marque "Configurar Probe agora" (opcional)
+   • Clique em Concluir
+
+3️⃣ Configurar
+   • Desktop > Configurar Coruja Probe
+   • Digite IP: 192.168.31.161
+   • Digite token da probe
+
+4️⃣ Instalar Serviço (Opcional)
+   • Menu Iniciar > Instalar Serviço Coruja
+   • Probe inicia automaticamente com Windows
+
+
+========================================
+✨ RECURSOS DO INNO SETUP
+========================================
+
+✅ INTERFACE GRÁFICA:
+   • Assistente profissional
+   • Barra de progresso
+   • Mensagens em Português/Inglês
+   • Ícones personalizados
+
+✅ VALIDAÇÕES:
+   • Verifica Python antes de instalar Probe
+   • Verifica dependências
+   • Avisa se algo está faltando
+   • Sugere soluções
+
+✅ DESINSTALAÇÃO:
+   • Aparece no Painel de Controle
+   • Desinstalação limpa
+   • Pergunta sobre logs e config
+   • Remove atalhos automaticamente
+
+✅ REGISTRO WINDOWS:
+   • Registra instalação
+   • Salva versão e data
+   • Facilita atualizações
+
+✅ CUSTOMIZAÇÃO:
+   • Escolhe pasta de instalação
+   • Escolhe componentes
+   • Escolhe atalhos
+
+
+========================================
+🎯 VANTAGENS DO INNO SETUP
+========================================
+
+✅ PROFISSIONAL:
+   • Interface gráfica moderna
+   • Assistente passo a passo
+   • Mensagens claras
+
+✅ FÁCIL DE USAR:
+   • Clique duplo para instalar
+   • Não precisa linha de comando
+   • Usuário final não precisa conhecimento técnico
+
+✅ COMPATÍVEL:
+   • Funciona em AD e Workgroup
+   • Sem erro 8235
+   • Windows 7 até Windows 11
+
+✅ COMPLETO:
+   • Instalação silenciosa disponível
+   • Desinstalação limpa
+   • Atualização automática
+
+✅ LEVE:
+   • Compressão LZMA
+   • Arquivos menores
+   • Download rápido
+
+
+========================================
+🔧 INSTALAÇÃO SILENCIOSA
+========================================
+
+Para instalar sem interface gráfica:
+
+DEPENDÊNCIAS:
+SetupDependencias-v1.0.0.exe /VERYSILENT /NORESTART
+
+PROBE:
+SetupProbe-v1.0.0.exe /VERYSILENT /NORESTART
+
+AMBOS:
+SetupDependencias-v1.0.0.exe /VERYSILENT /NORESTART
+timeout /t 300
+SetupProbe-v1.0.0.exe /VERYSILENT /NORESTART
+
+PARÂMETROS:
+/SILENT - Mostra barra de progresso
+/VERYSILENT - Totalmente silencioso
+/NORESTART - Não reinicia o computador
+/DIR="C:\Caminho" - Pasta customizada
+/LOG="C:\log.txt" - Gera log
+
+
+========================================
+📊 COMPARAÇÃO
+========================================
+
+INSTALADOR BAT:
+✅ Simples
+✅ Não precisa compilar
+❌ Sem interface gráfica
+❌ Menos profissional
+
+MSI (WiX):
+✅ Profissional
+✅ Políticas de grupo
+❌ Difícil de compilar
+❌ Precisa WiX Toolset
+❌ Erro 8235 em AD
+
+INNO SETUP:
+✅ Profissional
+✅ Fácil de compilar
+✅ Interface gráfica
+✅ Sem erro 8235
+✅ Leve e rápido
+✅ Customizável
+✅ Instalação silenciosa
+
+
+========================================
+🎓 RECOMENDAÇÃO
+========================================
+
+USE INNO SETUP PARA:
+✅ Distribuição para clientes
+✅ Ambiente corporativo
+✅ Instalação profissional
+✅ Interface gráfica
+✅ Facilidade de uso
+✅ Compatibilidade máxima
+
+
+========================================
+📦 DISTRIBUIÇÃO
+========================================
+
+PARA CLIENTES, ENVIE:
+
+1. SetupDependencias-v1.0.0.exe
+2. SetupProbe-v1.0.0.exe
+3. README.txt
+
+CONTEÚDO DO README.txt:
+---
+INSTALAÇÃO CORUJA MONITOR PROBE
+
+ORDEM:
+1. SetupDependencias-v1.0.0.exe (como Admin)
+2. SetupProbe-v1.0.0.exe (como Admin)
+3. Desktop > Configurar Coruja Probe
+   IP: 192.168.31.161
+   Token: [solicite ao admin]
+
+SUPORTE:
+admin@coruja.com
+http://192.168.31.161:3000
+---
+
+
+========================================
+🔍 VERIFICAÇÃO
+========================================
+
+APÓS INSTALAÇÃO:
+
+1. Painel de Controle > Programas
+   ✅ Coruja Monitor - Dependências
+   ✅ Coruja Monitor Probe
+
+2. Menu Iniciar > Verificar Dependências
+   ✅ Python instalado
+   ✅ Dependências OK
+
+3. Menu Iniciar > Verificar Instalação
+   ✅ Probe instalada
+   ✅ Arquivos OK
+
+4. Desktop > Configurar Coruja Probe
+   ✅ Atalho funciona
+   ✅ Abre configuração
+
+
+========================================
+🛠️ PERSONALIZAÇÃO
+========================================
+
+Para customizar os instaladores, edite:
+
+DEPENDÊNCIAS:
+installer/SetupDependencias.iss
+• Linha 6-10: Nome, versão, publisher
+• Linha 20-30: Configurações do instalador
+• Linha 40-50: Arquivos a incluir
+• Linha 60-70: Atalhos
+
+PROBE:
+installer/SetupProbe.iss
+• Linha 6-10: Nome, versão, publisher
+• Linha 20-30: Configurações do instalador
+• Linha 50-80: Arquivos a incluir
+• Linha 90-110: Atalhos
+
+Depois recompile:
+.\GERAR_INSTALADORES_ISS.ps1
+
+
+========================================
+📞 SUPORTE
+========================================
+
+Servidor: 192.168.31.161
+Web: http://192.168.31.161:3000
+Login: admin@coruja.com
+Senha: admin123
+
+
+========================================
+✅ INSTALADORES INNO SETUP PRONTOS!
+========================================
+
+Dois instaladores EXE profissionais com interface gráfica!
+
+PRÓXIMOS PASSOS:
+1. Execute: .\GERAR_INSTALADORES_ISS.ps1
+2. Teste os instaladores
+3. Distribua para clientes
+

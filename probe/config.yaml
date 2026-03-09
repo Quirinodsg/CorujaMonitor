@@ -1,0 +1,36 @@
+# ========================================
+# CONFIGURAÇÃO CORUJA MONITOR PROBE
+# ========================================
+
+# Servidor Coruja Monitor
+server:
+  host: "192.168.31.161"
+  port: 8000
+  protocol: "http"
+  
+# Token de autenticação (gerado no servidor)
+token: ""
+
+# Identificação da Probe
+probe:
+  name: ""
+  location: ""
+  
+# Intervalo de coleta (segundos)
+collection_interval: 60
+
+# Logs
+logging:
+  level: "INFO"
+  file: "logs/probe.log"
+  max_size_mb: 10
+  backup_count: 5
+
+# Coletores habilitados
+collectors:
+  system: true
+  ping: true
+  snmp: true
+  docker: false
+  kubernetes: false
+  wmi_remote: false

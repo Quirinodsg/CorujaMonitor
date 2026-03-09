@@ -1,0 +1,68 @@
+================================================================================
+                    CORUJA MONITOR - INSTALACAO DO PROBE
+================================================================================
+
+ANTES DE COMECAR:
+
+1. Voce precisa ter PYTHON instalado
+   - Se nao tem, execute: check_python.bat
+   - Ou baixe em: https://www.python.org/downloads/
+   - IMPORTANTE: Marque "Add Python to PATH" durante a instalacao
+
+2. Voce precisa do TOKEN do probe
+   - Acesse o dashboard do Coruja Monitor
+   - Va em: Probes -> Novo Probe
+   - Copie o token gerado
+
+================================================================================
+
+INSTALACAO AUTOMATICA (Recomendado):
+
+1. Abra PowerShell como Administrador
+2. Execute: .\setup_wizard.bat
+3. Siga as instrucoes na tela
+
+================================================================================
+
+INSTALACAO MANUAL:
+
+1. Execute: check_python.bat (verificar se Python esta instalado)
+2. Execute: install_manual.bat (instalacao passo a passo)
+
+================================================================================
+
+ARQUIVOS IMPORTANTES:
+
+- check_python.bat         -> Verifica se Python esta instalado
+- setup_wizard.bat         -> Instalador automatico
+- install_manual.bat       -> Instalador manual (passo a passo)
+- INSTALACAO_RAPIDA.md     -> Guia rapido
+- INSTALACAO.md            -> Guia completo
+- README.md                -> Documentacao tecnica
+
+================================================================================
+
+PROBLEMAS?
+
+1. "Python nao encontrado"
+   -> Execute: check_python.bat
+   -> Siga as instrucoes para instalar
+
+2. "Nao conecta ao servidor"
+   -> Verifique a URL do servidor
+   -> Verifique o firewall
+   -> Teste: Test-NetConnection -ComputerName SEU-SERVIDOR -Port 8000
+
+3. "Servico nao inicia"
+   -> Veja os logs: type probe.log
+   -> Execute manualmente: python probe_core.py
+
+================================================================================
+
+SUPORTE:
+
+- Logs: probe.log
+- Config: probe_config.json
+- Documentacao: INSTALACAO.md
+
+================================================================================
