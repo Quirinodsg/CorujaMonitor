@@ -42,8 +42,31 @@ function Probes() {
   };
 
   const copyToken = () => {
-    navigator.clipboard.writeText(newProbe.token);
-    alert('Token copiado!');
+    // Fallback para HTTP (clipboard API só funciona em HTTPS)
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(newProbe.token)
+        .then(() => alert('Token copiado!'))
+        .catch(() => fallbackCopyToken());
+    } else {
+      fallbackCopyToken();
+    }
+  };
+
+  const fallbackCopyToken = () => {
+    // Método alternativo para copiar (funciona em HTTP)
+    const textArea = document.createElement('textarea');
+    textArea.value = newProbe.token;
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      alert('Token copiado!');
+    } catch (err) {
+      alert('Não foi possível copiar automaticamente. Copie manualmente: ' + newProbe.token);
+    }
+    document.body.removeChild(textArea);
   };
 
   const handleDeleteClick = (probe) => {
