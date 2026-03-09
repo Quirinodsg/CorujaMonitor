@@ -942,19 +942,33 @@ function Servers({ selectedServerId, selectedSensorId }) {
         request: error.request
       });
       
-      let errorMessage = 'Erro desconhecido';
-      if (error.response) {
-        // Servidor respondeu com erro
-        errorMessage = error.response.data?.detail || `Erro ${error.response.status}`;
-      } else if (error.request) {
-        // Requisição foi feita mas sem resposta
-        errorMessage = 'Sem resposta do servidor. Verifique se a API está rodando.';
+      // Se DELETE falhar, tentar desativar o sensor
+      if (error.response && error.response.status === 404) {
+        console.log('Sensor não encontrado no banco, tentando desativar...');
+        try {
+          await api.put(`/sensors/${sensorId}`, { is_active: false });
+          console.log('Sensor desativado com sucesso');
+          loadSensors(selectedServer.id);
+          alert('Sensor não pôde ser deletado, mas foi desativado. Ele não aparecerá mais no dashboard.');
+        } catch (deactivateError) {
+          console.error('Erro ao desativar sensor:', deactivateError);
+          alert('Erro ao remover/desativar sensor. Verifique os logs do console (F12).');
+        }
       } else {
-        // Erro ao configurar requisição
-        errorMessage = error.message;
+        let errorMessage = 'Erro desconhecido';
+        if (error.response) {
+          // Servidor respondeu com erro
+          errorMessage = error.response.data?.detail || `Erro ${error.response.status}`;
+        } else if (error.request) {
+          // Requisição foi feita mas sem resposta
+          errorMessage = 'Sem resposta do servidor. Verifique se a API está rodando.';
+        } else {
+          // Erro ao configurar requisição
+          errorMessage = error.message;
+        }
+        
+        alert('Erro ao remover sensor: ' + errorMessage);
       }
-      
-      alert('Erro ao remover sensor: ' + errorMessage);
     }
   };
 
