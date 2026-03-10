@@ -136,7 +136,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
     snmp_community: 'public',
     snmp_port: 161,
     environment: 'production',
-    monitoring_schedule: null
+    monitoring_schedule: null,
+    group_name: ''
   });
   const [newSensor, setNewSensor] = useState({
     sensor_type: 'service',
@@ -1016,7 +1017,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
         snmp_community: newServer.monitoring_protocol === 'snmp' ? newServer.snmp_community : null,
         snmp_port: newServer.monitoring_protocol === 'snmp' ? parseInt(newServer.snmp_port) : null,
         environment: newServer.environment,
-        monitoring_schedule: newServer.environment === 'custom' ? newServer.monitoring_schedule : null
+        monitoring_schedule: newServer.environment === 'custom' ? newServer.monitoring_schedule : null,
+        group_name: newServer.group_name || null
       });
 
       setShowAddServerModal(false);
@@ -1030,7 +1032,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
         snmp_community: 'public',
         snmp_port: 161,
         environment: 'production',
-        monitoring_schedule: null
+        monitoring_schedule: null,
+        group_name: ''
       });
       loadServers();
       alert('Servidor adicionado com sucesso! A probe começará a monitorá-lo automaticamente.');
@@ -1958,6 +1961,37 @@ function Servers({ selectedServerId, selectedSensorId }) {
               </div>
             </div>
 
+            <div className="form-row">
+              <div className="form-group">
+                <label>Grupo / Empresa:</label>
+                <select
+                  value={newServer.group_name || ''}
+                  onChange={(e) => setNewServer({...newServer, group_name: e.target.value})}
+                >
+                  <option value="">Sem grupo</option>
+                  {Array.from(new Set(servers.map(s => s.group_name).filter(g => g))).sort().map(group => (
+                    <option key={group} value={group}>{group}</option>
+                  ))}
+                </select>
+                <small>Selecione um grupo existente ou deixe sem grupo</small>
+              </div>
+
+              <div className="form-group">
+                <label>Ou criar novo grupo:</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Empresa A, Datacenter SP, Produção"
+                  value=""
+                  onChange={(e) => {
+                    if (e.target.value.trim()) {
+                      setNewServer({...newServer, group_name: e.target.value});
+                    }
+                  }}
+                />
+                <small>Digite um novo nome de grupo para criar</small>
+              </div>
+            </div>
+
             <div className="form-section">
               <h3>⚙️ Protocolo de Monitoramento</h3>
               <div className="form-row">
@@ -2076,13 +2110,30 @@ function Servers({ selectedServerId, selectedSensorId }) {
             <h2>Editar Servidor: {editingServer.hostname}</h2>
             <div className="form-group">
               <label>Grupo / Empresa:</label>
+              <select
+                value={editingServer.group_name || ''}
+                onChange={(e) => setEditingServer({...editingServer, group_name: e.target.value})}
+              >
+                <option value="">Sem grupo</option>
+                {Array.from(new Set(servers.map(s => s.group_name).filter(g => g))).sort().map(group => (
+                  <option key={group} value={group}>{group}</option>
+                ))}
+              </select>
+              <small>Selecione um grupo existente ou deixe sem grupo</small>
+            </div>
+            <div className="form-group">
+              <label>Ou criar novo grupo:</label>
               <input
                 type="text"
                 placeholder="Ex: Empresa A, Datacenter SP, Produção"
-                value={editingServer.group_name}
-                onChange={(e) => setEditingServer({...editingServer, group_name: e.target.value})}
+                value=""
+                onChange={(e) => {
+                  if (e.target.value.trim()) {
+                    setEditingServer({...editingServer, group_name: e.target.value});
+                  }
+                }}
               />
-              <small>Agrupe servidores por empresa, localização ou ambiente</small>
+              <small>Digite um novo nome de grupo para criar</small>
             </div>
             <div className="form-group">
               <label>Tags (separadas por vírgula):</label>
