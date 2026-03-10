@@ -266,151 +266,72 @@ class ProbeCore:
             logger.error(f"WMI collection failed for {server.get('hostname')}: {e}")
     
     def _collect_snmp_remote(self, server):
-        """Collect metrics from remote device via SNMP"""
-        try:
-            from collectors.snmp_collector import SNMPCollector
-            
-            hostname = server.get('ip_address') or server.get('hostname')
-            community = server.get('snmp_community', 'public')
-            version = server.get('snmp_version', '2c')
-            port = server.get('snmp_port', 161)
-            
-            logger.info(f"Collecting SNMP metrics from {hostname} (v{version})")
-            
-            collector = SNMPCollector()
-            metrics = []
-            
-            if version == '2c':
-                result = collector.collect_snmp_v2c(
-                    host=hostname,
-                    community=community,
-                    port=port
-                )
-                # Converter resultado SNMP em métricas
-                metrics = self._parse_snmp_metrics(result, server)
-            elif version == '3':
-                metrics = collector.collect_snmp_v3(
-                    hostname=hostname,
-                    username=server.get('snmp_username'),
-                    auth_password=server.get('snmp_auth_password'),
-                    priv_password=server.get('snmp_priv_password'),
-                    auth_protocol=server.get('snmp_auth_protocol', 'SHA'),
-                    priv_protocol=server.get('snmp_priv_protocol', 'AES'),
-                    port=port
-                )
-            
-            # Adicionar métricas ao buffer
-            timestamp = datetime.now().isoformat()
-            for metric in metrics:
-                metric['timestamp'] = timestamp
-                metric['hostname'] = server.get('hostname')
-                self.buffer.append(metric)
-            
-            logger.info(f"Collected {len(metrics)} SNMP metrics from {hostname}")
-            
-        except ImportError:
-            logger.warning(f"pysnmp not installed, falling back to PING for {server.get('hostname')}")
-            self._collect_ping_only(server)
-        except Exception as e:
-            logger.error(f"SNMP collection failed for {server.get('hostname')}: {e}")
-            # Fallback to PING
-            self._collect_ping_only(server)
-    
-    def _parse_snmp_metrics(self, snmp_result, server):
-        """Parse SNMP raw data into metrics format"""
-        metrics = []
-        
-        if snmp_result.get('status') != 'success':
-            logger.error(f"SNMP collection failed: {snmp_result.get('error')}")
-            return metrics
-        
-        data = snmp_result.get('data', {})
-        server_id = server.get('id')
-        
-        # OIDs padrão para Linux
-        OID_CPU_IDLE = '1.3.6.1.4.1.2021.11.11.0'
-        OID_MEM_TOTAL = '1.3.6.1.4.1.2021.4.5.0'
-        OID_MEM_AVAIL = '1.3.6.1.4.1.2021.4.6.0'
-        OID_DISK_PERCENT = '1.3.6.1.4.1.2021.9.1.9'
-        
-        # CPU
-        for oid, value in data.items():
-            if OID_CPU_IDLE in oid:
-                try:
-                    cpu_idle = float(value)
-                    cpu_usage = 100 - cpu_idle
-                    metrics.append({
-                        'type': 'cpu',
-                        'name': 'CPU',
-                        'value': cpu_usage,
-                        'unit': 'percent',
-                        'status': 'critical' if cpu_usage > 95 else ('warning' if cpu_usage > 80 else 'ok'),
-                        'server_id': server_id
-                    })
-                except ValueError:
-                    pass
-        
-        # Memória
-        mem_total = None
-        mem_avail = None
-        for oid, value in data.items():
-            if OID_MEM_TOTAL in oid:
-                try:
-                    mem_total = float(value)
-                except ValueError:
-                    pass
-            elif OID_MEM_AVAIL in oid:
-                try:
-                    mem_avail = float(value)
-                except ValueError:
-                    pass
-        
-        if mem_total and mem_avail:
-            mem_used_percent = ((mem_total - mem_avail) / mem_total) * 100
-            metrics.append({
-                'type': 'memory',
-                'name': 'Memória',
-                'value': mem_used_percent,
-                'unit': 'percent',
-                'status': 'critical' if mem_used_percent > 95 else ('warning' if mem_used_percent > 80 else 'ok'),
-                'server_id': server_id
-            })
-        
-        # Discos
-        for oid, value in data.items():
-            if OID_DISK_PERCENT in oid:
-                try:
-                    disk_percent = float(value)
-                    metrics.append({
-                        'type': 'disk',
-                        'name': 'Disco',
-                        'value': disk_percent,
-                        'unit': 'percent',
-                        'status': 'critical' if disk_percent > 95 else ('warning' if disk_percent > 85 else 'ok'),
-                        'server_id': server_id
-                    })
-                    break
-                except ValueError:
-                    pass
-        
-        # Uptime
-        for oid, value in data.items():
-            if '1.3.6.1.2.1.1.3.0' in oid:
-                try:
-                    timeticks = int(value)
-                    uptime_days = timeticks / (100 * 60 * 60 * 24)
-                    metrics.append({
-                        'type': 'system',
-                        'name': 'Uptime',
-                        'value': uptime_days,
-                        'unit': 'days',
-                        'status': 'ok',
-                        'server_id': server_id
-                    })
-                except ValueError:
-                    pass
-        
-        return metrics
+            """Collect metrics from remote device via SNMP"""
+            try:
+                from collectors.snmp_collector import SNMPCollector
+
+                hostname = server.get('ip_address') or server.get('hostname')
+                community = server.get('snmp_community', 'public')
+                version = server.get('snmp_version', '2c')
+                port = server.get('snmp_port', 161)
+
+                # Normalizar version (remover 'v' se existir)
+                if version and version.startswith('v'):
+                    version = version[1:]  # Remove 'v' do início
+
+                logger.info(f"Collecting SNMP metrics from {hostname} (v{version})")
+
+                collector = SNMPCollector()
+                metrics = []
+
+                if version == '2c':
+                    result = collector.collect_snmp_v2c(
+                        host=hostname,
+                        community=community,
+                        port=port
+                    )
+
+                    if result.get('status') == 'success':
+                        logger.debug(f"SNMP v2c collected {len(result.get('data', {}))} OIDs from {hostname}")
+                    else:
+                        logger.warning(f"SNMP v2c failed for {hostname}: {result.get('error')}")
+
+                    # Converter resultado SNMP em métricas
+                    metrics = self._parse_snmp_metrics(result, server)
+                    logger.info(f"Parsed {len(metrics)} metrics from SNMP data")
+                elif version == '3':
+                    metrics = collector.collect_snmp_v3(
+                        hostname=hostname,
+                        username=server.get('snmp_username'),
+                        auth_password=server.get('snmp_auth_password'),
+                        priv_password=server.get('snmp_priv_password'),
+                        auth_protocol=server.get('snmp_auth_protocol', 'SHA'),
+                        priv_protocol=server.get('snmp_priv_protocol', 'AES'),
+                        port=port
+                    )
+
+                # Adicionar métricas ao buffer
+                timestamp = datetime.now().isoformat()
+                for metric in metrics:
+                    metric['timestamp'] = timestamp
+                    metric['hostname'] = server.get('hostname')
+                    self.buffer.append(metric)
+
+                logger.info(f"Collected {len(metrics)} SNMP metrics from {hostname}")
+
+                # SEMPRE coletar PING para servidores SNMP (independente do sucesso)
+                logger.debug(f"Collecting PING metric for SNMP server {hostname}")
+                self._collect_ping_only(server)
+
+            except ImportError as ie:
+                logger.error(f"ImportError in SNMP collection: {ie}", exc_info=True)
+                logger.warning(f"pysnmp not installed or import error, falling back to PING for {server.get('hostname')}")
+                self._collect_ping_only(server)
+            except Exception as e:
+                logger.error(f"SNMP collection failed for {server.get('hostname')}: {e}", exc_info=True)
+                # Fallback to PING
+                self._collect_ping_only(server)
+
     
     def _collect_ping_only(self, server):
         """Collect only PING metric for servers without credentials"""
@@ -473,6 +394,8 @@ class ProbeCore:
 
         data = snmp_result.get('data', {})
         server_id = server.get('id')
+        
+        logger.debug(f"Parsing {len(data)} SNMP OIDs for server {server.get('hostname')}")
 
         # OIDs padrão para Linux
         OID_CPU_IDLE = '1.3.6.1.4.1.2021.11.11.0'  # ssCpuIdle
@@ -488,6 +411,7 @@ class ProbeCore:
                 try:
                     cpu_idle = float(value)
                     cpu_usage = 100 - cpu_idle
+                    logger.debug(f"CPU: {cpu_usage:.1f}% (idle: {cpu_idle}%)")
                     metrics.append({
                         'type': 'cpu',
                         'name': 'CPU',
@@ -496,8 +420,8 @@ class ProbeCore:
                         'status': 'critical' if cpu_usage > 95 else ('warning' if cpu_usage > 80 else 'ok'),
                         'server_id': server_id
                     })
-                except ValueError:
-                    pass
+                except ValueError as e:
+                    logger.error(f"Error parsing CPU value '{value}': {e}")
 
         # Memória
         mem_total = None
@@ -506,16 +430,19 @@ class ProbeCore:
             if OID_MEM_TOTAL in oid:
                 try:
                     mem_total = float(value)
-                except ValueError:
-                    pass
+                    logger.debug(f"Memory total: {mem_total} KB")
+                except ValueError as e:
+                    logger.error(f"Error parsing mem_total '{value}': {e}")
             elif OID_MEM_AVAIL in oid:
                 try:
                     mem_avail = float(value)
-                except ValueError:
-                    pass
+                    logger.debug(f"Memory available: {mem_avail} KB")
+                except ValueError as e:
+                    logger.error(f"Error parsing mem_avail '{value}': {e}")
 
         if mem_total and mem_avail:
             mem_used_percent = ((mem_total - mem_avail) / mem_total) * 100
+            logger.debug(f"Memory: {mem_used_percent:.1f}%")
             metrics.append({
                 'type': 'memory',
                 'name': 'Memória',
@@ -524,14 +451,16 @@ class ProbeCore:
                 'status': 'critical' if mem_used_percent > 95 else ('warning' if mem_used_percent > 80 else 'ok'),
                 'server_id': server_id
             })
+        else:
+            logger.warning(f"Memory data incomplete: total={mem_total}, avail={mem_avail}")
 
         # Discos (simplificado - pegar primeiro disco)
         for oid, value in data.items():
             if OID_DISK_PERCENT in oid:
                 try:
                     disk_percent = float(value)
-                    # Extrair path do disco se disponível
                     disk_name = "Disco"
+                    logger.debug(f"Disk: {disk_percent}%")
                     metrics.append({
                         'type': 'disk',
                         'name': disk_name,
@@ -563,6 +492,10 @@ class ProbeCore:
                 except ValueError:
                     pass
 
+        logger.info(f"Parsed {len(metrics)} metrics from SNMP data")
+        if len(metrics) == 0:
+            logger.warning(f"No metrics parsed! OIDs in data: {list(data.keys())[:10]}")
+        
         return metrics
 
     
