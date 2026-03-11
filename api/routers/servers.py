@@ -141,13 +141,8 @@ async def create_server(
     if server.device_type == 'server' and server.monitoring_protocol == 'wmi':
         from models import Sensor
         
+        # PING removido - agora é criado automaticamente pelo worker a cada 60s
         default_sensors = [
-            {
-                "name": "PING",
-                "sensor_type": "ping",
-                "threshold_warning": 100,
-                "threshold_critical": 200
-            },
             {
                 "name": "cpu_usage",
                 "sensor_type": "cpu",
@@ -204,14 +199,8 @@ async def create_server(
         from models import Sensor
         
         # SNMP OIDs padrão baseados em PRTG e Zabbix
+        # PING removido - agora é criado automaticamente pelo worker a cada 60s
         snmp_sensors = [
-            {
-                "name": "PING",
-                "sensor_type": "ping",
-                "threshold_warning": 100,
-                "threshold_critical": 200,
-                "snmp_oid": None  # ICMP ping, não usa SNMP
-            },
             {
                 "name": "SNMP_Uptime",
                 "sensor_type": "snmp_uptime",
