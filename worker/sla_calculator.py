@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 import httpx
@@ -115,7 +115,7 @@ def calculate_monthly_sla(db: Session, tenant_id: int, year: int, month: int):
         existing_report.sla_compliance = sla_compliance
         existing_report.report_data = report_data
         existing_report.ai_summary = ai_summary
-        existing_report.generated_at = datetime.now()
+        existing_report.generated_at = datetime.now(timezone.utc)
     else:
         report = MonthlyReport(
             tenant_id=tenant_id,

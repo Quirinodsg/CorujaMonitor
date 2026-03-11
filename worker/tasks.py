@@ -1,7 +1,7 @@
 from celery import Celery
 from celery.schedules import crontab
 from celery.utils.log import get_task_logger
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import httpx
 import sys
@@ -108,7 +108,7 @@ def evaluate_all_thresholds():
                 
                 for incident in open_incidents:
                     incident.status = "resolved"
-                    incident.resolved_at = datetime.now()
+                    incident.resolved_at = datetime.now(timezone.utc)
                     incident.resolution_notes = "Auto-resolvido: sensor voltou ao normal"
                     db.commit()
                     logger.info(f"✅ Incidente {incident.id} auto-resolvido (sensor {sensor.name} voltou ao normal)")
@@ -198,7 +198,7 @@ def request_ai_analysis(incident_id: int):
         # Get recent metrics (última hora)
         recent_metrics = db.query(Metric).filter(
             Metric.sensor_id == sensor.id,
-            Metric.timestamp >= datetime.now() - timedelta(hours=1)
+            Metric.timestamp >= datetime.now(timezone.utc) - timedelta(hours=1)
         ).order_by(Metric.timestamp.desc()).limit(60).all()
         
         # Call AI Agent
@@ -243,7 +243,7 @@ def generate_monthly_reports():
         tenants = db.query(Tenant).filter(Tenant.is_active == True).all()
         
         # Previous month (calcular mês anterior)
-        today = datetime.now()
+        today = datetime.now(timezone.utc)
         if today.month == 1:
             year = today.year - 1
             month = 12
@@ -334,7 +334,7 @@ def execute_aiops_analysis(incident_id: int):
                     incident.root_cause = aiops_result.get('root_cause')
                     incident.ai_analysis = {
                         'rca': aiops_result,
-                        'timestamp': datetime.now().isoformat()
+                        'timestamp': datetime.now(timezone.utc).isoformat()
                     }
                     db.commit()
                 else:
@@ -1109,13 +1109,13 @@ def ping_all_servers():
                 else:
                     status = 'ok'
                 
-                # Create metric (usar datetime.now() para timezone local)
+                # Create metric (usar UTC para consistência com PostgreSQL)
                 metric = Metric(
                     sensor_id=ping_sensor.id,
                     value=latency_ms,
                     unit='ms',
                     status=status,
-                    timestamp=datetime.now()
+                    timestamp=datetime.now(timezone.utc)
                 )
                 db.add(metric)
                 db.commit()
