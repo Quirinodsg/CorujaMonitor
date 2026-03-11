@@ -4,8 +4,8 @@ Script para adicionar coluna updated_at na tabela servers
 import psycopg2
 from datetime import datetime
 
-# Configurações do banco
-DB_HOST = "localhost"
+# Configurações do banco (usar hostname do Docker)
+DB_HOST = "postgres"  # Nome do container no docker-compose
 DB_PORT = 5432
 DB_NAME = "coruja_monitor"
 DB_USER = "coruja_user"

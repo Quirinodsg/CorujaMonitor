@@ -1,0 +1,74 @@
+═══════════════════════════════════════════════════════════════
+  ADICIONAR COLUNA updated_at NO BANCO - CORRIGIDO
+═══════════════════════════════════════════════════════════════
+
+📋 SITUAÇÃO:
+- Worker precisa da coluna "updated_at" na tabela servers
+- Script Python corrigido para usar hostname correto do Docker
+
+═══════════════════════════════════════════════════════════════
+  PASSO 1: BAIXAR CÓDIGO ATUALIZADO NO LINUX
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+git pull origin master
+
+═══════════════════════════════════════════════════════════════
+  PASSO 2: EXECUTAR SCRIPT PYTHON (MÉTODO RECOMENDADO)
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-api python /app/adicionar_coluna_updated_at.py
+
+✅ Se aparecer "Coluna updated_at adicionada com sucesso!" → SUCESSO!
+
+═══════════════════════════════════════════════════════════════
+  PASSO 3: REINICIAR WORKER
+═══════════════════════════════════════════════════════════════
+
+docker-compose restart worker
+
+═══════════════════════════════════════════════════════════════
+  PASSO 4: VERIFICAR LOGS DO WORKER (AGUARDAR 60 SEGUNDOS)
+═══════════════════════════════════════════════════════════════
+
+# Aguardar 60 segundos para task ping_all_servers executar
+sleep 60
+
+# Ver logs do worker
+docker logs coruja-worker --tail 200 | grep -i ping
+
+✅ SUCESSO: Deve aparecer mensagens de PING sendo executado
+❌ ERRO: Se ainda aparecer erro de "updated_at", usar método alternativo
+
+═══════════════════════════════════════════════════════════════
+  MÉTODO ALTERNATIVO: SQL DIRETO (SE SCRIPT PYTHON FALHAR)
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja_user -d coruja_monitor -c "ALTER TABLE servers ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;"
+
+docker exec -it coruja-postgres psql -U coruja_user -d coruja_monitor -c "UPDATE servers SET updated_at = created_at WHERE updated_at IS NULL;"
+
+# Depois reiniciar worker
+docker-compose restart worker
+
+═══════════════════════════════════════════════════════════════
+  PASSO 5: VERIFICAR NO DASHBOARD
+═══════════════════════════════════════════════════════════════
+
+1. Abrir: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em "Servidores"
+4. Verificar se sensor "PING" aparece com latência (ex: 2ms, 5ms)
+5. Verificar se incidentes falsos de PING sumiram
+
+═══════════════════════════════════════════════════════════════
+  RESUMO DO QUE FOI IMPLEMENTADO
+═══════════════════════════════════════════════════════════════
+
+✅ Task ping_all_servers() no worker (executa a cada 60s)
+✅ PING direto do servidor Linux (independente de probe)
+✅ Cria sensor PING automaticamente para todos servidores
+✅ Funciona igual PRTG: PING automático ao adicionar servidor
+✅ Script Python corrigido para usar hostname Docker correto
+
+═══════════════════════════════════════════════════════════════
