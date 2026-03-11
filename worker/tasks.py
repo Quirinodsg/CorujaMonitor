@@ -108,7 +108,7 @@ def evaluate_all_thresholds():
                 
                 for incident in open_incidents:
                     incident.status = "resolved"
-                    incident.resolved_at = datetime.utcnow()
+                    incident.resolved_at = datetime.now()
                     incident.resolution_notes = "Auto-resolvido: sensor voltou ao normal"
                     db.commit()
                     logger.info(f"✅ Incidente {incident.id} auto-resolvido (sensor {sensor.name} voltou ao normal)")
@@ -195,10 +195,10 @@ def request_ai_analysis(incident_id: int):
         sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
         server = db.query(Server).filter(Server.id == sensor.server_id).first()
         
-        # Get recent metrics
+        # Get recent metrics (última hora)
         recent_metrics = db.query(Metric).filter(
             Metric.sensor_id == sensor.id,
-            Metric.timestamp >= datetime.utcnow() - timedelta(hours=1)
+            Metric.timestamp >= datetime.now() - timedelta(hours=1)
         ).order_by(Metric.timestamp.desc()).limit(60).all()
         
         # Call AI Agent
@@ -242,8 +242,8 @@ def generate_monthly_reports():
         from models import Tenant
         tenants = db.query(Tenant).filter(Tenant.is_active == True).all()
         
-        # Previous month
-        today = datetime.utcnow()
+        # Previous month (calcular mês anterior)
+        today = datetime.now()
         if today.month == 1:
             year = today.year - 1
             month = 12
@@ -334,7 +334,7 @@ def execute_aiops_analysis(incident_id: int):
                     incident.root_cause = aiops_result.get('root_cause')
                     incident.ai_analysis = {
                         'rca': aiops_result,
-                        'timestamp': datetime.utcnow().isoformat()
+                        'timestamp': datetime.now().isoformat()
                     }
                     db.commit()
                 else:
@@ -1109,13 +1109,13 @@ def ping_all_servers():
                 else:
                     status = 'ok'
                 
-                # Create metric
+                # Create metric (usar datetime.now() para timezone local)
                 metric = Metric(
                     sensor_id=ping_sensor.id,
                     value=latency_ms,
                     unit='ms',
                     status=status,
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.now()
                 )
                 db.add(metric)
                 db.commit()

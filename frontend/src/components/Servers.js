@@ -432,6 +432,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
       case 'hyperv': return '🖼️';
       case 'udm': return '📡';
       case 'docker': return '🐳';
+      case 'snmp': return '🌐';
+      case 'snmp_uptime': return '⏱️';
+      case 'snmp_cpu': return '🖥️';
+      case 'snmp_memory': return '💾';
+      case 'snmp_traffic': return '📊';
+      case 'snmp_interface': return '🔌';
       default: return '📊';
     }
   };
@@ -488,7 +494,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         groups.services.sensors.push(sensor);
       } else if (['hyperv', 'kubernetes'].includes(type)) {
         groups.applications.sensors.push(sensor);
-      } else if (['http', 'port', 'dns', 'ssl', 'snmp'].includes(type)) {
+      } else if (['http', 'port', 'dns', 'ssl', 'snmp', 'snmp_uptime', 'snmp_cpu', 'snmp_memory', 'snmp_traffic', 'snmp_interface'].includes(type)) {
         groups.network.sensors.push(sensor);
       } else {
         // Sensor de tipo desconhecido - adicionar ao grupo apropriado ou criar novo
