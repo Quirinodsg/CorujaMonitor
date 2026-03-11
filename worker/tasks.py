@@ -1072,19 +1072,19 @@ def ping_all_servers():
                 logger.debug(f"🏓 PING {server.hostname} ({server.ip_address}): {latency_ms}ms")
                 
                 # Get or create PING sensor
+                # Buscar por qualquer nome (ping, PING, Ping) para evitar duplicação
                 ping_sensor = db.query(Sensor).filter(
                     Sensor.server_id == server.id,
-                    Sensor.sensor_type == 'ping',
-                    Sensor.name == 'ping'
+                    Sensor.sensor_type == 'ping'
                 ).first()
                 
                 if not ping_sensor:
-                    # Create PING sensor automatically
+                    # Create PING sensor automatically (nome maiúsculo para consistência com API)
                     logger.info(f"✨ Criando sensor PING automático para {server.hostname}")
                     ping_sensor = Sensor(
                         server_id=server.id,
                         sensor_type='ping',
-                        name='ping',
+                        name='PING',  # Maiúsculo para consistência com API
                         threshold_warning=100,
                         threshold_critical=200,
                         is_active=True
@@ -1092,6 +1092,12 @@ def ping_all_servers():
                     db.add(ping_sensor)
                     db.commit()
                     db.refresh(ping_sensor)
+                else:
+                    # Normalizar nome para PING (maiúsculo) se estiver diferente
+                    if ping_sensor.name != 'PING':
+                        logger.info(f"🔄 Normalizando nome do sensor PING de '{ping_sensor.name}' para 'PING'")
+                        ping_sensor.name = 'PING'
+                        db.commit()
                 
                 # Determine status
                 if latency_ms == 0:

@@ -1,0 +1,172 @@
+═══════════════════════════════════════════════════════════════
+  🚀 EXECUTAR AGORA - CORREÇÃO PING DUPLICADO
+  📅 11 MARÇO 2026
+═══════════════════════════════════════════════════════════════
+
+✅ CORREÇÕES JÁ APLICADAS NO CÓDIGO:
+- worker/tasks.py (busca sensor sem filtrar nome, normaliza para PING)
+- probe/probe_core.py (PING desabilitado)
+
+⏳ FALTA FAZER:
+1. Reiniciar worker e API (Linux)
+2. Reiniciar probe (Windows)
+3. Limpar sensores duplicados
+4. Deletar sensores desconhecidos
+5. Fechar incidentes de PING
+6. Enviar para Git
+
+═══════════════════════════════════════════════════════════════
+  PASSO 1: DIAGNOSTICAR (LINUX)
+═══════════════════════════════════════════════════════════════
+
+# Ver sensores PING atuais
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, s.id, s.name, COUNT(m.id) as metricas FROM servers srv JOIN sensors s ON s.server_id = srv.id LEFT JOIN metrics m ON m.sensor_id = s.id WHERE s.sensor_type = 'ping' GROUP BY srv.hostname, s.id, s.name ORDER BY srv.hostname, metricas DESC;"
+
+# Anotar IDs dos sensores DUPLICADOS (com menos métricas)
+# Exemplo: Se SRVCMONITOR001 tem IDs 41 e 42, deletar o com menos métricas
+
+═══════════════════════════════════════════════════════════════
+  PASSO 2: DELETAR SENSORES PING DUPLICADOS (LINUX)
+═══════════════════════════════════════════════════════════════
+
+# SUBSTITUA 41,42 pelos IDs corretos dos sensores DUPLICADOS!
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM remediation_logs WHERE incident_id IN (SELECT id FROM incidents WHERE sensor_id IN (41, 42));"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM incidents WHERE sensor_id IN (41, 42);"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM metrics WHERE sensor_id IN (41, 42);"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM sensors WHERE id IN (41, 42);"
+
+# Verificar resultado (deve mostrar 1 sensor por servidor)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, COUNT(s.id) as total_ping FROM servers srv JOIN sensors s ON s.server_id = srv.id WHERE s.sensor_type = 'ping' GROUP BY srv.hostname;"
+
+═══════════════════════════════════════════════════════════════
+  PASSO 3: DELETAR SENSORES DESCONHECIDOS (LINUX)
+═══════════════════════════════════════════════════════════════
+
+# Ver sensores desconhecidos
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, name, sensor_type FROM sensors WHERE sensor_type = 'unknown' OR name LIKE '%unknown%' OR name LIKE '%Unknown%';"
+
+# Deletar sensores desconhecidos
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM remediation_logs WHERE incident_id IN (SELECT id FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE sensor_type = 'unknown' OR name LIKE '%unknown%' OR name LIKE '%Unknown%'));"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE sensor_type = 'unknown' OR name LIKE '%unknown%' OR name LIKE '%Unknown%');"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM metrics WHERE sensor_id IN (SELECT id FROM sensors WHERE sensor_type = 'unknown' OR name LIKE '%unknown%' OR name LIKE '%Unknown%');"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM sensors WHERE sensor_type = 'unknown' OR name LIKE '%unknown%' OR name LIKE '%Unknown%';"
+
+# Verificar resultado (deve ser 0)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT COUNT(*) as total_unknown FROM sensors WHERE sensor_type = 'unknown' OR name LIKE '%unknown%' OR name LIKE '%Unknown%';"
+
+═══════════════════════════════════════════════════════════════
+  PASSO 4: FECHAR INCIDENTES DE PING (LINUX)
+═══════════════════════════════════════════════════════════════
+
+# Ver incidentes de PING abertos
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT COUNT(*) as total_abertos FROM incidents i JOIN sensors s ON i.sensor_id = s.id WHERE s.sensor_type = 'ping' AND i.status != 'resolved';"
+
+# Fechar todos os incidentes de PING
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "UPDATE incidents SET status = 'resolved', resolved_at = NOW(), resolution_notes = 'Fechado automaticamente - sistema de PING migrado para worker' WHERE sensor_id IN (SELECT id FROM sensors WHERE sensor_type = 'ping') AND status != 'resolved';"
+
+# Verificar resultado (deve ser 0)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT COUNT(*) as total_abertos FROM incidents i JOIN sensors s ON i.sensor_id = s.id WHERE s.sensor_type = 'ping' AND i.status != 'resolved';"
+
+═══════════════════════════════════════════════════════════════
+  PASSO 5: REINICIAR WORKER E API (LINUX)
+═══════════════════════════════════════════════════════════════
+
+# Reiniciar worker
+docker-compose restart worker
+
+# Aguardar 10 segundos
+sleep 10
+
+# Ver logs do worker (deve mostrar PING funcionando)
+docker logs coruja-worker --tail 50 | grep -i ping
+
+# Reiniciar API
+docker-compose restart api
+
+# Aguardar 10 segundos
+sleep 10
+
+# Ver logs da API
+docker logs coruja-api --tail 20
+
+═══════════════════════════════════════════════════════════════
+  PASSO 6: REINICIAR PROBE (WINDOWS - SRVSONDA001)
+═══════════════════════════════════════════════════════════════
+
+Conectar no Windows SRVSONDA001 e executar:
+
+# Parar serviço
+net stop CorujaProbe
+
+# Aguardar 5 segundos
+timeout /t 5
+
+# Iniciar serviço
+net start CorujaProbe
+
+# Ver logs (deve mostrar "PING desabilitado")
+type "C:\Program Files\CorujaMonitor\Probe\probe.log" | findstr /i "ping"
+
+═══════════════════════════════════════════════════════════════
+  PASSO 7: VERIFICAÇÃO FINAL (LINUX)
+═══════════════════════════════════════════════════════════════
+
+# Contar sensores PING (deve ser 1 por servidor)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, COUNT(s.id) as total_ping FROM servers srv JOIN sensors s ON s.server_id = srv.id WHERE s.sensor_type = 'ping' GROUP BY srv.hostname;"
+
+# Ver latências atuais
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, m.value as latencia_ms, m.status, m.timestamp FROM metrics m JOIN sensors s ON m.sensor_id = s.id JOIN servers srv ON s.server_id = srv.id WHERE s.sensor_type = 'ping' ORDER BY m.timestamp DESC LIMIT 10;"
+
+# Ver logs do worker (deve executar a cada 60s)
+docker logs coruja-worker --tail 100 | grep -i "ping"
+
+═══════════════════════════════════════════════════════════════
+  PASSO 8: ENVIAR PARA GIT (WINDOWS - NOTEBOOK)
+═══════════════════════════════════════════════════════════════
+
+No Windows (notebook), abrir Git Bash:
+
+cd ~/Coruja\ Monitor
+
+# Adicionar arquivos corrigidos
+git add worker/tasks.py
+git add probe/probe_core.py
+git add LIMPAR_SENSORES_COMPLETO_AGORA.txt
+git add PROBLEMA_DUPLICACAO_PING_RESOLVIDO.md
+git add EXECUTAR_AGORA_CORRECAO_PING.txt
+
+# Commit
+git commit -m "fix: Corrigir duplicação de sensores PING e desabilitar PING na probe"
+
+# Push
+git push origin master
+
+═══════════════════════════════════════════════════════════════
+  PASSO 9: ATUALIZAR LINUX
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+git pull origin master
+
+═══════════════════════════════════════════════════════════════
+  ✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════
+
+✅ 1 sensor PING por servidor (nome: PING)
+✅ 0 sensores desconhecidos
+✅ 0 incidentes de PING abertos
+✅ Latências atualizando a cada 60s
+✅ Worker logando: "🏓 Iniciando PING de todos os servidores..."
+✅ Probe logando: "⚠️ PING desabilitado na probe"
+✅ Dashboard mostrando apenas 1 sensor PING por servidor
+
+═══════════════════════════════════════════════════════════════
+  📚 ARQUIVOS DE REFERÊNCIA
+═══════════════════════════════════════════════════════════════
+
+- EXECUTAR_AGORA_CORRECAO_PING.txt (este arquivo)
+- LIMPAR_SENSORES_COMPLETO_AGORA.txt (comandos detalhados)
+- PROBLEMA_DUPLICACAO_PING_RESOLVIDO.md (documentação técnica)
+
+═══════════════════════════════════════════════════════════════
