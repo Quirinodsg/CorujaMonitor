@@ -1,0 +1,40 @@
+═══════════════════════════════════════════════════════════════
+  ENVIAR CORREÇÕES PING PARA GIT - WINDOWS
+═══════════════════════════════════════════════════════════════
+
+📋 O QUE FOI ALTERADO:
+- api/routers/servers.py: PING removido dos sensores padrão
+
+📝 ARQUIVOS PARA COMMIT:
+- api/routers/servers.py (MODIFICADO)
+- ANALISE_CORRECOES_PING_NECESSARIAS.md (NOVO)
+- APLICAR_CORRECOES_PING_AGORA.txt (NOVO)
+- RESUMO_PING_COMPLETO_11MAR.md (NOVO)
+- SUCESSO_PING_11MAR.txt (NOVO)
+- DELETAR_SENSORES_PING_CASCATA.txt (NOVO)
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS GIT (COPIAR E COLAR NO GIT BASH)
+═══════════════════════════════════════════════════════════════
+
+cd ~/Coruja\ Monitor
+
+git add api/routers/servers.py
+git add ANALISE_CORRECOES_PING_NECESSARIAS.md
+git add APLICAR_CORRECOES_PING_AGORA.txt
+git add RESUMO_PING_COMPLETO_11MAR.md
+git add SUCESSO_PING_11MAR.txt
+git add DELETAR_SENSORES_PING_CASCATA.txt
+
+git commit -m "fix: Remover criação automática de sensor PING - agora feito pelo worker"
+
+git push origin master
+
+═══════════════════════════════════════════════════════════════
+  APÓS ENVIAR PARA GIT
+═══════════════════════════════════════════════════════════════
+
+✅ Arquivos enviados para GitHub
+✅ Pronto para atualizar servidor Linux
+
+═══════════════════════════════════════════════════════════════

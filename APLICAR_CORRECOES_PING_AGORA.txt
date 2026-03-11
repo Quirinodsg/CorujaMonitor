@@ -1,0 +1,140 @@
+═══════════════════════════════════════════════════════════════
+  APLICAR CORREÇÕES PING - REMOVER CRIAÇÃO AUTOMÁTICA
+═══════════════════════════════════════════════════════════════
+
+✅ CORREÇÕES APLICADAS NO CÓDIGO:
+- api/routers/servers.py: PING removido dos sensores padrão WMI
+- api/routers/servers.py: PING removido dos sensores padrão SNMP
+
+📋 MOTIVO:
+Worker já cria sensor PING automaticamente a cada 60s para TODOS os servidores.
+Não precisa mais criar na API ao adicionar servidor.
+
+═══════════════════════════════════════════════════════════════
+  PASSO 1: ENVIAR PARA GIT (WINDOWS)
+═══════════════════════════════════════════════════════════════
+
+cd ~/Coruja\ Monitor
+git add api/routers/servers.py ANALISE_CORRECOES_PING_NECESSARIAS.md
+git commit -m "fix: Remover criação automática de sensor PING - agora feito pelo worker"
+git push origin master
+
+═══════════════════════════════════════════════════════════════
+  PASSO 2: ATUALIZAR SERVIDOR LINUX
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker-compose restart api
+
+# Aguardar API reiniciar
+sleep 10
+
+# Verificar se API está rodando
+docker logs coruja-api --tail 20
+
+═══════════════════════════════════════════════════════════════
+  PASSO 3: TESTAR ADICIONANDO SERVIDOR NOVO
+═══════════════════════════════════════════════════════════════
+
+1. Abrir http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em "Servidores"
+4. Clicar em "+ Adicionar Servidor"
+5. Preencher:
+   - Nome: TESTE-PING
+   - IP: 192.168.31.100 (qualquer IP)
+   - Tipo: Servidor
+   - Protocolo: WMI
+6. Salvar
+
+═══════════════════════════════════════════════════════════════
+  PASSO 4: VERIFICAR QUE PING NÃO FOI CRIADO
+═══════════════════════════════════════════════════════════════
+
+# Ver sensores do servidor novo
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.id, s.name, s.sensor_type FROM sensors s JOIN servers srv ON s.server_id = srv.id WHERE srv.hostname = 'TESTE-PING';"
+
+RESULTADO ESPERADO:
+- cpu_usage
+- memory_usage
+- disk_C_
+- uptime
+- network_in
+- network_out
+- SEM PING! ✅
+
+═══════════════════════════════════════════════════════════════
+  PASSO 5: AGUARDAR WORKER CRIAR PING (60 SEGUNDOS)
+═══════════════════════════════════════════════════════════════
+
+echo "⏳ Aguardando 60 segundos para worker criar sensor PING..."
+sleep 60
+
+# Ver logs do worker
+docker logs coruja-worker --tail 50 | grep -i ping
+
+# Verificar sensor PING criado
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.id, s.name, s.sensor_type FROM sensors s JOIN servers srv ON s.server_id = srv.id WHERE srv.hostname = 'TESTE-PING' AND s.sensor_type = 'ping';"
+
+RESULTADO ESPERADO:
+- 1 sensor PING criado automaticamente pelo worker ✅
+
+═══════════════════════════════════════════════════════════════
+  PASSO 6: VERIFICAR DASHBOARD
+═══════════════════════════════════════════════════════════════
+
+1. Dashboard → Servidores → TESTE-PING
+2. Ver sensores
+3. Verificar que PING aparece
+4. Verificar latência real (não 0ms)
+
+═══════════════════════════════════════════════════════════════
+  PASSO 7: LIMPAR TESTE (OPCIONAL)
+═══════════════════════════════════════════════════════════════
+
+# Deletar servidor de teste
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM servers WHERE hostname = 'TESTE-PING';"
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS RÁPIDOS (COPIAR TUDO)
+═══════════════════════════════════════════════════════════════
+
+# No Linux
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker-compose restart api
+sleep 10
+
+# Verificar API
+docker logs coruja-api --tail 20
+
+# Após adicionar servidor TESTE-PING no dashboard:
+
+# Ver sensores (não deve ter PING)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.name, s.sensor_type FROM sensors s JOIN servers srv ON s.server_id = srv.id WHERE srv.hostname = 'TESTE-PING';"
+
+# Aguardar 60s
+sleep 60
+
+# Ver sensor PING criado pelo worker
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.name, s.sensor_type FROM sensors s JOIN servers srv ON s.server_id = srv.id WHERE srv.hostname = 'TESTE-PING' AND s.sensor_type = 'ping';"
+
+═══════════════════════════════════════════════════════════════
+  RESULTADO ESPERADO FINAL
+═══════════════════════════════════════════════════════════════
+
+✅ Servidor novo criado SEM sensor PING
+✅ Após 60s, worker cria sensor PING automaticamente
+✅ Latência real aparece no dashboard
+✅ Sem duplicação de sensores PING
+✅ Sistema funcionando igual PRTG
+
+═══════════════════════════════════════════════════════════════
+  PRÓXIMA CORREÇÃO (OPCIONAL)
+═══════════════════════════════════════════════════════════════
+
+Desabilitar PING na probe (probe/probe_core.py) para evitar redundância.
+Ver arquivo: ANALISE_CORRECOES_PING_NECESSARIAS.md
+
+═══════════════════════════════════════════════════════════════

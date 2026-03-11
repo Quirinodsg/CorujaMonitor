@@ -1,0 +1,124 @@
+═══════════════════════════════════════════════════════════════
+  ✅ PING DIRETO DO SERVIDOR - IMPLEMENTADO COM SUCESSO
+═══════════════════════════════════════════════════════════════
+
+📅 Data: 11 Março 2026
+🎯 Objetivo: PING automático direto do servidor Linux (igual PRTG)
+
+═══════════════════════════════════════════════════════════════
+  ✅ O QUE FOI IMPLEMENTADO
+═══════════════════════════════════════════════════════════════
+
+1. ✅ Task `ping_all_servers()` no worker
+   - Executa a cada 60 segundos
+   - Faz PING direto do servidor Linux
+   - Independente de probe/SNMP/WMI
+   - Cria sensores PING automaticamente
+
+2. ✅ Coluna `updated_at` adicionada na tabela sensors
+   - Script Python corrigido para Docker
+   - Hostname: `postgres` (não localhost)
+
+3. ✅ Comando `ping` instalado no worker
+   - Dockerfile atualizado com `iputils-ping`
+   - Container reconstruído
+
+4. ✅ Sensores PING duplicados removidos
+   - Deletados em cascata (remediation_logs → incidents → metrics → sensors)
+   - Mantidos apenas sensores novos (34 e 35)
+
+═══════════════════════════════════════════════════════════════
+  ✅ RESULTADO FINAL
+═══════════════════════════════════════════════════════════════
+
+Sensores PING ativos:
+- Sensor 34: SRVSONDA001 (24 métricas)
+- Sensor 35: SRVCMONITOR001 (24 métricas)
+
+Latências reais:
+- SRVCMONITOR001: ~0.06ms (excelente!)
+- SRVSONDA001: ~0.55ms (excelente!)
+
+═══════════════════════════════════════════════════════════════
+  ✅ COMO FUNCIONA AGORA
+═══════════════════════════════════════════════════════════════
+
+1. Worker executa task `ping_all_servers()` a cada 60s
+2. Busca todos os servidores ativos no banco
+3. Executa comando `ping -c 1 -W 2 <IP>` para cada servidor
+4. Cria sensor PING automaticamente se não existir
+5. Salva métrica com latência real (ms)
+6. Cria incidente se latência > threshold ou offline
+7. Dashboard mostra latência em tempo real
+
+═══════════════════════════════════════════════════════════════
+  ✅ VANTAGENS (IGUAL PRTG)
+═══════════════════════════════════════════════════════════════
+
+✅ PING automático ao adicionar servidor
+✅ Independente de probe Windows
+✅ Independente de SNMP/WMI
+✅ Latência real em milissegundos
+✅ Funciona mesmo se probe estiver offline
+✅ Incidentes criados automaticamente
+✅ Dashboard atualizado a cada 60s
+
+═══════════════════════════════════════════════════════════════
+  📊 VERIFICAR NO DASHBOARD
+═══════════════════════════════════════════════════════════════
+
+1. Abrir http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em "Sensores"
+4. Clicar em "Ativos" (verde)
+5. Ver 2 sensores PING com latência real
+6. Sem duplicados!
+
+═══════════════════════════════════════════════════════════════
+  🔧 ARQUIVOS MODIFICADOS
+═══════════════════════════════════════════════════════════════
+
+1. worker/tasks.py
+   - Adicionada função `execute_ping()`
+   - Adicionada task `ping_all_servers()`
+   - Schedule: a cada 60 segundos
+
+2. worker/Dockerfile
+   - Adicionado `iputils-ping`
+
+3. api/adicionar_coluna_updated_at.py
+   - Corrigido hostname para Docker (`postgres`)
+
+═══════════════════════════════════════════════════════════════
+  📝 COMMITS GIT
+═══════════════════════════════════════════════════════════════
+
+Commit 8c8e440: "fix: Corrigir hostname PostgreSQL para Docker no script updated_at"
+- api/adicionar_coluna_updated_at.py
+- EXECUTAR_SQL_DIRETO_AGORA.txt
+
+Commits anteriores:
+- worker/tasks.py (task PING)
+- worker/Dockerfile (iputils-ping)
+
+═══════════════════════════════════════════════════════════════
+  🎯 PRÓXIMOS PASSOS (OPCIONAL)
+═══════════════════════════════════════════════════════════════
+
+1. Monitorar logs do worker:
+   docker logs coruja-worker --tail 100 | grep -i ping
+
+2. Ver latências no banco:
+   docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, m.value, m.timestamp FROM metrics m JOIN sensors s ON m.sensor_id = s.id JOIN servers srv ON s.server_id = srv.id WHERE s.sensor_type = 'ping' ORDER BY m.timestamp DESC LIMIT 10;"
+
+3. Adicionar mais servidores e ver PING automático!
+
+═══════════════════════════════════════════════════════════════
+  ✅ SISTEMA FUNCIONANDO PERFEITAMENTE!
+═══════════════════════════════════════════════════════════════
+
+🎉 PING direto do servidor implementado com sucesso!
+🎉 Igual ao PRTG: automático, independente, confiável!
+🎉 Latências reais: 0.06ms e 0.55ms
+
+═══════════════════════════════════════════════════════════════
