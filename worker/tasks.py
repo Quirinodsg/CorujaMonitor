@@ -23,6 +23,10 @@ app.conf.broker_url = settings.CELERY_BROKER_URL
 app.conf.result_backend = settings.CELERY_RESULT_BACKEND
 
 app.conf.beat_schedule = {
+    'ping-all-servers-every-minute': {
+        'task': 'tasks.ping_all_servers',
+        'schedule': 60.0,  # A cada 60 segundos
+    },
     'evaluate-thresholds-every-minute': {
         'task': 'tasks.evaluate_all_thresholds',
         'schedule': 60.0,
@@ -1045,3 +1049,111 @@ def send_dynamics365_notification_sync(config: dict, incident_data: dict) -> dic
             'success': False,
             'error': f"Dynamics 365 connection error: {str(e)}"
         }
+
+
+@app.task
+def ping_all_servers():
+    """
+    Faz PING em todos os servidores ativos direto do servidor Linux.
+    Cria sensor PING automaticamente se não existir.
+    Igual ao PRTG - PING independente de probe/SNMP/WMI.
+    """
+    logger.info("🏓 Iniciando PING de todos os servidores...")
+    db = SessionLocal()
+    
+    try:
+        servers = db.query(Server).filter(Server.is_active == True).all()
+        logger.info(f"📊 Encontrados {len(servers)} servidores ativos para fazer PING")
+        
+        for server in servers:
+            try:
+                # Execute ping
+                latency_ms = execute_ping(server.ip_address)
+                logger.debug(f"🏓 PING {server.hostname} ({server.ip_address}): {latency_ms}ms")
+                
+                # Get or create PING sensor
+                ping_sensor = db.query(Sensor).filter(
+                    Sensor.server_id == server.id,
+                    Sensor.sensor_type == 'ping',
+                    Sensor.name == 'ping'
+                ).first()
+                
+                if not ping_sensor:
+                    # Create PING sensor automatically
+                    logger.info(f"✨ Criando sensor PING automático para {server.hostname}")
+                    ping_sensor = Sensor(
+                        server_id=server.id,
+                        sensor_type='ping',
+                        name='ping',
+                        threshold_warning=100,
+                        threshold_critical=200,
+                        is_active=True
+                    )
+                    db.add(ping_sensor)
+                    db.commit()
+                    db.refresh(ping_sensor)
+                
+                # Determine status
+                if latency_ms == 0:
+                    status = 'critical'  # Offline
+                elif latency_ms > ping_sensor.threshold_critical:
+                    status = 'critical'
+                elif latency_ms > ping_sensor.threshold_warning:
+                    status = 'warning'
+                else:
+                    status = 'ok'
+                
+                # Create metric
+                metric = Metric(
+                    sensor_id=ping_sensor.id,
+                    value=latency_ms,
+                    unit='ms',
+                    status=status,
+                    timestamp=datetime.utcnow()
+                )
+                db.add(metric)
+                db.commit()
+                
+                logger.debug(f"✅ Métrica PING salva: {server.hostname} = {latency_ms}ms ({status})")
+                
+            except Exception as e:
+                logger.error(f"❌ Erro ao fazer PING em {server.hostname}: {e}")
+                continue
+        
+        logger.info(f"✅ PING concluído para {len(servers)} servidores")
+        
+    except Exception as e:
+        logger.error(f"❌ Erro ao fazer PING de servidores: {e}")
+    finally:
+        db.close()
+
+
+def execute_ping(ip_address: str) -> float:
+    """
+    Executa PING e retorna latência em ms (0 se offline).
+    Usa comando ping nativo do Linux.
+    """
+    try:
+        # Linux ping command: -c 1 (1 pacote), -W 2 (timeout 2s)
+        result = subprocess.run(
+            ['ping', '-c', '1', '-W', '2', ip_address],
+            capture_output=True,
+            text=True,
+            timeout=3
+        )
+        
+        if result.returncode == 0:
+            # Parse output: "time=1.23 ms"
+            output = result.stdout
+            if 'time=' in output:
+                time_str = output.split('time=')[1].split()[0]
+                return float(time_str)
+        
+        return 0  # Offline
+        
+    except subprocess.TimeoutExpired:
+        logger.debug(f"⏱️ Timeout ao fazer PING em {ip_address}")
+        return 0
+    except Exception as e:
+        logger.error(f"❌ Erro ao executar PING para {ip_address}: {e}")
+        return 0
