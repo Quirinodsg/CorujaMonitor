@@ -415,7 +415,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
       const minutes = Math.floor(((value - days) * 24 - hours) * 60);
       return `${days}d ${hours}h ${minutes}m`;
     } else if (unit === 'ms') {
-      return `${value.toFixed(0)} ms`;
+      // Para valores muito baixos (< 1ms), mostrar 2 casas decimais
+      if (value < 1) {
+        return `${value.toFixed(2)} ms`;
+      }
+      return `${Math.round(value)} ms`;
     }
     return value.toFixed(2);
   };

@@ -1,0 +1,114 @@
+═══════════════════════════════════════════════════════════════
+📥 BAIXAR CORREÇÃO DO GIT E APLICAR NO LINUX
+═══════════════════════════════════════════════════════════════
+
+📋 COPIAR E COLAR NO LINUX (SRVCMONITOR001):
+═══════════════════════════════════════════════════════════════
+
+# 1. IR PARA DIRETÓRIO DO PROJETO
+cd /home/administrador/CorujaMonitor
+
+# 2. BAIXAR ATUALIZAÇÕES DO GIT
+git pull origin master
+
+# 3. VERIFICAR ARQUIVO ATUALIZADO
+grep -A 5 "unit === 'ms'" frontend/src/components/Servers.js
+
+# Deve mostrar:
+#   } else if (unit === 'ms') {
+#     if (value < 1) {
+#       return `${value.toFixed(2)} ms`;
+#     }
+#     return `${Math.round(value)} ms`;
+#   }
+
+# 4. REBUILD DO FRONTEND (para aplicar mudanças)
+docker-compose down
+docker-compose up -d --build frontend
+
+# 5. AGUARDAR 2 MINUTOS
+echo "Aguardando frontend iniciar..."
+sleep 120
+
+# 6. VERIFICAR LOGS
+docker logs coruja-frontend --tail 50
+
+# Aguardar mensagem: "webpack compiled successfully"
+
+# 7. VERIFICAR STATUS
+docker-compose ps
+
+═══════════════════════════════════════════════════════════════
+🌐 TESTAR NO NAVEGADOR
+═══════════════════════════════════════════════════════════════
+
+1. Abrir: http://192.168.31.161:3000
+2. Pressionar: Ctrl+Shift+R (limpar cache)
+3. Login: admin@coruja.com / admin123
+4. Ir em "Servidores"
+
+═══════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════
+
+SRVCMONITOR001:
+  📡 PING: 0.05 ms  ✅ (corrigido de 0 ms)
+
+SRVSONDA001:
+  📡 PING: 18 ms    ✅ (já estava correto)
+
+═══════════════════════════════════════════════════════════════
+🔍 DIAGNÓSTICO DE SENSORES "UNKNOWN" (OPCIONAL)
+═══════════════════════════════════════════════════════════════
+
+# Instalar jq (se ainda não tiver)
+apt install -y jq
+
+# Verificar sensores sem métricas recentes
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+  s.id,
+  s.name,
+  s.sensor_type,
+  srv.hostname,
+  s.is_active,
+  COUNT(m.id) as metric_count,
+  MAX(m.timestamp) as last_metric
+FROM sensors s
+JOIN servers srv ON s.server_id = srv.id
+LEFT JOIN metrics m ON m.sensor_id = s.id 
+  AND m.timestamp > NOW() - INTERVAL '10 minutes'
+GROUP BY s.id, s.name, s.sensor_type, srv.hostname, s.is_active
+HAVING COUNT(m.id) = 0
+ORDER BY s.id;
+"
+
+# Verificar API retornando sensores
+curl -s http://localhost:8000/api/v1/servers | jq '.[].sensors[] | {id, name, sensor_type, is_active}'
+
+═══════════════════════════════════════════════════════════════
+❓ SE FRONTEND NÃO INICIAR
+═══════════════════════════════════════════════════════════════
+
+# Ver logs detalhados
+docker logs -f coruja-frontend
+
+# Se houver erro, rebuild completo
+docker-compose down
+docker system prune -f
+docker-compose up -d --build
+
+═══════════════════════════════════════════════════════════════
+📊 VERIFICAR WORKER FUNCIONANDO
+═══════════════════════════════════════════════════════════════
+
+# Ver logs do worker (PING a cada 60s)
+docker logs -f coruja-worker --tail 100
+
+# Deve mostrar:
+# 🏓 PING SRVSONDA001: 18.xxx ms
+# ✅ Métrica PING salva
+# 🏓 PING SRVCMONITOR001: 0.0xx ms
+# ✅ Métrica PING salva
+
+═══════════════════════════════════════════════════════════════

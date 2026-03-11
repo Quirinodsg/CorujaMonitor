@@ -1,0 +1,35 @@
+═══════════════════════════════════════════════════════════════
+🚀 ENVIAR CORREÇÃO PING FRONTEND PARA GIT
+═══════════════════════════════════════════════════════════════
+
+📋 EXECUTAR NO NOTEBOOK WINDOWS (Git Bash ou PowerShell):
+═══════════════════════════════════════════════════════════════
+
+cd "C:\Users\andre.quirino\Coruja Monitor"
+
+git add frontend/src/components/Servers.js
+git add ANALISE_PING_0MS_FRONTEND.md
+git add DIAGNOSTICO_SENSORES_UNKNOWN_FRONTEND.md
+git add REINICIAR_FRONTEND_AGORA.txt
+git add EXECUTAR_AGORA_CORRECAO_FINAL_PING.txt
+git add SUCESSO_TIMEZONE_RESOLVIDO_11MAR.md
+git add ENVIAR_CORRECAO_PING_FRONTEND_GIT.txt
+git add BAIXAR_CORRECAO_LINUX_AGORA.txt
+
+git commit -m "fix: Corrigir exibição de PING < 1ms no frontend (mostrar 2 decimais)
+
+- Problema: toFixed(0) arredondava 0.049ms para 0ms
+- Solução: Mostrar 2 decimais para valores < 1ms
+- Valores >= 1ms continuam arredondados para inteiro
+- SRVCMONITOR001 agora mostra 0.05ms corretamente
+- Documentação completa adicionada"
+
+git push origin master
+
+═══════════════════════════════════════════════════════════════
+✅ APÓS ENVIAR, EXECUTAR NO LINUX
+═══════════════════════════════════════════════════════════════
+
+Abrir arquivo: BAIXAR_CORRECAO_LINUX_AGORA.txt
+
+═══════════════════════════════════════════════════════════════

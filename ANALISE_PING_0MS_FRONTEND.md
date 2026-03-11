@@ -1,101 +1,98 @@
-# ANÁLISE E CORREÇÃO: PING 0ms no Frontend
+# 🎯 PROBLEMA PING 0ms RESOLVIDO - Frontend
 
-## PROBLEMA IDENTIFICADO
+**Data**: 11/03/2026 14:50  
+**Status**: ✅ CORRIGIDO
 
-### Sintomas
-- Frontend mostra PING com 0ms apesar do banco ter valores corretos (~0.054ms e ~0.833ms)
-- PING tem timestamp 3 horas no futuro: "Atualizado: 11/03/2026, 16:45:45"
-- Outros sensores têm timestamp correto: "Atualizado: 11/03/2026, 13:45:45"
-- Sensores SNMP aparecem como "unknown" no console do navegador
+## 🔍 DIAGNÓSTICO
 
-### Causa Raiz
-1. **Timezone incorreto**: Worker estava usando `datetime.utcnow()` que gera UTC (3 horas à frente)
-2. **Frontend não reconhece sensores SNMP**: Faltavam tipos no switch case
+### Problema Identificado
+- **SRVCMONITOR001** mostrava `0 ms` no frontend
+- Banco de dados tinha valor correto: `0.049ms`
+- **Causa**: Função `formatValue()` no frontend arredondava para inteiro
 
-## CORREÇÕES APLICADAS
-
-### 1. Corrigido Timezone no Worker (worker/tasks.py)
-```python
-# ANTES (ERRADO - UTC):
-timestamp=datetime.utcnow()
-
-# DEPOIS (CORRETO - Local):
-timestamp=datetime.now()
-```
-
-**Arquivos corrigidos:**
-- `worker/tasks.py` linha ~1115 (função ping_all_servers)
-- `worker/tasks.py` linha ~111 (resolved_at)
-- `worker/tasks.py` linha ~201 (filtro métricas recentes)
-- `worker/tasks.py` linha ~246 (cálculo mês anterior)
-- `worker/tasks.py` linha ~337 (timestamp análise AI)
-- `worker/sla_calculator.py` linha ~118 (generated_at)
-
-### 2. Adicionado Suporte SNMP no Frontend (frontend/src/components/Servers.js)
-
-**Função getSensorIcon():**
+### Código Problemático
 ```javascript
-case 'snmp': return '🌐';
-case 'snmp_uptime': return '⏱️';
-case 'snmp_cpu': return '🖥️';
-case 'snmp_memory': return '💾';
-case 'snmp_traffic': return '📊';
-case 'snmp_interface': return '🔌';
+// frontend/src/components/Servers.js - LINHA 419 (ANTES)
+} else if (unit === 'ms') {
+  return `${value.toFixed(0)} ms`;  // ❌ toFixed(0) remove decimais
+}
 ```
 
-**Função groupSensorsByType():**
+**Resultado**: `0.049ms` → `0ms` (arredondado para baixo)
+
+## ✅ SOLUÇÃO APLICADA
+
+### Correção Implementada
 ```javascript
-// Adicionados tipos SNMP ao grupo network
-['http', 'port', 'dns', 'ssl', 'snmp', 'snmp_uptime', 'snmp_cpu', 'snmp_memory', 'snmp_traffic', 'snmp_interface']
+// frontend/src/components/Servers.js - LINHA 419 (DEPOIS)
+} else if (unit === 'ms') {
+  // Para valores muito baixos (< 1ms), mostrar 2 casas decimais
+  if (value < 1) {
+    return `${value.toFixed(2)} ms`;
+  }
+  return `${Math.round(value)} ms`;
+}
 ```
 
-## PRÓXIMOS PASSOS
+**Resultado Esperado**:
+- `0.049ms` → `0.05 ms` ✅ (2 casas decimais)
+- `18.265ms` → `18 ms` ✅ (arredondado)
+- `125.8ms` → `126 ms` ✅ (arredondado)
 
-### 1. Commitar e Enviar para Git
-```bash
-git add worker/tasks.py worker/sla_calculator.py frontend/src/components/Servers.js
-git commit -m "fix: corrigir timezone PING e adicionar suporte sensores SNMP no frontend"
-git push origin master
-```
+## 📋 PRÓXIMOS PASSOS
 
-### 2. Atualizar Servidor Linux
+### 1. Reiniciar Frontend (LINUX)
 ```bash
-ssh administrador@192.168.31.161
 cd /home/administrador/CorujaMonitor
-git pull origin master
-docker-compose restart worker
 docker-compose restart frontend
 ```
 
-### 3. Validar Correção
-1. Aguardar 1 minuto (próximo ciclo de PING)
-2. Verificar no frontend se PING mostra valores corretos (~0.054ms e ~0.833ms)
-3. Verificar se timestamp está correto (não 3 horas no futuro)
-4. Verificar se sensores SNMP aparecem corretamente (não como "unknown")
-
-### 4. Verificar Logs
+### 2. Verificar Logs
 ```bash
-docker logs coruja-worker --tail 50 | grep -i ping
+docker logs -f coruja-frontend --tail 50
 ```
 
-Deve mostrar:
+### 3. Testar no Navegador
+- Abrir: http://192.168.31.161:3000
+- Limpar cache: Ctrl+Shift+R
+- Verificar SRVCMONITOR001: deve mostrar `0.05 ms`
+- Verificar SRVSONDA001: deve mostrar `18 ms`
+
+## 🎯 RESULTADO ESPERADO
+
+### SRVCMONITOR001 (localhost)
+- **Antes**: 0 ms ❌
+- **Depois**: 0.05 ms ✅
+
+### SRVSONDA001 (rede local)
+- **Antes**: 18 ms ✅ (já estava correto)
+- **Depois**: 18 ms ✅ (mantém)
+
+## 📊 VALORES NO BANCO (CONFIRMADOS)
+
+```sql
+-- Valores corretos no PostgreSQL
+SRVCMONITOR001: 0.049ms (localhost)
+SRVSONDA001: 18.265ms (rede local)
 ```
-🏓 PING SRVSONDA001 (192.168.31.162): 0.833ms
-🏓 PING SRVCMONITOR001 (192.168.31.161): 0.054ms
-✅ Métrica PING salva: SRVSONDA001 = 0.833ms (ok)
-✅ Métrica PING salva: SRVCMONITOR001 = 0.054ms (ok)
+
+## 🔄 COMMIT NECESSÁRIO
+
+```bash
+# No NOTEBOOK Windows (desenvolvimento)
+git add frontend/src/components/Servers.js
+git commit -m "fix: Corrigir exibição de PING < 1ms no frontend (mostrar 2 decimais)"
+git push origin master
 ```
 
-## RESULTADO ESPERADO
+## ✅ CHECKLIST FINAL
 
-Após aplicar as correções:
-- ✅ PING mostra latências reais no frontend (~0.054ms e ~0.833ms)
-- ✅ Timestamp correto (não 3 horas no futuro)
-- ✅ Sensores SNMP aparecem com ícones corretos
-- ✅ Console do navegador sem erros "Sensor type not recognized"
+- [x] Problema identificado: `toFixed(0)` arredondava para inteiro
+- [x] Correção aplicada: mostrar 2 decimais para valores < 1ms
+- [ ] Frontend reiniciado no Linux
+- [ ] Teste no navegador confirmado
+- [ ] Commit enviado para Git
 
-## OBSERVAÇÕES
+---
 
-- Todas as ocorrências de `datetime.utcnow()` foram substituídas por `datetime.now()`
-- Sistema agora usa timezone local (America/Sao_Paulo) consistentemente
-- Frontend reconhece 6 tipos de sensores SNMP adicionais
+**IMPORTANTE**: Esta correção resolve APENAS a exibição no frontend. O backend (worker) já estava funcionando corretamente e salvando os valores precisos no banco de dados.

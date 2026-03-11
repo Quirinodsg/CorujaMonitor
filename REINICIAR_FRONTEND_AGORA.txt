@@ -1,0 +1,48 @@
+═══════════════════════════════════════════════════════════════
+🚀 REINICIAR FRONTEND - CORRIGIR PING 0ms
+═══════════════════════════════════════════════════════════════
+
+📋 COPIAR E COLAR NO LINUX (SRVCMONITOR001):
+
+cd /home/administrador/CorujaMonitor
+docker-compose restart frontend
+
+═══════════════════════════════════════════════════════════════
+⏱️ AGUARDAR 30 SEGUNDOS
+═══════════════════════════════════════════════════════════════
+
+docker logs -f coruja-frontend --tail 50
+
+Aguardar mensagem: "webpack compiled successfully"
+Pressionar Ctrl+C para sair dos logs
+
+═══════════════════════════════════════════════════════════════
+🌐 TESTAR NO NAVEGADOR
+═══════════════════════════════════════════════════════════════
+
+1. Abrir: http://192.168.31.161:3000
+2. Pressionar: Ctrl+Shift+R (limpar cache)
+3. Fazer login: admin@coruja.com / admin123
+4. Ir em "Servidores"
+
+═══════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════
+
+SRVCMONITOR001:
+  📡 PING: 0.05 ms  ✅ (antes mostrava 0 ms)
+
+SRVSONDA001:
+  📡 PING: 18 ms    ✅ (já estava correto)
+
+═══════════════════════════════════════════════════════════════
+❓ SE NÃO FUNCIONAR
+═══════════════════════════════════════════════════════════════
+
+# Rebuild completo do frontend
+docker-compose down
+docker-compose up -d --build frontend
+
+# Aguardar 2 minutos e testar novamente
+
+═══════════════════════════════════════════════════════════════
