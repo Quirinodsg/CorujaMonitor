@@ -1,0 +1,80 @@
+═══════════════════════════════════════════════════════════════════════════════
+📍 CAMINHO DA PROBE NA SRVSONDA001 (IMPORTANTE!)
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ ATENÇÃO: O caminho da Probe na SRVSONDA001 é:
+
+   C:\Program Files\CorujaMonitor\Probe
+
+   NÃO É: C:\CorujaProbe
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📂 ESTRUTURA DE PASTAS NA SRVSONDA001
+═══════════════════════════════════════════════════════════════════════════════
+
+C:\Program Files\CorujaMonitor\Probe\
+   ├── probe_core.py                    ← Arquivo principal (ATUALIZAR ESTE)
+   ├── config.py
+   ├── config.yaml
+   ├── collectors\
+   │   ├── wmi_remote_collector.py
+   │   ├── snmp_collector.py
+   │   ├── ping_collector.py
+   │   └── ...
+   └── logs\
+       └── probe.log                     ← Logs da Probe
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 COMANDOS CORRETOS (PowerShell)
+═══════════════════════════════════════════════════════════════════════════════
+
+Parar serviço:
+   Stop-Service -Name "CorujaProbe" -Force
+
+Ir para pasta:
+   cd "C:\Program Files\CorujaMonitor\Probe"
+
+Fazer backup:
+   Copy-Item probe_core.py probe_core.py.backup_12mar2026
+
+Verificar arquivo:
+   Get-Content probe_core.py | Select-String "_get_server_credential"
+
+Reiniciar serviço:
+   Start-Service -Name "CorujaProbe"
+
+Ver logs:
+   Get-Content logs\probe.log -Tail 50 -Wait
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 PROCESSO DE CÓPIA MANUAL
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ORIGEM (Seu PC de desenvolvimento):
+   C:\Users\[SEU_USUARIO]\Coruja Monitor\probe\probe_core.py
+
+2. DESTINO (SRVSONDA001):
+   C:\Program Files\CorujaMonitor\Probe\probe_core.py
+
+3. MÉTODO:
+   - Copiar arquivo do seu PC (Ctrl+C)
+   - Conectar na SRVSONDA001 (RDP/Rede/USB)
+   - Parar serviço da Probe
+   - Fazer backup do arquivo antigo
+   - Colar arquivo novo (Ctrl+V)
+   - Reiniciar serviço da Probe
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ REGISTRADO NO HISTÓRICO
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Caminho da Probe: C:\Program Files\CorujaMonitor\Probe
+✅ Você copia arquivos MANUALMENTE para SRVSONDA001
+✅ Não usa git pull na máquina da sonda
+
+
+═══════════════════════════════════════════════════════════════════════════════

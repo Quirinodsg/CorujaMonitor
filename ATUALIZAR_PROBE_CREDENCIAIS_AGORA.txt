@@ -35,7 +35,7 @@ No servidor SRVSONDA001 (Windows onde a Probe está instalada):
    Stop-Service -Name "CorujaProbe" -Force
 
 3. Ir para pasta da Probe:
-   cd C:\CorujaProbe
+   cd "C:\Program Files\CorujaMonitor\Probe"
 
 4. Baixar atualização do Git:
    git pull origin master

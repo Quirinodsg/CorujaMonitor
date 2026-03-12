@@ -6,6 +6,8 @@ Write-Host "🔐 Enviando atualização da Probe para usar credenciais do banco.
 git add probe/probe_core.py
 git add COMECE_AQUI_PROBE_CREDENCIAIS.txt
 git add COPIAR_PROBE_CORE_MANUAL_SRVSONDA001.txt
+git add NOTA_CAMINHO_PROBE_SRVSONDA001.txt
+git add DIAGNOSTICO_PROBE_ATUAL_12MAR.txt
 git add ATUALIZAR_PROBE_CREDENCIAIS_AGORA.txt
 git add RESUMO_PROBE_CREDENCIAIS_12MAR.md
 git add SESSAO_12MAR_PROBE_CREDENCIAIS.md
@@ -41,12 +43,12 @@ Write-Host ""
 Write-Host "📋 PRÓXIMOS PASSOS:" -ForegroundColor Yellow
 Write-Host "   1. No servidor SRVSONDA001 (Windows):" -ForegroundColor White
 Write-Host "      Stop-Service -Name 'CorujaProbe' -Force" -ForegroundColor Gray
-Write-Host "      cd C:\CorujaProbe" -ForegroundColor Gray
+Write-Host "      cd 'C:\Program Files\CorujaMonitor\Probe'" -ForegroundColor Gray
 Write-Host "      git pull origin master" -ForegroundColor Gray
 Write-Host "      Start-Service -Name 'CorujaProbe'" -ForegroundColor Gray
 Write-Host ""
 Write-Host "   2. Verificar logs:" -ForegroundColor White
-Write-Host "      Get-Content logs\probe.log -Tail 50 -Wait" -ForegroundColor Gray
+Write-Host "      Get-Content 'C:\Program Files\CorujaMonitor\Probe\logs\probe.log' -Tail 50 -Wait" -ForegroundColor Gray
 Write-Host ""
 Write-Host "   3. Aguardar 60 segundos e verificar dashboard" -ForegroundColor White
 Write-Host "      http://192.168.31.161:3000" -ForegroundColor Gray
