@@ -8,7 +8,6 @@ function Credentials() {
   const [credentials, setCredentials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [editingCredential, setEditingCredential] = useState(null);
   const [tenants, setTenants] = useState([]);
   const [groups, setGroups] = useState([]);
   const [servers, setServers] = useState([]);
@@ -174,7 +173,6 @@ function Credentials() {
       snmp_community: '',
       snmp_port: 161,
     });
-    setEditingCredential(null);
   };
 
   const getCredentialTypeLabel = (type) => {
