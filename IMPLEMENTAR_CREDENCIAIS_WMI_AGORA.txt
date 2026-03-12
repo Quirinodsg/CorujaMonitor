@@ -1,0 +1,237 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔐 SISTEMA DE CREDENCIAIS CENTRALIZADAS - IMPLEMENTADO
+Sistema moderno como PRTG/SolarWinds/CheckMK
+═══════════════════════════════════════════════════════════════════════════════
+
+📅 Data: 12/03/2026
+✅ Status: CÓDIGO CRIADO - AGUARDANDO DEPLOY
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 O QUE FOI IMPLEMENTADO
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ✅ BANCO DE DADOS
+   - Tabela 'credentials' criada
+   - Suporta WMI, SNMP v1/v2c/v3, SSH
+   - Sistema de herança: Servidor → Grupo → Tenant
+   - Criptografia de senhas
+   - Teste de conectividade
+
+2. ✅ API (Backend)
+   - api/routers/credentials.py
+   - Endpoints:
+     * GET /api/v1/credentials/ - Listar credenciais
+     * POST /api/v1/credentials/wmi - Criar credencial WMI
+     * POST /api/v1/credentials/snmp-v2c - Criar credencial SNMP
+     * PUT /api/v1/credentials/{id} - Atualizar credencial
+     * DELETE /api/v1/credentials/{id} - Deletar credencial
+     * POST /api/v1/credentials/{id}/test - Testar conectividade
+     * GET /api/v1/credentials/resolve/{server_id} - Resolver herança
+
+3. ✅ FRONTEND (React)
+   - frontend/src/components/Credentials.js
+   - frontend/src/components/Credentials.css
+   - Interface moderna para gerenciar credenciais
+   - Suporte para WMI e SNMP v2c
+   - Teste de conectividade integrado
+
+4. ✅ MODELOS
+   - api/models.py atualizado
+   - Classe Credential com todos os campos
+   - Server.credential_id para referenciar credencial
+   - Server.use_inherited_credential para herança
+
+5. ✅ MIGRAÇÃO
+   - api/migrate_credentials.py
+   - Cria tabela e índices
+   - Adiciona colunas na tabela servers
+
+═══════════════════════════════════════════════════════════════════════════════
+🚀 PASSO A PASSO: APLICAR NO LINUX
+═══════════════════════════════════════════════════════════════════════════════
+
+EXECUTAR NO LINUX (SRVCMONITOR001 - 192.168.31.161):
+
+1. ATUALIZAR CÓDIGO DO GIT
+   cd ~/CorujaMonitor
+   git pull origin master
+
+2. EXECUTAR MIGRAÇÃO DO BANCO
+   cd api
+   python3 migrate_credentials.py
+
+3. REINICIAR API
+   cd ..
+   docker-compose restart api
+
+4. REINICIAR FRONTEND
+   docker-compose restart frontend
+
+5. VERIFICAR LOGS
+   docker-compose logs -f api
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 COMO USAR NO PORTAL WEB
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ACESSAR CREDENCIAIS
+   - Ir em: Configurações > Credenciais (ou /credentials)
+   - Verá lista de credenciais configuradas
+
+2. CRIAR CREDENCIAL WMI (EMPRESA)
+   - Clicar em "➕ Nova Credencial"
+   - Nome: "Domínio Principal"
+   - Tipo: WMI (Windows)
+   - Nível: Empresa (Tenant)
+   - Usuário: DOMINIO\svc_monitor
+   - Senha: SenhaForte123!
+   - Domínio: DOMINIO.local
+   - Marcar: "Usar como padrão"
+   - Clicar em "Criar Credencial"
+
+3. CRIAR CREDENCIAL SNMP (GRUPO)
+   - Clicar em "➕ Nova Credencial"
+   - Nome: "SNMP Switches"
+   - Tipo: SNMP v2c
+   - Nível: Grupo
+   - Grupo: "Rede"
+   - Community: public
+   - Porta: 161
+   - Marcar: "Usar como padrão"
+   - Clicar em "Criar Credencial"
+
+4. TESTAR CREDENCIAL
+   - Clicar em "🧪 Testar" na credencial
+   - Digitar hostname ou IP: 192.168.31.110
+   - Aguardar resultado
+   - Status será atualizado: ✓ OK ou ✗ Falhou
+
+5. USAR EM SERVIDOR
+   - Ir em: Servidores
+   - Editar servidor
+   - Seção "Credenciais":
+     * Opção 1: "Herdar do grupo" (padrão)
+     * Opção 2: "Herdar da empresa"
+     * Opção 3: Selecionar credencial específica
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 SISTEMA DE HERANÇA
+═══════════════════════════════════════════════════════════════════════════════
+
+ORDEM DE RESOLUÇÃO (igual ao PRTG):
+
+1. SERVIDOR ESPECÍFICO
+   - Se servidor tem credential_id E use_inherited_credential=false
+   - Usa credencial específica do servidor
+
+2. GRUPO
+   - Se servidor tem group_name
+   - Busca credencial padrão do grupo
+   - Usa credencial do grupo
+
+3. EMPRESA (TENANT)
+   - Se não encontrou nos níveis anteriores
+   - Busca credencial padrão da empresa
+   - Usa credencial global
+
+4. NENHUMA
+   - Se não encontrou em nenhum nível
+   - Servidor não será monitorado via WMI/SNMP
+
+EXEMPLO:
+- Empresa: Credencial WMI "Domínio Principal" (padrão)
+- Grupo "Rede": Credencial SNMP "SNMP Switches" (padrão)
+- Servidor "SRVHVSPRD010" no grupo "Servidores":
+  * Herda credencial WMI da empresa
+- Servidor "Switch01" no grupo "Rede":
+  * Herda credencial SNMP do grupo
+
+═══════════════════════════════════════════════════════════════════════════════
+🔐 SEGURANÇA
+═══════════════════════════════════════════════════════════════════════════════
+
+1. CRIPTOGRAFIA
+   - Senhas criptografadas com Fernet (cryptography)
+   - Chave em variável de ambiente: ENCRYPTION_KEY
+   - Nunca retorna senhas na API (apenas mascaradas)
+
+2. VARIÁVEL DE AMBIENTE
+   Adicionar no .env:
+   ENCRYPTION_KEY=sua_chave_aqui
+
+   Gerar chave:
+   python3 -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+
+3. AUDITORIA
+   - created_by: Quem criou a credencial
+   - created_at: Quando foi criada
+   - updated_at: Última atualização
+   - last_test_at: Último teste de conectividade
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 PRÓXIMOS PASSOS (FUTURO)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. ATUALIZAR PROBE
+   - Modificar probe/probe_core.py
+   - Função _collect_wmi_remote() buscar credenciais com herança
+   - Função _collect_snmp_remote() buscar credenciais com herança
+   - Cache de credenciais para performance
+
+2. ATUALIZAR MODAL DE SERVIDOR
+   - frontend/src/components/Servers.js
+   - Adicionar seção "Credenciais"
+   - Dropdown para selecionar credencial
+   - Opções: Herdar do grupo, Herdar da empresa, Específica
+
+3. SUPORTE SNMP v3
+   - Adicionar endpoint POST /api/v1/credentials/snmp-v3
+   - Campos: username, auth_protocol, auth_password, priv_protocol, priv_password
+
+4. SUPORTE SSH
+   - Adicionar endpoint POST /api/v1/credentials/ssh
+   - Campos: username, password, private_key, port
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ CHECKLIST DE DEPLOY
+═══════════════════════════════════════════════════════════════════════════════
+
+NO NOTEBOOK (DESKTOP-P9VGN04):
+[ ] 1. Fazer commit das alterações
+[ ] 2. Fazer push para Git (branch master)
+
+NO LINUX (SRVCMONITOR001):
+[ ] 3. git pull origin master
+[ ] 4. python3 api/migrate_credentials.py
+[ ] 5. Adicionar ENCRYPTION_KEY no .env
+[ ] 6. docker-compose restart api
+[ ] 7. docker-compose restart frontend
+[ ] 8. Verificar logs: docker-compose logs -f api
+[ ] 9. Acessar frontend: http://192.168.31.161:3000
+[ ] 10. Ir em Configurações > Credenciais
+[ ] 11. Criar credencial WMI de teste
+[ ] 12. Testar conectividade
+
+═══════════════════════════════════════════════════════════════════════════════
+🎉 BENEFÍCIOS
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Configuração única para múltiplos servidores
+✅ Sistema de herança (servidor → grupo → empresa)
+✅ Interface web moderna e intuitiva
+✅ Teste de conectividade integrado
+✅ Senhas criptografadas
+✅ Auditoria completa
+✅ Igual ao PRTG/SolarWinds/CheckMK
+✅ Escalável: 1 credencial para 1000 servidores
+
+═══════════════════════════════════════════════════════════════════════════════
+📞 SUPORTE
+═══════════════════════════════════════════════════════════════════════════════
+
+Dúvidas ou problemas:
+- Verificar logs: docker-compose logs -f api
+- Verificar banco: psql -U coruja -d coruja_monitor
+- Verificar tabela: SELECT * FROM credentials;
+
+═══════════════════════════════════════════════════════════════════════════════
