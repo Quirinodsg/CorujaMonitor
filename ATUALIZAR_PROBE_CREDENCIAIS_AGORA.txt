@@ -1,0 +1,120 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔐 ATUALIZAR PROBE WINDOWS - USAR CREDENCIAIS DO BANCO (MODERNO COMO PRTG)
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 SITUAÇÃO:
+   ✅ Credencial WMI "Techbiz" configurada no banco (ID salvo)
+   ✅ Servidor SRVHVSPRD010 (192.168.31.110) adicionado com 7 sensores
+   ✅ PING funcionando (0.44ms coletado pelo worker Linux)
+   ⚠️ Sensores WMI "Aguardando dados..." (Probe não busca credenciais do banco)
+
+🎯 OBJETIVO:
+   Modificar Probe Windows (SRVSONDA001) para buscar credenciais WMI do banco
+   via API antes de coletar métricas (sistema moderno como PRTG/SolarWinds)
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 1: ENVIAR CORREÇÃO PARA GIT
+═══════════════════════════════════════════════════════════════════════════════
+
+No Windows (Git Bash):
+
+cd ~/Coruja\ Monitor
+git add probe/probe_core.py
+git commit -m "feat: Probe busca credenciais WMI do banco via API (moderno como PRTG)"
+git push origin master
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 2: ATUALIZAR PROBE NO WINDOWS (SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════════════
+
+No servidor SRVSONDA001 (Windows onde a Probe está instalada):
+
+1. Abrir PowerShell como Administrador
+
+2. Parar o serviço da Probe:
+   Stop-Service -Name "CorujaProbe" -Force
+
+3. Ir para pasta da Probe:
+   cd C:\CorujaProbe
+
+4. Baixar atualização do Git:
+   git pull origin master
+
+5. Reiniciar o serviço:
+   Start-Service -Name "CorujaProbe"
+
+6. Verificar logs:
+   Get-Content logs\probe.log -Tail 50 -Wait
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ O QUE VAI ACONTECER APÓS ATUALIZAÇÃO:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Probe vai buscar lista de servidores da API (como antes)
+
+2. Para cada servidor Windows (SRVHVSPRD010):
+   - Probe chama: GET /api/v1/credentials/resolve/{server_id}
+   - API retorna credencial com herança (Servidor → Grupo → Empresa)
+   - Credencial "Techbiz" será retornada (nível Empresa, marcada como padrão)
+
+3. Probe usa credencial para coletar métricas WMI:
+   - CPU Usage
+   - Memory Usage
+   - Disk C:
+   - Uptime
+   - Network In/Out
+
+4. Métricas são enviadas para API e aparecem no dashboard
+
+═══════════════════════════════════════════════════════════════════════════════
+🔍 LOGS ESPERADOS (após atualização):
+═══════════════════════════════════════════════════════════════════════════════
+
+INFO - Found 1 servers to monitor remotely
+INFO - Collecting from remote server: SRVHVSPRD010 (192.168.31.110)
+INFO - Using WMI for SRVHVSPRD010
+INFO - 🔐 Usando credencial: Techbiz (Nível: Empresa)
+DEBUG - Usuário: Techbiz\coruja.monitor
+INFO - Collected WMI metrics from 192.168.31.110
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ SE APARECER ERRO "Nenhuma credencial configurada":
+═══════════════════════════════════════════════════════════════════════════════
+
+Significa que:
+1. Credencial não está marcada como PADRÃO no nível Empresa
+2. Servidor não tem credencial específica
+3. Grupo do servidor não tem credencial
+
+SOLUÇÃO:
+- Ir em: Configurações → Credenciais
+- Verificar se credencial "Techbiz" está marcada como PADRÃO
+- Verificar se Nível = "Empresa (Tenant)"
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 VERIFICAR DASHBOARD:
+═══════════════════════════════════════════════════════════════════════════════
+
+Após 60 segundos (intervalo de coleta):
+
+1. Abrir: http://192.168.31.161:3000
+2. Ir em: Servidores → SRVHVSPRD010
+3. Verificar se sensores mostram valores:
+   ✅ CPU Usage: XX%
+   ✅ Memory Usage: XX%
+   ✅ Disk C:: XX%
+   ✅ Uptime: X dias
+   ✅ Network In: XX MB/s
+   ✅ Network Out: XX MB/s
+
+═══════════════════════════════════════════════════════════════════════════════
+🎉 SUCESSO!
+═══════════════════════════════════════════════════════════════════════════════
+
+Sistema de credenciais centralizadas funcionando igual PRTG:
+✅ Configure uma vez, use em todos os servidores
+✅ Herança automática (Servidor → Grupo → Empresa)
+✅ Probe busca credenciais do banco via API
+✅ Métricas WMI coletadas e exibidas no dashboard
+
+═══════════════════════════════════════════════════════════════════════════════

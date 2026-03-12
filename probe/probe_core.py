@@ -121,6 +121,34 @@ class ProbeCore:
             self._send_metrics()
         logger.info("Coruja Probe stopped")
     
+    def _get_server_credential(self, server_id):
+        """
+        Busca credencial do servidor via API (sistema moderno como PRTG)
+        Usa herança: Servidor → Grupo → Empresa
+        """
+        try:
+            with httpx.Client(timeout=10.0, verify=False) as client:
+                response = client.get(
+                    f"{self.config.api_url}/api/v1/credentials/resolve/{server_id}",
+                    params={"probe_token": self.config.probe_token}
+                )
+                
+                if response.status_code == 404:
+                    logger.debug(f"Nenhuma credencial configurada para servidor ID {server_id}")
+                    return None
+                
+                if response.status_code != 200:
+                    logger.warning(f"Erro ao buscar credencial: HTTP {response.status_code}")
+                    return None
+                
+                credential = response.json()
+                logger.debug(f"Credencial resolvida: {credential.get('name')} (Nível: {credential.get('inheritance_level')})")
+                return credential
+                
+        except Exception as e:
+            logger.error(f"Erro ao buscar credencial do servidor {server_id}: {e}")
+            return None
+    
     def _collect_metrics(self):
         """Collect metrics from all collectors"""
         timestamp = datetime.now()
@@ -218,13 +246,30 @@ class ProbeCore:
             from collectors.wmi_remote_collector import WMIRemoteCollector
             
             hostname = server.get('ip_address') or server.get('hostname')
-            username = server.get('wmi_username')
-            password = server.get('wmi_password')  # API will decrypt
-            domain = server.get('wmi_domain', '')
+            server_id = server.get('id')
+            
+            # Buscar credenciais do banco via API (sistema moderno como PRTG)
+            credential = self._get_server_credential(server_id)
+            
+            if not credential:
+                logger.warning(f"⚠️ Nenhuma credencial WMI configurada para {hostname} (ID: {server_id})")
+                logger.info(f"💡 Configure credenciais em: Configurações → Credenciais")
+                return
+            
+            if credential.get('credential_type') != 'wmi':
+                logger.warning(f"Credencial para {hostname} não é do tipo WMI")
+                return
+            
+            username = credential.get('wmi_username')
+            password = credential.get('wmi_password')  # API descriptografa automaticamente
+            domain = credential.get('wmi_domain', '')
             
             if not username or not password:
-                logger.warning(f"WMI credentials not configured for {hostname}")
+                logger.warning(f"Credencial WMI incompleta para {hostname}")
                 return
+            
+            logger.info(f"🔐 Usando credencial: {credential.get('name')} (Nível: {credential.get('inheritance_level')})")
+            logger.debug(f"   Usuário: {domain}\\{username}" if domain else f"   Usuário: {username}")
             
             collector = WMIRemoteCollector(hostname, username, password, domain)
             
@@ -334,56 +379,12 @@ class ProbeCore:
 
     
     def _collect_ping_only(self, server):
-        """Collect only PING metric for servers without credentials"""
-        try:
-            import subprocess
-            import platform
-            
-            hostname = server.get('ip_address') or server.get('hostname')
-            
-            # Ping command varies by OS
-            param = '-n' if platform.system().lower() == 'windows' else '-c'
-            command = ['ping', param, '1', hostname]
-            
-            result = subprocess.run(command, capture_output=True, text=True, timeout=5)
-            
-            # Parse ping result
-            is_online = result.returncode == 0
-            latency = 0
-            
-            if is_online:
-                # Extract latency from output
-                output = result.stdout
-                if 'time=' in output.lower():
-                    try:
-                        # Windows: "time=12ms" or "time<1ms"
-                        # Linux: "time=12.3 ms"
-                        import re
-                        match = re.search(r'time[=<](\d+\.?\d*)', output.lower())
-                        if match:
-                            latency = float(match.group(1))
-                    except:
-                        latency = 1  # Default if can't parse
-            
-            metric = {
-                'type': 'ping',
-                'name': 'PING',
-                'value': latency if is_online else 0,
-                'unit': 'ms',
-                'status': 'ok' if is_online else 'critical',
-                'timestamp': datetime.now().isoformat(),
-                'hostname': server.get('hostname'),
-                'metadata': {
-                    'target': hostname,
-                    'collection_method': 'icmp_ping'
-                }
-            }
-            
-            self.buffer.append(metric)
-            logger.debug(f"PING {hostname}: {'OK' if is_online else 'OFFLINE'} ({latency}ms)")
-            
-        except Exception as e:
-            logger.error(f"PING failed for {server.get('hostname')}: {e}")
+        """
+        DESABILITADO: PING agora é feito direto do servidor Linux (worker).
+        Mantido apenas para compatibilidade com código legado.
+        """
+        logger.info(f"⚠️ PING desabilitado na probe - feito pelo servidor central (worker)")
+        return  # Não coleta PING
     def _parse_snmp_metrics(self, snmp_result, server):
         """Parse SNMP raw data into metrics format"""
         metrics = []

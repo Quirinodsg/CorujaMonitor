@@ -1,0 +1,142 @@
+═══════════════════════════════════════════════════════════════════════════════
+🚀 COMECE AQUI - ATUALIZAR PROBE PARA USAR CREDENCIAIS DO BANCO
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 SITUAÇÃO ATUAL:
+   ✅ Credencial WMI "Techbiz" configurada no banco
+   ✅ Servidor SRVHVSPRD010 adicionado com 7 sensores
+   ✅ PING funcionando (0.44ms)
+   ⚠️ Sensores WMI "Aguardando dados..." (Probe não usa credenciais do banco)
+
+🎯 OBJETIVO:
+   Atualizar Probe Windows para buscar credenciais WMI do banco via API
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PROCESSO SIMPLIFICADO (3 PASSOS)
+═══════════════════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PASSO 1: ENVIAR PARA GIT (No seu PC)                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   cd ~/Coruja\ Monitor
+   ./commit_probe_credenciais.ps1
+
+   ✅ Isso envia o arquivo atualizado para o GitHub
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PASSO 2: COPIAR ARQUIVO MANUALMENTE PARA SRVSONDA001                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   ⚠️ VOCÊ COPIA MANUALMENTE (não usa git pull na sonda)
+
+   2.1 - Copiar arquivo do seu PC:
+         C:\Users\[SEU_USUARIO]\Coruja Monitor\probe\probe_core.py
+
+   2.2 - Conectar na SRVSONDA001 (RDP/Rede/USB)
+
+   2.3 - Parar serviço:
+         Stop-Service -Name "CorujaProbe" -Force
+
+   2.4 - Fazer backup:
+         cd C:\CorujaProbe\probe
+         Copy-Item probe_core.py probe_core.py.backup_12mar2026
+
+   2.5 - Colar arquivo novo em:
+         C:\CorujaProbe\probe\probe_core.py
+         (Substituir quando perguntar)
+
+   2.6 - Reiniciar serviço:
+         Start-Service -Name "CorujaProbe"
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ PASSO 3: VERIFICAR LOGS E DASHBOARD                                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+   3.1 - Ver logs (aguardar 60 segundos):
+         Get-Content C:\CorujaProbe\logs\probe.log -Tail 50 -Wait
+
+   3.2 - Verificar mensagem:
+         ✅ "🔐 Usando credencial: Techbiz (Nível: Empresa)"
+         ✅ "Collected WMI metrics from 192.168.31.110"
+
+   3.3 - Verificar dashboard:
+         http://192.168.31.161:3000
+         Servidores → SRVHVSPRD010
+         ✅ Sensores devem mostrar valores (não mais "Aguardando dados...")
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📚 DOCUMENTAÇÃO COMPLETA
+═══════════════════════════════════════════════════════════════════════════════
+
+Para mais detalhes, consulte:
+
+   📄 COPIAR_PROBE_CORE_MANUAL_SRVSONDA001.txt
+      → Instruções detalhadas de cópia manual (RECOMENDADO)
+
+   📄 CHECKLIST_VALIDACAO_PROBE.txt
+      → Checklist completo de validação
+
+   📄 FLUXO_PROBE_CREDENCIAIS_VISUAL.txt
+      → Fluxo visual do sistema (antes/depois)
+
+   📄 RESUMO_PROBE_CREDENCIAIS_12MAR.md
+      → Documentação técnica completa
+
+   📄 SESSAO_12MAR_PROBE_CREDENCIAIS.md
+      → Resumo da sessão de implementação
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 TROUBLESHOOTING RÁPIDO
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ Logs mostram "⚠️ Nenhuma credencial WMI configurada"
+   → Verificar se credencial "Techbiz" está marcada como PADRÃO
+   → Ir em: Configurações → Credenciais
+
+❌ Dashboard ainda mostra "Aguardando dados..."
+   → Aguardar 60 segundos (intervalo de coleta)
+   → Limpar cache do navegador (Ctrl+Shift+R)
+   → Verificar logs da Probe
+
+❌ Serviço não inicia após copiar arquivo
+   → Restaurar backup: Copy-Item probe_core.py.backup_12mar2026 probe_core.py -Force
+   → Reiniciar: Start-Service -Name "CorujaProbe"
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════════
+
+Após seguir os 3 passos acima:
+
+   ✅ Probe busca credenciais do banco via API
+   ✅ Sistema de herança funcionando (Servidor → Grupo → Empresa)
+   ✅ Métricas WMI coletadas do SRVHVSPRD010
+   ✅ Dashboard mostra valores reais:
+      - CPU Usage: XX%
+      - Memory Usage: XX%
+      - Disk C:: XX%
+      - Uptime: X dias
+      - Network In/Out: XX MB/s
+
+   🎉 Sistema moderno igual PRTG/SolarWinds!
+      Configure uma vez, use em todos os servidores
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 NOTA IMPORTANTE
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ REGISTRADO NO HISTÓRICO:
+   Você copia arquivos MANUALMENTE para SRVSONDA001
+   (não usa git pull na máquina da sonda)
+
+   Processo: Git → Copiar arquivo → Colar na sonda → Reiniciar serviço
+
+
+═══════════════════════════════════════════════════════════════════════════════
