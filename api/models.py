@@ -845,6 +845,7 @@ class Credential(Base):
         Index('idx_credentials_group', 'group_name'),
         Index('idx_credentials_server', 'server_id'),
         Index('idx_credentials_default', 'is_default'),
+        {'extend_existing': True}
     )
 
 
