@@ -410,18 +410,44 @@ def test_credential(
     # Testar baseado no tipo
     try:
         if credential.credential_type == "wmi":
-            # Testar WMI
-            from collectors.wmi_remote_collector import WMIRemoteCollector
+            # Testar WMI usando wmi-client-wrapper (Linux) ou subprocess (Windows)
+            import subprocess
+            import platform
             
             password = decrypt_password(credential.wmi_password_encrypted)
-            collector = WMIRemoteCollector(
-                hostname=request.hostname,
-                username=credential.wmi_username,
-                password=password,
-                domain=credential.wmi_domain or ""
-            )
             
-            success, message = collector.test_connection()
+            # Montar comando WMI
+            if platform.system() == "Linux":
+                # Linux: usar wmic (samba-common-bin)
+                domain_prefix = f"{credential.wmi_domain}\\" if credential.wmi_domain else ""
+                cmd = [
+                    "wmic",
+                    "-U", f"{domain_prefix}{credential.wmi_username}%{password}",
+                    f"//{request.hostname}",
+                    "SELECT Name FROM Win32_OperatingSystem"
+                ]
+            else:
+                # Windows: usar PowerShell
+                ps_script = f"""
+                $password = ConvertTo-SecureString '{password}' -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential('{credential.wmi_username}', $password)
+                Get-WmiObject -Class Win32_OperatingSystem -ComputerName {request.hostname} -Credential $credential | Select-Object -ExpandProperty Caption
+                """
+                cmd = ["powershell", "-Command", ps_script]
+            
+            try:
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                success = result.returncode == 0
+                message = "Conexão WMI OK - Servidor respondeu" if success else f"Falha WMI: {result.stderr[:200]}"
+            except subprocess.TimeoutExpired:
+                success = False
+                message = "Timeout ao conectar via WMI (10s)"
+            except FileNotFoundError:
+                success = False
+                message = "Comando WMI não encontrado no sistema"
+            except Exception as e:
+                success = False
+                message = f"Erro ao executar teste WMI: {str(e)}"
             
             # Atualizar status
             credential.last_test_at = datetime.now()
@@ -436,20 +462,37 @@ def test_credential(
             )
         
         elif credential.credential_type in ["snmp_v2c", "snmp_v1"]:
-            # Testar SNMP
-            from collectors.snmp_collector import SNMPCollector
-            
-            community = decrypt_password(credential.snmp_community)
-            collector = SNMPCollector()
-            
-            result = collector.collect_snmp_v2c(
-                host=request.hostname,
-                community=community,
-                port=credential.snmp_port
-            )
-            
-            success = result.get("status") == "success"
-            message = "Conexão SNMP OK" if success else result.get("error", "Falha na conexão")
+            # Testar SNMP usando pysnmp
+            try:
+                from pysnmp.hlapi import *
+                
+                community = decrypt_password(credential.snmp_community)
+                
+                iterator = getCmd(
+                    SnmpEngine(),
+                    CommunityData(community),
+                    UdpTransportTarget((request.hostname, credential.snmp_port), timeout=5, retries=1),
+                    ContextData(),
+                    ObjectType(ObjectIdentity('SNMPv2-MIB', 'sysDescr', 0))
+                )
+                
+                errorIndication, errorStatus, errorIndex, varBinds = next(iterator)
+                
+                if errorIndication:
+                    success = False
+                    message = f"Erro SNMP: {errorIndication}"
+                elif errorStatus:
+                    success = False
+                    message = f"Erro SNMP: {errorStatus.prettyPrint()}"
+                else:
+                    success = True
+                    message = "Conexão SNMP OK - Dispositivo respondeu"
+            except ImportError:
+                success = False
+                message = "Biblioteca pysnmp não instalada"
+            except Exception as e:
+                success = False
+                message = f"Erro ao testar SNMP: {str(e)}"
             
             credential.last_test_at = datetime.now()
             credential.last_test_status = "success" if success else "failed"
