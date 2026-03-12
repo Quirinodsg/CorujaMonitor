@@ -9,6 +9,7 @@ function Credentials() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingCredential, setEditingCredential] = useState(null);
+  const [tenants, setTenants] = useState([]);
   const [groups, setGroups] = useState([]);
   const [servers, setServers] = useState([]);
   
@@ -18,6 +19,7 @@ function Credentials() {
     description: '',
     credential_type: 'wmi',
     level: 'tenant',
+    tenant_id: null,
     group_name: '',
     server_id: null,
     is_default: false,
@@ -32,6 +34,7 @@ function Credentials() {
 
   useEffect(() => {
     loadCredentials();
+    loadTenants();
     loadGroups();
     loadServers();
   }, []);
@@ -47,6 +50,18 @@ function Credentials() {
       console.error('Erro ao carregar credenciais:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTenants = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${API_URL}/api/v1/tenants/`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setTenants(response.data);
+    } catch (error) {
+      console.error('Erro ao carregar tenants:', error);
     }
   };
 
@@ -149,6 +164,7 @@ function Credentials() {
       description: '',
       credential_type: 'wmi',
       level: 'tenant',
+      tenant_id: null,
       group_name: '',
       server_id: null,
       is_default: false,
@@ -325,7 +341,7 @@ function Credentials() {
                   <label>Nível *</label>
                   <select
                     value={formData.level}
-                    onChange={(e) => setFormData({...formData, level: e.target.value, group_name: '', server_id: null})}
+                    onChange={(e) => setFormData({...formData, level: e.target.value, tenant_id: null, group_name: '', server_id: null})}
                     required
                   >
                     <option value="tenant">Empresa (Tenant)</option>
@@ -334,6 +350,25 @@ function Credentials() {
                   </select>
                 </div>
               </div>
+
+              {formData.level === 'tenant' && tenants.length > 0 && (
+                <div className="form-group">
+                  <label>Empresa (Tenant) *</label>
+                  <select
+                    value={formData.tenant_id || ''}
+                    onChange={(e) => setFormData({...formData, tenant_id: parseInt(e.target.value)})}
+                    required
+                  >
+                    <option value="">Selecione uma empresa</option>
+                    {tenants.map(tenant => (
+                      <option key={tenant.id} value={tenant.id}>{tenant.name}</option>
+                    ))}
+                  </select>
+                  <small style={{color: '#666', fontSize: '12px', marginTop: '5px', display: 'block'}}>
+                    💡 Esta credencial será usada em todos os servidores desta empresa
+                  </small>
+                </div>
+              )}
 
               {formData.level === 'group' && (
                 <div className="form-group">
@@ -348,6 +383,9 @@ function Credentials() {
                       <option key={group} value={group}>{group}</option>
                     ))}
                   </select>
+                  <small style={{color: '#666', fontSize: '12px', marginTop: '5px', display: 'block'}}>
+                    💡 Esta credencial será usada em todos os servidores deste grupo
+                  </small>
                 </div>
               )}
 
@@ -366,6 +404,9 @@ function Credentials() {
                       </option>
                     ))}
                   </select>
+                  <small style={{color: '#666', fontSize: '12px', marginTop: '5px', display: 'block'}}>
+                    💡 Esta credencial será usada apenas neste servidor específico
+                  </small>
                 </div>
               )}
 
