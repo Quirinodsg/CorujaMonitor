@@ -2,7 +2,17 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import './Credentials.css';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+// Detectar se está acessando via IP externo ou localhost
+const getApiUrl = () => {
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:8000';
+  }
+  // Se acessando via IP externo, usar o mesmo IP para a API
+  return `http://${hostname}:8000`;
+};
+
+const API_URL = process.env.REACT_APP_API_URL || getApiUrl();
 
 function Credentials() {
   const [credentials, setCredentials] = useState([]);
