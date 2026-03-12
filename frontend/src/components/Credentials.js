@@ -38,10 +38,7 @@ function Credentials() {
 
   const loadCredentials = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/v1/credentials/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/credentials/');
       setCredentials(response.data);
     } catch (error) {
       console.error('Erro ao carregar credenciais:', error);
@@ -52,10 +49,7 @@ function Credentials() {
 
   const loadTenants = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/v1/tenants/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/tenants/');
       setTenants(response.data);
     } catch (error) {
       console.error('Erro ao carregar tenants:', error);
@@ -64,10 +58,7 @@ function Credentials() {
 
   const loadGroups = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/v1/servers/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/servers/');
       const uniqueGroups = [...new Set(response.data.map(s => s.group_name).filter(Boolean))];
       setGroups(uniqueGroups);
     } catch (error) {
@@ -77,10 +68,7 @@ function Credentials() {
 
   const loadServers = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_URL}/api/v1/servers/`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/servers/');
       setServers(response.data);
     } catch (error) {
       console.error('Erro ao carregar servidores:', error);
@@ -91,19 +79,16 @@ function Credentials() {
     e.preventDefault();
     
     try {
-      const token = localStorage.getItem('token');
       let endpoint = '';
       let payload = { ...formData };
       
       if (formData.credential_type === 'wmi') {
-        endpoint = `${API_URL}/api/v1/credentials/wmi`;
+        endpoint = '/credentials/wmi';
       } else if (formData.credential_type === 'snmp_v2c') {
-        endpoint = `${API_URL}/api/v1/credentials/snmp-v2c`;
+        endpoint = '/credentials/snmp-v2c';
       }
       
-      await axios.post(endpoint, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.post(endpoint, payload);
       
       alert('Credencial criada com sucesso!');
       setShowModal(false);
@@ -119,10 +104,7 @@ function Credentials() {
     if (!window.confirm('Tem certeza que deseja deletar esta credencial?')) return;
     
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${API_URL}/api/v1/credentials/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/credentials/${id}`);
       alert('Credencial deletada com sucesso!');
       loadCredentials();
     } catch (error) {
@@ -136,11 +118,9 @@ function Credentials() {
     if (!testHostname) return;
     
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${API_URL}/api/v1/credentials/${id}/test`,
-        { hostname: testHostname },
-        { headers: { Authorization: `Bearer ${token}` } }
+      const response = await api.post(
+        `/credentials/${id}/test`,
+        { hostname: testHostname }
       );
       
       if (response.data.success) {
