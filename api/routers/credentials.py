@@ -528,9 +528,9 @@ def resolve_credential_for_server(
             # Se for probe, retornar dados completos descriptografados
             if probe_token:
                 if credential.credential_type == "wmi":
-                    result["username"] = credential.wmi_username
-                    result["password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password_encrypted else None
-                    result["domain"] = credential.wmi_domain
+                    result["wmi_username"] = credential.wmi_username
+                    result["wmi_password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password_encrypted else None
+                    result["wmi_domain"] = credential.wmi_domain or ""
                 elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
                     result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
                 elif credential.credential_type == "snmp_v3":
@@ -570,9 +570,9 @@ def resolve_credential_for_server(
             # Se for probe, retornar dados completos descriptografados
             if probe_token:
                 if credential.credential_type == "wmi":
-                    result["username"] = credential.wmi_username
-                    result["password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password_encrypted else None
-                    result["domain"] = credential.wmi_domain
+                    result["wmi_username"] = credential.wmi_username
+                    result["wmi_password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password_encrypted else None
+                    result["wmi_domain"] = credential.wmi_domain or ""
                 elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
                     result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
                 elif credential.credential_type == "snmp_v3":
@@ -609,9 +609,9 @@ def resolve_credential_for_server(
         # Se for probe, retornar dados completos descriptografados
         if probe_token:
             if credential.credential_type == "wmi":
-                result["username"] = credential.wmi_username
-                result["password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password_encrypted else None
-                result["domain"] = credential.wmi_domain
+                result["wmi_username"] = credential.wmi_username
+                result["wmi_password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password_encrypted else None
+                result["wmi_domain"] = credential.wmi_domain or ""
             elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
                 result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
             elif credential.credential_type == "snmp_v3":
