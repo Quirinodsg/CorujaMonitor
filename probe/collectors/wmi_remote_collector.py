@@ -1,33 +1,26 @@
 """
-WMI Remote Collector - Coleta métricas de servidores Windows remotos via WMI
-Requer credenciais de administrador no servidor remoto
+WMI Remote Collector - Versão PowerShell (Moderna)
+Coleta métricas de servidores Windows remotos via PowerShell Remoting
 """
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 import subprocess
 import json
+import base64
 
 logger = logging.getLogger(__name__)
 
 class WMIRemoteCollector:
     """
-    Coletor de métricas via WMI remoto (agentless)
+    Coletor de métricas via PowerShell Remoting (WinRM)
     
     Requisitos no servidor remoto:
-    - WMI habilitado
-    - Firewall liberado (portas 135, 445)
+    - WinRM habilitado (Enable-PSRemoting)
+    - Firewall liberado (porta 5985 HTTP ou 5986 HTTPS)
     - Usuário com permissões de administrador
-    - Compartilhamento administrativo habilitado
     """
     
     def __init__(self, hostname: str, username: str, password: str, domain: str = ""):
-        """
-        Args:
-            hostname: Nome ou IP do servidor remoto
-            username: Usuário administrador (ex: Administrator ou DOMAIN\\user)
-            password: Senha do usuário
-            domain: Domínio (opcional, pode estar no username)
-        """
         self.hostname = hostname
         self.username = username
         self.password = password
@@ -39,35 +32,26 @@ class WMIRemoteCollector:
         else:
             self.full_username = username
     
-    def test_connection(self) -> tuple[bool, str]:
-        """
-        Testa conexão WMI com o servidor remoto
-        Returns: (sucesso, mensagem)
-        """
-        try:
-            result = self._execute_wmi_query(
-                "SELECT Caption FROM Win32_OperatingSystem"
-            )
-            if result:
-                return True, f"Conexão OK: {result[0].get('Caption', 'Unknown')}"
-            return False, "Sem resposta do servidor"
-        except Exception as e:
-            return False, f"Erro de conexão: {str(e)}"
-    
     def collect_cpu(self) -> List[Dict[str, Any]]:
-        """Coleta métricas de CPU via WMI"""
+        """Coleta métricas de CPU via PowerShell"""
         try:
-            # Query WMI para CPU
-            query = "SELECT LoadPercentage, NumberOfLogicalProcessors FROM Win32_Processor"
-            results = self._execute_wmi_query(query)
+            script = """
+            $cpu = Get-WmiObject Win32_Processor
+            $load = ($cpu | Measure-Object -Property LoadPercentage -Average).Average
+            $cores = $cpu[0].NumberOfLogicalProcessors
+            @{
+                LoadPercentage = $load
+                Cores = $cores
+            } | ConvertTo-Json
+            """
             
-            if not results:
+            result = self._execute_powershell(script)
+            if not result:
                 return []
             
-            # Calcular média de uso de CPU
-            total_load = sum(float(r.get('LoadPercentage', 0)) for r in results)
-            avg_load = total_load / len(results) if results else 0
-            cpu_count = results[0].get('NumberOfLogicalProcessors', 0)
+            data = json.loads(result)
+            avg_load = float(data.get('LoadPercentage', 0))
+            cpu_count = int(data.get('Cores', 0))
             
             return [{
                 "type": "cpu",
@@ -77,311 +61,263 @@ class WMIRemoteCollector:
                 "status": self._get_status(avg_load, 80, 95),
                 "metadata": {
                     "cpu_count": cpu_count,
-                    "collection_method": "wmi_remote"
+                    "collection_method": "powershell_remote"
                 }
             }]
         except Exception as e:
-            logger.error(f"Erro ao coletar CPU via WMI: {e}")
+            logger.error(f"Erro ao coletar CPU via PowerShell: {e}")
             return []
     
     def collect_memory(self) -> List[Dict[str, Any]]:
-        """Coleta métricas de memória via WMI"""
+        """Coleta métricas de memória via PowerShell"""
         try:
-            # Query WMI para memória
-            query = "SELECT TotalVisibleMemorySize, FreePhysicalMemory FROM Win32_OperatingSystem"
-            results = self._execute_wmi_query(query)
+            script = """
+            $os = Get-WmiObject Win32_OperatingSystem
+            $total = [math]::Round($os.TotalVisibleMemorySize / 1MB, 2)
+            $free = [math]::Round($os.FreePhysicalMemory / 1MB, 2)
+            $used = $total - $free
+            $percent = [math]::Round(($used / $total) * 100, 2)
+            @{
+                TotalGB = $total
+                UsedGB = $used
+                FreeGB = $free
+                PercentUsed = $percent
+            } | ConvertTo-Json
+            """
             
-            if not results or not results[0]:
+            result = self._execute_powershell(script)
+            if not result:
                 return []
             
-            data = results[0]
-            total_kb = float(data.get('TotalVisibleMemorySize', 0))
-            free_kb = float(data.get('FreePhysicalMemory', 0))
-            
-            if total_kb == 0:
-                return []
-            
-            used_kb = total_kb - free_kb
-            usage_percent = (used_kb / total_kb) * 100
+            data = json.loads(result)
+            percent_used = float(data.get('PercentUsed', 0))
             
             return [{
                 "type": "memory",
                 "name": "memory_usage",
-                "value": usage_percent,
+                "value": percent_used,
                 "unit": "percent",
-                "status": self._get_status(usage_percent, 80, 95),
+                "status": self._get_status(percent_used, 80, 95),
                 "metadata": {
-                    "total_mb": total_kb / 1024,
-                    "used_mb": used_kb / 1024,
-                    "free_mb": free_kb / 1024,
-                    "collection_method": "wmi_remote"
+                    "total_gb": data.get('TotalGB', 0),
+                    "used_gb": data.get('UsedGB', 0),
+                    "free_gb": data.get('FreeGB', 0),
+                    "collection_method": "powershell_remote"
                 }
             }]
         except Exception as e:
-            logger.error(f"Erro ao coletar memória via WMI: {e}")
+            logger.error(f"Erro ao coletar memória via PowerShell: {e}")
             return []
     
-    def collect_disk(self) -> List[Dict[str, Any]]:
-        """Coleta métricas de disco via WMI"""
+    def collect_disk(self, drive_letter: str = None) -> List[Dict[str, Any]]:
+        """Coleta métricas de disco via PowerShell"""
         try:
-            # Query WMI para discos
-            query = "SELECT DeviceID, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType=3"
-            results = self._execute_wmi_query(query)
+            if drive_letter:
+                filter_clause = f"WHERE DeviceID='{drive_letter}'"
+            else:
+                filter_clause = "WHERE DriveType=3"
             
-            if not results:
+            script = f"""
+            $disks = Get-WmiObject Win32_LogicalDisk {filter_clause}
+            $disks | ForEach-Object {{
+                @{{
+                    DeviceID = $_.DeviceID
+                    VolumeName = $_.VolumeName
+                    SizeGB = [math]::Round($_.Size / 1GB, 2)
+                    FreeGB = [math]::Round($_.FreeSpace / 1GB, 2)
+                    UsedGB = [math]::Round(($_.Size - $_.FreeSpace) / 1GB, 2)
+                    PercentUsed = [math]::Round((($_.Size - $_.FreeSpace) / $_.Size) * 100, 2)
+                }}
+            }} | ConvertTo-Json
+            """
+            
+            result = self._execute_powershell(script)
+            if not result:
                 return []
             
+            # Parse JSON (pode ser array ou objeto único)
+            data = json.loads(result)
+            if not isinstance(data, list):
+                data = [data]
+            
             metrics = []
-            for disk in results:
-                device_id = disk.get('DeviceID', 'Unknown')
-                size = float(disk.get('Size', 0))
-                free = float(disk.get('FreeSpace', 0))
-                
-                if size == 0:
-                    continue
-                
-                used = size - free
-                usage_percent = (used / size) * 100
+            for disk in data:
+                device_id = disk.get('DeviceID', '')
+                percent_used = float(disk.get('PercentUsed', 0))
                 
                 metrics.append({
                     "type": "disk",
                     "name": f"disk_{device_id.replace(':', '')}",
-                    "value": usage_percent,
+                    "value": percent_used,
                     "unit": "percent",
-                    "status": self._get_status(usage_percent, 80, 95),
+                    "status": self._get_status(percent_used, 80, 95),
                     "metadata": {
                         "device": device_id,
-                        "total_gb": size / (1024**3),
-                        "used_gb": used / (1024**3),
-                        "free_gb": free / (1024**3),
-                        "collection_method": "wmi_remote"
+                        "volume_name": disk.get('VolumeName', ''),
+                        "total_gb": disk.get('SizeGB', 0),
+                        "used_gb": disk.get('UsedGB', 0),
+                        "free_gb": disk.get('FreeGB', 0),
+                        "collection_method": "powershell_remote"
                     }
                 })
             
             return metrics
         except Exception as e:
-            logger.error(f"Erro ao coletar disco via WMI: {e}")
+            logger.error(f"Erro ao coletar disco via PowerShell: {e}")
             return []
     
-    def collect_services(self, service_names: List[str]) -> List[Dict[str, Any]]:
-        """Coleta status de serviços via WMI"""
+    def collect_uptime(self) -> List[Dict[str, Any]]:
+        """Coleta uptime via PowerShell"""
         try:
-            if not service_names:
+            script = """
+            $os = Get-WmiObject Win32_OperatingSystem
+            $uptime = (Get-Date) - $os.ConvertToDateTime($os.LastBootUpTime)
+            @{
+                UptimeDays = [math]::Round($uptime.TotalDays, 2)
+                UptimeHours = [math]::Round($uptime.TotalHours, 2)
+                LastBootTime = $os.ConvertToDateTime($os.LastBootUpTime).ToString('yyyy-MM-dd HH:mm:ss')
+            } | ConvertTo-Json
+            """
+            
+            result = self._execute_powershell(script)
+            if not result:
                 return []
             
-            # Criar filtro para serviços específicos
-            service_filter = " OR ".join([f"Name='{name}'" for name in service_names])
-            query = f"SELECT Name, State, Status FROM Win32_Service WHERE {service_filter}"
-            results = self._execute_wmi_query(query)
+            data = json.loads(result)
+            uptime_days = float(data.get('UptimeDays', 0))
             
-            if not results:
+            return [{
+                "type": "uptime",
+                "name": "uptime",
+                "value": uptime_days,
+                "unit": "days",
+                "status": "ok",
+                "metadata": {
+                    "uptime_hours": data.get('UptimeHours', 0),
+                    "last_boot": data.get('LastBootTime', ''),
+                    "collection_method": "powershell_remote"
+                }
+            }]
+        except Exception as e:
+            logger.error(f"Erro ao coletar uptime via PowerShell: {e}")
+            return []
+    
+    def collect_network(self) -> List[Dict[str, Any]]:
+        """Coleta métricas de rede via PowerShell"""
+        try:
+            script = """
+            $adapters = Get-WmiObject Win32_PerfFormattedData_Tcpip_NetworkInterface | Where-Object {$_.BytesTotalPersec -gt 0}
+            $adapters | ForEach-Object {
+                @{
+                    Name = $_.Name
+                    BytesReceivedPerSec = $_.BytesReceivedPerSec
+                    BytesSentPerSec = $_.BytesSentPerSec
+                    BytesTotalPerSec = $_.BytesTotalPersec
+                }
+            } | ConvertTo-Json
+            """
+            
+            result = self._execute_powershell(script)
+            if not result:
                 return []
+            
+            data = json.loads(result)
+            if not isinstance(data, list):
+                data = [data]
             
             metrics = []
-            for service in results:
-                name = service.get('Name', 'Unknown')
-                state = service.get('State', 'Unknown')
-                status = service.get('Status', 'Unknown')
+            for adapter in data:
+                name = adapter.get('Name', 'Unknown')
+                bytes_in = float(adapter.get('BytesReceivedPerSec', 0))
+                bytes_out = float(adapter.get('BytesSentPerSec', 0))
                 
-                # State: Running, Stopped, Paused, etc
-                # Status: OK, Degraded, Error, etc
-                is_running = state.lower() == 'running'
+                # Converter para Mbps
+                mbps_in = (bytes_in * 8) / 1_000_000
+                mbps_out = (bytes_out * 8) / 1_000_000
                 
-                metrics.append({
-                    "type": "service",
-                    "name": f"service_{name}",
-                    "value": 1 if is_running else 0,
-                    "unit": "status",
-                    "status": "ok" if is_running else "critical",
-                    "metadata": {
-                        "service_name": name,
-                        "state": state,
-                        "status": status,
-                        "collection_method": "wmi_remote"
+                metrics.extend([
+                    {
+                        "type": "network",
+                        "name": f"network_in_{name}",
+                        "value": mbps_in,
+                        "unit": "mbps",
+                        "status": "ok",
+                        "metadata": {
+                            "adapter": name,
+                            "direction": "in",
+                            "collection_method": "powershell_remote"
+                        }
+                    },
+                    {
+                        "type": "network",
+                        "name": f"network_out_{name}",
+                        "value": mbps_out,
+                        "unit": "mbps",
+                        "status": "ok",
+                        "metadata": {
+                            "adapter": name,
+                            "direction": "out",
+                            "collection_method": "powershell_remote"
+                        }
                     }
-                })
+                ])
             
             return metrics
         except Exception as e:
-            logger.error(f"Erro ao coletar serviços via WMI: {e}")
+            logger.error(f"Erro ao coletar rede via PowerShell: {e}")
             return []
     
-    def collect_system_info(self) -> Dict[str, Any]:
-        """Coleta informações do sistema via WMI"""
-        try:
-            # Sistema operacional
-            os_query = "SELECT Caption, Version, OSArchitecture FROM Win32_OperatingSystem"
-            os_results = self._execute_wmi_query(os_query)
-            
-            # Computador
-            cs_query = "SELECT Name, Domain FROM Win32_ComputerSystem"
-            cs_results = self._execute_wmi_query(cs_query)
-            
-            info = {}
-            if os_results and os_results[0]:
-                info['os_name'] = os_results[0].get('Caption', 'Unknown')
-                info['os_version'] = os_results[0].get('Version', 'Unknown')
-                info['os_architecture'] = os_results[0].get('OSArchitecture', 'Unknown')
-            
-            if cs_results and cs_results[0]:
-                info['hostname'] = cs_results[0].get('Name', 'Unknown')
-                info['domain'] = cs_results[0].get('Domain', 'WORKGROUP')
-            
-            return info
-        except Exception as e:
-            logger.error(f"Erro ao coletar info do sistema via WMI: {e}")
-            return {}
-    
-    def discover_services(self) -> List[Dict[str, Any]]:
+    def _execute_powershell(self, script: str) -> str:
         """
-        Descobre TODOS os serviços Windows no servidor remoto
-        Retorna lista completa com nome, display name, status e tipo de inicialização
-        """
-        try:
-            query = "SELECT Name, DisplayName, State, StartMode FROM Win32_Service"
-            results = self._execute_wmi_query(query)
-            
-            if not results:
-                logger.warning(f"Nenhum serviço encontrado em {self.hostname}")
-                return []
-            
-            services = []
-            for service in results:
-                name = service.get('Name', '').strip()
-                display_name = service.get('DisplayName', name).strip()
-                state = service.get('State', 'Unknown').strip()
-                start_mode = service.get('StartMode', 'Unknown').strip()
-                
-                if not name:
-                    continue
-                
-                services.append({
-                    "name": name,
-                    "display_name": display_name,
-                    "status": state.lower(),  # running, stopped, paused
-                    "start_type": start_mode.lower()  # auto, manual, disabled
-                })
-            
-            # Ordenar por display name
-            services.sort(key=lambda x: x['display_name'].lower())
-            
-            logger.info(f"Descobertos {len(services)} serviços em {self.hostname}")
-            return services
-            
-        except Exception as e:
-            logger.error(f"Erro ao descobrir serviços via WMI: {e}")
-            return []
-    
-    def discover_disks(self) -> List[Dict[str, Any]]:
-        """
-        Descobre TODOS os discos no servidor remoto
-        Retorna lista completa com letra, nome, tamanho e uso
-        """
-        try:
-            query = "SELECT DeviceID, VolumeName, Size, FreeSpace FROM Win32_LogicalDisk WHERE DriveType=3"
-            results = self._execute_wmi_query(query)
-            
-            if not results:
-                logger.warning(f"Nenhum disco encontrado em {self.hostname}")
-                return []
-            
-            disks = []
-            for disk in results:
-                device_id = disk.get('DeviceID', '').strip()
-                volume_name = disk.get('VolumeName', '').strip()
-                size = float(disk.get('Size', 0))
-                free = float(disk.get('FreeSpace', 0))
-                
-                if not device_id or size == 0:
-                    continue
-                
-                used = size - free
-                percent_used = (used / size) * 100
-                
-                # Nome amigável
-                if volume_name:
-                    display_name = f"{volume_name} ({device_id})"
-                else:
-                    display_name = f"Disco Local ({device_id})"
-                
-                disks.append({
-                    "name": device_id,
-                    "display_name": display_name,
-                    "total_gb": round(size / (1024**3), 2),
-                    "used_gb": round(used / (1024**3), 2),
-                    "free_gb": round(free / (1024**3), 2),
-                    "percent_used": round(percent_used, 1)
-                })
-            
-            # Ordenar por letra
-            disks.sort(key=lambda x: x['name'])
-            
-            logger.info(f"Descobertos {len(disks)} discos em {self.hostname}")
-            return disks
-            
-        except Exception as e:
-            logger.error(f"Erro ao descobrir discos via WMI: {e}")
-            return []
-    
-    def _execute_wmi_query(self, query: str) -> List[Dict[str, Any]]:
-        """
-        Executa query WMI usando wmic.exe (Windows) ou wmi-client (Linux)
+        Executa script PowerShell remoto via Invoke-Command
         
-        IMPORTANTE: Esta é uma implementação básica usando wmic.exe
-        Para produção, considere usar bibliotecas como:
-        - pypsrp (PowerShell Remoting)
-        - wmi-client-wrapper (Linux)
-        - impacket (Cross-platform)
+        IMPORTANTE: Usa hostname (não IP) para permitir autenticação Kerberos
+        Kerberos NÃO funciona com IP, apenas com hostname/FQDN
+        
+        Tenta Kerberos primeiro (funciona com Domain Admin + hostname),
+        se falhar tenta Negotiate, depois CredSSP
         """
-        try:
-            # Comando wmic para Windows
-            # Formato: wmic /node:hostname /user:username /password:password query
-            cmd = [
-                'wmic',
-                f'/node:{self.hostname}',
-                f'/user:{self.full_username}',
-                f'/password:{self.password}',
-                query,
-                '/format:csv'
-            ]
-            
-            # Executar comando
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=30
-            )
-            
-            if result.returncode != 0:
-                logger.error(f"Erro wmic: {result.stderr}")
-                return []
-            
-            # Parse CSV output
-            lines = result.stdout.strip().split('\n')
-            if len(lines) < 2:
-                return []
-            
-            # Primeira linha é o header
-            headers = lines[0].split(',')
-            
-            # Linhas seguintes são os dados
-            results = []
-            for line in lines[1:]:
-                if not line.strip():
+        # Tentar métodos de autenticação em ordem
+        # Kerberos requer hostname, não IP
+        auth_methods = ['Kerberos', 'Negotiate', 'CredSSP']
+        
+        for auth in auth_methods:
+            try:
+                ps_command = f"""
+                $ErrorActionPreference = 'Stop'
+                $password = ConvertTo-SecureString '{self.password}' -AsPlainText -Force
+                $credential = New-Object System.Management.Automation.PSCredential('{self.full_username}', $password)
+                Invoke-Command -ComputerName {self.hostname} -Credential $credential -Authentication {auth} -ScriptBlock {{
+                    {script}
+                }}
+                """
+                
+                cmd = ['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', ps_command]
+                
+                result = subprocess.run(
+                    cmd,
+                    capture_output=True,
+                    text=True,
+                    timeout=30
+                )
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    logger.info(f"✅ PowerShell remoto OK via {auth} em {self.hostname}")
+                    return result.stdout.strip()
+                
+                if result.returncode != 0:
+                    logger.warning(f"⚠️ Auth {auth} falhou em {self.hostname}: {result.stderr[:200]}")
                     continue
-                values = line.split(',')
-                row = dict(zip(headers, values))
-                results.append(row)
-            
-            return results
-            
-        except subprocess.TimeoutExpired:
-            logger.error(f"Timeout ao executar WMI query no host {self.hostname}")
-            return []
-        except Exception as e:
-            logger.error(f"Erro ao executar WMI query: {e}")
-            return []
+                    
+            except subprocess.TimeoutExpired:
+                logger.warning(f"⚠️ Timeout com {auth} em {self.hostname}")
+                continue
+            except Exception as e:
+                logger.warning(f"⚠️ Erro com {auth} em {self.hostname}: {e}")
+                continue
+        
+        logger.error(f"❌ Todos os métodos de autenticação falharam para {self.hostname}")
+        return ""
     
     def _get_status(self, value: float, warning: float, critical: float) -> str:
         """Determina status baseado em thresholds"""

@@ -245,7 +245,9 @@ class ProbeCore:
         try:
             from collectors.wmi_remote_collector import WMIRemoteCollector
             
-            hostname = server.get('ip_address') or server.get('hostname')
+            # IMPORTANTE: Usar hostname primeiro para permitir autenticação Kerberos
+            # Kerberos NÃO funciona com IP, apenas com hostname/FQDN
+            hostname = server.get('hostname') or server.get('ip_address')
             server_id = server.get('id')
             
             # Buscar credenciais do banco via API (sistema moderno como PRTG)
