@@ -215,7 +215,7 @@ def create_wmi_credential(
         group_name=credential.group_name,
         server_id=credential.server_id,
         wmi_username=credential.wmi_username,
-        wmi_password_encrypted=encrypt_password(credential.wmi_password_encrypted),
+        wmi_password_encrypted=encrypt_password(credential.wmi_password),
         wmi_domain=credential.wmi_domain,
         is_default=credential.is_default,
         is_active=credential.is_active,
