@@ -215,7 +215,7 @@ def create_wmi_credential(
         group_name=credential.group_name,
         server_id=credential.server_id,
         wmi_username=credential.wmi_username,
-        wmi_password_encrypted=encrypt_password(credential.wmi_password),
+        wmi_password_encrypted=encrypt_password(credential.wmi_password_encrypted),
         wmi_domain=credential.wmi_domain,
         is_default=credential.is_default,
         is_active=credential.is_active,
@@ -529,20 +529,20 @@ def resolve_credential_for_server(
             if probe_token:
                 if credential.credential_type == "wmi":
                     result["username"] = credential.wmi_username
-                    result["password"] = decrypt_password(credential.wmi_password) if credential.wmi_password else None
+                    result["password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password else None
                     result["domain"] = credential.wmi_domain
                 elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
                     result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
                 elif credential.credential_type == "snmp_v3":
                     result["username"] = credential.snmp_username
-                    result["auth_password"] = decrypt_password(credential.snmp_auth_password) if credential.snmp_auth_password else None
-                    result["priv_password"] = decrypt_password(credential.snmp_priv_password) if credential.snmp_priv_password else None
+                    result["auth_password"] = decrypt_password(credential.snmp_auth_password_encrypted) if credential.snmp_auth_password else None
+                    result["priv_password"] = decrypt_password(credential.snmp_priv_password_encrypted) if credential.snmp_priv_password else None
                     result["auth_protocol"] = credential.snmp_auth_protocol
                     result["priv_protocol"] = credential.snmp_priv_protocol
                 elif credential.credential_type == "ssh":
                     result["username"] = credential.ssh_username
-                    result["password"] = decrypt_password(credential.ssh_password) if credential.ssh_password else None
-                    result["private_key"] = credential.ssh_private_key
+                    result["password"] = decrypt_password(credential.ssh_password_encrypted) if credential.ssh_password else None
+                    result["private_key"] = credential.ssh_private_key_encrypted
             
             return result
     
@@ -571,20 +571,20 @@ def resolve_credential_for_server(
             if probe_token:
                 if credential.credential_type == "wmi":
                     result["username"] = credential.wmi_username
-                    result["password"] = decrypt_password(credential.wmi_password) if credential.wmi_password else None
+                    result["password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password else None
                     result["domain"] = credential.wmi_domain
                 elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
                     result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
                 elif credential.credential_type == "snmp_v3":
                     result["username"] = credential.snmp_username
-                    result["auth_password"] = decrypt_password(credential.snmp_auth_password) if credential.snmp_auth_password else None
-                    result["priv_password"] = decrypt_password(credential.snmp_priv_password) if credential.snmp_priv_password else None
+                    result["auth_password"] = decrypt_password(credential.snmp_auth_password_encrypted) if credential.snmp_auth_password else None
+                    result["priv_password"] = decrypt_password(credential.snmp_priv_password_encrypted) if credential.snmp_priv_password else None
                     result["auth_protocol"] = credential.snmp_auth_protocol
                     result["priv_protocol"] = credential.snmp_priv_protocol
                 elif credential.credential_type == "ssh":
                     result["username"] = credential.ssh_username
-                    result["password"] = decrypt_password(credential.ssh_password) if credential.ssh_password else None
-                    result["private_key"] = credential.ssh_private_key
+                    result["password"] = decrypt_password(credential.ssh_password_encrypted) if credential.ssh_password else None
+                    result["private_key"] = credential.ssh_private_key_encrypted
             
             return result
     
@@ -610,20 +610,20 @@ def resolve_credential_for_server(
         if probe_token:
             if credential.credential_type == "wmi":
                 result["username"] = credential.wmi_username
-                result["password"] = decrypt_password(credential.wmi_password) if credential.wmi_password else None
+                result["password"] = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password else None
                 result["domain"] = credential.wmi_domain
             elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
                 result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
             elif credential.credential_type == "snmp_v3":
                 result["username"] = credential.snmp_username
-                result["auth_password"] = decrypt_password(credential.snmp_auth_password) if credential.snmp_auth_password else None
-                result["priv_password"] = decrypt_password(credential.snmp_priv_password) if credential.snmp_priv_password else None
+                result["auth_password"] = decrypt_password(credential.snmp_auth_password_encrypted) if credential.snmp_auth_password else None
+                result["priv_password"] = decrypt_password(credential.snmp_priv_password_encrypted) if credential.snmp_priv_password else None
                 result["auth_protocol"] = credential.snmp_auth_protocol
                 result["priv_protocol"] = credential.snmp_priv_protocol
             elif credential.credential_type == "ssh":
                 result["username"] = credential.ssh_username
-                result["password"] = decrypt_password(credential.ssh_password) if credential.ssh_password else None
-                result["private_key"] = credential.ssh_private_key
+                result["password"] = decrypt_password(credential.ssh_password_encrypted) if credential.ssh_password else None
+                result["private_key"] = credential.ssh_private_key_encrypted
         
         return result
     
@@ -631,3 +631,4 @@ def resolve_credential_for_server(
         "source": "none",
         "message": "Nenhuma credencial configurada"
     }
+
