@@ -13,8 +13,21 @@ import os
 import base64
 
 from database import get_db
-from models import Credential, Server, User
+from models import Credential, Server, User, Probe
 from auth import get_current_user
+
+# Função auxiliar para autenticação opcional
+def get_current_user_optional(
+    db: Session = Depends(get_db),
+    token: str = None
+) -> Optional[User]:
+    """Retorna usuário se autenticado, None caso contrário"""
+    if not token:
+        return None
+    try:
+        return get_current_user(db, token)
+    except:
+        return None
 
 router = APIRouter(prefix="/api/v1/credentials", tags=["credentials"])
 
@@ -463,39 +476,81 @@ def test_credential(
 @router.get("/resolve/{server_id}")
 def resolve_credential_for_server(
     server_id: int,
+    probe_token: str = None,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user_optional)
 ):
     """
     Resolve qual credencial usar para um servidor (herança)
     Ordem: Servidor específico → Grupo → Tenant
+    Suporta autenticação via JWT (usuário) ou probe_token (probe)
     """
-    server = db.query(Server).filter(
-        and_(
-            Server.id == server_id,
-            Server.tenant_id == current_user.tenant_id
-        )
-    ).first()
+    # Autenticação via probe_token
+    if probe_token:
+        probe = db.query(Probe).filter(Probe.token == probe_token).first()
+        if not probe:
+            raise HTTPException(403, "Token de probe inválido")
+        
+        server = db.query(Server).filter(Server.id == server_id).first()
+        if not server:
+            raise HTTPException(404, "Servidor não encontrado")
+        
+        tenant_id = server.tenant_id
     
-    if not server:
-        raise HTTPException(404, "Servidor não encontrado")
+    # Autenticação via JWT
+    elif current_user:
+        server = db.query(Server).filter(
+            and_(
+                Server.id == server_id,
+                Server.tenant_id == current_user.tenant_id
+            )
+        ).first()
+        
+        if not server:
+            raise HTTPException(404, "Servidor não encontrado")
+        
+        tenant_id = current_user.tenant_id
+    
+    else:
+        raise HTTPException(401, "Autenticação necessária")
     
     # 1. Credencial específica do servidor
     if server.credential_id and not server.use_inherited_credential:
         credential = db.query(Credential).filter(Credential.id == server.credential_id).first()
         if credential:
-            return {
-                "source": "server",
-                "credential_id": credential.id,
-                "credential_name": credential.name,
-                "credential_type": credential.credential_type
+            result = {
+                "id": credential.id,
+                "name": credential.name,
+                "credential_type": credential.credential_type,
+                "inheritance_level": "server"
             }
+            
+            # Se for probe, retornar dados completos descriptografados
+            if probe_token:
+                if credential.credential_type == "wmi":
+                    result["username"] = credential.wmi_username
+                    result["password"] = decrypt_password(credential.wmi_password) if credential.wmi_password else None
+                    result["domain"] = credential.wmi_domain
+                elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
+                    result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
+                elif credential.credential_type == "snmp_v3":
+                    result["username"] = credential.snmp_username
+                    result["auth_password"] = decrypt_password(credential.snmp_auth_password) if credential.snmp_auth_password else None
+                    result["priv_password"] = decrypt_password(credential.snmp_priv_password) if credential.snmp_priv_password else None
+                    result["auth_protocol"] = credential.snmp_auth_protocol
+                    result["priv_protocol"] = credential.snmp_priv_protocol
+                elif credential.credential_type == "ssh":
+                    result["username"] = credential.ssh_username
+                    result["password"] = decrypt_password(credential.ssh_password) if credential.ssh_password else None
+                    result["private_key"] = credential.ssh_private_key
+            
+            return result
     
     # 2. Credencial do grupo
     if server.group_name:
         credential = db.query(Credential).filter(
             and_(
-                Credential.tenant_id == current_user.tenant_id,
+                Credential.tenant_id == tenant_id,
                 Credential.level == "group",
                 Credential.group_name == server.group_name,
                 Credential.is_active == True,
@@ -504,18 +559,39 @@ def resolve_credential_for_server(
         ).first()
         
         if credential:
-            return {
-                "source": "group",
-                "credential_id": credential.id,
-                "credential_name": credential.name,
+            result = {
+                "id": credential.id,
+                "name": credential.name,
                 "credential_type": credential.credential_type,
+                "inheritance_level": "group",
                 "group_name": server.group_name
             }
+            
+            # Se for probe, retornar dados completos descriptografados
+            if probe_token:
+                if credential.credential_type == "wmi":
+                    result["username"] = credential.wmi_username
+                    result["password"] = decrypt_password(credential.wmi_password) if credential.wmi_password else None
+                    result["domain"] = credential.wmi_domain
+                elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
+                    result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
+                elif credential.credential_type == "snmp_v3":
+                    result["username"] = credential.snmp_username
+                    result["auth_password"] = decrypt_password(credential.snmp_auth_password) if credential.snmp_auth_password else None
+                    result["priv_password"] = decrypt_password(credential.snmp_priv_password) if credential.snmp_priv_password else None
+                    result["auth_protocol"] = credential.snmp_auth_protocol
+                    result["priv_protocol"] = credential.snmp_priv_protocol
+                elif credential.credential_type == "ssh":
+                    result["username"] = credential.ssh_username
+                    result["password"] = decrypt_password(credential.ssh_password) if credential.ssh_password else None
+                    result["private_key"] = credential.ssh_private_key
+            
+            return result
     
     # 3. Credencial do tenant (padrão)
     credential = db.query(Credential).filter(
         and_(
-            Credential.tenant_id == current_user.tenant_id,
+            Credential.tenant_id == tenant_id,
             Credential.level == "tenant",
             Credential.is_active == True,
             Credential.is_default == True
@@ -523,12 +599,33 @@ def resolve_credential_for_server(
     ).first()
     
     if credential:
-        return {
-            "source": "tenant",
-            "credential_id": credential.id,
-            "credential_name": credential.name,
-            "credential_type": credential.credential_type
+        result = {
+            "id": credential.id,
+            "name": credential.name,
+            "credential_type": credential.credential_type,
+            "inheritance_level": "tenant"
         }
+        
+        # Se for probe, retornar dados completos descriptografados
+        if probe_token:
+            if credential.credential_type == "wmi":
+                result["username"] = credential.wmi_username
+                result["password"] = decrypt_password(credential.wmi_password) if credential.wmi_password else None
+                result["domain"] = credential.wmi_domain
+            elif credential.credential_type in ["snmp_v1", "snmp_v2c"]:
+                result["community"] = decrypt_password(credential.snmp_community) if credential.snmp_community else None
+            elif credential.credential_type == "snmp_v3":
+                result["username"] = credential.snmp_username
+                result["auth_password"] = decrypt_password(credential.snmp_auth_password) if credential.snmp_auth_password else None
+                result["priv_password"] = decrypt_password(credential.snmp_priv_password) if credential.snmp_priv_password else None
+                result["auth_protocol"] = credential.snmp_auth_protocol
+                result["priv_protocol"] = credential.snmp_priv_protocol
+            elif credential.credential_type == "ssh":
+                result["username"] = credential.ssh_username
+                result["password"] = decrypt_password(credential.ssh_password) if credential.ssh_password else None
+                result["private_key"] = credential.ssh_private_key
+        
+        return result
     
     return {
         "source": "none",
