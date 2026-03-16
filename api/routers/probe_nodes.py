@@ -46,10 +46,17 @@ def list_nodes(db: Session = Depends(get_db), current_user=Depends(get_current_u
             Server.is_active == True
         ).count()
 
-        sensors_count = db.query(Sensor).filter(
-            Sensor.probe_id == probe.id,
+        # Sensores via servidor (caminho principal) + sensores standalone com probe_id direto
+        sensors_via_server = db.query(Sensor).join(Server, Sensor.server_id == Server.id).filter(
+            Server.probe_id == probe.id,
             Sensor.is_active == True
         ).count()
+        sensors_standalone = db.query(Sensor).filter(
+            Sensor.probe_id == probe.id,
+            Sensor.server_id == None,
+            Sensor.is_active == True
+        ).count()
+        sensors_count = sensors_via_server + sensors_standalone
 
         result.append({
             "id": str(probe.id),
