@@ -96,6 +96,8 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
   const formatValue = (value, unit) => {
     if (unit === 'percent') {
       return `${value.toFixed(1)}%`;
+    } else if (unit === 'mbps') {
+      return `${value.toFixed(2)} Mbps`;
     } else if (unit === 'bytes/s') {
       const mbps = value / 1024 / 1024;
       return `${mbps.toFixed(2)} MB/s`;
@@ -119,6 +121,9 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       case 'memory': return '💾';
       case 'disk': return '💿';
       case 'network': return '🌐';
+      case 'network_in': return '📥';
+      case 'network_out': return '📤';
+      case 'uptime': return '⏱️';
       case 'service': return '⚙️';
       case 'system': return '⏱️';
       case 'hyperv': return '🖼️';
@@ -170,7 +175,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
     sensors.forEach(sensor => {
       const type = sensor.sensor_type;
       
-      if (['ping', 'cpu', 'memory', 'disk', 'system', 'network'].includes(type)) {
+      if (['ping', 'cpu', 'memory', 'disk', 'system', 'network', 'uptime', 'network_in', 'network_out'].includes(type)) {
         groups.system.sensors.push(sensor);
       } else if (type === 'docker') {
         groups.docker.sensors.push(sensor);
