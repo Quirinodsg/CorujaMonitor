@@ -99,26 +99,43 @@ class WMIConnectionPool:
         self._cleanup_thread.start()
 
     def _create_connection(self, host: str, username: str, password: str, domain: str) -> Optional[object]:
-        """Cria nova conexão WMI com COM inicializado corretamente para esta thread"""
+        """
+        Cria nova conexão WMI.
+
+        Estratégia:
+        1. Tenta sem credenciais (usa identidade do serviço via Kerberos - mais confiável)
+        2. Fallback com credenciais explícitas (para workgroup ou quando necessário)
+        """
         try:
             import wmi
 
             # CRÍTICO: inicializar COM + CoInitializeSecurity para esta thread
             _init_thread_com()
 
-            # Formatar usuário
             full_user = f"{domain}\\{username}" if domain and "\\" not in username else username
-
             logger.info(f"🔌 WMI Pool: criando conexão para {host} ({full_user})")
 
+            # Tentativa 1: sem credenciais explícitas
+            # Quando o serviço roda como coruja.monitor no domínio, o Kerberos
+            # usa automaticamente a identidade do serviço - igual ao PRTG
+            try:
+                conn = wmi.WMI(
+                    computer=host,
+                    namespace="root/cimv2",
+                )
+                logger.info(f"✅ WMI Pool: conexão criada para {host} (identidade do serviço)")
+                return conn
+            except Exception as e1:
+                logger.debug(f"WMI sem credenciais falhou para {host}: {e1} — tentando com credenciais explícitas")
+
+            # Tentativa 2: com credenciais explícitas (fallback)
             conn = wmi.WMI(
                 computer=host,
                 user=full_user,
                 password=password,
                 namespace="root/cimv2",
             )
-
-            logger.info(f"✅ WMI Pool: conexão criada para {host}")
+            logger.info(f"✅ WMI Pool: conexão criada para {host} (credenciais explícitas)")
             return conn
 
         except Exception as e:
