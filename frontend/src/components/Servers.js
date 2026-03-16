@@ -179,7 +179,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         let groupKey = null;
         const type = sensor.sensor_type;
         
-        if (['ping', 'cpu', 'memory', 'disk', 'system', 'network'].includes(type)) {
+        if (['ping', 'cpu', 'memory', 'disk', 'system', 'network', 'uptime', 'network_in', 'network_out'].includes(type)) {
           groupKey = 'system';
         } else if (type === 'docker') {
           groupKey = 'docker';
@@ -344,7 +344,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
       'memory': 3,
       'disk': 4,
       'system': 5,  // uptime
+      'uptime': 5,
       'network': 6,
+      'network_in': 6,
+      'network_out': 6.5,
       'service': 7,
       'hyperv': 8,
       'process': 9,
@@ -490,7 +493,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     sensors.forEach(sensor => {
       const type = sensor.sensor_type;
       
-      if (['ping', 'cpu', 'memory', 'disk', 'system', 'network'].includes(type)) {
+      if (['ping', 'cpu', 'memory', 'disk', 'system', 'network', 'uptime', 'network_in', 'network_out'].includes(type)) {
         groups.system.sensors.push(sensor);
       } else if (type === 'docker') {
         groups.docker.sensors.push(sensor);
