@@ -215,12 +215,106 @@ class SmartCollector:
             logger.error(f"SmartCollector disk error: {e}")
             return []
 
+    def collect_uptime(self) -> List[Dict[str, Any]]:
+        """Coleta uptime via Win32_OperatingSystem.LastBootUpTime"""
+        if not self.conn:
+            return []
+        try:
+            rows = self.conn.query("SELECT LastBootUpTime FROM Win32_OperatingSystem")
+            if not rows:
+                return []
+
+            import datetime
+            # LastBootUpTime formato: "20260316193000.000000+000"
+            boot_str = rows[0].LastBootUpTime
+            # Parsear apenas os primeiros 14 chars: YYYYMMDDHHmmss
+            boot_dt = datetime.datetime.strptime(boot_str[:14], "%Y%m%d%H%M%S")
+            boot_dt = boot_dt.replace(tzinfo=datetime.timezone.utc)
+            now = datetime.datetime.now(datetime.timezone.utc)
+            uptime_seconds = (now - boot_dt).total_seconds()
+            uptime_days = uptime_seconds / 86400
+
+            return [{
+                "type": "uptime",
+                "name": "Uptime",
+                "value": round(uptime_days, 4),
+                "unit": "days",
+                "status": "ok",
+                "metadata": {
+                    "uptime_seconds": int(uptime_seconds),
+                    "last_boot": boot_dt.isoformat(),
+                    "collection_method": CollectionMethod.WMI_WQL.value,
+                },
+            }]
+        except Exception as e:
+            logger.error(f"SmartCollector uptime error: {e}")
+            return []
+
+    def collect_network(self) -> List[Dict[str, Any]]:
+        """Coleta tráfego de rede via Win32_PerfFormattedData_Tcpip_NetworkInterface"""
+        if not self.conn:
+            return []
+        try:
+            rows = self.conn.query(
+                "SELECT BytesReceivedPerSec,BytesSentPerSec,Name "
+                "FROM Win32_PerfFormattedData_Tcpip_NetworkInterface"
+            )
+            if not rows:
+                return []
+
+            # Somar todos os adaptadores (excluir loopback)
+            total_in = 0
+            total_out = 0
+            for row in rows:
+                name = (row.Name or "").lower()
+                if "loopback" in name or "isatap" in name or "teredo" in name:
+                    continue
+                try:
+                    total_in += int(row.BytesReceivedPerSec or 0)
+                    total_out += int(row.BytesSentPerSec or 0)
+                except (TypeError, ValueError):
+                    pass
+
+            # Converter bytes/s para Mbps
+            in_mbps = round(total_in * 8 / 1_000_000, 4)
+            out_mbps = round(total_out * 8 / 1_000_000, 4)
+
+            return [
+                {
+                    "type": "network_in",
+                    "name": "Network IN",
+                    "value": in_mbps,
+                    "unit": "mbps",
+                    "status": "ok",
+                    "metadata": {
+                        "bytes_per_sec": total_in,
+                        "collection_method": CollectionMethod.PERF_COUNTER.value,
+                    },
+                },
+                {
+                    "type": "network_out",
+                    "name": "Network OUT",
+                    "value": out_mbps,
+                    "unit": "mbps",
+                    "status": "ok",
+                    "metadata": {
+                        "bytes_per_sec": total_out,
+                        "collection_method": CollectionMethod.PERF_COUNTER.value,
+                    },
+                },
+            ]
+        except Exception as e:
+            logger.error(f"SmartCollector network error: {e}")
+            return []
+
     def collect_all(self) -> List[Dict[str, Any]]:
         """Coleta todas as métricas usando os métodos mais rápidos disponíveis"""
         metrics = []
         metrics.extend(self.collect_cpu())
         metrics.extend(self.collect_memory())
         metrics.extend(self.collect_disk())
+        metrics.extend(self.collect_uptime())
+        metrics.extend(self.collect_network())
         return metrics
 
     def get_method_report(self) -> Dict[str, Any]:
