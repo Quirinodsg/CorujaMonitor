@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 
 from database import get_db
-from routers.auth import get_current_user
+from auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/multi-probe", tags=["Multi-Probe"])
 

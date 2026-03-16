@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from database import get_db
-from routers.auth import get_current_user
+from auth import get_current_user
 
 logger = logging.getLogger(__name__)
 

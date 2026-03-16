@@ -8,7 +8,7 @@ from sqlalchemy import text
 from pathlib import Path
 
 from database import get_db
-from routers.auth import get_current_user
+from auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/timescale", tags=["TimescaleDB Migration"])
 

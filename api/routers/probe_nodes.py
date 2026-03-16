@@ -11,7 +11,7 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
-from routers.auth import get_current_user
+from auth import get_current_user
 
 router = APIRouter(prefix="/api/v1/probe-nodes", tags=["Probe Nodes"])
 
