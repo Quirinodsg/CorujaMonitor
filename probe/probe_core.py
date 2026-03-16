@@ -241,76 +241,71 @@ class ProbeCore:
             logger.error(f"Error fetching remote servers: {e}", exc_info=True)
     
     def _collect_wmi_remote(self, server):
-        """Collect metrics from remote Windows server via WMI"""
+        """
+        Coleta métricas de servidor Windows remoto via WMI Engine + SmartCollector.
+        Usa Connection Pool para reutilizar conexões e evitar sobrecarga do wmiprvse.exe.
+        Hierarquia: PerfCounter → WQL → Registry (fallback automático)
+        """
         try:
-            from collectors.wmi_remote_collector import WMIRemoteCollector
-            
-            # IMPORTANTE: Usar hostname primeiro para permitir autenticação Kerberos
-            # Kerberos NÃO funciona com IP, apenas com hostname/FQDN
+            from engine.wmi_pool import get_pool
+            from engine.smart_collector import SmartCollector
+
             hostname = server.get('hostname') or server.get('ip_address')
             server_id = server.get('id')
-            
-            # Buscar credenciais do banco via API (sistema moderno como PRTG)
+
             credential = self._get_server_credential(server_id)
-            
+
             if not credential:
-                logger.warning(f"⚠️ Nenhuma credencial WMI configurada para {hostname} (ID: {server_id})")
-                logger.info(f"💡 Configure credenciais em: Configurações → Credenciais")
+                logger.warning(f"⚠️ Nenhuma credencial WMI para {hostname} (ID: {server_id})")
                 return
-            
+
             if credential.get('credential_type') != 'wmi':
                 logger.warning(f"Credencial para {hostname} não é do tipo WMI")
                 return
-            
+
             username = credential.get('wmi_username')
-            password = credential.get('wmi_password')  # API descriptografa automaticamente
+            password = credential.get('wmi_password')
             domain = credential.get('wmi_domain', '')
-            
+
             if not username or not password:
                 logger.warning(f"Credencial WMI incompleta para {hostname}")
                 return
-            
-            logger.info(f"🔐 Usando credencial: {credential.get('name')} (Nível: {credential.get('inheritance_level')})")
-            logger.debug(f"   Usuário: {domain}\\{username}" if domain else f"   Usuário: {username}")
-            
-            collector = WMIRemoteCollector(hostname, username, password, domain)
-            
-            # Collect all metrics
-            timestamp = datetime.now().isoformat()
-            
-            # CPU
-            cpu_metrics = collector.collect_cpu()
-            for metric in cpu_metrics:
-                metric['timestamp'] = timestamp
-                metric['hostname'] = server.get('hostname')
-                self.buffer.append(metric)
-            
-            # Memory
-            mem_metrics = collector.collect_memory()
-            for metric in mem_metrics:
-                metric['timestamp'] = timestamp
-                metric['hostname'] = server.get('hostname')
-                self.buffer.append(metric)
-            
-            # Disk
-            disk_metrics = collector.collect_disk()
-            for metric in disk_metrics:
-                metric['timestamp'] = timestamp
-                metric['hostname'] = server.get('hostname')
-                self.buffer.append(metric)
-            
-            # Services (if configured)
-            if self.config.monitored_services:
-                service_metrics = collector.collect_services(self.config.monitored_services)
-                for metric in service_metrics:
+
+            logger.info(f"🔐 Credencial: {credential.get('name')} | Usuário: {domain}\\{username}")
+
+            # Adquirir conexão do pool (reutiliza se disponível)
+            pool = get_pool()
+            conn = pool.acquire(hostname, username, password, domain)
+
+            if not conn:
+                logger.error(f"❌ Não foi possível adquirir conexão WMI para {hostname}")
+                return
+
+            try:
+                # SmartCollector decide automaticamente: PerfCounter → WQL → Registry
+                sc = SmartCollector(wmi_connection=conn)
+                all_metrics = sc.collect_all()
+
+                timestamp = datetime.now().isoformat()
+                for metric in all_metrics:
                     metric['timestamp'] = timestamp
                     metric['hostname'] = server.get('hostname')
+                    metric['server_id'] = server_id
                     self.buffer.append(metric)
-            
-            logger.info(f"Collected WMI metrics from {hostname}")
-            
+
+                # Log do método usado (diagnóstico de performance)
+                report = sc.get_method_report()
+                logger.info(
+                    f"✅ WMI {hostname}: {len(all_metrics)} métricas | "
+                    f"métodos={report['methods_in_use']} | "
+                    f"latências={report['query_latency_ms']}"
+                )
+
+            finally:
+                pool.release(hostname, conn)
+
         except Exception as e:
-            logger.error(f"WMI collection failed for {server.get('hostname')}: {e}")
+            logger.error(f"❌ WMI collection failed for {server.get('hostname')}: {e}", exc_info=True)
     
     def _collect_snmp_remote(self, server):
             """Collect metrics from remote device via SNMP"""
