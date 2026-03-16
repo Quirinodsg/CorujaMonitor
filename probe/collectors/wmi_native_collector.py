@@ -75,9 +75,10 @@ class WMINativeCollector:
             if not processors:
                 return []
             
-            # Calcular média de uso
-            total_load = sum(p.LoadPercentage for p in processors if p.LoadPercentage)
-            avg_load = total_load / len(processors) if processors else 0
+            # Calcular média de uso (usar is not None para não filtrar valor 0 real)
+            valid_processors = [p for p in processors if p.LoadPercentage is not None]
+            total_load = sum(p.LoadPercentage for p in valid_processors)
+            avg_load = total_load / len(valid_processors) if valid_processors else 0
             cpu_count = processors[0].NumberOfLogicalProcessors
             
             return [{

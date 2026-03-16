@@ -422,8 +422,14 @@ class ProbeCore:
                     logger.error(f"Error parsing CPU value '{value}': {e}")
 
         # Memória
+        # OIDs adicionais para calcular memória disponível real (incluindo buffers/cache do Linux)
+        OID_MEM_BUFFER = '1.3.6.1.4.1.2021.4.14.0'  # memBuffer
+        OID_MEM_CACHED = '1.3.6.1.4.1.2021.4.15.0'  # memCached
+
         mem_total = None
         mem_avail = None
+        mem_buffer = 0
+        mem_cached = 0
         for oid, value in data.items():
             if OID_MEM_TOTAL in oid:
                 try:
@@ -434,17 +440,32 @@ class ProbeCore:
             elif OID_MEM_AVAIL in oid:
                 try:
                     mem_avail = float(value)
-                    logger.debug(f"Memory available: {mem_avail} KB")
+                    logger.debug(f"Memory available (raw): {mem_avail} KB")
                 except ValueError as e:
                     logger.error(f"Error parsing mem_avail '{value}': {e}")
+            elif OID_MEM_BUFFER in oid:
+                try:
+                    mem_buffer = float(value)
+                    logger.debug(f"Memory buffer: {mem_buffer} KB")
+                except ValueError:
+                    pass
+            elif OID_MEM_CACHED in oid:
+                try:
+                    mem_cached = float(value)
+                    logger.debug(f"Memory cached: {mem_cached} KB")
+                except ValueError:
+                    pass
 
-        if mem_total and mem_avail:
-            mem_used_percent = ((mem_total - mem_avail) / mem_total) * 100
-            logger.debug(f"Memory: {mem_used_percent:.1f}%")
+        if mem_total and mem_avail is not None:
+            # Memória realmente disponível = livre + buffers + cache (como 'free -h' mostra)
+            mem_really_avail = mem_avail + mem_buffer + mem_cached
+            mem_used_percent = ((mem_total - mem_really_avail) / mem_total) * 100
+            mem_used_percent = max(0, min(100, mem_used_percent))  # clamp 0-100
+            logger.debug(f"Memory: {mem_used_percent:.1f}% (avail={mem_avail}, buf={mem_buffer}, cached={mem_cached})")
             metrics.append({
                 'type': 'memory',
                 'name': 'Memória',
-                'value': mem_used_percent,
+                'value': round(mem_used_percent, 2),
                 'unit': 'percent',
                 'status': 'critical' if mem_used_percent > 95 else ('warning' if mem_used_percent > 80 else 'ok'),
                 'server_id': server_id
