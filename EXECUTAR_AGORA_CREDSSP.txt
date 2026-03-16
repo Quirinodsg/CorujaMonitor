@@ -1,0 +1,84 @@
+========================================
+EXECUTAR AGORA - RESOLVER CREDSSP
+========================================
+
+COPIAR E COLAR NA SRVSONDA001 (192.168.31.162)
+========================================
+
+PowerShell como Administrador:
+
+# ========================================
+# CONFIGURAR CREDSSP
+# ========================================
+
+Write-Host "Configurando CredSSP..." -ForegroundColor Cyan
+
+$regPath1 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation"
+$regPath2 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentials"
+$regPath3 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly"
+
+New-Item -Path $regPath1 -Force | Out-Null
+New-Item -Path $regPath2 -Force | Out-Null
+New-Item -Path $regPath3 -Force | Out-Null
+
+Set-ItemProperty -Path $regPath1 -Name "AllowFreshCredentials" -Value 1 -Type DWord
+Set-ItemProperty -Path $regPath1 -Name "AllowFreshCredentialsWhenNTLMOnly" -Value 1 -Type DWord
+Set-ItemProperty -Path $regPath1 -Name "ConcatenateDefaults_AllowFresh" -Value 1 -Type DWord
+Set-ItemProperty -Path $regPath1 -Name "ConcatenateDefaults_AllowFreshNTLMOnly" -Value 1 -Type DWord
+
+Set-ItemProperty -Path $regPath2 -Name "1" -Value "WSMAN/192.168.31.110" -Type String
+Set-ItemProperty -Path $regPath3 -Name "1" -Value "WSMAN/192.168.31.110" -Type String
+Set-ItemProperty -Path $regPath2 -Name "2" -Value "WSMAN/*" -Type String
+Set-ItemProperty -Path $regPath3 -Name "2" -Value "WSMAN/*" -Type String
+
+gpupdate /force | Out-Null
+
+Write-Host "✅ Políticas configuradas" -ForegroundColor Green
+
+# ========================================
+# TESTAR CONEXÃO
+# ========================================
+
+Write-Host "Testando conexão..." -ForegroundColor Cyan
+
+try {
+    $password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+    $credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+    
+    $result = Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -Authentication CredSSP -ScriptBlock { 
+        Get-WmiObject Win32_OperatingSystem | Select-Object Caption
+    } -ErrorAction Stop
+    
+    Write-Host "✅ SUCESSO! CredSSP funcionando!" -ForegroundColor Green
+    Write-Host "Sistema: $($result.Caption)" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Próximo passo: Copiar wmi_remote_collector.py atualizado" -ForegroundColor Yellow
+    
+} catch {
+    Write-Host "❌ ERRO: $($_.Exception.Message)" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Solução: Reiniciar a máquina" -ForegroundColor Yellow
+    Write-Host "Executar: Restart-Computer -Force" -ForegroundColor White
+}
+
+========================================
+SE O TESTE FALHAR:
+========================================
+
+1. Reiniciar máquina:
+   Restart-Computer -Force
+
+2. Após reiniciar, testar novamente:
+   $password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+   $credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+   Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -Authentication CredSSP -ScriptBlock { hostname }
+
+========================================
+APÓS SUCESSO:
+========================================
+
+1. Copiar wmi_remote_collector.py atualizado via RDP
+2. Reiniciar probe
+3. Verificar logs
+
+========================================

@@ -6,7 +6,133 @@ Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/).
 
 ---
 
-## [2.0.0] — 2026-03-16
+## [2.1.0] — 2026-03-16
+
+### Resumo
+
+Versão 2.1 consolida as melhorias enterprise da v2.0 com correções de segurança críticas (WAF reativado),
+novos componentes de infraestrutura distribuída e melhorias de UX no portal web. Suite de testes expandida
+para 120 testes automatizados com 0 falhas.
+
+---
+
+### Adicionado
+
+#### WAF — Web Application Firewall (`api/middleware/waf.py`)
+- Reativado em produção após correções de compatibilidade
+- Whitelist de ranges Docker completos: `172.16.0.0/12`, `192.168.0.0/16`, `10.0.0.0/8`
+- Bypass automático para WebSocket upgrades (`/ws/dashboard`)
+- `validate_content_type` expandido: aceita `application/octet-stream`, `application/xml`, content-type vazio
+- Remoção automática de IPs da blacklist após `blacklist_duration` (1h) — TODO implementado
+
+#### WMI Connection Pool (`probe/connection_pool/wmi_pool.py`, `probe/engine/wmi_pool.py`)
+- `WMIConnectionPool` com `max_connections_per_host = 3`, `idle_timeout = 300s`
+- Funções: `acquire()`, `release()`, `invalidate()`, `cleanup_idle_connections()`, `stats()`
+- `PooledConnection` dataclass com tracking de `last_used` e `in_use`
+- `_init_thread_com()` para CoInitializeSecurity (gracioso sem pythoncom)
+- Singleton `get_pool()` thread-safe
+
+#### Global Rate Limiter (`probe/engine/global_rate_limiter.py`)
+- `MAX_GLOBAL_SENSORS_RUNNING = 200`, `QUEUE_LIMIT = 1000`
+- Context manager `acquire_slot()` com semáforo
+- Métricas: `global_active_sensors`, `global_queue_depth`, `utilization_pct`
+- Singleton `get_limiter()`
+
+#### TimescaleDB (`docker-compose.yml`)
+- Imagem `timescale/timescaledb:latest-pg15`
+- SQL de migration montado em `initdb` com hypertable `sensor_metrics`
+- Compressão automática e retention policy (30 dias raw, 1 ano agregado)
+
+#### Streaming de Métricas (`probe/metrics_pipeline/`)
+- `stream_producer.py` — `StreamProducer` com Redis Streams + fallback em memória; `MetricEvent` dataclass
+- `stream_consumer.py` — consumidor assíncrono com `drain_fallback()`
+- `metrics_processor.py` — deduplicação por bucket de 5s, batch persist
+
+#### Probe Nodes Distribuídos (`api/routers/probe_nodes.py`)
+- Entidade `ProbeNode` com campos: id, name, location, status, last_heartbeat, version, capacity
+- Endpoints: `POST /probes/register`, `POST /probes/heartbeat`, `GET /probes`
+
+#### WMI Batch Collector (`probe/engine/wmi_batch_collector.py`)
+- Coleta CPU + RAM + Disco em paralelo com cache TTL 5s
+- Reduz queries WMI de N para 1 por host por ciclo
+
+#### SNMP Engine Otimizado (`probe/protocol_engines/snmp_engine.py`)
+- GetBulk com `BULK_MAX_REPETITIONS = 25`
+- Fallback automático para GetNext
+
+#### Event Queue (`probe/event_engine/event_queue.py`)
+- `EventQueue` com deduplicação por janela configurável
+- Rate limiting por host
+- `MonitoringEvent` dataclass; `flush()` e `stats()`
+
+#### AIOps Expandido (`ai-agent/`)
+- `anomaly_detector.py` — baseline automático, `detect_trend()` (regressão linear pura), `predict_capacity()`
+- `root_cause_engine.py` — RCA com detecção de cascata (switch → hosts dependentes), top 5 hipóteses por confiança
+
+#### Portal Web — Novos Componentes (`frontend/src/components/`)
+- `Dashboard.js` — WebSocket tempo real (`/ws/dashboard`) + polling fallback 30s + indicador "Tempo real"
+- `ProbeNodes.js` — cards com status, heartbeat, capacidade, add/remove probe
+- `MetricsViewer.js` — gráficos históricos, zoom temporal (1h/6h/24h/7d/30d), comparação por servidor
+- `EventTimeline.js` — timeline com filtros por severidade/tipo/host/intervalo + paginação
+- `AIOps.js` — anomalias, correlações, RCA, planos de ação
+- `Discovery.js` + `Discovery.css` — scan de rede, SNMP discovery, WMI discovery
+- `SystemHealth.js` + `SystemHealth.css` — monitoramento interno: CPU probe, fila, latência WMI, ingestão
+
+#### Portal Web — UX (`frontend/src/`)
+- Toggle dark/light mode (`Sidebar.js` + `App.js`)
+- Carregamento assíncrono em todos os componentes
+- `Sensors.js` — busca por texto (nome/tipo) + paginação de 50 itens por página
+- `EventTimeline.js` — paginação de 20 itens + filtros por severidade, tipo, host, intervalo
+
+#### API — Novos Routers
+- `api/routers/metrics_batch.py` — `POST /metrics/batch` para ingestão em lote
+- `api/routers/ws_dashboard.py` — WebSocket `/ws/dashboard` tempo real
+- `api/routers/discovery.py` — endpoints `/network-scan`, `/snmp`, `/wmi`, `/add-sensor`
+
+#### Testes (`tests/test_audit_enterprise.py`)
+- Expandido de 77 para **120 testes** cobrindo todos os novos componentes
+- Seção 13: WMI Connection Pool (12 testes)
+- Seção 14: Global Rate Limiter (6 testes)
+- Seção 15: Metrics Pipeline (5 testes)
+- Seção 16: Event Queue (5 testes)
+- Seção 17: Root Cause Engine (4 testes)
+- Seção 18: AnomalyDetector expandido (7 testes)
+- Seção 19: Discovery Files (4 testes)
+
+---
+
+### Alterado
+
+- `api/main.py` — WAF reativado; todos os novos routers registrados
+- `api/middleware/waf.py` — whitelist expandida, WebSocket bypass, blacklist com expiração automática
+- `frontend/src/components/Sensors.js` — busca por texto + paginação adicionadas
+- `frontend/src/components/Sidebar.js` — toggle dark/light mode
+
+---
+
+### Corrigido
+
+- WAF bloqueava requisições de containers Docker (range `172.17.x.x` não estava na whitelist)
+- WAF bloqueava WebSocket upgrades para `/ws/dashboard`
+- WAF retornava 415 para requisições sem Content-Type (GET requests com body vazio)
+- Blacklist de IPs nunca expirava (TODO implementado com `_blacklist_expiry`)
+
+---
+
+### Performance (Benchmarks v2.1)
+
+| Métrica | Resultado |
+|---------|-----------|
+| Testes automatizados | 120 passed, 0 failed |
+| Registro de 10.000 sensores | < 10s |
+| Cache throughput | > 10.000 ops/s |
+| WMI Pool — 50 hosts simultâneos | 50/50 sem conflito |
+| Rate Limiter — context manager | thread-safe |
+| EventQueue dedup | janela configurável |
+
+---
+
+
 
 ### Resumo
 

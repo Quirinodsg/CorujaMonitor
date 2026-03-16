@@ -1,0 +1,145 @@
+═══════════════════════════════════════════════════════════════════════════
+  SOLUÇÃO FINAL: USAR SNMP EM VEZ DE WMI - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════
+
+CONCLUSÃO: WMI dá "Access denied" mesmo com:
+- ✅ Serviço rodando como Domain Admin
+- ✅ Usuário no grupo Administrators local
+- ✅ Hostname FQDN configurado
+- ✅ Kerberos funcionando
+
+CAUSA RAIZ: Permissões DCOM/WMI não configuradas no SRVHVSPRD010
+SOLUÇÃO RÁPIDA: Usar SNMP (mais simples, funciona imediatamente)
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 1: INSTALAR SNMP NO SRVHVSPRD010
+═══════════════════════════════════════════════════════════════════════════
+
+No SRVHVSPRD010, execute PowerShell como Administrador:
+
+# Instalar SNMP
+Add-WindowsFeature SNMP-Service,SNMP-WMI-Provider
+
+# Configurar serviço para iniciar automaticamente
+Set-Service SNMP -StartupType Automatic
+Start-Service SNMP
+
+# Configurar community string "public"
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\SNMP\Parameters\ValidCommunities" -Name "public" -Value 4 -PropertyType DWord -Force
+
+# Configurar para aceitar de qualquer host
+New-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Services\SNMP\Parameters\PermittedManagers" -Name "1" -Value "192.168.31.162" -PropertyType String -Force
+
+# Reiniciar serviço SNMP
+Restart-Service SNMP
+
+Write-Host "✅ SNMP instalado e configurado!"
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 2: ATUALIZAR SERVIDOR NO BANCO DE DADOS
+═══════════════════════════════════════════════════════════════════════════
+
+No Linux (192.168.31.161), conecte ao banco:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor
+
+Execute:
+
+UPDATE servers 
+SET monitoring_protocol = 'snmp',
+    snmp_enabled = true,
+    snmp_version = '2c',
+    snmp_community = 'public',
+    snmp_port = 161,
+    wmi_enabled = false
+WHERE id = 5;
+
+SELECT id, hostname, ip_address, monitoring_protocol, snmp_enabled, wmi_enabled 
+FROM servers 
+WHERE id = 5;
+
+\q
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 3: REINICIAR PROBE
+═══════════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001:
+
+nssm restart CorujaProbe
+
+Aguarde 60 segundos e verifique logs:
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log" -Tail 50
+
+═══════════════════════════════════════════════════════════════════════════
+RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════
+
+Você deve ver nos logs:
+
+INFO:__main__:Collecting from remote server: srvhvsprd010.ad.techbiz.com.br (192.168.31.110)
+INFO:__main__:Using SNMP for srvhvsprd010.ad.techbiz.com.br
+INFO:__main__:Collecting SNMP metrics from 192.168.31.110 (v2c)
+INFO:__main__:Collected X SNMP metrics from 192.168.31.110
+
+SEM erros de "Access denied"!
+
+═══════════════════════════════════════════════════════════════════════════
+VANTAGENS DO SNMP
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Funciona imediatamente (sem configuração complexa)
+✅ Não precisa de credenciais de domínio
+✅ Funciona em Windows e Linux
+✅ Mais leve que WMI
+✅ Padrão da indústria
+
+DESVANTAGENS:
+❌ Menos métricas que WMI (mas suficiente para monitoramento básico)
+❌ Precisa instalar SNMP em cada servidor
+
+═══════════════════════════════════════════════════════════════════════════
+MÉTRICAS DISPONÍVEIS VIA SNMP
+═══════════════════════════════════════════════════════════════════════════
+
+✅ CPU (uso percentual)
+✅ Memória (total, usado, livre)
+✅ Disco (uso percentual por partição)
+✅ Uptime
+✅ Rede (tráfego IN/OUT)
+✅ Processos
+✅ Serviços (limitado)
+
+═══════════════════════════════════════════════════════════════════════════
+ALTERNATIVA: CONFIGURAR PERMISSÕES DCOM/WMI (MAIS COMPLEXO)
+═══════════════════════════════════════════════════════════════════════════
+
+Se realmente precisar usar WMI, será necessário:
+
+1. Configurar permissões WMI no SRVHVSPRD010:
+   - wmimgmt.msc → Root → CIMV2 → Security
+   - Adicionar TECHBIZ\coruja.monitor
+   - Dar permissões: Execute Methods, Enable Account, Remote Enable
+
+2. Configurar permissões DCOM:
+   - dcomcnfg → Component Services → My Computer → Properties
+   - COM Security → Access Permissions → Edit Limits
+   - Adicionar TECHBIZ\coruja.monitor com Local/Remote Access
+
+3. Verificar firewall:
+   - Porta 135 (RPC)
+   - Portas dinâmicas (49152-65535)
+
+Mas SNMP é MUITO mais simples e funciona imediatamente!
+
+═══════════════════════════════════════════════════════════════════════════
+RECOMENDAÇÃO
+═══════════════════════════════════════════════════════════════════════════
+
+Use SNMP para monitoramento básico de servidores Windows.
+Reserve WMI apenas para casos que realmente precisem de métricas avançadas.
+
+═══════════════════════════════════════════════════════════════════════════
+Data: 13/03/2026 - Coruja Monitor
+═══════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,125 @@
+========================================
+EXECUTAR AGORA - ATUALIZAR SONDA E LINUX
+========================================
+
+RESUMO: Aplicar correção Kerberos (hostname primeiro, não IP)
+
+FLUXO: Máquina Dev (Kiro) → Git → SRVSONDA001 → Copiar Probe → Linux
+
+========================================
+PASSO 1: MÁQUINA DEV (KIRO) - ENVIAR PARA GIT
+========================================
+
+PowerShell na sua máquina de desenvolvimento:
+
+cd [caminho-do-seu-repositorio]
+
+# Verificar o que mudou
+git status
+
+# Adicionar e commitar
+git add probe/probe_core.py
+git add probe/collectors/wmi_remote_collector.py
+git add atualizar_hostname_servidor_110.py
+git add docs/REQUISITO_HOSTNAME_KERBEROS.md
+git add TOPOLOGIA_E_FLUXO_TRABALHO.md
+
+git commit -m "fix: usar hostname (FQDN) para WMI com Kerberos - linha 247 probe_core.py"
+
+git push
+
+========================================
+PASSO 2: SRVSONDA001 (.162) - BAIXAR DO GIT
+========================================
+
+RDP para 192.168.31.162, depois PowerShell como Admin:
+
+cd C:\Users\Steve.Jobs\Desktop\coruja-monitor
+
+# Baixar mudanças do Git
+git pull
+
+========================================
+PASSO 3: SRVSONDA001 (.162) - COPIAR PROBE VIA RDP
+========================================
+
+Na SRVSONDA001, copiar arquivos atualizados:
+
+copy probe\probe_core.py "C:\Program Files\CorujaMonitor\Probe\"
+copy probe\collectors\wmi_remote_collector.py "C:\Program Files\CorujaMonitor\Probe\collectors\"
+
+# Reiniciar probe (Ctrl+C na janela atual, depois):
+cd C:\Users\Steve.Jobs\Desktop
+.\iniciar_probe.bat
+
+========================================
+PASSO 4: LINUX (.161) - ATUALIZAR
+========================================
+
+SSH para 192.168.31.161:
+
+# Corrigir permissão do Git (primeira vez)
+git config --global --add safe.directory /home/administrador/CorujaMonitor
+
+# Ir para diretório correto
+cd /home/administrador/CorujaMonitor
+
+# Baixar mudanças do Git
+git pull
+
+# Atualizar hostname no banco (IMPORTANTE!)
+python3 atualizar_hostname_servidor_110.py
+
+========================================
+PASSO 5: VERIFICAR LOGS (aguardar 1 minuto)
+========================================
+
+Na janela da probe (SRVSONDA001), procurar por:
+
+✅ SUCESSO - Deve aparecer:
+INFO:__main__:Collecting from remote server: srvhvsprd010.ad.techbiz.com.br (192.168.31.110)
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010.ad.techbiz.com.br
+INFO:__main__:Collected WMI metrics from srvhvsprd010.ad.techbiz.com.br
+
+❌ ERRO - Se aparecer:
+ERROR:collectors.wmi_remote_collector:❌ Todos os métodos de autenticação falharam
+→ Verificar se hostname foi atualizado no banco (Passo 3)
+→ Verificar se DNS resolve: nslookup SRVHVSPRD010.ad.techbiz.com.br
+
+========================================
+O QUE FOI MUDADO
+========================================
+
+1. probe_core.py linha 247:
+   ANTES: hostname = server.get('ip_address') or server.get('hostname')
+   DEPOIS: hostname = server.get('hostname') or server.get('ip_address')
+   
+   → Agora usa hostname PRIMEIRO (permite Kerberos)
+
+2. wmi_remote_collector.py:
+   → Ordem de autenticação: Kerberos → Negotiate → CredSSP
+   → Logs melhorados para debug
+
+3. atualizar_hostname_servidor_110.py:
+   → Script para atualizar hostname no banco
+   → Muda de IP para FQDN: SRVHVSPRD010.ad.techbiz.com.br
+
+4. Documentação:
+   → REQUISITO_HOSTNAME_KERBEROS.md: regra para TODAS as máquinas
+   → TOPOLOGIA_E_FLUXO_TRABALHO.md: fluxo de trabalho completo
+
+========================================
+IMPORTANTE PARA O FUTURO
+========================================
+
+TODAS as máquinas Windows devem usar hostname/FQDN, NÃO IP!
+
+Motivo: Kerberos não funciona com IP, apenas com hostname.
+
+Ao adicionar nova máquina no portal:
+✅ Hostname: SRVNOME.ad.techbiz.com.br
+✅ IP: 192.168.31.xxx
+
+❌ Hostname: 192.168.31.xxx (ERRADO!)
+
+========================================

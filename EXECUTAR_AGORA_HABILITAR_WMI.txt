@@ -1,0 +1,53 @@
+═══════════════════════════════════════════════════════════════
+🚀 EXECUTAR AGORA - HABILITAR WMI
+═══════════════════════════════════════════════════════════════
+
+COPIE E COLE ESTES COMANDOS NO LINUX:
+
+# 1. Conectar via SSH
+ssh administrador@192.168.31.161
+
+# 2. Ir para pasta da API
+cd /home/administrador/CorujaMonitor/api
+
+# 3. Executar script
+python3 habilitar_wmi_srvhvsprd010.py
+
+# O script vai pedir:
+# - Usuário WMI: Administrator (ou pressione Enter)
+# - Senha WMI: [digite a senha usada no teste PowerShell]
+# - Domínio WMI: [deixe vazio e pressione Enter]
+
+# 4. Aguardar 1-2 minutos
+
+# 5. Verificar se funcionou (no Linux)
+docker exec -it coruja_monitor-postgres-1 psql -U coruja -d coruja_monitor -c "SELECT hostname, ip_address, monitoring_protocol, wmi_enabled, wmi_username FROM servers WHERE hostname ILIKE '%srvhvsprd010%';"
+
+═══════════════════════════════════════════════════════════════
+RESULTADO ESPERADO:
+═══════════════════════════════════════════════════════════════
+
+hostname     | ip_address      | monitoring_protocol | wmi_enabled | wmi_username
+-------------+-----------------+---------------------+-------------+--------------
+srvhvsprd010 | 192.168.31.110  | wmi                 | t           | Administrator
+
+═══════════════════════════════════════════════════════════════
+APÓS 1-2 MINUTOS, VERIFICAR LOGS DA PROBE (SRVSONDA001):
+═══════════════════════════════════════════════════════════════
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\probe.log" -Tail 50
+
+Procurar por:
+✅ INFO:__main__:Using WMI for srvhvsprd010
+✅ INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+═══════════════════════════════════════════════════════════════
+VERIFICAR FRONTEND:
+═══════════════════════════════════════════════════════════════
+
+http://192.168.31.161:3000
+Login: admin@coruja.com / admin123
+Ir em: Servidores
+Verificar: SRVHVSPRD010 mostrando métricas
+
+═══════════════════════════════════════════════════════════════

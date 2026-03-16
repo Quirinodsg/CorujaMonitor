@@ -1,0 +1,92 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔍 DIAGNOSTICAR API E FRONTEND - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ MIGRAÇÃO CONCLUÍDA COM SUCESSO!
+⚠️  API e Frontend não estão carregando
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 COPIAR E COLAR NO LINUX (SSH):
+═══════════════════════════════════════════════════════════════════════════════
+
+# 1. Verificar status dos containers
+echo "🔍 Status dos containers:"
+docker-compose ps
+
+# 2. Verificar logs da API (últimas 50 linhas)
+echo ""
+echo "📋 Logs da API:"
+docker logs coruja-api --tail 50
+
+# 3. Verificar logs do Frontend (últimas 30 linhas)
+echo ""
+echo "📋 Logs do Frontend:"
+docker logs coruja-frontend --tail 30
+
+# 4. Verificar se as portas estão abertas
+echo ""
+echo "🔌 Portas abertas:"
+netstat -tlnp | grep -E ':(3000|8000)'
+
+# 5. Testar API diretamente
+echo ""
+echo "🧪 Testando API:"
+curl -s http://localhost:8000/health || echo "❌ API não responde"
+
+# 6. Testar Frontend diretamente
+echo ""
+echo "🧪 Testando Frontend:"
+curl -s http://localhost:3000 | head -20 || echo "❌ Frontend não responde"
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 SE API TIVER ERRO DE IMPORT:
+═══════════════════════════════════════════════════════════════════════════════
+
+# Verificar se o arquivo credentials.py está no lugar certo
+ls -la /home/administrador/CorujaMonitor/api/routers/credentials.py
+
+# Se não existir, o problema é que o Git não baixou o arquivo
+# Solução: fazer git pull novamente
+git status
+git pull origin master
+
+# Reiniciar API
+docker-compose restart api
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 SE FRONTEND TIVER ERRO DE BUILD:
+═══════════════════════════════════════════════════════════════════════════════
+
+# Verificar se o arquivo Credentials.js está no lugar certo
+ls -la /home/administrador/CorujaMonitor/frontend/src/components/Credentials.js
+ls -la /home/administrador/CorujaMonitor/frontend/src/components/Credentials.css
+
+# Se não existir, fazer git pull novamente
+git pull origin master
+
+# Rebuild do frontend
+docker-compose build frontend
+docker-compose up -d frontend
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 SOLUÇÃO RÁPIDA (SE TUDO FALHAR):
+═══════════════════════════════════════════════════════════════════════════════
+
+# Parar tudo
+docker-compose down
+
+# Rebuild completo
+docker-compose build --no-cache api frontend
+
+# Subir novamente
+docker-compose up -d
+
+# Aguardar 30 segundos
+sleep 30
+
+# Verificar status
+docker-compose ps
+docker logs coruja-api --tail 20
+docker logs coruja-frontend --tail 20
+
+═══════════════════════════════════════════════════════════════════════════════

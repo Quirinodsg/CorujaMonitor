@@ -31,6 +31,7 @@ class WAFMiddleware(BaseHTTPMiddleware):
         
         # Blacklist de IPs bloqueados
         self.blacklist = set()
+        self._blacklist_expiry = {}  # ip -> datetime de expiração
         
         # Cache de padrões compilados para melhor performance
         self._compiled_sql_patterns = None
@@ -45,9 +46,17 @@ class WAFMiddleware(BaseHTTPMiddleware):
         self.whitelist_ips = {
             "127.0.0.1",
             "::1",
-            "172.18.0.1",  # Docker network
+            "172.18.0.1",  # Docker network gateway
             "localhost"
         }
+        # Ranges Docker completos (172.16.0.0/12 e 192.168.0.0/16)
+        self.whitelist_prefixes = (
+            "172.16.", "172.17.", "172.18.", "172.19.", "172.20.", "172.21.",
+            "172.22.", "172.23.", "172.24.", "172.25.", "172.26.", "172.27.",
+            "172.28.", "172.29.", "172.30.", "172.31.",
+            "192.168.",
+            "10.",
+        )
         
         # Whitelist de paths que não precisam de verificação completa
         self.whitelist_paths = [
@@ -113,11 +122,16 @@ class WAFMiddleware(BaseHTTPMiddleware):
         # Debug: log do IP
         logger.info(f"WAF: Request from IP {client_ip} to {path}")
         
-        # Skip verificação completa para IPs whitelisted (Docker, localhost)
-        if client_ip in self.whitelist_ips:
-            logger.info(f"WAF: IP {client_ip} is whitelisted, skipping checks")
+        # Skip verificação completa para IPs whitelisted (Docker, localhost, redes internas)
+        if client_ip in self.whitelist_ips or any(client_ip.startswith(p) for p in self.whitelist_prefixes):
+            logger.debug(f"WAF: IP {client_ip} is whitelisted, skipping checks")
             response = await call_next(request)
             self._add_security_headers(response)
+            return response
+
+        # Skip para WebSocket upgrades
+        if request.headers.get("upgrade", "").lower() == "websocket":
+            response = await call_next(request)
             return response
         
         # Skip verificação completa para paths whitelisted (performance)
@@ -128,11 +142,13 @@ class WAFMiddleware(BaseHTTPMiddleware):
         
         # 1. Verificar blacklist (mais rápido)
         if client_ip in self.blacklist:
-            logger.warning(f"Blocked request from blacklisted IP: {client_ip}")
-            return JSONResponse(
-                status_code=403,
-                content={"detail": "Access denied"}
-            )
+            self._cleanup_blacklist()  # limpar expirados
+            if client_ip in self.blacklist:  # verificar novamente após cleanup
+                logger.warning(f"Blocked request from blacklisted IP: {client_ip}")
+                return JSONResponse(
+                    status_code=403,
+                    content={"detail": "Access denied"}
+                )
         
         # 2. Rate Limiting (otimizado)
         if not self.check_rate_limit(client_ip):
@@ -262,23 +278,37 @@ class WAFMiddleware(BaseHTTPMiddleware):
     
     def validate_content_type(self, content_type: str) -> bool:
         """Valida Content-Type permitidos"""
+        # Content-Type vazio é permitido (alguns clientes não enviam)
+        if not content_type:
+            return True
+
         allowed_types = [
             "application/json",
             "application/x-www-form-urlencoded",
             "multipart/form-data",
-            "text/plain"
+            "text/plain",
+            "application/octet-stream",
+            "application/xml",
+            "text/xml",
         ]
-        
+
         for allowed in allowed_types:
             if content_type.startswith(allowed):
                 return True
-        
+
         return False
     
     def add_to_blacklist(self, ip: str):
-        """Adiciona IP à blacklist temporária"""
+        """Adiciona IP à blacklist temporária com remoção automática"""
         self.blacklist.add(ip)
-        logger.warning(f"IP {ip} added to blacklist")
-        
-        # TODO: Implementar remoção automática após duração
-        # Pode usar background task ou scheduler
+        self._blacklist_expiry[ip] = datetime.now() + self.blacklist_duration
+        logger.warning(f"IP {ip} added to blacklist (expires in {self.blacklist_duration})")
+
+    def _cleanup_blacklist(self):
+        """Remove IPs expirados da blacklist"""
+        now = datetime.now()
+        expired = [ip for ip, exp in self._blacklist_expiry.items() if now >= exp]
+        for ip in expired:
+            self.blacklist.discard(ip)
+            del self._blacklist_expiry[ip]
+            logger.info(f"IP {ip} removed from blacklist (expired)")

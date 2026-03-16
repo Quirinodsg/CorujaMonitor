@@ -1,0 +1,51 @@
+========================================
+COMANDOS SIMPLES - COPIE E COLE
+========================================
+
+PASSO 1: Ver status do Git
+---------------------------
+git status
+
+
+PASSO 2: Ver se há diferenças nos arquivos
+-------------------------------------------
+git diff api/routers/sensors.py
+
+
+PASSO 3: Ver últimos commits
+-----------------------------
+git log --oneline -5
+
+
+PASSO 4: Verificar outras pastas Coruja
+----------------------------------------
+cd /c/Users/andre.quirino
+ls -la | grep -i coruja
+
+
+========================================
+INTERPRETAÇÃO
+========================================
+
+Se "git status" mostrar:
+→ "nothing to commit, working tree clean"
+  = Correções já estão no Git
+  = Vá para o servidor Linux
+
+→ "Changes not staged for commit"
+  = Há modificações pendentes
+  = Execute GIT_COMANDOS_SEPARADOS.txt
+
+Se "git diff" mostrar linhas com + e -:
+→ Há modificações não commitadas
+→ Execute GIT_COMANDOS_SEPARADOS.txt
+
+Se "git diff" não mostrar nada:
+→ Arquivo não foi modificado
+→ Correções podem estar em outra pasta
+
+Se encontrar pasta "Coruja" (sem Monitor):
+→ Entre nela: cd /c/Users/andre.quirino/Coruja
+→ Execute: git status
+
+========================================

@@ -1,0 +1,204 @@
+.discovery-page {
+  padding: 24px;
+  max-width: 1200px;
+}
+
+.discovery-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.discovery-header p {
+  color: var(--text-secondary);
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.discovery-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border-primary);
+  padding-bottom: 0;
+}
+
+.disc-tab {
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+
+.disc-tab:hover { color: var(--text-primary); }
+.disc-tab.active {
+  color: var(--accent-primary);
+  border-bottom-color: var(--accent-primary);
+}
+
+.discovery-body {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-primary);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.disc-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 480px;
+  margin-bottom: 24px;
+}
+
+.disc-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.disc-form-row label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+.disc-form-row input,
+.disc-form-row select {
+  padding: 10px 12px;
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.disc-btn-scan {
+  padding: 10px 20px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  width: fit-content;
+  transition: background 0.15s;
+}
+
+.disc-btn-scan:hover:not(:disabled) { background: var(--accent-primary-hover); }
+.disc-btn-scan:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.disc-error {
+  background: var(--error-light);
+  color: var(--error);
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.disc-scanning {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px 0;
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.disc-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid var(--border-primary);
+  border-top-color: var(--accent-primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.disc-results-header {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: 12px;
+  font-weight: 500;
+}
+
+.disc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.disc-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border-primary);
+  background: var(--bg-tertiary);
+}
+
+.disc-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-primary);
+  color: var(--text-primary);
+}
+
+.disc-table tr:last-child td { border-bottom: none; }
+.disc-table tbody tr:hover { background: var(--bg-tertiary); }
+
+.disc-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.disc-badge-ok { background: var(--success-light); color: var(--success); }
+.disc-badge-down { background: var(--error-light); color: var(--error); }
+
+.disc-btn-add {
+  padding: 4px 12px;
+  background: var(--accent-primary);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.disc-btn-add:hover:not(:disabled) { background: var(--accent-primary-hover); }
+.disc-btn-add:disabled {
+  background: var(--success);
+  cursor: default;
+}
+
+.disc-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--text-tertiary);
+}
+
+.disc-empty-icon {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.disc-empty p {
+  font-size: 14px;
+}

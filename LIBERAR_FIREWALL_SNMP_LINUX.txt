@@ -1,0 +1,58 @@
+════════════════════════════════════════════════════════════════
+LIBERAR FIREWALL PARA SNMP NO LINUX
+════════════════════════════════════════════════════════════════
+
+EXECUTAR NO SERVIDOR LINUX (SRVCMONITOR001):
+
+# 1. Verificar status do firewall
+sudo ufw status verbose
+
+# 2. Liberar porta 161 UDP para a rede local
+sudo ufw allow from 192.168.31.0/24 to any port 161 proto udp
+
+# 3. OU liberar para qualquer origem (menos seguro)
+sudo ufw allow 161/udp
+
+# 4. Recarregar firewall
+sudo ufw reload
+
+# 5. Verificar regra adicionada
+sudo ufw status numbered
+
+# 6. Verificar se SNMP está escutando em 0.0.0.0
+sudo netstat -ulnp | grep 161
+
+Deve mostrar:
+udp        0      0 0.0.0.0:161             0.0.0.0:*
+
+════════════════════════════════════════════════════════════════
+TESTAR DA MÁQUINA SONDA (SRVSONDA001)
+════════════════════════════════════════════════════════════════
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python TESTAR_SNMP_DETALHADO.py
+
+════════════════════════════════════════════════════════════════
+SE AINDA NÃO FUNCIONAR: DESABILITAR FIREWALL TEMPORARIAMENTE
+════════════════════════════════════════════════════════════════
+
+NO LINUX:
+sudo ufw disable
+
+TESTAR:
+python TESTAR_SNMP_DETALHADO.py
+
+Se funcionar = problema é firewall
+Reabilitar: sudo ufw enable
+
+════════════════════════════════════════════════════════════════
+VERIFICAR LOGS (SE NECESSÁRIO)
+════════════════════════════════════════════════════════════════
+
+# Ver logs do firewall
+sudo tail -f /var/log/ufw.log
+
+# Ver logs do SNMP
+sudo journalctl -u snmpd -f
+
+════════════════════════════════════════════════════════════════

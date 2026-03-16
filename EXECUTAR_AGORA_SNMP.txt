@@ -1,0 +1,65 @@
+========================================
+EXECUTAR AGORA - CORREÇÃO SNMP
+========================================
+
+COPIE E COLE ESTES COMANDOS NO CMD:
+========================================
+
+REM Passo 1: Testar sintaxe (opcional)
+TESTAR_PROBE_CORE_LOCAL.bat
+
+REM Passo 2: Copiar arquivo corrigido
+COPIAR_PROBE_CORE_AGORA.bat
+
+REM Passo 3: Reiniciar probe
+REINICIAR_PROBE_SRVSONDA001.bat
+
+
+AGUARDE 60 SEGUNDOS E VERIFIQUE:
+========================================
+
+1. Acesse: http://192.168.31.161:3000
+2. Vá em: Servidores > SRVCMONITOR001
+3. Verifique se sensores aparecem com valores
+
+
+SE QUISER VER OS LOGS:
+========================================
+
+REM Conecte na SRVSONDA001 via RDP ou PowerShell remoto
+cd "C:\Program Files\CorujaMonitor\Probe"
+type probe.log | findstr /C:"Collected" /C:"SNMP"
+
+
+O QUE ESPERAR:
+========================================
+
+ANTES (PROBLEMA):
+INFO:__main__:Collected 0 SNMP metrics from 192.168.31.161
+
+DEPOIS (CORRIGIDO):
+INFO:__main__:Collected 4 SNMP metrics from 192.168.31.161
+(ou 5, 6, 8 métricas - depende dos OIDs disponíveis)
+
+
+DASHBOARD DEVE MOSTRAR:
+========================================
+✓ PING - OK (latência em ms)
+✓ CPU - percentual de uso
+✓ Memória - percentual de uso  
+✓ Disco - percentual de uso
+✓ Uptime - dias online
+
+
+PROBLEMA RESOLVIDO:
+========================================
+✓ Removida duplicação do método _parse_snmp_metrics()
+✓ Arquivo probe_core.py limpo e sem ambiguidade
+✓ Versão mais completa mantida com todos os OIDs
+
+
+ARQUIVOS PARA REFERÊNCIA:
+========================================
+- COMECE_AQUI_SNMP_FINAL.txt (guia completo)
+- RESUMO_CORRECAO_SNMP_09MAR.md (documentação técnica)
+- RESOLVER_SNMP_0_METRICAS_AGORA.txt (troubleshooting)

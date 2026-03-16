@@ -1,19 +1,24 @@
 import React from 'react';
 import './Sidebar.css';
 
-function Sidebar({ currentPage, onNavigate }) {
+function Sidebar({ currentPage, onNavigate, darkMode, onToggleDark }) {
   const menuItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard' },
     { id: 'companies', icon: '🏢', label: 'Empresas' },
     { id: 'servers', icon: '🖥️', label: 'Servidores' },
     { id: 'sensors', icon: '📡', label: 'Sensores' },
     { id: 'incidents', icon: '⚠️', label: 'Incidentes' },
+    { id: 'event-timeline', icon: '📋', label: 'Timeline de Eventos' },
     { id: 'reports', icon: '📈', label: 'Relatórios' },
+    { id: 'metrics-viewer', icon: '📉', label: 'Métricas' },
+    { id: 'aiops', icon: '🔮', label: 'AIOps' },
+    { id: 'discovery', icon: '🔍', label: 'Discovery' },
     { id: 'knowledge-base', icon: '🧠', label: 'Base de Conhecimento' },
     { id: 'ai-activities', icon: '🤖', label: 'Atividades da IA' },
+    { id: 'probe-nodes', icon: '🔌', label: 'Probe Nodes' },
+    { id: 'system-health', icon: '⚙️', label: 'Saúde do Sistema' },
     { id: 'maintenance', icon: '🔧', label: 'GMUD' },
-    { id: 'settings', icon: '⚙️', label: 'Configurações' },
-    { id: 'aiops', icon: '🔮', label: 'AIOps' },
+    { id: 'settings', icon: '🛠️', label: 'Configurações' },
   ];
 
   return (
@@ -33,6 +38,12 @@ function Sidebar({ currentPage, onNavigate }) {
           </button>
         ))}
       </nav>
+      <div className="sidebar-footer">
+        <button className="sidebar-theme-toggle" onClick={onToggleDark} title={darkMode ? 'Modo claro' : 'Modo escuro'}>
+          <span>{darkMode ? '☀️' : '🌙'}</span>
+          <span className="sidebar-label">{darkMode ? 'Modo Claro' : 'Modo Escuro'}</span>
+        </button>
+      </div>
     </div>
   );
 }

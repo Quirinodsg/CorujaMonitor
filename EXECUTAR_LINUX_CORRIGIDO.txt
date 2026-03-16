@@ -1,0 +1,22 @@
+========================================
+EXECUTAR NO LINUX - COMANDOS CORRETOS
+========================================
+
+Copie e cole no SSH (192.168.31.161):
+
+git config --global --add safe.directory /home/administrador/CorujaMonitor
+
+cd /home/administrador/CorujaMonitor
+
+git pull
+
+python3 atualizar_hostname_servidor_110.py
+
+========================================
+RESULTADO ESPERADO
+========================================
+
+✅ Hostname atualizado com sucesso!
+   Novo hostname: SRVHVSPRD010.ad.techbiz.com.br
+
+========================================

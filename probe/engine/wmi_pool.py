@@ -208,6 +208,11 @@ class WMIConnectionPool:
                 if removed:
                     logger.info(f"WMI Pool: removidas {removed} conexões ociosas de {host}")
 
+    # Alias público conforme especificação
+    def cleanup_idle_connections(self):
+        """Alias público para _cleanup_idle — remove conexões ociosas expiradas."""
+        self._cleanup_idle()
+
     def stats(self) -> Dict[str, Dict]:
         """Retorna estatísticas do pool"""
         with self._lock:

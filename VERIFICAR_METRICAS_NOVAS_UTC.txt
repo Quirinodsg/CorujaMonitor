@@ -1,0 +1,39 @@
+========================================
+VERIFICAR MÉTRICAS NOVAS COM UTC
+========================================
+
+📋 EXECUTAR NO SSH:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+    s.name,
+    srv.hostname,
+    m.value,
+    m.timestamp,
+    m.id
+FROM metrics m
+JOIN sensors s ON m.sensor_id = s.id
+JOIN servers srv ON s.server_id = srv.id
+WHERE s.sensor_type = 'ping'
+ORDER BY m.id DESC
+LIMIT 10;
+"
+
+
+✅ DEVE MOSTRAR:
+- Métricas novas com ID maior
+- Timestamp correto (14:14:45 UTC)
+
+
+🔍 SE NÃO APARECER MÉTRICAS NOVAS:
+Verificar se houve erro ao salvar no banco.
+
+
+📋 VERIFICAR LOGS DE ERRO:
+
+docker logs coruja-worker --tail 50 | grep -i error
+
+
+📋 VERIFICAR SE WORKER ESTÁ CONECTADO AO BANCO:
+
+docker logs coruja-worker --tail 100 | grep -i "database\|postgres\|connection"

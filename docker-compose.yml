@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   postgres:
-    image: postgres:15-alpine
+    image: timescale/timescaledb:latest-pg15
     container_name: coruja-postgres
     restart: always
     environment:
@@ -12,6 +12,7 @@ services:
       TZ: America/Sao_Paulo
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./api/migrations/timescaledb_setup.sql:/docker-entrypoint-initdb.d/01_timescaledb.sql
     ports:
       - "5432:5432"
     healthcheck:

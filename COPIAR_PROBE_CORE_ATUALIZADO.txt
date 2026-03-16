@@ -1,0 +1,114 @@
+═══════════════════════════════════════════════════════════════════════
+COPIAR probe_core.py ATUALIZADO - 10 MAR 2026 11:00
+═══════════════════════════════════════════════════════════════════════
+
+PROBLEMA IDENTIFICADO:
+- Arquivo probe_core.py na SRVSONDA001 está com versão antiga
+- Logs detalhados não aparecem porque código antigo não tem eles
+- Precisa copiar versão atualizada do notebook
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 1: VERIFICAR VERSÃO ATUAL (SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, execute:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python VERIFICAR_VERSAO_PROBE_CORE.py
+
+Se mostrar "VERSÃO ANTIGA", continue para o Passo 2.
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 2: COPIAR ARQUIVO ATUALIZADO
+═══════════════════════════════════════════════════════════════════════
+
+MÉTODO A - Via PowerShell (RECOMENDADO):
+
+1. Abra PowerShell como Administrador na SRVSONDA001
+
+2. Execute:
+
+Copy-Item "\\DESKTOP-P9VGN04\C$\Users\andre.quirino\Coruja Monitor\probe\probe_core.py" "C:\Program Files\CorujaMonitor\Probe\probe_core.py" -Force
+
+OU se não funcionar:
+
+Copy-Item "C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py" "C:\Program Files\CorujaMonitor\Probe\probe_core.py" -Force
+
+
+MÉTODO B - Via Área de Transferência Remota:
+
+1. No NOTEBOOK (DESKTOP-P9VGN04):
+   - Abra: C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py
+   - Selecione TUDO (Ctrl+A)
+   - Copie (Ctrl+C)
+
+2. Na SRVSONDA001:
+   - Abra: C:\Program Files\CorujaMonitor\Probe\probe_core.py
+   - Selecione TUDO (Ctrl+A)
+   - Cole (Ctrl+V)
+   - Salve (Ctrl+S)
+
+
+MÉTODO C - Via Compartilhamento de Rede:
+
+1. No NOTEBOOK, compartilhe a pasta:
+   C:\Users\andre.quirino\Coruja Monitor\probe
+
+2. Na SRVSONDA001, acesse:
+   \\DESKTOP-P9VGN04\[nome_compartilhamento]\probe_core.py
+
+3. Copie para:
+   C:\Program Files\CorujaMonitor\Probe\probe_core.py
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 3: VERIFICAR CÓPIA
+═══════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, execute novamente:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python VERIFICAR_VERSAO_PROBE_CORE.py
+
+Deve mostrar: "✓✓✓ VERSÃO CORRETA INSTALADA!"
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 4: TESTAR PROBE COM LOGS DETALHADOS
+═══════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python probe_core.py
+
+Aguarde até aparecer "Collecting SNMP metrics from 192.168.31.161"
+
+LOGS ESPERADOS (devem aparecer TODOS):
+✓ "About to call collect_snmp_v2c with host=..."
+✓ "Collector object: ..."
+✓ "Collector type: ..."
+✓ "collect_snmp_v2c returned successfully"
+✓ "Result type: ..."
+✓ "Result: ..."
+✓ "SNMP result status: ..."
+✓ "SNMP data keys: ..."
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 5: ENVIAR LOGS COMPLETOS
+═══════════════════════════════════════════════════════════════════════
+
+Copie e cole TODA a saída desde "Collecting SNMP metrics" até 
+"Collected X SNMP metrics" incluindo TODOS os logs intermediários.
+
+═══════════════════════════════════════════════════════════════════════
+TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════
+
+Se VERIFICAR_VERSAO_PROBE_CORE.py não existir na SRVSONDA001:
+
+1. Copie do notebook:
+   C:\Users\andre.quirino\Coruja Monitor\VERIFICAR_VERSAO_PROBE_CORE.py
+
+2. Para:
+   C:\Program Files\CorujaMonitor\Probe\VERIFICAR_VERSAO_PROBE_CORE.py
+
+═══════════════════════════════════════════════════════════════════════

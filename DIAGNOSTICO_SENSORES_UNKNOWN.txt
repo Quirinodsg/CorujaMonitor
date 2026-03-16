@@ -1,0 +1,140 @@
+═══════════════════════════════════════════════════════════════
+  🔍 DIAGNÓSTICO: Sensores "Unknown" no Frontend
+  📅 11 MARÇO 2026
+═══════════════════════════════════════════════════════════════
+
+## 🎯 SITUAÇÃO
+
+✅ Banco de dados: 0 sensores unknown
+✅ Sensores PING: 1 por servidor (IDs 40 e 41)
+❓ Frontend: Mostra 6 sensores desconhecidos (mas não aparecem ao clicar)
+
+## 🔍 DIAGNÓSTICO
+
+Isso é CACHE DO FRONTEND! O banco está limpo, mas o navegador está
+mostrando dados antigos em cache.
+
+═══════════════════════════════════════════════════════════════
+  🚀 SOLUÇÃO: LIMPAR CACHE DO FRONTEND
+═══════════════════════════════════════════════════════════════
+
+## OPÇÃO 1: Reiniciar Frontend (Recomendado)
+
+### No Linux (SSH):
+
+cd /home/administrador/CorujaMonitor
+
+# Reiniciar frontend
+docker-compose restart frontend
+
+# Aguardar 10 segundos
+sleep 10
+
+# Verificar logs
+docker logs coruja-frontend --tail 20
+
+═══════════════════════════════════════════════════════════════
+
+## OPÇÃO 2: Limpar Cache do Navegador
+
+### No navegador:
+
+1. Pressionar: Ctrl + Shift + Delete
+2. Selecionar: "Imagens e arquivos em cache"
+3. Período: "Todo o período"
+4. Clicar: "Limpar dados"
+5. Fechar navegador completamente
+6. Abrir novamente e acessar: http://192.168.31.161:3000
+
+═══════════════════════════════════════════════════════════════
+
+## OPÇÃO 3: Forçar Reload (Mais Rápido)
+
+### No navegador (na página do Coruja):
+
+1. Pressionar: Ctrl + Shift + R (Windows)
+   ou: Cmd + Shift + R (Mac)
+
+2. Ou: Ctrl + F5
+
+═══════════════════════════════════════════════════════════════
+
+## ✅ VERIFICAÇÃO FINAL
+
+### Após limpar cache, verificar:
+
+1. Dashboard → Servidores
+2. Clicar em SRVCMONITOR001
+3. Deve mostrar apenas sensores válidos:
+   - PING
+   - CPU
+   - Memory
+   - Disk
+   - Network IN
+   - Network OUT
+   - Uptime
+
+4. Clicar em SRVSONDA001
+5. Deve mostrar apenas sensores válidos (mesma lista)
+
+6. NÃO deve aparecer sensores "unknown" ou "desconhecidos"
+
+═══════════════════════════════════════════════════════════════
+
+## 📊 CONFIRMAÇÃO NO BANCO (Opcional)
+
+### Se ainda aparecer sensores unknown após limpar cache:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+    srv.hostname,
+    s.id,
+    s.name,
+    s.sensor_type,
+    s.is_active,
+    COUNT(m.id) as total_metricas
+FROM servers srv
+JOIN sensors s ON s.server_id = srv.id
+LEFT JOIN metrics m ON m.sensor_id = s.id
+GROUP BY srv.hostname, s.id, s.name, s.sensor_type, s.is_active
+ORDER BY srv.hostname, s.sensor_type, s.name;
+"
+
+### Resultado esperado:
+
+ hostname      | id | name       | sensor_type | is_active | total_metricas
+---------------+----+------------+-------------+-----------+----------------
+ SRVCMONITOR001| 41 | PING       | ping        | t         | 20+
+ SRVCMONITOR001| XX | CPU        | cpu         | t         | XX
+ SRVCMONITOR001| XX | Memory     | memory      | t         | XX
+ SRVCMONITOR001| XX | Disk C:    | disk        | t         | XX
+ SRVSONDA001   | 40 | PING       | ping        | t         | 20+
+ SRVSONDA001   | XX | CPU        | cpu         | t         | XX
+ SRVSONDA001   | XX | Memory     | memory      | t         | XX
+ SRVSONDA001   | XX | Disk C:    | disk        | t         | XX
+
+═══════════════════════════════════════════════════════════════
+
+## 🎯 RESUMO
+
+**Problema**: Frontend mostra 6 sensores "unknown" mas não aparecem ao clicar
+
+**Causa**: Cache do navegador com dados antigos
+
+**Solução**: 
+1. Reiniciar frontend: docker-compose restart frontend
+2. Limpar cache do navegador: Ctrl + Shift + Delete
+3. Forçar reload: Ctrl + Shift + R
+
+**Banco de dados**: ✅ Limpo (0 sensores unknown confirmado)
+
+═══════════════════════════════════════════════════════════════
+
+## 📝 PRÓXIMOS PASSOS
+
+1. ✅ Executar OPÇÃO 1 (reiniciar frontend)
+2. ✅ Executar OPÇÃO 2 (limpar cache navegador)
+3. ✅ Verificar dashboard
+4. ✅ Confirmar 0 sensores unknown
+
+═══════════════════════════════════════════════════════════════

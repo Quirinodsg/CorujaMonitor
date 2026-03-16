@@ -1,0 +1,155 @@
+═══════════════════════════════════════════════════════════════
+  ⚠️  COMECE AQUI - BACKUP E RECONFIGURAÇÃO DO SISTEMA
+═══════════════════════════════════════════════════════════════
+
+SITUAÇÃO: Banco de dados foi zerado após limpeza do Docker.
+SOLUÇÃO: Configurar backup automático + reconfigurar sistema.
+
+═══════════════════════════════════════════════════════════════
+  ETAPA 1: CONFIGURAR BACKUP AUTOMÁTICO (5 MINUTOS)
+═══════════════════════════════════════════════════════════════
+
+COPIE E COLE NO PUTTY (LINUX):
+
+cd /home/administrador/CorujaMonitor
+chmod +x backup_automatico.sh restaurar_backup.sh verificar_sistema_completo.sh
+./backup_automatico.sh
+sudo crontab -e
+
+ADICIONE ESTA LINHA NO FINAL DO ARQUIVO:
+0 3 * * * /home/administrador/CorujaMonitor/backup_automatico.sh >> /home/administrador/CorujaMonitor/backup.log 2>&1
+
+SALVAR: ESC → :wq → ENTER (se vim) ou CTRL+X → Y → ENTER (se nano)
+
+VERIFICAR:
+sudo crontab -l
+ls -lh api/backups/
+
+✓ Backup configurado! Agora roda todo dia às 3h da manhã.
+
+═══════════════════════════════════════════════════════════════
+  ETAPA 2: CRIAR PROBE NO DASHBOARD (2 MINUTOS)
+═══════════════════════════════════════════════════════════════
+
+1. Abrir: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Menu "Empresas" → "Default" → "+ Nova Probe"
+4. Nome: Datacenter
+5. Descrição: Probe principal Windows
+6. Clicar "Criar"
+7. COPIAR O TOKEN (exemplo: ABC123XYZ...)
+
+═══════════════════════════════════════════════════════════════
+  ETAPA 3: ATUALIZAR TOKEN NA SRVSONDA001 (3 MINUTOS)
+═══════════════════════════════════════════════════════════════
+
+COPIE E COLE NO POWERSHELL DA SRVSONDA001:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+Get-Process | Where-Object {$_.ProcessName -like "*python*"} | Stop-Process -Force
+Start-Sleep -Seconds 3
+notepad config.yaml
+
+NO NOTEPAD:
+- Localizar: probe_token: "V-PTetiHvb..."
+- Substituir pelo TOKEN NOVO
+- Salvar (CTRL+S) e fechar
+
+REINICIAR PROBE:
+python probe_core.py
+
+AGUARDAR 60 SEGUNDOS e verificar logs:
+✓ Deve aparecer "Heartbeat successful"
+✓ Deve aparecer "Auto-registering server 'SRVSONDA001'"
+✓ Deve aparecer "Sent X metrics successfully"
+
+═══════════════════════════════════════════════════════════════
+  ETAPA 4: ADICIONAR SERVIDOR LINUX (2 MINUTOS)
+═══════════════════════════════════════════════════════════════
+
+NO DASHBOARD:
+
+1. Menu "Servidores" → "+ Adicionar Servidor"
+2. Preencher:
+   Nome: SRVCMONITOR001
+   IP: 192.168.31.161
+   Protocolo: SNMP
+   Versão: v2c
+   Community: public
+   Porta: 161
+   Probe: Datacenter
+3. Clicar "Adicionar"
+
+AGUARDAR 60 SEGUNDOS e verificar logs da probe:
+✓ Deve aparecer "Collecting SNMP metrics for SRVCMONITOR001"
+✓ Deve aparecer "Collected 25 OIDs"
+✓ Deve aparecer "Collecting PING metric"
+
+═══════════════════════════════════════════════════════════════
+  ETAPA 5: FAZER BACKUP IMEDIATAMENTE (1 MINUTO)
+═══════════════════════════════════════════════════════════════
+
+NO LINUX:
+cd /home/administrador/CorujaMonitor
+./backup_automatico.sh
+
+VERIFICAR:
+ls -lh api/backups/
+
+✓ Deve aparecer arquivo coruja_backup_YYYYMMDD_HHMMSS.sql
+
+═══════════════════════════════════════════════════════════════
+  VERIFICAÇÃO COMPLETA DO SISTEMA
+═══════════════════════════════════════════════════════════════
+
+NO LINUX:
+./verificar_sistema_completo.sh
+
+Este script verifica:
+✓ Containers Docker
+✓ API e Frontend
+✓ Banco de dados
+✓ SNMPD
+✓ Backups
+✓ Cron
+✓ Espaço em disco
+✓ Logs de erro
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS ÚTEIS
+═══════════════════════════════════════════════════════════════
+
+BACKUP MANUAL:
+./backup_automatico.sh
+
+RESTAURAR BACKUP:
+./restaurar_backup.sh
+
+VERIFICAR SISTEMA:
+./verificar_sistema_completo.sh
+
+LOGS API:
+docker logs -f coruja-api
+
+REINICIAR CONTAINERS:
+docker-compose restart
+
+═══════════════════════════════════════════════════════════════
+  ARQUIVOS CRIADOS
+═══════════════════════════════════════════════════════════════
+
+✓ backup_automatico.sh - Backup automático do PostgreSQL
+✓ restaurar_backup.sh - Restaurar backup interativo
+✓ verificar_sistema_completo.sh - Verificação completa
+✓ CONFIGURAR_BACKUP_AUTOMATICO_AGORA.txt - Guia backup
+✓ RECONFIGURAR_SISTEMA_COMPLETO_AGORA.txt - Guia completo
+✓ COMECE_AQUI_BACKUP_E_RECONFIGURACAO.txt - Este arquivo
+
+═══════════════════════════════════════════════════════════════
+  TEMPO TOTAL: ~15 MINUTOS
+═══════════════════════════════════════════════════════════════
+
+Siga as etapas na ordem. Qualquer dúvida, consulte o arquivo:
+RECONFIGURAR_SISTEMA_COMPLETO_AGORA.txt
+
+═══════════════════════════════════════════════════════════════

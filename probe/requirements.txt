@@ -1,5 +1,36 @@
+# Dependências base
 psutil==5.9.8
 httpx==0.26.0
 pywin32>=307
 pysnmp==4.4.12
 pyyaml==6.0.1
+
+# Task 17.1 - MetricCache Redis backend
+redis>=5.0.0
+
+# Task 17.2 - PrometheusExporter
+prometheus_client>=0.20.0
+
+# Task 17.3 - CredentialManager AES-256
+cryptography>=42.0.0
+
+# Task 17.4 - HashiCorp Vault
+hvac>=2.1.0
+
+# Task 17.5 - Azure Key Vault
+azure-keyvault-secrets>=4.8.0
+azure-identity>=1.16.0
+
+# Task 17.6 - AIOps Isolation Forest
+scikit-learn>=1.4.0
+
+# Task 17.7 - Predição de falhas (ARIMA)
+statsmodels>=0.14.0
+
+# Task 17.8 - Docker SDK (docker_engine + docker_event_listener)
+docker>=7.0.0
+
+# Task 17.9 - Kubernetes client (kubernetes_engine + k8s_event_listener)
+kubernetes>=29.0.0
+
+# Task 17.10 - psutil já presente acima

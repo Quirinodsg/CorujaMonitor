@@ -1,0 +1,110 @@
+========================================
+CHECKLIST APÓS ENTRAR NO DOMÍNIO
+========================================
+
+Execute na ordem após SRVSONDA001 entrar no domínio Techbiz
+
+========================================
+☐ 1. VERIFICAR ENTRADA NO DOMÍNIO
+========================================
+
+PowerShell:
+(Get-WmiObject Win32_ComputerSystem).Domain
+
+Resultado esperado: techbiz.local
+
+========================================
+☐ 2. TESTAR RESOLUÇÃO DNS
+========================================
+
+PowerShell:
+nslookup SRVHVSPRD010
+
+Resultado esperado: 192.168.31.110
+
+========================================
+☐ 3. TESTAR KERBEROS
+========================================
+
+PowerShell:
+$password = ConvertTo-SecureString 'Dj8SXoXie!o6Tkc@' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+Invoke-Command -ComputerName SRVHVSPRD010 -Credential $credential -ScriptBlock { hostname }
+
+Resultado esperado: SRVHVSPRD010
+
+========================================
+☐ 4. ATUALIZAR HOSTNAME NO BANCO
+========================================
+
+No Linux (.161):
+cd /root/coruja-monitor
+python3 atualizar_hostname_servidor_110.py
+
+Resultado esperado: ✅ Hostname atualizado com sucesso!
+
+========================================
+☐ 5. COPIAR COLLECTOR ATUALIZADO
+========================================
+
+Na SRVSONDA001:
+cd C:\Users\coruja.monitor\Desktop\coruja-monitor
+git pull
+copy probe\collectors\wmi_remote_collector.py "C:\Program Files\CorujaMonitor\Probe\collectors\"
+
+========================================
+☐ 6. REINICIAR PROBE
+========================================
+
+1. Parar probe (Ctrl+C)
+2. cd C:\Users\coruja.monitor\Desktop
+3. .\iniciar_probe.bat
+
+========================================
+☐ 7. VERIFICAR LOGS DA PROBE
+========================================
+
+Aguardar 1 minuto e verificar:
+
+✅ SUCESSO:
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010
+INFO:__main__:Collected 7 WMI metrics from 192.168.31.110
+
+❌ ERRO:
+ERROR:collectors.wmi_remote_collector:❌ Todos os métodos de autenticação falharam
+
+========================================
+☐ 8. VERIFICAR MÉTRICAS NO DASHBOARD
+========================================
+
+Acessar: http://192.168.31.161:3000
+
+Verificar servidor SRVHVSPRD010:
+- CPU
+- Memória
+- Disco
+- Uptime
+
+========================================
+☐ 9. COMMIT NO GIT
+========================================
+
+No Linux (.161):
+cd /root/coruja-monitor
+git add probe/collectors/wmi_remote_collector.py atualizar_hostname_servidor_110.py
+git commit -m "fix: WMI com Kerberos usando hostname (compatível com GPO)"
+git push
+
+========================================
+☐ 10. DOCUMENTAR SUCESSO
+========================================
+
+Criar arquivo: SUCESSO_WMI_KERBEROS_13MAR.txt
+
+Conteúdo:
+- Data/hora do sucesso
+- Configuração final
+- Logs de sucesso
+- Métricas coletadas
+
+========================================

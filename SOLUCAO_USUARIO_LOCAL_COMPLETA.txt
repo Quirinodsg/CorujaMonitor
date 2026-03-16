@@ -1,0 +1,117 @@
+========================================
+SOLUÇÃO COMPLETA: USUÁRIO LOCAL
+========================================
+
+✅ Collector atualizado com fallback automático:
+   1. Tenta Negotiate (usuário local)
+   2. Se falhar, tenta CredSSP (domain)
+
+========================================
+EXECUTAR AGORA - ORDEM CORRETA
+========================================
+
+PASSO 1: CRIAR USUÁRIO NO SERVIDOR .110
+========================================
+
+RDP no 192.168.31.110, PowerShell como Admin:
+
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+New-LocalUser -Name "corujamonitor" -Password $password -FullName "Coruja Monitor" -Description "Monitoramento" -PasswordNeverExpires
+Add-LocalGroupMember -Group "Administrators" -Member "corujamonitor"
+Get-LocalUser -Name "corujamonitor"
+
+========================================
+PASSO 2: TESTAR CONEXÃO
+========================================
+
+Na SRVSONDA001 (192.168.31.162), PowerShell como Admin:
+
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('192.168.31.110\corujamonitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -ScriptBlock { hostname }
+
+DEVE RETORNAR: SRVHVSPRD010
+
+========================================
+PASSO 3: COPIAR COLLECTOR ATUALIZADO
+========================================
+
+Via RDP na SRVSONDA001:
+
+1. Copiar probe/collectors/wmi_remote_collector.py do seu PC
+2. Colar em: C:\Program Files\CorujaMonitor\Probe\collectors\wmi_remote_collector.py
+3. Substituir arquivo existente
+
+========================================
+PASSO 4: ATUALIZAR CREDENCIAL NO BANCO
+========================================
+
+Dashboard: http://192.168.31.161:3000
+
+Menu → Credenciais → Editar "Techbiz":
+- Nome: Servidor Local 110
+- Tipo: WMI
+- Usuário: 192.168.31.110\corujamonitor
+- Senha: Coruja@2025
+- Domínio: (vazio)
+- Nível: Servidor
+- Servidor: SRVHVSPRD010
+- Salvar
+
+========================================
+PASSO 5: REINICIAR PROBE
+========================================
+
+Na SRVSONDA001:
+
+1. Parar probe (Ctrl+C)
+2. Iniciar:
+   cd C:\Users\Administrator\Desktop
+   .\iniciar_probe.bat
+
+========================================
+VERIFICAÇÃO (aguardar 1 minuto)
+========================================
+
+Logs esperados:
+✅ PowerShell remoto OK via Negotiate em 192.168.31.110
+INFO:__main__:Collected 7 WMI metrics from 192.168.31.110
+
+Dashboard → Servidores → SRVHVSPRD010:
+- CPU Usage: ~X%
+- Memory Usage: ~X%
+- Disk C:: ~X%
+- Uptime: X days
+- Network In/Out: X Mbps
+
+========================================
+MUDANÇAS NO COLLECTOR
+========================================
+
+Antes:
+- Só tentava CredSSP
+- Falhava com "Access Denied"
+
+Agora:
+- Tenta Negotiate primeiro (usuário local)
+- Se falhar, tenta CredSSP (domain)
+- Logs informativos de qual método funcionou
+
+========================================
+POR QUE FUNCIONA?
+========================================
+
+Negotiate:
+✅ Funciona com usuário local
+✅ Não precisa CredSSP
+✅ Não precisa Group Policy
+✅ Autenticação direta
+✅ Mais simples
+
+CredSSP:
+❌ Complexo
+❌ Requer políticas
+❌ Pode ser bloqueado
+✅ Necessário para cross-domain
+
+========================================

@@ -1,0 +1,45 @@
+========================================
+EXECUTAR DIAGNÓSTICO - COPIE E COLE
+========================================
+
+Você está no Git Bash. Copie e cole este comando:
+
+bash DIAGNOSTICO_COMPLETO_GIT.sh
+
+Isso vai mostrar:
+✓ Pasta atual
+✓ Status do Git
+✓ Modificações nos arquivos
+✓ Últimos commits
+✓ Outras pastas Coruja
+
+========================================
+INTERPRETAÇÃO DOS RESULTADOS
+========================================
+
+CENÁRIO 1: "nothing to commit, working tree clean"
+→ As correções JÁ ESTÃO no Git
+→ Próximo passo: Ir para o servidor Linux
+
+CENÁRIO 2: "Changes not staged for commit"
+→ Há modificações pendentes
+→ Próximo passo: Fazer commit
+
+CENÁRIO 3: Encontrou pasta "Coruja" (sem Monitor)
+→ As modificações podem estar lá
+→ Próximo passo: cd /c/Users/andre.quirino/Coruja
+
+========================================
+COMANDOS RÁPIDOS
+========================================
+
+# Ver status
+git status
+
+# Ver diferenças
+git diff api/routers/sensors.py
+
+# Listar pastas Coruja
+cd /c/Users/andre.quirino && ls -la | grep -i coruja
+
+========================================

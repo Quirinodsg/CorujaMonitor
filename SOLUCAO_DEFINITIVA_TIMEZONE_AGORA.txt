@@ -1,0 +1,116 @@
+═══════════════════════════════════════════════════════════════
+  SOLUÇÃO DEFINITIVA TIMEZONE - CONFIGURAR POSTGRESQL UTC
+═══════════════════════════════════════════════════════════════
+
+HORA ATUAL: 14:34 (2:34 PM) - Brasília
+PROBLEMA: PostgreSQL salvando com -03 ao invés de UTC
+
+═══════════════════════════════════════════════════════════════
+1. DELETAR TODAS MÉTRICAS PING (começar do zero)
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+DELETE FROM metrics WHERE sensor_id IN (
+  SELECT id FROM sensors WHERE sensor_type = 'ping'
+);
+"
+
+═══════════════════════════════════════════════════════════════
+2. CONFIGURAR POSTGRESQL PARA UTC
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+ALTER DATABASE coruja_monitor SET timezone TO 'UTC';
+"
+
+═══════════════════════════════════════════════════════════════
+3. REINICIAR CONTAINERS PARA APLICAR
+═══════════════════════════════════════════════════════════════
+
+docker-compose restart postgres worker api
+
+═══════════════════════════════════════════════════════════════
+4. AGUARDAR 30 SEGUNDOS E VERIFICAR TIMEZONE DO POSTGRES
+═══════════════════════════════════════════════════════════════
+
+sleep 30
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SHOW timezone;
+SELECT NOW() as postgres_time_utc;
+"
+
+Resultado esperado: timezone = UTC
+
+═══════════════════════════════════════════════════════════════
+5. AGUARDAR PRÓXIMO PING (máximo 60 segundos)
+═══════════════════════════════════════════════════════════════
+
+Monitorar logs:
+
+docker logs coruja-worker -f | grep "🏓"
+
+Quando aparecer "✅ PING concluído", pressione Ctrl+C
+
+═══════════════════════════════════════════════════════════════
+6. VERIFICAR NOVAS MÉTRICAS COM TIMEZONE CORRETO
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+  s.name,
+  srv.hostname,
+  m.value,
+  m.timestamp,
+  NOW() as now_utc,
+  EXTRACT(EPOCH FROM (NOW() - m.timestamp)) as seconds_ago
+FROM metrics m
+JOIN sensors s ON m.sensor_id = s.id
+JOIN servers srv ON s.server_id = srv.id
+WHERE s.sensor_type = 'ping'
+ORDER BY m.timestamp DESC
+LIMIT 5;
+"
+
+═══════════════════════════════════════════════════════════════
+ANÁLISE DO RESULTADO:
+═══════════════════════════════════════════════════════════════
+
+✅ SUCESSO se:
+- timestamp está em UTC (sem -03)
+- seconds_ago é POSITIVO (5-60 segundos)
+- Frontend mostra valores reais (~0.05ms e ~0.3ms)
+
+❌ FALHA se:
+- timestamp ainda tem -03
+- seconds_ago é NEGATIVO
+- Frontend mostra 0ms
+
+═══════════════════════════════════════════════════════════════
+7. VERIFICAR FRONTEND
+═══════════════════════════════════════════════════════════════
+
+Abra: http://192.168.31.161:3000
+Vá em: Servidores
+
+Valores esperados:
+- SRVCMONITOR001: ~0.05ms (localhost)
+- SRVSONDA001: ~0.3ms (rede local)
+
+═══════════════════════════════════════════════════════════════
+EXPLICAÇÃO TÉCNICA:
+═══════════════════════════════════════════════════════════════
+
+ANTES:
+- Python: datetime.now(timezone.utc) → 17:34 UTC
+- PostgreSQL timezone: America/Sao_Paulo (-03)
+- Banco salva: 17:34-03 (interpretado como local)
+- Resultado: timestamp 3 horas no futuro
+
+DEPOIS:
+- Python: datetime.now(timezone.utc) → 17:34 UTC
+- PostgreSQL timezone: UTC
+- Banco salva: 17:34+00 (UTC correto)
+- Resultado: timestamp correto, frontend funciona!
+
+═══════════════════════════════════════════════════════════════

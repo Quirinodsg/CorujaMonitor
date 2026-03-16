@@ -1,0 +1,159 @@
+═══════════════════════════════════════════════════════════════
+🎯 COMECE AQUI: CONFIGURAR WMI REMOTO
+═══════════════════════════════════════════════════════════════
+
+SITUAÇÃO ATUAL:
+- ✅ Servidor 192.168.31.110 adicionado no frontend
+- ✅ Firewall WMI liberado no 192.168.31.110
+- ⏳ Aguardando dados (precisa testar conectividade WMI)
+
+PROBLEMA RESOLVIDO:
+- ❌ PowerShell 7+ não tem -Credential no Get-CimInstance
+- ❌ wmic.exe não existe no Windows Server 2022
+- ✅ Solução: Usar Get-WmiObject (funciona!)
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 1: CONFIGURAR TRUSTEDHOSTS (SRVSONDA001)
+═══════════════════════════════════════════════════════════════
+
+Execute como ADMINISTRADOR na SRVSONDA001:
+
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "192.168.31.*" -Force
+Restart-Service WinRM
+
+# Verificar
+Get-Item WSMan:\localhost\Client\TrustedHosts
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 2: HABILITAR PSREMOTING (192.168.31.110)
+═══════════════════════════════════════════════════════════════
+
+Execute como ADMINISTRADOR no 192.168.31.110:
+
+Enable-PSRemoting -Force
+Get-Service WinRM
+
+# Deve mostrar: Running
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 3: TESTAR CONECTIVIDADE WMI
+═══════════════════════════════════════════════════════════════
+
+OPÇÃO A: Script Completo (Recomendado)
+--------------------------------------
+Execute na SRVSONDA001:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+.\testar_wmi_192.168.31.110.ps1
+
+# Vai pedir credenciais:
+# Usuário: Administrator
+# Senha: [senha do 192.168.31.110]
+
+OPÇÃO B: Teste Manual
+----------------------
+Execute na SRVSONDA001:
+
+$cred = Get-Credential
+# Digitar: Administrator
+# Senha: [senha do 192.168.31.110]
+
+Get-WmiObject Win32_OperatingSystem -ComputerName 192.168.31.110 -Credential $cred
+
+═══════════════════════════════════════════════════════════════
+✅ SE FUNCIONAR
+═══════════════════════════════════════════════════════════════
+
+Parabéns! WMI está funcionando!
+
+Você verá informações do sistema:
+- Nome do sistema operacional
+- Versão
+- Arquitetura
+- Uptime
+
+PRÓXIMOS PASSOS:
+1. Aguardar implementação de credenciais no frontend
+2. Configurar credenciais na interface web
+3. Probe vai coletar métricas automaticamente
+
+═══════════════════════════════════════════════════════════════
+❌ SE DER ERRO
+═══════════════════════════════════════════════════════════════
+
+ERRO: "The WinRM client cannot process the request"
+SOLUÇÃO:
+1. Verificar TrustedHosts na SRVSONDA001 (Passo 1)
+2. Verificar PSRemoting no 192.168.31.110 (Passo 2)
+3. Verificar firewall WMI no 192.168.31.110
+
+ERRO: "Access is denied"
+SOLUÇÃO:
+1. Verificar se usuário é Administrador
+2. Tentar com: 192.168.31.110\Administrator
+3. Verificar UAC (User Account Control)
+
+ERRO: "RPC server is unavailable"
+SOLUÇÃO:
+1. Verificar serviço WinRM está rodando
+2. Verificar firewall (portas 135, 445, 5985)
+3. Testar ping: ping 192.168.31.110
+
+═══════════════════════════════════════════════════════════════
+📝 ARQUIVOS DE REFERÊNCIA
+═══════════════════════════════════════════════════════════════
+
+1. COMECE_AQUI_WMI_AGORA.txt (este arquivo)
+   - Instruções rápidas para começar
+
+2. testar_wmi_192.168.31.110.ps1
+   - Script completo de teste WMI
+
+3. RESOLVER_WMI_WORKGROUP_AGORA.txt
+   - Instruções detalhadas para workgroup
+
+4. SOLUCAO_WMI_CREDENCIAIS_CENTRALIZADAS.md
+   - Arquitetura completa da solução
+
+5. RESUMO_SITUACAO_WMI_11MAR_15H20.md
+   - Resumo completo da situação
+
+═══════════════════════════════════════════════════════════════
+🎯 IMPLEMENTAÇÃO FUTURA (CÓDIGO)
+═══════════════════════════════════════════════════════════════
+
+Após testar WMI, precisamos implementar:
+
+1. Tabela wmi_credentials no banco de dados
+2. API para gerenciar credenciais (api/routers/wmi_credentials.py)
+3. Interface no frontend para configurar credenciais
+4. Atualizar probe para usar credenciais do banco
+
+Detalhes em: SOLUCAO_WMI_CREDENCIAIS_CENTRALIZADAS.md
+
+═══════════════════════════════════════════════════════════════
+📊 PARA SERVIDORES NO DOMÍNIO (FUTURO)
+═══════════════════════════════════════════════════════════════
+
+Para servidores no domínio, a configuração é MAIS SIMPLES:
+
+1. Criar usuário de serviço no AD: svc_monitor
+2. Adicionar ao grupo Domain Admins
+3. Configurar GPO para firewall WMI
+4. Usar credenciais de domínio: DOMINIO\svc_monitor
+
+Não precisa TrustedHosts!
+Não precisa PSRemoting!
+Funciona automaticamente via Kerberos!
+
+═══════════════════════════════════════════════════════════════
+🚀 COMECE AGORA
+═══════════════════════════════════════════════════════════════
+
+1. Execute Passo 1 na SRVSONDA001
+2. Execute Passo 2 no 192.168.31.110
+3. Execute Passo 3 para testar
+
+Boa sorte! 🎯
+
+═══════════════════════════════════════════════════════════════

@@ -1,0 +1,75 @@
+================================================================================
+REINICIAR SERVIÇO CORUJAPROBE - APLICAR CORREÇÃO PING
+================================================================================
+
+Arquivo copiado com sucesso: 11:55:39 AM ✓
+
+EXECUTAR NA SRVSONDA001 (PowerShell como Administrador):
+================================================================================
+
+# Parar serviço
+Stop-Service -Name "CorujaProbe" -Force
+
+# Aguardar 5 segundos
+Start-Sleep -Seconds 5
+
+# Iniciar serviço
+Start-Service -Name "CorujaProbe"
+
+# Verificar status
+Get-Service CorujaProbe
+
+# Aguardar 60 segundos para primeira coleta
+Start-Sleep -Seconds 60
+
+# Ver se está rodando (deve aparecer como Python)
+Get-Process | Where-Object {$_.ProcessName -like "*python*"}
+
+================================================================================
+VERIFICAR LOGS (executar após 60 segundos):
+================================================================================
+
+# Ver últimas 40 linhas do console (se estiver rodando em janela)
+# OU verificar se processo Python está ativo
+
+# Se não tiver arquivo de log, os logs aparecem no console do serviço
+# Para ver logs do serviço:
+Get-EventLog -LogName Application -Source "CorujaProbe" -Newest 10
+
+================================================================================
+VALIDAR NO LINUX (após 2 minutos):
+================================================================================
+
+Conectar via PuTTY e executar:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+    s.id, 
+    srv.hostname,
+    COUNT(m.id) as total_metrics,
+    MAX(m.timestamp) as last_metric_time
+FROM sensors s
+LEFT JOIN servers srv ON s.server_id = srv.id
+LEFT JOIN metrics m ON m.sensor_id = s.id
+WHERE s.sensor_type = 'ping'
+GROUP BY s.id, srv.hostname
+ORDER BY s.id;
+"
+
+RESULTADO ESPERADO:
+- ID 15 (SRVSONDA001): continua com métricas
+- ID 23 (SRVCMONITOR001): DEVE TER MÉTRICAS NOVAS com timestamp recente!
+
+================================================================================
+VERIFICAR NO FRONTEND:
+================================================================================
+
+1. Abrir: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em "Servidores"
+4. Verificar SRVCMONITOR001:
+   - Sensor PING deve sair de "Desconhecido"
+   - Deve mostrar latência (ex: "1ms")
+   - Status "OK" (verde)
+
+================================================================================

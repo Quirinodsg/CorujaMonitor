@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 
 from database import engine, Base
-from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset
+from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery
 
 # Importar WAF Middleware
 try:
@@ -25,16 +25,14 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Coruja Monitor API",
     description="Enterprise monitoring platform with AIOps capabilities",
-    version="1.0.0",
+    version="2.1.0",
     lifespan=lifespan
 )
 
-# WAF Middleware - TEMPORARIAMENTE DESABILITADO PARA TROUBLESHOOTING
-# if WAF_AVAILABLE:
-#     app.add_middleware(WAFMiddleware)
-#     print("✅ WAF Middleware enabled")
+# WAF Middleware
 if WAF_AVAILABLE:
-    print("⚠️  WAF Middleware disponível mas DESABILITADO temporariamente")
+    app.add_middleware(WAFMiddleware)
+    print("✅ WAF Middleware enabled")
 
 app.add_middleware(
     CORSMiddleware,
@@ -98,6 +96,12 @@ app.include_router(kubernetes.router)  # Já tem prefix no router
 app.include_router(kubernetes_alerts.router)  # Alertas Kubernetes
 app.include_router(security_monitor.router, prefix="/api/v1", tags=["Security Monitor"])
 app.include_router(system_reset.router)  # System Reset
+app.include_router(timescale_migration.router)  # TimescaleDB Migration
+app.include_router(multi_probe.router)  # Multi-Probe Management
+app.include_router(probe_nodes.router)  # Probe Nodes distribuídos
+app.include_router(metrics_batch.router)  # Ingestão em lote de métricas
+app.include_router(ws_dashboard.router)   # WebSocket Dashboard tempo real
+app.include_router(discovery.router)      # Discovery de rede/SNMP/WMI
 
 @app.get("/")
 async def root():

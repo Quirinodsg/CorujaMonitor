@@ -1,0 +1,41 @@
+========================================
+ATUALIZAR LINUX - CORREÇÃO WMI DOMAIN
+========================================
+
+COPIAR E COLAR NO LINUX (SSH):
+
+cd /home/administrador/CorujaMonitor
+git pull
+docker-compose restart api
+sleep 5
+docker logs coruja-api --tail 10
+
+========================================
+EXPLICAÇÃO:
+========================================
+
+✅ CORRIGIDO na API (api/routers/credentials.py):
+
+Endpoint /resolve agora retorna campos corretos para WMI:
+- result["wmi_username"] (antes: "username")
+- result["wmi_password"] (antes: "password")  
+- result["wmi_domain"] or "" (antes: "domain")
+
+A probe Windows já está esperando esses nomes corretos:
+- credential.get('wmi_username')
+- credential.get('wmi_password')
+- credential.get('wmi_domain', '')
+
+========================================
+APÓS ATUALIZAR:
+========================================
+
+Aguardar próximo ciclo da probe (60s) e verificar logs:
+
+INFO:__main__:🔐 Usando credencial: Techbiz (Nível: tenant)
+INFO:__main__:   Usuário: Techbiz\coruja.monitor
+
+Não deve mais aparecer:
+WARNING:__main__:Credencial WMI incompleta para 192.168.31.110
+
+========================================

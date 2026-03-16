@@ -1,0 +1,189 @@
+═══════════════════════════════════════════════════════════════
+  📋 COPIAR probe_core.py PARA SRVSONDA001
+  📅 11 MARÇO 2026
+═══════════════════════════════════════════════════════════════
+
+✅ CORREÇÃO APLICADA: probe_core.py com PING desabilitado
+⏳ PRECISA: Copiar arquivo para SRVSONDA001 e reiniciar serviço
+
+═══════════════════════════════════════════════════════════════
+  OPÇÃO 1: COPIAR VIA GIT (RECOMENDADO)
+═══════════════════════════════════════════════════════════════
+
+## PASSO 1: COMMIT E PUSH (NOTEBOOK WINDOWS)
+
+Abrir Git Bash no notebook:
+
+cd ~/Coruja\ Monitor
+
+# Adicionar arquivos corrigidos
+git add worker/tasks.py
+git add probe/probe_core.py
+git add COPIAR_PROBE_CORE_SRVSONDA001_AGORA.txt
+git add EXECUTAR_AGORA_CORRECAO_PING.txt
+git add PROBLEMA_DUPLICACAO_PING_RESOLVIDO.md
+git add LIMPAR_SENSORES_COMPLETO_AGORA.txt
+
+# Commit
+git commit -m "fix: Corrigir duplicação PING - worker normaliza nome, probe desabilitada"
+
+# Push
+git push origin master
+
+## PASSO 2: PULL NA SRVSONDA001 (WINDOWS)
+
+Conectar na SRVSONDA001 via RDP e abrir PowerShell:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+
+# Pull do Git
+git pull origin master
+
+# Verificar se arquivo foi atualizado
+type probe_core.py | findstr "DESABILITADO"
+
+# Deve mostrar: "DESABILITADO: PING agora é feito direto do servidor Linux"
+
+═══════════════════════════════════════════════════════════════
+  OPÇÃO 2: COPIAR MANUALMENTE (SE GIT NÃO FUNCIONAR)
+═══════════════════════════════════════════════════════════════
+
+## PASSO 1: COPIAR ARQUIVO DO NOTEBOOK
+
+No notebook Windows:
+
+# Copiar probe_core.py para área de transferência
+# Caminho: C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py
+
+## PASSO 2: COLAR NA SRVSONDA001
+
+Conectar na SRVSONDA001 via RDP:
+
+# Fazer backup do arquivo antigo
+copy "C:\Program Files\CorujaMonitor\Probe\probe_core.py" "C:\Program Files\CorujaMonitor\Probe\probe_core.py.bak"
+
+# Colar arquivo novo
+# Caminho: C:\Program Files\CorujaMonitor\Probe\probe_core.py
+
+═══════════════════════════════════════════════════════════════
+  OPÇÃO 3: COPIAR VIA REDE (COMPARTILHAMENTO)
+═══════════════════════════════════════════════════════════════
+
+## No Notebook (origem):
+
+# Compartilhar pasta temporariamente
+# Caminho: C:\Users\andre.quirino\Coruja Monitor\probe
+
+## Na SRVSONDA001 (destino):
+
+# Acessar compartilhamento de rede
+\\DESKTOP-P9VGN04\Users\andre.quirino\Coruja Monitor\probe
+
+# Copiar probe_core.py para:
+C:\Program Files\CorujaMonitor\Probe\
+
+═══════════════════════════════════════════════════════════════
+  PASSO 3: REINICIAR SERVIÇO (SRVSONDA001)
+═══════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, abrir PowerShell como Administrador:
+
+# Parar serviço
+net stop CorujaProbe
+
+# Aguardar 5 segundos
+timeout /t 5
+
+# Iniciar serviço
+net start CorujaProbe
+
+# Verificar status
+sc query CorujaProbe
+
+═══════════════════════════════════════════════════════════════
+  PASSO 4: VERIFICAR LOGS (SRVSONDA001)
+═══════════════════════════════════════════════════════════════
+
+# Ver logs recentes
+type "C:\Program Files\CorujaMonitor\Probe\probe.log" | findstr /i "ping"
+
+# Deve mostrar:
+# "⚠️ PING desabilitado na probe - feito pelo servidor central (worker)"
+
+# Ver últimas 50 linhas do log
+powershell -Command "Get-Content 'C:\Program Files\CorujaMonitor\Probe\probe.log' -Tail 50"
+
+═══════════════════════════════════════════════════════════════
+  PASSO 5: VERIFICAR NO LINUX (SERVIDOR)
+═══════════════════════════════════════════════════════════════
+
+Após 2-3 minutos, verificar no Linux:
+
+# Ver sensores PING (não deve criar novos)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, s.id, s.name, COUNT(m.id) as metricas FROM servers srv JOIN sensors s ON s.server_id = srv.id LEFT JOIN metrics m ON m.sensor_id = s.id WHERE s.sensor_type = 'ping' GROUP BY srv.hostname, s.id, s.name ORDER BY srv.hostname, s.created_at DESC;"
+
+# Ver logs da API (não deve receber métricas PING da probe)
+docker logs coruja-api --tail 50 | grep -i "ping"
+
+═══════════════════════════════════════════════════════════════
+  VERIFICAÇÃO COMPLETA
+═══════════════════════════════════════════════════════════════
+
+✅ SRVSONDA001:
+- probe_core.py atualizado
+- Serviço reiniciado
+- Logs mostram "PING desabilitado"
+
+✅ LINUX:
+- Worker criando sensores PING (a cada 60s)
+- API NÃO recebendo PING da probe
+- Apenas 1 sensor PING por servidor
+
+═══════════════════════════════════════════════════════════════
+  TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════
+
+## Problema: Git não instalado na SRVSONDA001
+
+Solução: Usar OPÇÃO 2 (copiar manualmente)
+
+## Problema: Serviço não reinicia
+
+# Verificar status
+sc query CorujaProbe
+
+# Forçar parada
+taskkill /F /IM python.exe
+
+# Iniciar novamente
+net start CorujaProbe
+
+## Problema: Arquivo não atualiza
+
+# Verificar se arquivo está correto
+type "C:\Program Files\CorujaMonitor\Probe\probe_core.py" | findstr "def _collect_ping_only"
+
+# Deve mostrar a função desabilitada
+
+═══════════════════════════════════════════════════════════════
+  RESUMO
+═══════════════════════════════════════════════════════════════
+
+1. ✅ Commit e push no notebook (Git)
+2. ⏳ Pull na SRVSONDA001 (Git) OU copiar manualmente
+3. ⏳ Reiniciar serviço CorujaProbe
+4. ⏳ Verificar logs (deve mostrar "PING desabilitado")
+5. ⏳ Aguardar 2-3 minutos
+6. ⏳ Verificar que probe NÃO envia mais PING
+
+═══════════════════════════════════════════════════════════════
+  PRÓXIMOS PASSOS APÓS COPIAR
+═══════════════════════════════════════════════════════════════
+
+1. Reiniciar worker no Linux (docker-compose restart worker)
+2. Limpar sensores duplicados (EXECUTAR_AGORA_CORRECAO_PING.txt)
+3. Deletar sensores desconhecidos
+4. Fechar incidentes de PING
+5. Verificar dashboard (1 sensor PING por servidor)
+
+═══════════════════════════════════════════════════════════════

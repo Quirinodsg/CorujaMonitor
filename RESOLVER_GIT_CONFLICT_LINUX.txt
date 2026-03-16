@@ -1,0 +1,99 @@
+═══════════════════════════════════════════════════════════════
+🔧 RESOLVER CONFLITO GIT E ATUALIZAR API
+═══════════════════════════════════════════════════════════════
+
+📋 PROBLEMA:
+- Git detectou modificações locais em api/models.py (script Python)
+- Precisa descartar mudanças locais e puxar versão do Git
+- Classe Credential já está correta no Git (só 1 definição)
+
+═══════════════════════════════════════════════════════════════
+📝 COPIAR E COLAR NO LINUX (SSH):
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+
+# 1️⃣ Descartar mudanças locais no models.py
+echo "🗑️ Descartando mudanças locais em api/models.py..."
+git checkout -- api/models.py
+
+# 2️⃣ Baixar correção do Git
+echo ""
+echo "📥 Baixando correção do Git..."
+git pull origin master
+
+# 3️⃣ Verificar que só existe UMA classe Credential
+echo ""
+echo "🔍 Verificando classe Credential (deve aparecer só 1 linha):"
+grep -n "^class Credential" api/models.py
+
+# 4️⃣ Verificar extend_existing no __table_args__
+echo ""
+echo "🔍 Verificando extend_existing:"
+grep -A 8 "class Credential" api/models.py | grep -A 8 "__table_args__"
+
+# 5️⃣ Reiniciar API
+echo ""
+echo "🔄 Reiniciando API..."
+docker-compose restart api
+
+# 6️⃣ Aguardar 10 segundos
+echo ""
+echo "⏳ Aguardando API iniciar (10 segundos)..."
+sleep 10
+
+# 7️⃣ Testar API
+echo ""
+echo "🧪 Testando API:"
+curl http://localhost:8000/health
+echo ""
+
+# 8️⃣ Ver logs da API (últimas 30 linhas)
+echo ""
+echo "📋 Logs da API (últimas 30 linhas):"
+docker logs coruja-api --tail 30
+
+# 9️⃣ Verificar status dos containers
+echo ""
+echo "🐳 Status dos containers:"
+docker-compose ps
+
+═══════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO:
+═══════════════════════════════════════════════════════════════
+
+1. git checkout: "Updated 1 path from the index"
+2. git pull: "Updating ... Fast-forward" (commit 9f220a8)
+3. grep Credential: Deve mostrar APENAS 1 linha (~781)
+4. grep extend_existing: Deve mostrar {'extend_existing': True}
+5. API restart: "Restarting coruja-api ... done"
+6. curl health: {"status":"healthy"} ou similar
+7. Logs: SEM erro "Table 'credentials' is already defined"
+8. Containers: Todos "Up"
+
+═══════════════════════════════════════════════════════════════
+❌ SE API AINDA NÃO INICIAR:
+═══════════════════════════════════════════════════════════════
+
+# Ver logs completos
+docker logs coruja-api --tail 100
+
+# Verificar arquivo completo
+cat api/models.py | grep -A 70 "^class Credential"
+
+# Rebuild completo do container (último recurso)
+docker-compose down
+docker-compose up -d --build api
+
+═══════════════════════════════════════════════════════════════
+📌 PRÓXIMOS PASSOS (APÓS API FUNCIONAR):
+═══════════════════════════════════════════════════════════════
+
+1. ✅ Acessar portal: http://192.168.31.161:3000
+2. ✅ Login: admin@coruja.com / admin123
+3. ✅ Ir em: Configurações > Credenciais
+4. ✅ Adicionar credencial WMI para SRVHVSPRD010
+5. ✅ Testar conectividade
+6. ✅ Aguardar probe coletar métricas
+
+═══════════════════════════════════════════════════════════════

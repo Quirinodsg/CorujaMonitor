@@ -1,0 +1,79 @@
+========================================
+RESOLVER WINRM: WORKGROUP → DOMAIN
+========================================
+
+PROBLEMA:
+- SRVSONDA001 (192.168.31.162) = WORKGROUP
+- SRVHVSPRD010 (192.168.31.110) = DOMAIN (Techbiz)
+- Access Denied ao tentar conectar
+
+SOLUÇÃO: Configurar autenticação CredSSP
+========================================
+
+PASSO 1: NO SERVIDOR 192.168.31.110 (Domain)
+========================================
+
+PowerShell como Admin:
+
+# Habilitar CredSSP no servidor
+Enable-WSManCredSSP -Role Server -Force
+
+# Verificar
+Get-WSManCredSSP
+
+========================================
+PASSO 2: NA SRVSONDA001 (Workgroup)
+========================================
+
+PowerShell como Admin:
+
+# Habilitar CredSSP no cliente
+Enable-WSManCredSSP -Role Client -DelegateComputer "192.168.31.110" -Force
+
+# Adicionar ao TrustedHosts
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "192.168.31.110" -Force
+
+# Verificar
+Get-WSManCredSSP
+Get-Item WSMan:\localhost\Client\TrustedHosts
+
+========================================
+PASSO 3: TESTAR CONEXÃO COM CREDSSP
+========================================
+
+Na SRVSONDA001:
+
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -Authentication CredSSP -ScriptBlock { Get-WmiObject Win32_OperatingSystem | Select Caption }
+
+Deve retornar:
+Caption
+-------
+Microsoft Windows Server 2019 Standard
+
+========================================
+ALTERNATIVA: Usar usuário local do servidor
+========================================
+
+Se CredSSP não funcionar, criar usuário local no 192.168.31.110:
+
+No 192.168.31.110:
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+New-LocalUser -Name "corujamonitor" -Password $password -FullName "Coruja Monitor" -Description "Conta para monitoramento"
+Add-LocalGroupMember -Group "Administrators" -Member "corujamonitor"
+
+Testar na SRVSONDA001:
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('192.168.31.110\corujamonitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -ScriptBlock { Get-WmiObject Win32_OperatingSystem | Select Caption }
+
+========================================
+ATUALIZAR COLLECTOR PARA USAR CREDSSP
+========================================
+
+Se usar CredSSP, precisa adicionar parâmetro no collector:
+
+Invoke-Command -ComputerName $hostname -Credential $credential -Authentication CredSSP -ScriptBlock { ... }
+
+========================================

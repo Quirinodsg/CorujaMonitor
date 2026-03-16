@@ -1,0 +1,169 @@
+═══════════════════════════════════════════════════════════════════
+  CORRIGIR SNMPD NO LINUX - HABILITAR MÉTRICAS
+═══════════════════════════════════════════════════════════════════
+
+PROBLEMA IDENTIFICADO:
+- SNMP responde mas só retorna 3 OIDs básicos (uptime, hostname, descrição)
+- Faltam OIDs de métricas: CPU, Memória, Disco, Load Average
+- Causa: snmpd.conf não está habilitando as MIBs do NET-SNMP
+
+SOLUÇÃO:
+Reconfigurar snmpd.conf para habilitar todas as métricas
+
+═══════════════════════════════════════════════════════════════════
+CONECTAR NO SERVIDOR LINUX (SRVCMONITOR001)
+═══════════════════════════════════════════════════════════════════
+
+Via PuTTY: 192.168.31.161
+Usuário: seu_usuario
+Senha: sua_senha
+
+═══════════════════════════════════════════════════════════════════
+PASSO 1: FAZER BACKUP DO ARQUIVO ATUAL
+═══════════════════════════════════════════════════════════════════
+
+sudo cp /etc/snmp/snmpd.conf /etc/snmp/snmpd.conf.backup
+
+═══════════════════════════════════════════════════════════════════
+PASSO 2: CRIAR NOVO ARQUIVO DE CONFIGURAÇÃO
+═══════════════════════════════════════════════════════════════════
+
+sudo vim /etc/snmp/snmpd.conf
+
+Pressione 'i' para entrar no modo de inserção, depois APAGUE TUDO e cole:
+
+# SNMP Configuration for Coruja Monitor
+# Community: public (read-only)
+
+# Listening address
+agentAddress udp:161
+
+# Community string (read-only)
+rocommunity public default
+
+# System information
+sysLocation    Datacenter Techbiz
+sysContact     admin@techbiz.com
+sysServices    72
+
+# Enable full access to system stats
+view   systemview    included   .1.3.6.1.2.1.1
+view   systemview    included   .1.3.6.1.2.1.25.1
+view   systemview    included   .1.3.6.1.4.1.2021
+
+# CPU, Memory, Disk monitoring (NET-SNMP MIBs)
+includeAllDisks 10%
+load 12 10 5
+
+# Disk monitoring - all partitions
+disk / 10%
+disk /boot 10%
+disk /home 10%
+disk /var 10%
+disk /tmp 10%
+
+# Process monitoring
+proc sshd
+proc snmpd
+
+# System stats
+extend uptime /bin/cat /proc/uptime
+extend hostname /bin/hostname
+
+# Enable all standard MIBs
+master agentx
+
+Pressione ESC, depois digite :wq e ENTER para salvar
+
+═══════════════════════════════════════════════════════════════════
+PASSO 3: REINICIAR SERVIÇO SNMP
+═══════════════════════════════════════════════════════════════════
+
+sudo systemctl restart snmpd
+
+sudo systemctl status snmpd
+
+Deve mostrar: "active (running)"
+
+═══════════════════════════════════════════════════════════════════
+PASSO 4: TESTAR SE MÉTRICAS ESTÃO DISPONÍVEIS
+═══════════════════════════════════════════════════════════════════
+
+# Testar CPU Idle
+snmpget -v2c -c public localhost 1.3.6.1.4.1.2021.11.11.0
+
+# Testar Memória Total
+snmpget -v2c -c public localhost 1.3.6.1.4.1.2021.4.5.0
+
+# Testar Memória Disponível
+snmpget -v2c -c public localhost 1.3.6.1.4.1.2021.4.6.0
+
+# Testar Disco
+snmpwalk -v2c -c public localhost 1.3.6.1.4.1.2021.9.1.9
+
+# Testar Load Average
+snmpget -v2c -c public localhost 1.3.6.1.4.1.2021.10.1.3.1
+
+RESULTADO ESPERADO:
+Cada comando deve retornar um valor numérico, não "No Such Object"
+
+═══════════════════════════════════════════════════════════════════
+PASSO 5: TESTAR DA SRVSONDA001
+═══════════════════════════════════════════════════════════════════
+
+Voltar para SRVSONDA001 (Windows) e executar:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+
+python DIAGNOSTICAR_SNMP_PARSING.py
+
+RESULTADO ESPERADO:
+✓ ENCONTRADO | CPU Idle
+✓ ENCONTRADO | Memória Total
+✓ ENCONTRADO | Memória Disponível
+✓ ENCONTRADO | Disco Percentual
+✓ ENCONTRADO | Load Average 1min
+
+RESULTADO FINAL: 3-4 métricas parseadas
+
+═══════════════════════════════════════════════════════════════════
+PASSO 6: TESTAR PROBE EM PRODUÇÃO
+═══════════════════════════════════════════════════════════════════
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+
+python probe_core.py
+
+Aguardar aparecer:
+INFO:__main__:Collected X SNMP metrics from 192.168.31.161
+
+X deve ser > 0 (esperado: 3-5 métricas)
+
+═══════════════════════════════════════════════════════════════════
+OBSERVAÇÕES:
+═══════════════════════════════════════════════════════════════════
+
+1. Se snmpget retornar "No Such Object", as MIBs não estão carregadas
+2. Verificar se pacote snmpd está completo: sudo apt install snmpd -y
+3. Verificar logs: sudo tail -f /var/log/syslog | grep snmp
+4. Se necessário, instalar MIBs extras: sudo apt install snmp-mibs-downloader
+
+═══════════════════════════════════════════════════════════════════
+TROUBLESHOOTING:
+═══════════════════════════════════════════════════════════════════
+
+PROBLEMA: snmpget retorna "No Such Object"
+SOLUÇÃO: 
+  sudo apt install snmp-mibs-downloader -y
+  sudo download-mibs
+  sudo systemctl restart snmpd
+
+PROBLEMA: Firewall bloqueando
+SOLUÇÃO:
+  sudo ufw allow from 192.168.31.0/24 to any port 161 proto udp
+  sudo ufw status
+
+PROBLEMA: snmpd não inicia
+SOLUÇÃO:
+  sudo journalctl -u snmpd -n 50
+  Verificar erros de sintaxe no snmpd.conf

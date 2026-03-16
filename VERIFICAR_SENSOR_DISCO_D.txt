@@ -1,0 +1,27 @@
+════════════════════════════════════════════════════════════════
+VERIFICAR SENSOR DISCO D NO BANCO
+════════════════════════════════════════════════════════════════
+
+COPIAR E COLAR NO LINUX (PuTTY):
+
+docker-compose exec postgres psql -U coruja -d coruja_monitor -c "SELECT id, name, sensor_type, server_id, is_active FROM sensors WHERE sensor_type = 'disk' ORDER BY name;"
+
+════════════════════════════════════════════════════════════════
+OBJETIVO:
+════════════════════════════════════════════════════════════════
+
+1. Ver TODOS os sensores de disco
+2. Identificar o ID EXATO do sensor "Disco D"
+3. Ver se está ativo (is_active)
+
+════════════════════════════════════════════════════════════════
+DEPOIS DE VER O RESULTADO:
+════════════════════════════════════════════════════════════════
+
+Se encontrar o sensor, deletar usando o ID exato:
+
+docker-compose exec postgres psql -U coruja -d coruja_monitor -c "DELETE FROM metrics WHERE sensor_id = [ID_DO_SENSOR]; DELETE FROM incidents WHERE sensor_id = [ID_DO_SENSOR]; DELETE FROM sensor_notes WHERE sensor_id = [ID_DO_SENSOR]; DELETE FROM sensors WHERE id = [ID_DO_SENSOR];"
+
+Substitua [ID_DO_SENSOR] pelo número que aparecer na coluna "id"
+
+════════════════════════════════════════════════════════════════

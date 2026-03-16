@@ -1,0 +1,82 @@
+═══════════════════════════════════════════════════════════════════════════
+  MUDAR PARA WMI NATIVO (COMO PRTG) - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════
+
+DECISÃO: Usar WMI nativo (DCOM/RPC) em vez de PowerShell Remoting
+- Funciona igual ao PRTG
+- Não precisa habilitar WinRM
+- Usa Kerberos automaticamente no domínio
+- Mais simples e confiável
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 1: INSTALAR BIBLIOTECA WMI NA SRVSONDA001
+═══════════════════════════════════════════════════════════════════════════
+
+Abra PowerShell como Administrador na SRVSONDA001 e execute:
+
+pip install pywin32 WMI
+
+Aguarde a instalação terminar.
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 2: COPIAR NOVO COLLECTOR PARA SRVSONDA001
+═══════════════════════════════════════════════════════════════════════════
+
+1. Copie via RDP o arquivo:
+   probe/collectors/wmi_native_collector.py
+   
+   Para:
+   C:\Users\Steve.Jobs\Desktop\coruja-monitor\probe\collectors\
+
+2. Depois copie para produção:
+   Copie de: C:\Users\Steve.Jobs\Desktop\coruja-monitor\probe\collectors\wmi_native_collector.py
+   Para: C:\Program Files\CorujaMonitor\Probe\collectors\
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 3: TESTAR WMI NATIVO
+═══════════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, abra PowerShell e teste:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python -c "import wmi; print('WMI OK')"
+
+Deve aparecer: WMI OK
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 4: REINICIAR PROBE
+═══════════════════════════════════════════════════════════════════════════
+
+1. Pare a probe (Ctrl+C se estiver rodando)
+2. Execute: Python .\probe_core.py
+
+═══════════════════════════════════════════════════════════════════════════
+RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════
+
+Você deve ver nos logs:
+
+✅ INFO:__main__:🔌 Conectando via WMI nativo em SRVHVSPRD010.ad.techbiz.com.br
+✅ INFO:__main__:✅ WMI nativo conectado em SRVHVSPRD010.ad.techbiz.com.br
+✅ INFO:__main__:Collected X WMI metrics from SRVHVSPRD010.ad.techbiz.com.br
+
+═══════════════════════════════════════════════════════════════════════════
+VANTAGENS DO WMI NATIVO
+═══════════════════════════════════════════════════════════════════════════
+
+✅ Funciona automaticamente no domínio (Kerberos)
+✅ Não precisa configurar WinRM
+✅ Mesma tecnologia do PRTG
+✅ Mais rápido e confiável
+✅ Firewall já liberado (porta 135 + dinâmicas)
+
+═══════════════════════════════════════════════════════════════════════════
+OBSERVAÇÃO
+═══════════════════════════════════════════════════════════════════════════
+
+O probe_core.py ainda precisa ser atualizado para usar o novo collector.
+Aguarde a próxima instrução após testar a biblioteca WMI.
+
+═══════════════════════════════════════════════════════════════════════════
+Data: 13/03/2026 - Coruja Monitor
+═══════════════════════════════════════════════════════════════════════════

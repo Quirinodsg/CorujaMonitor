@@ -1,15 +1,70 @@
 """
 SNMP Collector - Suporte v1, v2c e v3
 Coleta métricas de dispositivos via SNMP
+CORRECAO 09MAR: Atualizado para pysnmp 7.x API
 """
 
 import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from pysnmp.hlapi import *
-import asyncio
 
 logger = logging.getLogger(__name__)
+
+# Tentar importar pysnmp (versão 7.x tem estrutura diferente)
+PYSNMP_AVAILABLE = False
+PYSNMP_VERSION = 0
+
+try:
+    # pysnmp 7.x - API síncrona
+    from pysnmp.hlapi.v1arch.asyncio.sync import (
+        getCmd,
+        bulkCmd,
+        SnmpEngine,
+        CommunityData,
+        UdpTransportTarget,
+        ContextData,
+        ObjectType,
+        ObjectIdentity
+    )
+    PYSNMP_AVAILABLE = True
+    PYSNMP_VERSION = 7
+    logger.info("pysnmp 7.x carregado (v1arch.asyncio.sync)")
+except ImportError:
+    try:
+        # pysnmp 7.x - API alternativa
+        from pysnmp.hlapi.v1arch.asyncio import (
+            getCmd,
+            bulkCmd,
+            SnmpEngine,
+            CommunityData,
+            UdpTransportTarget,
+            ContextData,
+            ObjectType,
+            ObjectIdentity
+        )
+        PYSNMP_AVAILABLE = True
+        PYSNMP_VERSION = 7
+        logger.info("pysnmp 7.x carregado (v1arch.asyncio)")
+    except ImportError:
+        try:
+            # pysnmp 4.x - API antiga
+            from pysnmp.hlapi import (
+                getCmd,
+                bulkCmd,
+                SnmpEngine,
+                CommunityData,
+                UdpTransportTarget,
+                ContextData,
+                ObjectType,
+                ObjectIdentity
+            )
+            PYSNMP_AVAILABLE = True
+            PYSNMP_VERSION = 4
+            logger.info("pysnmp 4.x carregado")
+        except ImportError:
+            PYSNMP_AVAILABLE = False
+            PYSNMP_VERSION = 0
+            logger.warning("pysnmp não está instalado")
 
 class SNMPCollector:
     """Coletor SNMP avançado com suporte a múltiplas versões"""
@@ -24,6 +79,27 @@ class SNMPCollector:
         'ifSpeed': '1.3.6.1.2.1.2.2.1.5',
         'ifInOctets': '1.3.6.1.2.1.2.2.1.10',
         'ifOutOctets': '1.3.6.1.2.1.2.2.1.16',
+    }
+    
+    # OIDs do NET-SNMP (UCD-SNMP-MIB) para servidores Linux
+    LINUX_SERVER_OIDS = {
+        'memTotalReal': '1.3.6.1.4.1.2021.4.5.0',      # Memória Total (KB)
+        'memAvailReal': '1.3.6.1.4.1.2021.4.6.0',      # Memória Disponível (KB)
+        'memBuffer': '1.3.6.1.4.1.2021.4.14.0',        # Buffer
+        'memCached': '1.3.6.1.4.1.2021.4.15.0',        # Cached
+        'ssCpuUser': '1.3.6.1.4.1.2021.11.9.0',        # CPU User %
+        'ssCpuSystem': '1.3.6.1.4.1.2021.11.10.0',     # CPU System %
+        'ssCpuIdle': '1.3.6.1.4.1.2021.11.11.0',       # CPU Idle %
+        'ssCpuRawUser': '1.3.6.1.4.1.2021.11.50.0',    # CPU Raw User
+        'ssCpuRawSystem': '1.3.6.1.4.1.2021.11.52.0',  # CPU Raw System
+        'ssCpuRawIdle': '1.3.6.1.4.1.2021.11.53.0',    # CPU Raw Idle
+        'laLoad1': '1.3.6.1.4.1.2021.10.1.3.1',        # Load Average 1min
+        'laLoad5': '1.3.6.1.4.1.2021.10.1.3.2',        # Load Average 5min
+        'laLoad15': '1.3.6.1.4.1.2021.10.1.3.3',       # Load Average 15min
+        'dskPath': '1.3.6.1.4.1.2021.9.1.2.1',         # Disk Path
+        'dskPercent': '1.3.6.1.4.1.2021.9.1.9.1',      # Disk Usage %
+        'dskTotal': '1.3.6.1.4.1.2021.9.1.6.1',        # Disk Total (KB)
+        'dskUsed': '1.3.6.1.4.1.2021.9.1.8.1',         # Disk Used (KB)
     }
     
     # OIDs de impressoras (Printer MIB - RFC 3805)
@@ -59,6 +135,7 @@ class SNMPCollector:
     ) -> Dict[str, Any]:
         """
         Coleta dados via SNMP v2c
+        CORRECAO 09MAR: Compatível com pysnmp 7.x
         
         Args:
             host: IP ou hostname do dispositivo
@@ -69,34 +146,47 @@ class SNMPCollector:
         Returns:
             Dicionário com métricas coletadas
         """
+        if not PYSNMP_AVAILABLE:
+            return {
+                'status': 'error',
+                'host': host,
+                'error': 'pysnmp not installed'
+            }
+        
         try:
             if oids is None:
-                oids = list(self.STANDARD_OIDS.values())
+                # Coletar OIDs padrão + OIDs de servidor Linux
+                oids = list(self.STANDARD_OIDS.values()) + list(self.LINUX_SERVER_OIDS.values())
             
             results = {}
             
             for oid in oids:
-                iterator = getCmd(
-                    SnmpEngine(),
-                    CommunityData(community, mpModel=1),  # v2c
-                    UdpTransportTarget((host, port), timeout=5, retries=2),
-                    ContextData(),
-                    ObjectType(ObjectIdentity(oid))
-                )
-                
-                errorIndication, errorStatus, errorIndex, varBinds = next(iterator)
-                
-                if errorIndication:
-                    logger.error(f"SNMP error: {errorIndication}")
+                try:
+                    # Executar SNMP GET - funciona em pysnmp 4.x e 7.x
+                    iterator = getCmd(
+                        SnmpEngine(),
+                        CommunityData(community, mpModel=1),  # v2c
+                        UdpTransportTarget((host, port), timeout=5, retries=2),
+                        ContextData(),
+                        ObjectType(ObjectIdentity(oid))
+                    )
+                    
+                    errorIndication, errorStatus, errorIndex, varBinds = next(iterator)
+                    
+                    if errorIndication:
+                        logger.debug(f"SNMP error for OID {oid}: {errorIndication}")
+                        continue
+                    elif errorStatus:
+                        logger.debug(f"SNMP error for OID {oid}: {errorStatus.prettyPrint()}")
+                        continue
+                    else:
+                        for varBind in varBinds:
+                            oid_str = str(varBind[0])
+                            value = str(varBind[1])
+                            results[oid_str] = value
+                except Exception as e:
+                    logger.debug(f"Error getting OID {oid}: {e}")
                     continue
-                elif errorStatus:
-                    logger.error(f"SNMP error: {errorStatus.prettyPrint()}")
-                    continue
-                else:
-                    for varBind in varBinds:
-                        oid_str = str(varBind[0])
-                        value = str(varBind[1])
-                        results[oid_str] = value
             
             return {
                 'status': 'success',

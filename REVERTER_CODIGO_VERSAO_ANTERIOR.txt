@@ -1,0 +1,136 @@
+═══════════════════════════════════════════════════════════════
+  ⏮️ REVERTER CÓDIGO PARA VERSÃO ANTERIOR QUE FUNCIONAVA
+═══════════════════════════════════════════════════════════════
+
+ISSO VAI:
+✓ Voltar o código para commit anterior (antes da correção de grupos)
+✓ Manter o banco de dados atual
+✓ Sistema volta a funcionar como estava antes
+
+COPIE E COLE NO LINUX (PUTTY):
+
+cd /home/administrador/CorujaMonitor
+
+# 1. VER ÚLTIMOS COMMITS
+git log --oneline -10
+
+# 2. IDENTIFICAR O COMMIT ANTERIOR
+# Procure o commit ANTES de "Corrigir movimentação de servidores entre grupos"
+# Exemplo: 91ca95e (alguma descrição anterior)
+
+# 3. REVERTER PARA O COMMIT ANTERIOR
+git reset --hard 91ca95e
+
+# OU se quiser voltar 1 commit:
+git reset --hard HEAD~1
+
+# 4. PARAR CONTAINERS
+docker-compose down
+
+# 5. LIMPAR DOCKER (IMPORTANTE)
+sudo systemctl stop docker
+sudo iptables -t nat -F
+sudo iptables -t mangle -F
+sudo iptables -F
+sudo iptables -X
+sudo systemctl start docker
+
+# 6. AGUARDAR 5 SEGUNDOS
+sleep 5
+
+# 7. SUBIR CONTAINERS COM CÓDIGO ANTIGO
+docker-compose up -d
+
+# 8. AGUARDAR 30-60 SEGUNDOS
+sleep 30
+
+# 9. VERIFICAR
+docker ps
+curl http://localhost:8000/health
+
+═══════════════════════════════════════════════════════════════
+  ALTERNATIVA: REVERTER APENAS O ARQUIVO SERVERS.JS
+═══════════════════════════════════════════════════════════════
+
+Se quiser reverter APENAS o arquivo que foi modificado:
+
+cd /home/administrador/CorujaMonitor
+
+# Reverter apenas Servers.js para versão anterior
+git checkout HEAD~1 -- frontend/src/components/Servers.js
+
+# Rebuild frontend
+docker-compose restart frontend
+
+# Aguardar 15 segundos
+sleep 15
+
+# Limpar cache navegador e testar
+
+═══════════════════════════════════════════════════════════════
+  VER HISTÓRICO DE COMMITS
+═══════════════════════════════════════════════════════════════
+
+Para ver os últimos commits e escolher qual voltar:
+
+git log --oneline -20
+
+Saída exemplo:
+3892fd2 Corrigir movimentação de servidores entre grupos - adicionar dropdown
+91ca95e (algum commit anterior)
+abc1234 (outro commit)
+
+Para voltar para 91ca95e:
+git reset --hard 91ca95e
+
+═══════════════════════════════════════════════════════════════
+  IMPORTANTE
+═══════════════════════════════════════════════════════════════
+
+⚠️ git reset --hard VAI APAGAR TODAS AS MUDANÇAS NÃO COMMITADAS
+⚠️ Certifique-se de que é isso que você quer
+
+ALTERNATIVA SEGURA (criar branch de backup):
+git branch backup-antes-reverter
+git reset --hard 91ca95e
+
+Assim você pode voltar depois se precisar:
+git checkout backup-antes-reverter
+
+═══════════════════════════════════════════════════════════════
+  APÓS REVERTER
+═══════════════════════════════════════════════════════════════
+
+1. Limpar cache navegador: CTRL + SHIFT + DELETE
+2. Acessar: http://192.168.31.161:3000
+3. Login: admin@coruja.com / admin123
+4. Verificar se está funcionando normalmente
+
+═══════════════════════════════════════════════════════════════
+  SE QUISER VOLTAR PARA A VERSÃO MAIS RECENTE DEPOIS
+═══════════════════════════════════════════════════════════════
+
+git pull origin master
+docker-compose down
+docker-compose up -d
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS RESUMIDOS (COPIAR E COLAR)
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+git log --oneline -10
+git reset --hard HEAD~1
+docker-compose down
+sudo systemctl stop docker
+sudo iptables -t nat -F
+sudo iptables -t mangle -F
+sudo iptables -F
+sudo iptables -X
+sudo systemctl start docker
+sleep 5
+docker-compose up -d
+sleep 30
+docker ps
+
+═══════════════════════════════════════════════════════════════

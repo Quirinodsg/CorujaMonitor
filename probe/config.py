@@ -51,7 +51,7 @@ class ProbeConfig:
     
     def _auto_discover_api(self, token: str) -> Optional[str]:
         """Auto-discover API URL by trying common addresses"""
-        print("🔍 Auto-descobrindo servidor API...")
+        print("Auto-descobrindo servidor API...")
         
         # Try common addresses
         candidates = [
@@ -71,21 +71,21 @@ class ProbeConfig:
         for url in candidates:
             print(f"   Tentando: {url}")
             if self._test_api_connection(url, token):
-                print(f"✅ Servidor encontrado em: {url}")
+                print(f"Servidor encontrado em: {url}")
                 return url
         
-        print("❌ Servidor não encontrado em nenhum endereço")
+        print("Servidor nao encontrado em nenhum endereco")
         return None
     
     def load_config(self):
         """Load configuration from file"""
-        print(f"🔍 Procurando configuração em: {self.config_file}")
+        print(f"Procurando configuracao em: {self.config_file}")
         if self.config_file.exists():
-            print(f"✅ Configuração encontrada: {self.config_file}")
+            print(f"Configuracao encontrada: {self.config_file}")
             with open(self.config_file, 'r', encoding='utf-8') as f:
                 config = yaml.safe_load(f)
         else:
-            print(f"⚠️  Configuração não encontrada, criando padrão em: {self.config_file}")
+            print(f"Configuracao nao encontrada, criando padrao em: {self.config_file}")
             config = self.get_default_config()
             self.save_config(config)
         
@@ -99,12 +99,12 @@ class ProbeConfig:
         
         # Auto-discover API if current URL doesn't work
         if self.probe_token:
-            print(f"📡 Testando API URL: {self.api_url}")
+            print(f"Testando API URL: {self.api_url}")
             if not self._test_api_connection(self.api_url, self.probe_token):
-                print(f"⚠️  API não acessível em {self.api_url}")
+                print(f"API nao acessivel em {self.api_url}")
                 discovered_url = self._auto_discover_api(self.probe_token)
                 if discovered_url and discovered_url != self.api_url:
-                    print(f"🔄 Atualizando URL de {self.api_url} para {discovered_url}")
+                    print(f"Atualizando URL de {self.api_url} para {discovered_url}")
                     self.api_url = discovered_url
                     # Update config
                     from urllib.parse import urlparse
@@ -115,11 +115,11 @@ class ProbeConfig:
                     config['server'] = server_config
                     self.save_config(config)
             else:
-                print(f"✅ API acessível em {self.api_url}")
+                print(f"API acessivel em {self.api_url}")
         
-        print(f"📡 API URL: {self.api_url}")
-        print(f"🔑 Token: {self.probe_token[:10] if self.probe_token else '(vazio)'}...")
-        print(f"⏱️  Intervalo: {self.collection_interval}s")
+        print(f"API URL: {self.api_url}")
+        print(f"Token: {self.probe_token[:10] if self.probe_token else '(vazio)'}...")
+        print(f"Intervalo: {self.collection_interval}s")
     
     def save_config(self, config: Dict):
         """Save configuration to file"""

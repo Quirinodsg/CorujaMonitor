@@ -1,0 +1,97 @@
+═══════════════════════════════════════════════════════════════
+  RESOLVER SENSORES UNKNOWN E PING 0MS
+═══════════════════════════════════════════════════════════════
+
+EXECUTAR NO LINUX:
+
+═══════════════════════════════════════════════════════════════
+1. LISTAR SENSORES "UNKNOWN" (sem tipo definido)
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+  s.id,
+  s.name,
+  s.sensor_type,
+  srv.hostname,
+  s.is_active,
+  s.created_at
+FROM sensors s
+JOIN servers srv ON s.server_id = srv.id
+WHERE s.sensor_type IS NULL 
+   OR s.sensor_type = '' 
+   OR s.sensor_type = 'unknown'
+ORDER BY s.id;
+"
+
+═══════════════════════════════════════════════════════════════
+2. DELETAR SENSORES UNKNOWN (sem tipo definido)
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+DELETE FROM sensors
+WHERE sensor_type IS NULL 
+   OR sensor_type = '' 
+   OR sensor_type = 'unknown';
+"
+
+═══════════════════════════════════════════════════════════════
+3. VERIFICAR ENDPOINT DA API QUE RETORNA MÉTRICAS PING
+═══════════════════════════════════════════════════════════════
+
+curl -s http://localhost:8000/api/v1/servers/4 | jq '.sensors[] | select(.sensor_type == "ping")'
+
+Deve retornar algo como:
+{
+  "id": 41,
+  "name": "PING",
+  "sensor_type": "ping",
+  "latest_value": 0.049,
+  "latest_status": "ok",
+  "latest_timestamp": "2026-03-11T17:41:47..."
+}
+
+Se latest_value for null ou 0, o problema está na API.
+
+═══════════════════════════════════════════════════════════════
+4. VERIFICAR LOGS DA API
+═══════════════════════════════════════════════════════════════
+
+docker logs coruja-api --tail 50 | grep -E "(ERROR|Exception|ping)"
+
+═══════════════════════════════════════════════════════════════
+5. REINICIAR API E FRONTEND
+═══════════════════════════════════════════════════════════════
+
+docker-compose restart api frontend
+
+Aguarde 30 segundos...
+
+sleep 30
+
+═══════════════════════════════════════════════════════════════
+6. TESTAR NOVAMENTE NO FRONTEND
+═══════════════════════════════════════════════════════════════
+
+Abra: http://192.168.31.161:3000
+Pressione Ctrl+F5
+Vá em: Servidores
+
+Valores esperados:
+- SRVCMONITOR001: ~0.05ms (não mais 0ms)
+- SRVSONDA001: ~18-20ms
+- SEM sensores "unknown"
+
+═══════════════════════════════════════════════════════════════
+ANÁLISE:
+═══════════════════════════════════════════════════════════════
+
+Se ainda mostrar 0ms após reiniciar:
+  → Problema na query da API buscando métricas
+  → Verificar api/routers/servers.py
+
+Se sensores unknown voltarem:
+  → Probe está criando sensores sem tipo
+  → Verificar probe/probe_core.py
+
+═══════════════════════════════════════════════════════════════

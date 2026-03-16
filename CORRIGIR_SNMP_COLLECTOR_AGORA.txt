@@ -1,0 +1,62 @@
+════════════════════════════════════════════════════════════════
+CORRIGIR SNMP COLLECTOR - COPIAR ARQUIVO
+════════════════════════════════════════════════════════════════
+
+PROBLEMA: Probe coleta 0 métricas SNMP
+CAUSA: Falta conversão de dados SNMP brutos para métricas
+SOLUÇÃO: Atualizar probe_core.py
+
+════════════════════════════════════════════════════════════════
+PASSO 1: No notebook (DESKTOP-P9VGN04)
+════════════════════════════════════════════════════════════════
+
+Abrir Git Bash e executar:
+
+cd "C:/Users/andre.quirino/Coruja Monitor"
+git pull origin master
+
+════════════════════════════════════════════════════════════════
+PASSO 2: Copiar arquivo atualizado para produção
+════════════════════════════════════════════════════════════════
+
+Copiar manualmente:
+
+ORIGEM: C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py
+DESTINO: C:\Program Files\CorujaMonitor\Probe\probe_core.py
+
+════════════════════════════════════════════════════════════════
+PASSO 3: Reiniciar probe na máquina SRVSONDA001
+════════════════════════════════════════════════════════════════
+
+Na máquina SRVSONDA001, parar a probe (Ctrl+C na janela)
+
+Depois iniciar novamente:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python probe_core.py
+
+════════════════════════════════════════════════════════════════
+PASSO 4: Verificar logs
+════════════════════════════════════════════════════════════════
+
+Deve mostrar:
+
+INFO:__main__:Collecting SNMP metrics from 192.168.31.161 (v2c)
+INFO:__main__:Collected X SNMP metrics from 192.168.31.161
+
+(X deve ser maior que 0)
+
+════════════════════════════════════════════════════════════════
+PASSO 5: Aguardar 60 segundos e verificar dashboard
+════════════════════════════════════════════════════════════════
+
+1. Abrir: http://192.168.31.161:3000
+2. Ir em "Servidores"
+3. Clicar em SRVCMONITOR001
+4. Sensores devem aparecer:
+   ✓ CPU
+   ✓ Memória
+   ✓ Disco
+   ✓ Uptime
+
+════════════════════════════════════════════════════════════════

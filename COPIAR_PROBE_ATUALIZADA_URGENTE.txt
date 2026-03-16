@@ -1,0 +1,58 @@
+============================================================
+URGENTE: COPIAR PROBE ATUALIZADA PARA PASTA DE INSTALAÇÃO
+============================================================
+
+PROBLEMA IDENTIFICADO:
+----------------------
+A probe está rodando do Desktop, mas pode estar usando
+arquivos antigos da pasta de instalação!
+
+SOLUÇÃO:
+--------
+Copiar TODOS os arquivos atualizados para a pasta correta
+
+EXECUTAR AGORA NA SRVSONDA001 (.162):
+--------------------------------------
+
+PowerShell (como Administrador):
+
+# 1. Parar a probe (Ctrl+C na janela)
+
+# 2. Copiar arquivos atualizados
+cd C:\Users\Steve.Jobs\Desktop\coruja-monitor
+
+# Copiar probe_core.py
+copy probe\probe_core.py "C:\Program Files\CorujaMonitor\Probe\" -Force
+
+# Copiar wmi_remote_collector.py
+copy probe\collectors\wmi_remote_collector.py "C:\Program Files\CorujaMonitor\Probe\collectors\" -Force
+
+# Copiar config.py
+copy probe\config.py "C:\Program Files\CorujaMonitor\Probe\" -Force
+
+# 3. Verificar se copiou
+dir "C:\Program Files\CorujaMonitor\Probe\probe_core.py"
+dir "C:\Program Files\CorujaMonitor\Probe\collectors\wmi_remote_collector.py"
+
+# 4. Reiniciar probe
+cd C:\Users\Steve.Jobs\Desktop
+.\iniciar_probe.bat
+
+ALTERNATIVA (se não funcionar):
+--------------------------------
+Rodar a probe direto da pasta atualizada:
+
+cd C:\Users\Steve.Jobs\Desktop\coruja-monitor\probe
+python probe_core.py
+
+LOGS ESPERADOS:
+---------------
+✅ SUCESSO:
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010.ad.techbiz.com.br
+
+❌ ERRO (não deve mais aparecer):
+WARNING:collectors.wmi_remote_collector:⚠️ Auth Kerberos falhou em 192.168.31.110
+
+============================================================
+EXECUTAR AGORA: Copiar arquivos e reiniciar
+============================================================

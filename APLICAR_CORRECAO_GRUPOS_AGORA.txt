@@ -1,0 +1,65 @@
+═══════════════════════════════════════════════════════════════
+  ✅ APLICAR CORREÇÃO DE GRUPOS - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════
+
+O código já foi baixado do Git com sucesso!
+Agora precisa reiniciar o container do frontend.
+
+COPIE E COLE NO LINUX (PUTTY):
+
+cd /home/administrador/CorujaMonitor
+docker-compose restart frontend
+
+# AGUARDAR 10-15 SEGUNDOS para o frontend reiniciar
+
+# VERIFICAR SE ESTÁ RODANDO:
+docker ps | grep frontend
+
+═══════════════════════════════════════════════════════════════
+  LIMPAR CACHE DO NAVEGADOR
+═══════════════════════════════════════════════════════════════
+
+NO NAVEGADOR:
+
+1. Pressionar: CTRL + SHIFT + DELETE
+2. Selecionar: "Imagens e arquivos em cache"
+3. Clicar em "Limpar dados"
+4. Fechar e reabrir o navegador
+
+OU SIMPLESMENTE:
+
+1. Pressionar: CTRL + F5 (recarregar forçado)
+2. Fazer login novamente
+
+═══════════════════════════════════════════════════════════════
+  TESTAR A CORREÇÃO
+═══════════════════════════════════════════════════════════════
+
+1. Acessar: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Menu "Servidores"
+4. Clicar no botão "✏️" ao lado de um servidor
+5. VERIFICAR: Campo "Grupo / Empresa" agora é um DROPDOWN
+6. VERIFICAR: Dropdown mostra grupos existentes
+7. Selecionar um grupo e salvar
+8. Verificar se servidor foi movido para o grupo
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS EXECUTADOS COM SUCESSO
+═══════════════════════════════════════════════════════════════
+
+✓ git pull origin master - SUCESSO
+  - Arquivo atualizado: frontend/src/components/Servers.js
+  - 57 linhas adicionadas, 6 removidas
+
+✗ docker-compose restart coruja-frontend - ERRO
+  - Motivo: Nome do serviço incorreto
+  - Nome correto: "frontend" (não "coruja-frontend")
+
+═══════════════════════════════════════════════════════════════
+  PRÓXIMO COMANDO
+═══════════════════════════════════════════════════════════════
+
+docker-compose restart frontend
+
+═══════════════════════════════════════════════════════════════

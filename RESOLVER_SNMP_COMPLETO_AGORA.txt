@@ -1,0 +1,113 @@
+════════════════════════════════════════════════════════════════
+RESOLVER SNMP COMPLETO - PASSO A PASSO
+════════════════════════════════════════════════════════════════
+
+SITUAÇÃO ATUAL:
+✓ pysnmp instalado na SRVSONDA001
+✓ Código SNMP corrigido (pysnmp 7.x)
+✓ SNMP funcionando no Linux (localhost OK)
+✗ SNMP não responde da máquina sonda (0 OIDs)
+
+CAUSA PROVÁVEL: Firewall bloqueando porta 161 UDP
+
+════════════════════════════════════════════════════════════════
+SOLUÇÃO RÁPIDA (COPIAR E COLAR)
+════════════════════════════════════════════════════════════════
+
+NO SERVIDOR LINUX (SRVCMONITOR001):
+
+sudo ufw allow from 192.168.31.0/24 to any port 161 proto udp
+sudo ufw reload
+sudo ufw status
+
+════════════════════════════════════════════════════════════════
+TESTAR NA MÁQUINA SONDA (SRVSONDA001)
+════════════════════════════════════════════════════════════════
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python TESTAR_SNMP_DETALHADO.py
+
+RESULTADO ESPERADO:
+✓ SNMP funcionando!
+✓ Total OIDs: 8 (ou mais)
+✓ sysDescr: Linux srvcmonitor001...
+✓ ssCpuIdle: (valor)
+✓ memTotalReal: (valor)
+
+════════════════════════════════════════════════════════════════
+SE AINDA NÃO FUNCIONAR: DIAGNÓSTICO COMPLETO
+════════════════════════════════════════════════════════════════
+
+OPÇÃO 1: Desabilitar firewall temporariamente (TESTE)
+
+NO LINUX:
+sudo ufw disable
+
+TESTAR:
+python TESTAR_SNMP_DETALHADO.py
+
+Se funcionar:
+- Problema confirmado = firewall
+- Reabilitar: sudo ufw enable
+- Adicionar regra correta
+
+OPÇÃO 2: Verificar configuração SNMP
+
+NO LINUX:
+sudo vim /etc/snmp/snmpd.conf
+
+Verificar linha:
+agentaddress udp:161
+
+Deve ser 0.0.0.0:161 (todas as interfaces)
+NÃO deve ser 127.0.0.1:161 (apenas localhost)
+
+Reiniciar:
+sudo systemctl restart snmpd
+
+OPÇÃO 3: Verificar firewall Windows
+
+NA SRVSONDA001 (PowerShell como Admin):
+Get-NetFirewallRule | Where-Object {$_.DisplayName -like "*SNMP*"}
+
+Criar regra se necessário:
+New-NetFirewallRule -DisplayName "SNMP Client Out" -Direction Outbound -Protocol UDP -RemotePort 161 -Action Allow
+
+════════════════════════════════════════════════════════════════
+APÓS RESOLVER: REINICIAR PROBE
+════════════════════════════════════════════════════════════════
+
+1. Parar probe (Ctrl+C)
+
+2. Iniciar novamente:
+cd "C:\Program Files\CorujaMonitor\Probe"
+iniciar_probe.bat
+
+3. Verificar logs (deve mostrar):
+INFO:__main__:Collected X SNMP metrics from 192.168.31.161
+(X > 0, não mais 0)
+
+4. Aguardar 60 segundos
+
+5. Verificar dashboard:
+http://192.168.31.161:3000
+→ Servidores
+→ SRVCMONITOR001
+
+Sensores devem aparecer:
+✓ PING
+✓ CPU
+✓ Memória
+✓ Disco
+✓ Uptime
+
+════════════════════════════════════════════════════════════════
+RESUMO DOS ARQUIVOS CRIADOS
+════════════════════════════════════════════════════════════════
+
+1. TESTAR_SNMP_DETALHADO.py - Teste completo com diagnóstico
+2. LIBERAR_FIREWALL_SNMP_LINUX.txt - Comandos firewall Linux
+3. DIAGNOSTICAR_SNMP_LINUX_AGORA.txt - Diagnóstico completo
+4. Este arquivo - Solução passo a passo
+
+════════════════════════════════════════════════════════════════

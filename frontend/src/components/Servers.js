@@ -1015,6 +1015,24 @@ function Servers({ selectedServerId, selectedSensorId }) {
       return;
     }
 
+    // VALIDAÇÃO: Hostname não pode ser um IP (requisito para Kerberos)
+    const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
+    if (ipPattern.test(newServer.hostname)) {
+      alert('❌ ERRO: Hostname não pode ser um endereço IP!\n\n' +
+            '⚠️ Para autenticação Kerberos funcionar, você DEVE usar:\n' +
+            '✅ Hostname completo (FQDN): SRVHVSPRD010.ad.techbiz.com.br\n' +
+            '✅ Hostname curto: SRVHVSPRD010\n\n' +
+            '❌ NÃO use IP no campo Hostname: ' + newServer.hostname + '\n\n' +
+            'O IP deve ser preenchido no campo "Endereço IP" separadamente.');
+      return;
+    }
+
+    // Validação adicional: hostname deve ter pelo menos 3 caracteres
+    if (newServer.hostname.length < 3) {
+      alert('❌ Hostname muito curto. Use o nome completo do servidor (ex: SRVHVSPRD010)');
+      return;
+    }
+
     try {
       await api.post('/servers/', {
         probe_id: parseInt(newServer.probe_id),

@@ -1,0 +1,80 @@
+================================================================================
+⚠️ URGENTE: ARQUIVO probe_core.py NA SRVSONDA001 ESTÁ DESATUALIZADO
+================================================================================
+
+EVIDÊNCIA:
+Logs mostram: "Collected 4 SNMP metrics" mas NÃO mostram "Collecting PING metric"
+Isso confirma que o arquivo ainda está na versão ANTIGA (sem correção PING)
+
+================================================================================
+COPIAR ARQUIVO AGORA - MÉTODO SIMPLES
+================================================================================
+
+OPÇÃO 1: COPIAR MANUALMENTE VIA WINDOWS EXPLORER
+-------------------------------------------------
+1. No NOTEBOOK, abrir: C:\Users\andre.quirino\Coruja Monitor\probe
+2. Clicar com botão direito em "probe_core.py" → Copiar
+3. Conectar na SRVSONDA001 via Área de Trabalho Remota
+4. Navegar até: C:\Program Files\CorujaMonitor\Probe
+5. Colar arquivo (substituir o existente)
+6. Pular para "REINICIAR SERVIÇO" abaixo
+
+OPÇÃO 2: COPIAR VIA POWERSHELL (se tiver acesso remoto)
+--------------------------------------------------------
+No NOTEBOOK, abrir PowerShell como Administrador:
+
+# Copiar arquivo
+Copy-Item "C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py" "\\SRVSONDA001\C$\Program Files\CorujaMonitor\Probe\probe_core.py" -Force
+
+================================================================================
+REINICIAR SERVIÇO NA SRVSONDA001
+================================================================================
+
+Abrir PowerShell como Administrador NA SRVSONDA001:
+
+# Parar serviço
+Stop-Service -Name "CorujaProbe" -Force
+
+# Verificar data do arquivo (DEVE ser de AGORA)
+Get-Item "C:\Program Files\CorujaMonitor\Probe\probe_core.py" | Select-Object LastWriteTime, Length
+
+# Iniciar serviço
+Start-Service -Name "CorujaProbe"
+
+# Aguardar 60 segundos
+Start-Sleep -Seconds 60
+
+# Ver logs (DEVE aparecer "Collecting PING metric")
+Get-Service CorujaProbe | Select-Object Status
+python "C:\Program Files\CorujaMonitor\Probe\probe_core.py"
+
+================================================================================
+LOGS CORRETOS (o que DEVE aparecer):
+================================================================================
+
+INFO:__main__:Collecting SNMP metrics from 192.168.31.161 (v2c)
+INFO:__main__:Parsed 4 metrics from SNMP data
+INFO:__main__:Collected 4 SNMP metrics from 192.168.31.161
+DEBUG:__main__:Collecting PING metric for SNMP server 192.168.31.161  ← NOVO!
+DEBUG:__main__:PING 192.168.31.161: OK (1ms)  ← NOVO!
+
+Se NÃO aparecer essas linhas, o arquivo NÃO foi copiado corretamente!
+
+================================================================================
+VALIDAR NO LINUX (após 2 minutos)
+================================================================================
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT s.id, srv.hostname, COUNT(m.id) as metrics, MAX(m.timestamp) as last_time
+FROM sensors s
+LEFT JOIN servers srv ON s.server_id = srv.id
+LEFT JOIN metrics m ON m.sensor_id = s.id
+WHERE s.sensor_type = 'ping'
+GROUP BY s.id, srv.hostname
+ORDER BY s.id;
+"
+
+RESULTADO ESPERADO:
+- ID 23 (SRVCMONITOR001): DEVE TER MÉTRICAS NOVAS!
+
+================================================================================

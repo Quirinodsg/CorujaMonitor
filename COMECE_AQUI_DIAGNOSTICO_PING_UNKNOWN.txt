@@ -1,0 +1,46 @@
+═══════════════════════════════════════════════════════════════
+  🎯 COMECE AQUI: Diagnóstico PING 0ms + 6 Sensores Unknown
+  📅 11 MARÇO 2026
+═══════════════════════════════════════════════════════════════
+
+## 🔴 PROBLEMAS
+
+1. PING mostra 0ms (não atualiza)
+2. 6 sensores "desconhecidos" no frontend
+
+═══════════════════════════════════════════════════════════════
+  🚀 EXECUTAR NO LINUX (SSH)
+═══════════════════════════════════════════════════════════════
+
+ssh administrador@192.168.31.161
+
+# Copiar e colar TODO o bloco abaixo:
+
+cd /home/administrador/CorujaMonitor
+
+echo "1. LOGS WORKER (PING):"
+docker logs coruja-worker --tail 50 | grep -i ping
+echo ""
+
+echo "2. TESTAR PING NO CONTAINER:"
+docker exec coruja-worker ping -c 1 -W 2 192.168.31.161
+echo ""
+
+echo "3. SENSORES NO BANCO:"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, s.id, s.name, s.sensor_type FROM servers srv JOIN sensors s ON s.server_id = srv.id ORDER BY srv.hostname, s.sensor_type;"
+echo ""
+
+echo "4. MÉTRICAS PING (últimas 5):"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, m.value, m.timestamp FROM metrics m JOIN sensors s ON s.id = m.sensor_id JOIN servers srv ON srv.id = s.server_id WHERE s.sensor_type = 'ping' ORDER BY m.timestamp DESC LIMIT 5;"
+echo ""
+
+echo "5. SENSORES UNKNOWN:"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT COUNT(*) FROM sensors WHERE sensor_type = 'unknown' OR name LIKE '%unknown%';"
+
+═══════════════════════════════════════════════════════════════
+  📋 COPIAR RESULTADOS E ENVIAR
+═══════════════════════════════════════════════════════════════
+
+Após executar, copiar TODA a saída e enviar para análise.
+
+═══════════════════════════════════════════════════════════════

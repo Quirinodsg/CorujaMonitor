@@ -1,0 +1,129 @@
+═══════════════════════════════════════════════════════════════
+  ✅ CORREÇÃO DE GRUPOS JÁ ESTÁ NO GIT
+═══════════════════════════════════════════════════════════════
+
+COMMIT: 3892fd2 - "Corrigir movimentação de servidores entre grupos - adicionar dropdown"
+STATUS: ✅ JÁ ENVIADO PARA GIT (origin/master)
+
+═══════════════════════════════════════════════════════════════
+  VERIFICAR SE SERVIDOR LINUX ESTÁ ATUALIZADO
+═══════════════════════════════════════════════════════════════
+
+NO PUTTY (LINUX - 192.168.31.161):
+
+cd /home/administrador/CorujaMonitor
+
+# Verificar commit atual
+git log --oneline -1
+
+# Se NÃO mostrar "3892fd2", atualizar:
+git pull origin master
+
+# Reiniciar frontend
+docker-compose restart frontend
+
+# Aguardar 15 segundos
+sleep 15
+
+# Verificar se está rodando
+docker ps | grep frontend
+
+═══════════════════════════════════════════════════════════════
+  TESTAR NO NAVEGADOR
+═══════════════════════════════════════════════════════════════
+
+1. LIMPAR CACHE DO NAVEGADOR (IMPORTANTE!)
+   CTRL + SHIFT + DELETE
+   Marcar: "Imagens e arquivos em cache"
+   Período: "Todo o período"
+   Clicar em "Limpar dados"
+
+2. FECHAR E REABRIR O NAVEGADOR COMPLETAMENTE
+
+3. ACESSAR DASHBOARD
+   http://192.168.31.161:3000
+   Login: admin@coruja.com / admin123
+
+4. TESTAR EDIÇÃO DE SERVIDOR
+   - Menu "Servidores"
+   - Clicar no botão "✏️" ao lado de qualquer servidor
+   - Campo "Grupo / Empresa" deve ser DROPDOWN
+   - Deve listar grupos existentes (ex: techbiz)
+   - Selecionar grupo e salvar
+
+5. TESTAR CRIAÇÃO DE SERVIDOR
+   - Menu "Servidores" → "+ Adicionar Servidor"
+   - Preencher dados básicos
+   - Campo "Grupo / Empresa" deve ser DROPDOWN
+   - Selecionar grupo existente OU criar novo
+   - Salvar
+
+═══════════════════════════════════════════════════════════════
+  O QUE FOI CORRIGIDO (COMMIT 3892fd2)
+═══════════════════════════════════════════════════════════════
+
+ARQUIVO: frontend/src/components/Servers.js
+
+✅ Modal de CRIAÇÃO (linha ~1965):
+   - Campo "Grupo / Empresa" agora é DROPDOWN
+   - Lista todos os grupos existentes
+   - Opção "Sem grupo"
+   - Campo adicional para criar novo grupo
+
+✅ Modal de EDIÇÃO (linha ~2113):
+   - Campo "Grupo / Empresa" agora é DROPDOWN
+   - Lista grupos existentes
+   - Opção "Sem grupo"
+   - Campo para criar novo grupo
+
+✅ Estado newServer (linha ~140):
+   - Já tem group_name: ''
+
+✅ Função handleAddServer (linha ~1021):
+   - Já envia group_name para API
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS RESUMIDOS
+═══════════════════════════════════════════════════════════════
+
+# NO LINUX (PUTTY):
+cd /home/administrador/CorujaMonitor
+git log --oneline -1
+git pull origin master
+docker-compose restart frontend
+sleep 15
+docker ps | grep frontend
+
+═══════════════════════════════════════════════════════════════
+  IMPORTANTE
+═══════════════════════════════════════════════════════════════
+
+✓ Código JÁ ESTÁ correto no Git
+✓ Apenas precisa atualizar servidor Linux
+✓ LIMPAR CACHE do navegador é OBRIGATÓRIO
+✓ Fechar e reabrir navegador completamente
+
+═══════════════════════════════════════════════════════════════
+  SE O DROPDOWN NÃO APARECER
+═══════════════════════════════════════════════════════════════
+
+1. Verificar se frontend foi reiniciado:
+   docker ps | grep frontend
+   
+2. Ver logs do frontend:
+   docker logs coruja-frontend --tail 50
+
+3. Limpar cache AGRESSIVAMENTE:
+   - CTRL + SHIFT + DELETE
+   - Marcar TUDO
+   - Período: "Todo o período"
+   - Limpar
+   - Fechar navegador
+   - Reabrir navegador
+
+4. Testar em modo anônimo:
+   CTRL + SHIFT + N (Chrome)
+   CTRL + SHIFT + P (Firefox)
+   Acessar: http://192.168.31.161:3000
+
+═══════════════════════════════════════════════════════════════

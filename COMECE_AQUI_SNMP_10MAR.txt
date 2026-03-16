@@ -1,0 +1,61 @@
+═══════════════════════════════════════════════════════════════════════
+COMECE AQUI - RESOLVER SNMP 10 MAR 2026 11:00
+═══════════════════════════════════════════════════════════════════════
+
+SITUAÇÃO:
+✅ SNMP funciona (scripts de teste OK)
+❌ Probe coleta 0 métricas
+🔍 CAUSA: Arquivo probe_core.py desatualizado na SRVSONDA001
+
+═══════════════════════════════════════════════════════════════════════
+EXECUTE ESTES COMANDOS NA SRVSONDA001:
+═══════════════════════════════════════════════════════════════════════
+
+1. Verificar versão atual:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python VERIFICAR_VERSAO_PROBE_CORE.py
+
+
+2. Se mostrar "VERSÃO ANTIGA", copiar arquivo atualizado:
+
+MÉTODO RÁPIDO (PowerShell como Admin):
+
+Copy-Item "C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py" "C:\Program Files\CorujaMonitor\Probe\probe_core.py" -Force
+
+
+3. Verificar novamente:
+
+python VERIFICAR_VERSAO_PROBE_CORE.py
+
+Deve mostrar: "✓✓✓ VERSÃO CORRETA INSTALADA!"
+
+
+4. Testar probe:
+
+python probe_core.py
+
+Aguarde aparecer "Collecting SNMP metrics from 192.168.31.161"
+
+
+5. Copiar e colar TODOS os logs desde "Collecting SNMP" até "Collected X"
+
+═══════════════════════════════════════════════════════════════════════
+
+LOGS ESPERADOS (devem aparecer TODOS):
+✓ About to call collect_snmp_v2c with host=...
+✓ Collector object: ...
+✓ collect_snmp_v2c returned successfully
+✓ Result type: ...
+✓ SNMP result status: ...
+
+Se estes logs NÃO aparecerem, o arquivo ainda está desatualizado.
+
+═══════════════════════════════════════════════════════════════════════
+
+ARQUIVOS DE REFERÊNCIA:
+- COPIAR_PROBE_CORE_ATUALIZADO.txt (instruções detalhadas)
+- DIAGNOSTICO_FINAL_SNMP_10MAR.md (análise completa)
+- VERIFICAR_VERSAO_PROBE_CORE.py (script de verificação)
+
+═══════════════════════════════════════════════════════════════════════

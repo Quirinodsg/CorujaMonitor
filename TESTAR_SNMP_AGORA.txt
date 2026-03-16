@@ -1,0 +1,66 @@
+════════════════════════════════════════════════════════════════
+TESTAR SNMP - COPIAR E COLAR
+════════════════════════════════════════════════════════════════
+
+PASSO 1: Verificar se SNMP está rodando
+════════════════════════════════════════════════════════════════
+
+sudo systemctl status snmpd
+
+Deve mostrar "active (running)" em verde
+
+════════════════════════════════════════════════════════════════
+PASSO 2: Testar SNMP localmente
+════════════════════════════════════════════════════════════════
+
+snmpwalk -v2c -c public localhost system
+
+Deve mostrar várias linhas com informações do sistema
+
+════════════════════════════════════════════════════════════════
+PASSO 3: Testar SNMP via IP
+════════════════════════════════════════════════════════════════
+
+snmpwalk -v2c -c public 192.168.31.161 system
+
+Deve mostrar as mesmas informações
+
+════════════════════════════════════════════════════════════════
+SE DER ERRO "Timeout: No Response"
+════════════════════════════════════════════════════════════════
+
+Verificar firewall:
+
+sudo ufw status
+
+Se estiver ativo, liberar porta 161:
+
+sudo ufw allow 161/udp
+
+════════════════════════════════════════════════════════════════
+PRÓXIMO PASSO: Adicionar servidor no dashboard
+════════════════════════════════════════════════════════════════
+
+1. Abrir: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em "Servidores"
+4. Clicar "+ Adicionar Servidor"
+5. Preencher:
+
+   Probe: Datacenter
+   Hostname: SRVCMONITOR001
+   IP: 192.168.31.161
+   Tipo: Server
+   Protocolo: SNMP
+   Versão SNMP: v2c
+   Community: public
+   Porta: 161
+   Ambiente: Production
+
+6. Clicar "Adicionar"
+7. Aguardar 60 segundos
+8. Recarregar página (F5)
+9. Clicar no servidor SRVCMONITOR001
+10. Sensores devem aparecer
+
+════════════════════════════════════════════════════════════════

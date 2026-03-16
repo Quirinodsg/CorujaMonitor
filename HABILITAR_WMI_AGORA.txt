@@ -1,0 +1,189 @@
+═══════════════════════════════════════════════════════════════
+🚀 HABILITAR WMI - SRVHVSPRD010 (AGORA!)
+═══════════════════════════════════════════════════════════════
+
+OBJETIVO:
+Configurar credenciais WMI no banco de dados para que a probe
+possa coletar métricas do servidor 192.168.31.110
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 1: EXECUTAR SCRIPT NO LINUX
+═══════════════════════════════════════════════════════════════
+
+Conecte via SSH no SRVCMONITOR001 (192.168.31.161):
+
+ssh administrador@192.168.31.161
+
+Execute o script:
+
+cd /home/administrador/CorujaMonitor/api
+python3 habilitar_wmi_srvhvsprd010.py
+
+O script vai pedir:
+1. Usuário WMI: Administrator (ou pressione Enter)
+2. Senha WMI: [digite a senha usada no teste PowerShell]
+3. Domínio WMI: [deixe vazio e pressione Enter]
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 2: AGUARDAR COLETA (1-2 MINUTOS)
+═══════════════════════════════════════════════════════════════
+
+A probe coleta métricas a cada 60 segundos.
+Aguarde 1-2 minutos para a próxima coleta.
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 3: VERIFICAR LOGS DA PROBE
+═══════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, abra o arquivo de log:
+
+C:\Program Files\CorujaMonitor\Probe\logs\probe.log
+
+Procure por:
+✅ INFO:__main__:Using WMI for srvhvsprd010
+✅ INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+Se aparecer erro:
+❌ WMI collection failed for srvhvsprd010: [erro]
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 4: VERIFICAR FRONTEND
+═══════════════════════════════════════════════════════════════
+
+Abra o navegador:
+http://192.168.31.161:3000
+
+Login:
+- Email: admin@coruja.com
+- Senha: admin123
+
+Vá em: Servidores
+
+Procure: SRVHVSPRD010
+
+Deve mostrar:
+- CPU: ~2% (ou valor atual)
+- Memória: ~70% (358 GB usado)
+- Disco C:: ~45% (201 GB usado)
+
+═══════════════════════════════════════════════════════════════
+🔍 DIAGNÓSTICO: SE NÃO FUNCIONAR
+═══════════════════════════════════════════════════════════════
+
+1. VERIFICAR CONFIGURAÇÃO NO BANCO
+   ---------------------------------
+   No Linux:
+   
+   docker exec -it coruja_monitor-postgres-1 psql -U coruja -d coruja_monitor -c "
+   SELECT 
+     hostname, 
+     ip_address, 
+     monitoring_protocol, 
+     wmi_enabled, 
+     wmi_username,
+     CASE WHEN wmi_password_encrypted IS NOT NULL THEN 'SIM' ELSE 'NÃO' END as tem_senha
+   FROM servers 
+   WHERE hostname ILIKE '%srvhvsprd010%';
+   "
+   
+   Deve mostrar:
+   - monitoring_protocol: wmi
+   - wmi_enabled: t (true)
+   - wmi_username: Administrator
+   - tem_senha: SIM
+
+2. VERIFICAR LOGS DA PROBE (DETALHADO)
+   ------------------------------------
+   Na SRVSONDA001:
+   
+   # Ver últimas 50 linhas
+   Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\probe.log" -Tail 50
+   
+   # Filtrar por srvhvsprd010
+   Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\probe.log" | 
+     Select-String "srvhvsprd010"
+
+3. TESTAR WMI MANUALMENTE (NOVAMENTE)
+   -----------------------------------
+   Na SRVSONDA001:
+   
+   cd "C:\Program Files\CorujaMonitor\Probe"
+   .\testar_wmi_192.168.31.110.ps1
+   
+   Se funcionar no PowerShell mas não na probe:
+   - Verificar credenciais no banco
+   - Verificar se probe está usando credenciais corretas
+
+4. VERIFICAR SE PROBE ESTÁ RODANDO
+   --------------------------------
+   Na SRVSONDA001:
+   
+   Get-Service "CorujaProbe"
+   
+   Deve estar: Running
+   
+   Se não estiver:
+   Start-Service "CorujaProbe"
+
+═══════════════════════════════════════════════════════════════
+⚠️ PROBLEMAS COMUNS
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA 1: "WMI credentials not configured"
+SOLUÇÃO: Verificar se script foi executado corretamente
+
+PROBLEMA 2: "Access is denied"
+SOLUÇÃO: Verificar se senha está correta no banco
+
+PROBLEMA 3: "The WinRM client cannot process the request"
+SOLUÇÃO: Verificar TrustedHosts na SRVSONDA001
+
+PROBLEMA 4: "RPC server is unavailable"
+SOLUÇÃO: Verificar se serviço WinRM está rodando no 192.168.31.110
+
+═══════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════
+
+APÓS 1-2 MINUTOS:
+
+1. LOGS DA PROBE:
+   INFO:__main__:Using WMI for srvhvsprd010
+   INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+2. FRONTEND:
+   - Servidor SRVHVSPRD010 mostrando métricas
+   - CPU, Memória, Disco com valores reais
+   - Gráficos atualizando
+
+3. BANCO DE DADOS:
+   - Sensores criados automaticamente
+   - Métricas sendo salvas a cada 60 segundos
+
+═══════════════════════════════════════════════════════════════
+📝 CREDENCIAIS USADAS
+═══════════════════════════════════════════════════════════════
+
+Servidor: 192.168.31.110 (SRVHVSPRD010)
+Usuário: Administrator
+Senha: [a mesma usada no teste PowerShell]
+Domínio: [vazio - workgroup]
+
+IMPORTANTE:
+- Senha está em TEXTO PLANO no banco (temporário)
+- Funciona, mas não é seguro
+- Implementaremos criptografia depois
+
+═══════════════════════════════════════════════════════════════
+🎯 COMECE AGORA!
+═══════════════════════════════════════════════════════════════
+
+1. SSH no Linux: ssh administrador@192.168.31.161
+2. Executar: cd /home/administrador/CorujaMonitor/api
+3. Executar: python3 habilitar_wmi_srvhvsprd010.py
+4. Aguardar 1-2 minutos
+5. Verificar logs e frontend
+
+Boa sorte! 🚀
+
+═══════════════════════════════════════════════════════════════

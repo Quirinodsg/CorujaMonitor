@@ -19,7 +19,7 @@
 ### 3. Servidor Linux (192.168.31.161)
 - **Sistema:** Linux
 - **Função:** API, Frontend, Worker, Banco de Dados
-- **Git:** Repositório em `/root/coruja-monitor`
+- **Git:** Repositório em `/home/administrador/CorujaMonitor`
 - **Acesso:** SSH
 
 ## Fluxo de Trabalho Padrão
@@ -94,7 +94,7 @@ cd C:\Users\Steve.Jobs\Desktop
 **No Linux (.161):**
 ```bash
 # Pull (para manter sincronizado)
-cd /root/coruja-monitor
+cd /home/administrador/CorujaMonitor
 git pull
 ```
 
@@ -112,7 +112,7 @@ git push
 **No Linux (.161):**
 ```bash
 # Pull e reiniciar
-cd /root/coruja-monitor
+cd /home/administrador/CorujaMonitor
 git pull
 
 # Reiniciar API
@@ -136,7 +136,7 @@ git push
 **No Linux (.161):**
 ```bash
 # Pull e rebuild
-cd /root/coruja-monitor
+cd /home/administrador/CorujaMonitor
 git pull
 
 # Rebuild frontend
@@ -157,7 +157,7 @@ git push
 **No Linux (.161):**
 ```bash
 # Pull e reiniciar
-cd /root/coruja-monitor
+cd /home/administrador/CorujaMonitor
 git pull
 
 # Reiniciar worker
@@ -176,7 +176,7 @@ git add . ; git commit -m "descrição" ; git push
 ### Pull e Restart Rápido (Linux)
 ```bash
 # Pull e reiniciar tudo
-cd /root/coruja-monitor && git pull && docker-compose restart
+cd /home/administrador/CorujaMonitor && git pull && docker-compose restart
 ```
 
 ### Verificar Status Git
@@ -230,8 +230,8 @@ C:\Program Files\CorujaMonitor\
 
 ### Linux
 ```
-/root/
-└── coruja-monitor\          (repositório Git)
+/home/administrador/
+└── CorujaMonitor\          (repositório Git)
     ├── api\                 (roda no Docker)
     ├── frontend\            (roda no Docker)
     ├── worker\              (roda no Docker)
@@ -250,7 +250,7 @@ git status
 
 ```bash
 # Linux
-cd /root/coruja-monitor
+cd /home/administrador/CorujaMonitor
 git pull
 git status
 ```

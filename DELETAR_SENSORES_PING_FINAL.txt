@@ -1,0 +1,81 @@
+═══════════════════════════════════════════════════════════════
+  DELETAR SENSORES PING DUPLICADOS - COMANDO FINAL
+═══════════════════════════════════════════════════════════════
+
+✅ Métricas deletadas (1904 métricas antigas)
+❌ ERRO: Sensor 23 tem incidentes vinculados
+❌ Sensor 15 ainda existe (0 métricas)
+
+📋 SOLUÇÃO: Deletar incidentes primeiro, depois sensores
+
+═══════════════════════════════════════════════════════════════
+  COMANDO 1: VER INCIDENTES DOS SENSORES ANTIGOS
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, sensor_id, status, severity, created_at FROM incidents WHERE sensor_id IN (15, 23) ORDER BY created_at DESC LIMIT 10;"
+
+═══════════════════════════════════════════════════════════════
+  COMANDO 2: DELETAR INCIDENTES DOS SENSORES ANTIGOS
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM incidents WHERE sensor_id IN (15, 23);"
+
+═══════════════════════════════════════════════════════════════
+  COMANDO 3: DELETAR SENSORES ANTIGOS
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM sensors WHERE id IN (15, 23);"
+
+═══════════════════════════════════════════════════════════════
+  COMANDO 4: VERIFICAR RESULTADO FINAL
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.id, srv.hostname, COUNT(m.id) as metricas FROM sensors s JOIN servers srv ON s.server_id = srv.id LEFT JOIN metrics m ON m.sensor_id = s.id WHERE s.sensor_type = 'ping' GROUP BY s.id, srv.hostname ORDER BY srv.hostname;"
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS RÁPIDOS (COPIAR TUDO)
+═══════════════════════════════════════════════════════════════
+
+# Ver incidentes
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, sensor_id, status FROM incidents WHERE sensor_id IN (15, 23);"
+
+# Deletar incidentes
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM incidents WHERE sensor_id IN (15, 23);"
+
+# Deletar sensores
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM sensors WHERE id IN (15, 23);"
+
+# Verificar resultado (deve mostrar apenas 2 sensores)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.id, srv.hostname, COUNT(m.id) as metricas FROM sensors s JOIN servers srv ON s.server_id = srv.id LEFT JOIN metrics m ON m.sensor_id = s.id WHERE s.sensor_type = 'ping' GROUP BY s.id, srv.hostname;"
+
+═══════════════════════════════════════════════════════════════
+  RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════
+
+id |    hostname    | metricas
+----+----------------+----------
+34 | SRVSONDA001    |       22
+35 | SRVCMONITOR001 |       22
+
+✅ Apenas 2 sensores PING (IDs 34 e 35)
+✅ Ambos com métricas recentes
+✅ Sem duplicados
+
+═══════════════════════════════════════════════════════════════
+  VERIFICAR DASHBOARD APÓS DELETAR
+═══════════════════════════════════════════════════════════════
+
+1. Abrir http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em "Sensores"
+4. Clicar em "Ativos" - deve mostrar 2 sensores PING
+5. Verificar latência real (0.06ms e 0.55ms)
+6. Sem duplicados
+
+═══════════════════════════════════════════════════════════════
+  VER LATÊNCIAS ATUAIS
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, m.value as latencia_ms, m.status, m.timestamp FROM metrics m JOIN sensors s ON m.sensor_id = s.id JOIN servers srv ON s.server_id = srv.id WHERE s.sensor_type = 'ping' ORDER BY m.timestamp DESC LIMIT 10;"
+
+═══════════════════════════════════════════════════════════════

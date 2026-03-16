@@ -1,0 +1,52 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔧 HABILITAR WMI NO BANCO - PSQL DIRETO - 12/MAR 16:50
+═══════════════════════════════════════════════════════════════════════════════
+
+NO LINUX, executar:
+
+docker ps
+
+Procurar container do PostgreSQL (pode ser: postgres, db, coruja-postgres, etc.)
+
+DEPOIS:
+
+psql -h localhost -U coruja -d coruja
+
+OU (se pedir senha):
+
+PGPASSWORD=sua_senha psql -h localhost -U coruja -d coruja
+
+COPIAR E COLAR NO PSQL:
+
+UPDATE servers 
+SET 
+    wmi_enabled = true,
+    monitoring_protocol = 'wmi'
+WHERE hostname = 'srvhvsprd010' OR ip_address = '192.168.31.110';
+
+SELECT id, hostname, ip_address, wmi_enabled, monitoring_protocol 
+FROM servers 
+WHERE hostname = 'srvhvsprd010' OR ip_address = '192.168.31.110';
+
+\q
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════════
+
+UPDATE 1
+
+ id |   hostname    |  ip_address   | wmi_enabled | monitoring_protocol 
+----+---------------+---------------+-------------+---------------------
+  2 | srvhvsprd010  | 192.168.31.110|      t      | wmi
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 AGUARDAR 60 SEGUNDOS - PROBE VAI DETECTAR
+═══════════════════════════════════════════════════════════════════════════════
+
+LOGS ESPERADOS NA SONDA:
+   INFO:__main__:Using WMI for srvhvsprd010
+   INFO:__main__:🔐 Usando credencial: Techbiz
+   INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+═══════════════════════════════════════════════════════════════════════════════

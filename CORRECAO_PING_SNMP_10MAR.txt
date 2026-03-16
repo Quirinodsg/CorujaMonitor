@@ -1,0 +1,96 @@
+================================================================================
+CORREÇÃO: PING PARA SERVIDORES SNMP - 10 MAR 2026
+================================================================================
+
+PROBLEMA IDENTIFICADO:
+- Sensor PING do SRVCMONITOR001 (ID 23) tem 0 métricas
+- Sensor PING do SRVSONDA001 (ID 15) tem 1255 métricas
+- Método _collect_snmp_remote() só coletava PING em caso de erro (fallback)
+- Quando SNMP funcionava, PING nunca era coletado
+
+SOLUÇÃO IMPLEMENTADA:
+- Adicionada coleta de PING SEMPRE após coleta SNMP bem-sucedida
+- Arquivo modificado: probe/probe_core.py (linha ~325)
+- Agora TODOS os servidores SNMP terão métricas PING + SNMP
+
+EXECUTAR AGORA NO GIT BASH:
+================================================================================
+
+git commit -m "Corrigir coleta de PING para servidores SNMP"
+git push origin master
+
+================================================================================
+APLICAR NA SRVSONDA001 (PowerShell como Administrador):
+================================================================================
+
+# 1. Parar serviço
+Stop-Service -Name "CorujaProbe" -Force
+
+# 2. Fazer backup
+Copy-Item "C:\Program Files\CorujaMonitor\Probe\probe_core.py" "C:\Program Files\CorujaMonitor\Probe\probe_core.py.bak_10mar_12h"
+
+# 3. Baixar arquivo atualizado
+cd "C:\Program Files\CorujaMonitor\Probe"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/Quirinodsg/CorujaMonitor/master/probe/probe_core.py" -OutFile "probe_core.py"
+
+# 4. Verificar modificação (deve mostrar data/hora atual)
+Get-Item "probe_core.py" | Select-Object LastWriteTime
+
+# 5. Reiniciar serviço
+Start-Service -Name "CorujaProbe"
+
+# 6. Verificar logs (aguardar 60 segundos)
+Start-Sleep -Seconds 60
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\probe.log" -Tail 30
+
+================================================================================
+VALIDAR NO SERVIDOR LINUX:
+================================================================================
+
+# Conectar via PuTTY e executar:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+    s.id, 
+    s.server_id, 
+    s.name, 
+    srv.hostname,
+    COUNT(m.id) as total_metrics,
+    MAX(m.timestamp) as last_metric_time
+FROM sensors s
+LEFT JOIN servers srv ON s.server_id = srv.id
+LEFT JOIN metrics m ON m.sensor_id = s.id
+WHERE s.sensor_type = 'ping'
+GROUP BY s.id, s.server_id, s.name, srv.hostname
+ORDER BY s.id;
+"
+
+RESULTADO ESPERADO:
+- Sensor ID 15 (SRVSONDA001): continua com métricas
+- Sensor ID 23 (SRVCMONITOR001): DEVE TER MÉTRICAS NOVAS após 60 segundos
+
+================================================================================
+VERIFICAR NO FRONTEND:
+================================================================================
+
+1. Abrir: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em "Servidores"
+4. Verificar SRVCMONITOR001:
+   - Sensor PING deve sair de "Desconhecido"
+   - Deve mostrar latência (ex: "1ms")
+   - Status deve ser "OK" (verde)
+
+================================================================================
+LOGS ESPERADOS NA SRVSONDA001:
+================================================================================
+
+Você deve ver nos logs:
+
+[INFO] Collecting SNMP metrics from 192.168.31.161 (v2c)
+[INFO] Parsed 4 metrics from SNMP data
+[INFO] Collected 4 SNMP metrics from 192.168.31.161
+[DEBUG] Collecting PING metric for SNMP server 192.168.31.161  <-- NOVO!
+[DEBUG] PING 192.168.31.161: OK (1ms)  <-- NOVO!
+
+================================================================================

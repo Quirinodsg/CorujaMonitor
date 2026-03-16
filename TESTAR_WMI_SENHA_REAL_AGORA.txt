@@ -1,0 +1,97 @@
+========================================
+TESTAR WMI COM SENHA REAL
+========================================
+
+CREDENCIAIS:
+Usuário: Techbiz\coruja.monitor
+Senha: Dj8SXoXie!o6Tkc@
+Servidor: 192.168.31.110
+
+========================================
+PASSO 1: TESTAR CONEXÃO MANUAL
+========================================
+
+Na SRVSONDA001 (192.168.31.162), PowerShell como Admin:
+
+$password = ConvertTo-SecureString 'Dj8SXoXie!o6Tkc@' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -ScriptBlock { hostname }
+
+RESULTADO ESPERADO:
+SRVHVSPRD010
+
+========================================
+PASSO 2: ATUALIZAR CREDENCIAL NO BANCO
+========================================
+
+Dashboard: http://192.168.31.161:3000
+
+Menu → Credenciais → Editar "Techbiz" (ID: 2):
+- Nome: Techbiz Domain Admin
+- Tipo: WMI
+- Usuário: Techbiz\coruja.monitor
+- Senha: Dj8SXoXie!o6Tkc@
+- Domínio: Techbiz
+- Nível: Empresa (Tenant)
+- Empresa: Techbiz
+- Salvar
+
+========================================
+PASSO 3: COPIAR COLLECTOR ATUALIZADO
+========================================
+
+Via RDP na SRVSONDA001:
+
+1. Abrir probe/collectors/wmi_remote_collector.py no seu PC
+2. Copiar TODO o conteúdo (Ctrl+A, Ctrl+C)
+3. Na SRVSONDA001, abrir:
+   C:\Program Files\CorujaMonitor\Probe\collectors\wmi_remote_collector.py
+4. Selecionar tudo (Ctrl+A)
+5. Colar (Ctrl+V)
+6. Salvar (Ctrl+S)
+
+========================================
+PASSO 4: REINICIAR PROBE
+========================================
+
+Na SRVSONDA001:
+
+1. Parar probe (Ctrl+C)
+2. Iniciar:
+   cd C:\Users\Administrator\Desktop
+   .\iniciar_probe.bat
+
+========================================
+PASSO 5: VERIFICAR LOGS (1 minuto)
+========================================
+
+✅ SUCESSO esperado:
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Negotiate em 192.168.31.110
+INFO:__main__:Collected 7 WMI metrics from 192.168.31.110
+
+========================================
+PASSO 6: VERIFICAR DASHBOARD
+========================================
+
+http://192.168.31.161:3000
+
+Servidores → SRVHVSPRD010
+
+Sensores devem ter valores:
+- CPU Usage: ~X%
+- Memory Usage: ~X%
+- Disk C:: ~X%
+- Uptime: X days
+- Network In/Out: X Mbps
+
+========================================
+IMPORTANTE
+========================================
+
+Com Domain Admin, o collector deve funcionar com Negotiate (não precisa CredSSP).
+
+O collector tenta:
+1. Negotiate primeiro (funciona com Domain Admin)
+2. CredSSP como fallback (se Negotiate falhar)
+
+========================================

@@ -1,0 +1,69 @@
+════════════════════════════════════════════════════════════════
+PROBLEMA IDENTIFICADO: pysnmp 7.x TEM API DIFERENTE
+════════════════════════════════════════════════════════════════
+
+CAUSA: pysnmp versão 7.1.22 mudou completamente a API
+- Versão antiga (4.x): usava "from pysnmp.hlapi import *"
+- Versão nova (7.x): API diferente, precisa "import pysnmp.hlapi"
+
+SOLUÇÃO: Código foi corrigido para funcionar com pysnmp 7.x
+
+════════════════════════════════════════════════════════════════
+PASSO 1: COPIAR ARQUIVO CORRIGIDO PARA PRODUCAO
+════════════════════════════════════════════════════════════════
+
+Na máquina de DESENVOLVIMENTO (onde está o Kiro):
+
+1. Copiar arquivo corrigido:
+   - Origem: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\snmp_collector.py
+   - Destino: \\SRVSONDA001\C$\Program Files\CorujaMonitor\Probe\collectors\snmp_collector.py
+
+OU usar pen drive / rede compartilhada
+
+════════════════════════════════════════════════════════════════
+PASSO 2: TESTAR NA SRVSONDA001
+════════════════════════════════════════════════════════════════
+
+Na máquina SRVSONDA001:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python TESTAR_SNMP_MANUALMENTE.py
+
+Deve mostrar:
+✓ Status: success
+✓ Total de OIDs coletados: > 0
+
+════════════════════════════════════════════════════════════════
+PASSO 3: REINICIAR PROBE
+════════════════════════════════════════════════════════════════
+
+1. Parar probe (Ctrl+C)
+2. Iniciar novamente:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+iniciar_probe.bat
+
+════════════════════════════════════════════════════════════════
+PASSO 4: VERIFICAR LOGS
+════════════════════════════════════════════════════════════════
+
+Deve mostrar:
+INFO:__main__:Collected X SNMP metrics from 192.168.31.161
+
+(X deve ser maior que 0, não mais 0)
+
+════════════════════════════════════════════════════════════════
+PASSO 5: VERIFICAR DASHBOARD (após 60 segundos)
+════════════════════════════════════════════════════════════════
+
+http://192.168.31.161:3000
+→ Servidores
+→ SRVCMONITOR001
+
+Sensores devem aparecer:
+✓ CPU
+✓ Memória  
+✓ Disco
+✓ Uptime
+
+════════════════════════════════════════════════════════════════

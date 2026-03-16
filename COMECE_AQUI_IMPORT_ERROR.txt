@@ -1,0 +1,58 @@
+═══════════════════════════════════════════════════════════════════════
+COMECE AQUI - RESOLVER IMPORT ERROR 10 MAR 2026 11:15
+═══════════════════════════════════════════════════════════════════════
+
+DESCOBERTA:
+✅ Arquivo probe_core.py está atualizado (verificado)
+❌ Logs detalhados NÃO aparecem
+🔍 CAUSA PROVÁVEL: Import do SNMPCollector está falhando silenciosamente
+
+═══════════════════════════════════════════════════════════════════════
+EXECUTE NA SRVSONDA001:
+═══════════════════════════════════════════════════════════════════════
+
+1. Copiar arquivo com logs de import:
+
+Copy-Item "C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py" "C:\Program Files\CorujaMonitor\Probe\probe_core.py" -Force
+
+
+2. Testar probe:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python probe_core.py
+
+
+3. Procurar por estes logs:
+
+✓ "=== ENTERING _collect_snmp_remote ===" (deve aparecer)
+✓ "About to import SNMPCollector..." (deve aparecer)
+? "✓ SNMPCollector imported successfully!" (pode NÃO aparecer)
+? "ImportError in SNMP collection:" (pode aparecer com erro)
+
+
+4. Se aparecer "ImportError", testar import manualmente:
+
+python
+>>> from collectors.snmp_collector import SNMPCollector
+
+
+5. Copiar e colar TODOS os logs e erros
+
+═══════════════════════════════════════════════════════════════════════
+
+LOGS ESPERADOS:
+
+CASO 1 - Import OK (problema está depois):
+INFO:__main__:=== ENTERING _collect_snmp_remote for server: srvcmonitor001 ===
+INFO:__main__:About to import SNMPCollector...
+INFO:__main__:✓ SNMPCollector imported successfully!
+INFO:__main__:Collecting SNMP metrics from 192.168.31.161 (vv2c)
+INFO:__main__:About to call collect_snmp_v2c...
+
+CASO 2 - Import FALHA (problema no import):
+INFO:__main__:=== ENTERING _collect_snmp_remote for server: srvcmonitor001 ===
+INFO:__main__:About to import SNMPCollector...
+ERROR:__main__:ImportError in SNMP collection: [ERRO DETALHADO]
+WARNING:__main__:pysnmp not installed or import error, falling back to PING
+
+═══════════════════════════════════════════════════════════════════════

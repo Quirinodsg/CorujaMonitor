@@ -9,6 +9,16 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
+
+  useEffect(() => {
+    if (darkMode) {
+      document.body.classList.add('dark-mode');
+    } else {
+      document.body.classList.remove('dark-mode');
+    }
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
 
   useEffect(() => {
     console.log('App mounted, checking authentication...');
@@ -98,7 +108,7 @@ function App() {
   return (
     <div className="App">
       {isAuthenticated && user ? (
-        <MainLayout user={user} onLogout={handleLogout} />
+        <MainLayout user={user} onLogout={handleLogout} darkMode={darkMode} onToggleDark={() => setDarkMode(d => !d)} />
       ) : (
         <Login onLogin={handleLogin} />
       )}

@@ -1,0 +1,145 @@
+========================================
+SOLUÇÃO ALTERNATIVA: USAR SNMP
+========================================
+
+PROBLEMA:
+WinRM/PowerShell Remoting bloqueado no servidor .110
+Mesmo com Domain Admin, dá "Access Denied"
+
+SOLUÇÃO IMEDIATA:
+Usar SNMP para monitorar o servidor Windows
+
+========================================
+PASSO 1: HABILITAR SNMP NO SERVIDOR .110
+========================================
+
+RDP no 192.168.31.110, PowerShell como Admin:
+
+# Instalar SNMP
+Add-WindowsFeature SNMP-Service,SNMP-WMI-Provider
+
+# Configurar SNMP
+Set-Service SNMP -StartupType Automatic
+Start-Service SNMP
+
+# Configurar comunidade
+$snmp = Get-WmiObject -Namespace root\SNMP\localhost\DEFAULT -Class SNMP_RFC1156Agent
+$snmp.sysContact = "admin@techbiz.com"
+$snmp.sysLocation = "Datacenter"
+$snmp.Put()
+
+# Adicionar comunidade "public" com permissão READ
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\SNMP\Parameters\ValidCommunities" /v public /t REG_DWORD /d 4 /f
+
+# Permitir conexões de qualquer host
+reg add "HKLM\SYSTEM\CurrentControlSet\Services\SNMP\Parameters\PermittedManagers" /v 1 /t REG_SZ /d 192.168.31.162 /f
+
+# Reiniciar serviço
+Restart-Service SNMP
+
+Write-Host "✅ SNMP configurado!" -ForegroundColor Green
+
+========================================
+PASSO 2: TESTAR SNMP DA SONDA
+========================================
+
+Na SRVSONDA001 (192.168.31.162):
+
+# Testar se SNMP responde
+snmpwalk -v2c -c public 192.168.31.110 system
+
+OU via PowerShell:
+Test-NetConnection -ComputerName 192.168.31.110 -Port 161
+
+========================================
+PASSO 3: ATUALIZAR SERVIDOR NO DASHBOARD
+========================================
+
+Dashboard: http://192.168.31.161:3000
+
+Menu → Servidores → SRVHVSPRD010:
+- Protocolo de Monitoramento: SNMP
+- Versão SNMP: v2c
+- Comunidade SNMP: public
+- Porta SNMP: 161
+- Salvar
+
+========================================
+PASSO 4: REINICIAR PROBE
+========================================
+
+Na SRVSONDA001:
+
+1. Parar probe (Ctrl+C)
+2. Iniciar:
+   cd C:\Users\Administrator\Desktop
+   .\iniciar_probe.bat
+
+========================================
+VERIFICAÇÃO (1 minuto)
+========================================
+
+Logs esperados:
+INFO:__main__:Using SNMP for srvhvsprd010
+INFO:__main__:Collected 4 SNMP metrics from 192.168.31.110
+
+Dashboard:
+- CPU Usage: ~X%
+- Memory Usage: ~X%
+- Disk C:: ~X%
+- Uptime: X days
+
+========================================
+POR QUE SNMP É MELHOR NESTE CASO?
+========================================
+
+✅ Não precisa WinRM
+✅ Não precisa CredSSP
+✅ Não precisa Group Policy
+✅ Funciona cross-domain
+✅ Protocolo padrão de monitoramento
+✅ Menos overhead
+✅ Mais confiável
+
+WMI via PowerShell Remoting:
+❌ Complexo
+❌ Requer permissões específicas
+❌ Pode ser bloqueado por AD
+❌ Problemas com Workgroup → Domain
+
+========================================
+MÉTRICAS DISPONÍVEIS VIA SNMP
+========================================
+
+Windows SNMP fornece:
+- CPU Usage
+- Memory Usage  
+- Disk Usage
+- Network Traffic
+- Uptime
+- Processos
+- Serviços
+
+Mesmas métricas que WMI, mas via protocolo padrão!
+
+========================================
+PRÓXIMOS PASSOS PARA WMI (OPCIONAL)
+========================================
+
+Se ainda quiser resolver WMI depois:
+
+1. Verificar permissões WinRM no .110:
+   winrm get winrm/config
+
+2. Verificar se usuário está no grupo correto:
+   net localgroup "Remote Management Users"
+
+3. Adicionar usuário:
+   net localgroup "Remote Management Users" "Techbiz\coruja.monitor" /add
+
+4. Configurar WinRM para aceitar Basic Auth:
+   winrm set winrm/config/service/auth @{Basic="true"}
+
+Mas SNMP já resolve o problema!
+
+========================================

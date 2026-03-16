@@ -1,0 +1,47 @@
+═══════════════════════════════════════════════════════════════════════════════
+📋 COPIAR probe_core.py PARA SONDA (VIA RDP)
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ FLUXO CORRETO REGISTRADO:
+   - Sonda (SRVSONDA001): Copiar via RDP
+   - Linux (SRVCMONITOR001): Git pull
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO A PASSO
+═══════════════════════════════════════════════════════════════════════════════
+
+1. PARAR PROBE (na sonda, Ctrl+C)
+
+2. COPIAR ARQUIVO (na sua máquina):
+   - Abrir: C:\Users\[SEU_USUARIO]\Coruja Monitor\probe\probe_core.py
+   - Copiar (Ctrl+C)
+
+3. CONECTAR NA SONDA (RDP)
+
+4. COLAR ARQUIVO (na sonda):
+   - Ir para: C:\Program Files\CorujaMonitor\Probe
+   - Colar (Ctrl+V) - substituir quando perguntar
+
+5. REINICIAR PROBE (na sonda):
+   cd 'C:\Program Files\CorujaMonitor\Probe'
+   python .\probe_core.py
+
+6. VERIFICAR LOGS (aguardar 60 segundos):
+   ✅ "🔐 Usando credencial: Techbiz (Nível: Empresa)"
+   ✅ "Collected WMI metrics from 192.168.31.110"
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ O QUE VAI MUDAR NOS LOGS
+═══════════════════════════════════════════════════════════════════════════════
+
+ANTES:
+   INFO:__main__:Using PING only for srvhvsprd010
+
+DEPOIS:
+   INFO:__main__:Using WMI for srvhvsprd010
+   INFO:__main__:🔐 Usando credencial: Techbiz (Nível: Empresa)
+   INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+
+═══════════════════════════════════════════════════════════════════════════════

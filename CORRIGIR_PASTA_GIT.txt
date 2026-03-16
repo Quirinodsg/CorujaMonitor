@@ -1,0 +1,69 @@
+════════════════════════════════════════════════════════════════════
+  CORRIGIR PASTA DO GIT
+════════════════════════════════════════════════════════════════════
+
+⚠️ PROBLEMA IDENTIFICADO:
+--------------------------
+
+Você está em: ~/Coruja Monitor (pasta errada)
+Deveria estar em: C:\Users\andre.quirino\Coruja (pasta correta)
+
+
+✅ SOLUÇÃO:
+-----------
+
+1. Ir para a pasta correta:
+
+cd "C:\Users\andre.quirino\Coruja"
+
+
+2. Verificar status:
+
+git status
+
+
+3. Se mostrar arquivos modificados, adicionar:
+
+git add .
+
+
+4. Criar commit:
+
+git commit -m "fix: Correcao exclusao sensores e filtro CD-ROM"
+
+
+5. Enviar para GitHub:
+
+git push origin master
+
+
+📊 VERIFICAR SE ESTÁ NA PASTA CERTA:
+-------------------------------------
+
+Execute:
+
+pwd
+
+Deve mostrar: /c/Users/andre.quirino/Coruja
+(ou C:\Users\andre.quirino\Coruja no Windows)
+
+
+🔍 SE AINDA MOSTRAR "nothing to commit":
+-----------------------------------------
+
+Significa que os arquivos não foram salvos ou estão em outra pasta.
+
+Verifique se os arquivos foram modificados:
+
+git diff api/routers/sensors.py
+git diff frontend/src/components/Servers.js
+
+
+Se não mostrar diferenças, os arquivos não foram salvos.
+
+
+════════════════════════════════════════════════════════════════════
+
+RESUMO: cd "C:\Users\andre.quirino\Coruja" e tente novamente
+
+════════════════════════════════════════════════════════════════════

@@ -1,0 +1,90 @@
+═══════════════════════════════════════════════════════════════════════
+SOLUÇÃO FINAL SNMP - 10 MAR 2026 11:35
+═══════════════════════════════════════════════════════════════════════
+
+PROBLEMA ENCONTRADO E RESOLVIDO!
+
+CAUSA RAIZ:
+O banco de dados armazena snmp_version como 'v2c' (com 'v')
+O código compara com '2c' (sem 'v')
+Resultado: if version == '2c' NUNCA é verdadeiro!
+
+EVIDÊNCIA:
+Log mostra: "Collecting SNMP metrics from 192.168.31.161 (vv2c)"
+                                                                ^^^^
+                                                        Duplo 'v'!
+
+Código faz: f"(v{version})" onde version='v2c'
+Resultado: "(vv2c)"
+
+═══════════════════════════════════════════════════════════════════════
+CORREÇÃO APLICADA:
+═══════════════════════════════════════════════════════════════════════
+
+Adicionado código para normalizar a versão:
+
+```python
+# Normalizar version (remover 'v' se existir)
+if version and version.startswith('v'):
+    version = version[1:]  # Remove 'v' do início
+```
+
+Agora:
+- Se banco tem 'v2c' → código normaliza para '2c' → if funciona ✓
+- Se banco tem '2c' → código mantém '2c' → if funciona ✓
+- Se banco tem 'v3' → código normaliza para '3' → if funciona ✓
+
+═══════════════════════════════════════════════════════════════════════
+EXECUTAR AGORA:
+═══════════════════════════════════════════════════════════════════════
+
+1. Copiar arquivo corrigido:
+
+Copy-Item "C:\Users\andre.quirino\Coruja Monitor\probe\probe_core.py" "C:\Program Files\CorujaMonitor\Probe\probe_core.py" -Force
+
+
+2. Testar probe:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python probe_core.py
+
+
+3. LOGS ESPERADOS (agora devem aparecer TODOS):
+
+INFO:__main__:=== ENTERING _collect_snmp_remote for server: SRVCMONITOR001 ===
+INFO:__main__:About to import SNMPCollector...
+INFO:__main__:✓ SNMPCollector imported successfully!
+INFO:__main__:Collecting SNMP metrics from 192.168.31.161 (v2c)
+INFO:__main__:DEBUG: version variable = '2c' (type: <class 'str'>)
+INFO:__main__:DEBUG: version == '2c' ? True
+INFO:__main__:About to call collect_snmp_v2c with host=192.168.31.161...
+INFO:__main__:Collector object: <collectors.snmp_collector.SNMPCollector object>
+INFO:__main__:Collector type: <class 'collectors.snmp_collector.SNMPCollector'>
+INFO:__main__:collect_snmp_v2c returned successfully
+INFO:__main__:Result type: <class 'dict'>
+INFO:__main__:Result: {'status': 'success', 'host': '192.168.31.161', ...}
+INFO:__main__:SNMP result status: success
+INFO:__main__:SNMP data keys: ['1.3.6.1.2.1.1.1.0', '1.3.6.1.2.1.1.3.0', ...]
+INFO:__main__:Parsing SNMP data: 25 OIDs received
+INFO:__main__:Parsed CPU: 1.0% (idle: 99.0%)
+INFO:__main__:Parsed Memory: 92.51%
+INFO:__main__:Parsed Disk: 56.0%
+INFO:__main__:Total metrics parsed: 3
+INFO:__main__:Parsed 3 metrics from SNMP data
+INFO:__main__:Collected 3 SNMP metrics from 192.168.31.161
+
+═══════════════════════════════════════════════════════════════════════
+RESULTADO ESPERADO:
+═══════════════════════════════════════════════════════════════════════
+
+✓ 3 métricas coletadas (CPU, Memória, Disco)
+✓ Métricas enviadas para API
+✓ Dashboard mostra métricas do servidor Linux
+
+═══════════════════════════════════════════════════════════════════════
+SE AINDA NÃO FUNCIONAR:
+═══════════════════════════════════════════════════════════════════════
+
+Copie e cole TODOS os logs desde "=== ENTERING ===" até "Collected X"
+
+═══════════════════════════════════════════════════════════════════════

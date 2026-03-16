@@ -1,0 +1,26 @@
+# ========================================
+# INSTRUÇÕES PARA CORRIGIR CREDENTIALS.JS
+# ========================================
+
+# NO LINUX, execute:
+
+cd /home/administrador/CorujaMonitor
+
+# 1. Fazer backup
+cp frontend/src/components/Credentials.js frontend/src/components/Credentials.js.backup
+
+# 2. Baixar do Git (vou enviar a versão correta)
+git pull origin master
+
+# 3. Reiniciar frontend
+docker-compose restart frontend
+
+# 4. Aguardar 30 segundos
+sleep 30
+
+# 5. Testar
+curl -I http://localhost:3000
+
+# ========================================
+# AGUARDE EU ENVIAR A CORREÇÃO PARA O GIT
+# ========================================

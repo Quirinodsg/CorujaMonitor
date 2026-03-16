@@ -1,0 +1,52 @@
+========================================
+VERIFICAR MÉTRICAS PING NO BANCO
+========================================
+
+📋 EXECUTAR NO SSH LINUX:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+    s.id as sensor_id,
+    s.name as sensor_name,
+    srv.hostname,
+    m.value,
+    m.unit,
+    m.status,
+    m.timestamp,
+    NOW() as now_time,
+    m.timestamp AT TIME ZONE 'America/Sao_Paulo' as timestamp_local
+FROM metrics m
+JOIN sensors s ON m.sensor_id = s.id
+JOIN servers srv ON s.server_id = srv.id
+WHERE s.sensor_type = 'ping'
+ORDER BY m.timestamp DESC
+LIMIT 10;
+"
+
+
+✅ RESULTADO ESPERADO:
+- Deve mostrar métricas PING com valores reais (0.048ms, 0.305ms)
+- Timestamp deve estar correto (não 3 horas no futuro)
+- Status deve ser 'ok'
+
+
+🔍 SE TIMESTAMP ESTIVER ERRADO:
+O problema é que o PostgreSQL está interpretando datetime.now() como UTC.
+Precisamos ajustar o timezone no Python ou no PostgreSQL.
+
+
+📊 VERIFICAR TIMEZONE DO POSTGRESQL:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SHOW timezone;"
+
+
+✅ DEVE MOSTRAR:
+timezone
+-----------
+UTC
+(1 row)
+
+
+💡 SOLUÇÃO:
+O PostgreSQL está em UTC, mas o Python está salvando com datetime.now() que é local.
+Precisamos usar timezone-aware datetime no Python.

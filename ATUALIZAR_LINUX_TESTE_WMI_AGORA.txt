@@ -1,0 +1,54 @@
+🔧 ATUALIZAR LINUX - TESTE WMI CORRIGIDO + CSS ROXO
+====================================================
+
+📋 COPIE E COLE NO SSH DO LINUX (SRVCMONITOR001):
+
+cd /home/administrador/CorujaMonitor
+
+echo "🔄 Baixando correção do Git..."
+git fetch origin
+git reset --hard origin/master
+
+echo ""
+echo "📦 Commit atual (deve ser bfc5e7b):"
+git log -1 --oneline
+
+echo ""
+echo "🔄 Reiniciando API e Frontend..."
+docker-compose restart api frontend
+
+echo ""
+echo "⏳ Aguardando 40 segundos para containers iniciarem..."
+sleep 40
+
+echo ""
+echo "✅ Testando API:"
+curl -I http://localhost:8000/health
+
+echo ""
+echo "✅ Testando Frontend:"
+curl -I http://localhost:3000
+
+echo ""
+echo "🎉 PRONTO!"
+echo ""
+echo "📝 PRÓXIMOS PASSOS:"
+echo ""
+echo "1. Acesse: http://192.168.31.161:3000"
+echo "2. LIMPE O CACHE DO NAVEGADOR (Ctrl+Shift+Delete)"
+echo "3. Login: admin@coruja.com / admin123"
+echo "4. Vá em: Configurações > Credenciais"
+echo "5. Clique no botão 🧪 Testar da credencial 'Techbiz'"
+echo "6. Digite o hostname: 192.168.31.110"
+echo "7. Aguarde o teste (pode demorar 10s)"
+echo ""
+echo "✅ CORREÇÕES APLICADAS:"
+echo "   - Teste WMI agora usa subprocess (sem dependência de collectors)"
+echo "   - CSS roxo forçado com ?v=2 (quebra cache)"
+echo "   - API testa WMI direto via PowerShell/wmic"
+echo ""
+echo "⚠️  IMPORTANTE:"
+echo "   - Se cores ainda não mudarem, limpe cache do navegador"
+echo "   - Teste WMI pode falhar se wmic não estiver instalado no Linux"
+echo "   - Alternativa: Testar via PowerShell no Windows funciona 100%"
+echo ""

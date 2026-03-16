@@ -1,0 +1,49 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔧 CORRIGIR SYNTAX ERROR E APLICAR - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ PROBLEMA IDENTIFICADO E CORRIGIDO:
+   api/main.py linha 8 tinha: "credentials credentials security_monitor, mfa, system_reset"
+   Corrigido para: "credentials"
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 1: COMMIT NO NOTEBOOK (Git Bash ou PowerShell)
+═══════════════════════════════════════════════════════════════════════════════
+
+cd "C:\Users\andre.quirino\Coruja Monitor"
+
+git add api/models.py api/main.py frontend/src/components/Settings.js
+
+git commit -m "fix: Sistema de credenciais completo - models, main e Settings corrigidos"
+
+git push origin master
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 2: APLICAR NO LINUX (COPIAR E COLAR NO SSH)
+═══════════════════════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+
+git pull origin master
+
+docker-compose build frontend
+
+docker-compose up -d
+
+sleep 30
+
+docker-compose ps
+
+echo ""
+echo "🧪 Testando API:"
+curl http://localhost:8000/health
+
+echo ""
+echo "🧪 Testando Frontend:"
+curl -I http://localhost:3000
+
+echo ""
+echo "✅ PRONTO! Acesse: http://192.168.31.161:3000"
+echo "📍 Menu: Configurações > Credenciais"
+
+═══════════════════════════════════════════════════════════════════════════════

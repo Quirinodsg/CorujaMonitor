@@ -1,0 +1,66 @@
+═══════════════════════════════════════════════════════════════════════════
+  ASSOCIAR CREDENCIAL AO SERVIDOR - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════
+
+SITUAÇÃO ATUAL:
+- Servidor ID 5 (SRVHVSPRD010.ad.techbiz.com.br) está com credential_id = NULL
+- Credencial ID 2 (Techbiz) existe e está configurada corretamente
+- Probe está usando hostname correto mas falha por falta de credencial
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 1: ASSOCIAR CREDENCIAL NO LINUX
+═══════════════════════════════════════════════════════════════════════════
+
+Copie e cole no terminal SSH do Linux (.161):
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "UPDATE servers SET credential_id = 2 WHERE id = 5;"
+
+Resultado esperado: UPDATE 1
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 2: VERIFICAR ASSOCIAÇÃO
+═══════════════════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.id, s.hostname, s.ip_address, c.name as credential_name, c.wmi_username, c.wmi_domain FROM servers s LEFT JOIN credentials c ON s.credential_id = c.id WHERE s.ip_address = '192.168.31.110';"
+
+Resultado esperado:
+ id |            hostname            |   ip_address   | credential_name | wmi_username   | wmi_domain
+----+--------------------------------+----------------+-----------------+----------------+------------
+  5 | SRVHVSPRD010.ad.techbiz.com.br | 192.168.31.110 | Techbiz         | coruja.monitor | Techbiz
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 3: AGUARDAR OU REINICIAR PROBE
+═══════════════════════════════════════════════════════════════════════════
+
+OPÇÃO A - Aguardar 1 minuto (próximo ciclo automático)
+
+OPÇÃO B - Reiniciar probe agora na SRVSONDA001:
+1. Pressione Ctrl+C no terminal da probe
+2. Execute novamente: Python .\probe_core.py
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 4: VERIFICAR LOGS - SUCESSO ESPERADO
+═══════════════════════════════════════════════════════════════════════════
+
+Você deve ver nos logs da probe:
+
+✅ INFO:__main__:🔐 Usando credencial: Techbiz (Nível: tenant)
+✅ INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010.ad.techbiz.com.br
+✅ INFO:__main__:Collected X WMI metrics from SRVHVSPRD010.ad.techbiz.com.br
+
+NÃO deve mais aparecer:
+❌ "The user name or password is incorrect"
+❌ "Access is denied"
+
+═══════════════════════════════════════════════════════════════════════════
+CAUSA RAIZ DO PROBLEMA
+═══════════════════════════════════════════════════════════════════════════
+
+O servidor foi adicionado ao banco SEM credencial associada.
+A probe tentava autenticar com Kerberos mas sem usuário/senha configurados.
+
+SOLUÇÃO: Associar credential_id = 2 ao servidor ID 5
+
+═══════════════════════════════════════════════════════════════════════════
+Data: 13/03/2026 - Coruja Monitor
+═══════════════════════════════════════════════════════════════════════════

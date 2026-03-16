@@ -1,0 +1,98 @@
+═══════════════════════════════════════════════════════════════
+🔧 ATUALIZAR LINUX E TESTAR API - CREDENCIAIS WMI/SNMP
+═══════════════════════════════════════════════════════════════
+
+📋 SITUAÇÃO:
+- ✅ Classe Credential duplicada REMOVIDA no Linux (script Python)
+- ✅ Classe Credential duplicada REMOVIDA no notebook Windows
+- ✅ Commit 9f220a8 enviado para Git
+- ⏳ Precisa atualizar código no Linux via Git
+- ⏳ Precisa reiniciar API e verificar se inicia corretamente
+
+═══════════════════════════════════════════════════════════════
+📝 COPIAR E COLAR NO LINUX (SSH):
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+
+# 1️⃣ Baixar correção do Git
+echo "📥 Baixando correção do Git..."
+git pull origin master
+
+# 2️⃣ Verificar que só existe UMA classe Credential
+echo ""
+echo "🔍 Verificando classe Credential (deve aparecer só 1 linha):"
+grep -n "^class Credential" api/models.py
+
+# 3️⃣ Reiniciar API
+echo ""
+echo "🔄 Reiniciando API..."
+docker-compose restart api
+
+# 4️⃣ Aguardar 10 segundos
+echo ""
+echo "⏳ Aguardando API iniciar (10 segundos)..."
+sleep 10
+
+# 5️⃣ Testar API
+echo ""
+echo "🧪 Testando API:"
+curl http://localhost:8000/health
+echo ""
+
+# 6️⃣ Testar rota de credenciais
+echo ""
+echo "🔑 Testando rota de credenciais:"
+curl -s http://localhost:8000/api/v1/credentials/ -H "Authorization: Bearer SEU_TOKEN" | head -20
+echo ""
+
+# 7️⃣ Ver logs da API (últimas 30 linhas)
+echo ""
+echo "📋 Logs da API (últimas 30 linhas):"
+docker logs coruja-api --tail 30
+
+# 8️⃣ Verificar status dos containers
+echo ""
+echo "🐳 Status dos containers:"
+docker-compose ps
+
+═══════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO:
+═══════════════════════════════════════════════════════════════
+
+1. Git pull: "Updating ... Fast-forward"
+2. grep: Deve mostrar APENAS 1 linha (classe Credential na linha ~781)
+3. API restart: "Restarting coruja-api ... done"
+4. curl health: {"status":"healthy"} ou similar
+5. Logs: SEM erro "Table 'credentials' is already defined"
+6. Containers: api, frontend, worker, postgres todos "Up"
+
+═══════════════════════════════════════════════════════════════
+❌ SE API NÃO INICIAR:
+═══════════════════════════════════════════════════════════════
+
+# Ver logs completos da API
+docker logs coruja-api --tail 100
+
+# Verificar se há outro erro no models.py
+grep -n "class Credential" api/models.py
+grep -n "__tablename__ = \"credentials\"" api/models.py
+
+═══════════════════════════════════════════════════════════════
+📌 PRÓXIMOS PASSOS (APÓS API FUNCIONAR):
+═══════════════════════════════════════════════════════════════
+
+1. ✅ Acessar portal: http://192.168.31.161:3000
+2. ✅ Login: admin@coruja.com / admin123
+3. ✅ Ir em: Configurações > Credenciais
+4. ✅ Adicionar credencial WMI para SRVHVSPRD010:
+   - Nome: "Domínio Principal"
+   - Tipo: WMI
+   - Nível: Tenant (Empresa)
+   - Usuário: TECHBIZ\administrador
+   - Senha: [senha do domínio]
+   - Domínio: TECHBIZ
+5. ✅ Testar conectividade
+6. ✅ Aguardar probe coletar métricas WMI
+
+═══════════════════════════════════════════════════════════════

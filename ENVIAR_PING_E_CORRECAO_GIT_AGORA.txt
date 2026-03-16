@@ -1,0 +1,151 @@
+═══════════════════════════════════════════════════════════════
+  📤 ENVIAR PING E CORREÇÃO PARA GIT - COMPLETO
+═══════════════════════════════════════════════════════════════
+
+ARQUIVOS ALTERADOS:
+1. worker/tasks.py - Task de PING direto do servidor
+2. api/adicionar_coluna_updated_at.py - Script de migração
+
+═══════════════════════════════════════════════════════════════
+  PASSO 1: ENVIAR PARA GIT (NO NOTEBOOK - POWERSHELL)
+═══════════════════════════════════════════════════════════════
+
+cd "C:\Users\andre.quirino\Coruja Monitor"
+
+git add worker/tasks.py
+git add api/adicionar_coluna_updated_at.py
+git commit -m "feat: PING direto do servidor Linux + correção coluna updated_at"
+git push origin master
+
+═══════════════════════════════════════════════════════════════
+  PASSO 2: ATUALIZAR NO SERVIDOR LINUX (PUTTY)
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+
+# Baixar código atualizado
+git pull origin master
+
+# Executar script de migração do banco
+docker exec -it coruja-api python /app/adicionar_coluna_updated_at.py
+
+# Reiniciar worker
+docker-compose restart worker
+
+# Aguardar 10 segundos
+sleep 10
+
+# Verificar se worker está rodando
+docker ps | grep worker
+
+═══════════════════════════════════════════════════════════════
+  PASSO 3: VERIFICAR LOGS DO PING
+═══════════════════════════════════════════════════════════════
+
+# Aguardar 60 segundos para primeira execução do PING
+sleep 60
+
+# Ver logs do PING
+docker logs coruja-worker --tail 200 | grep -i ping
+
+═══════════════════════════════════════════════════════════════
+  O QUE DEVE APARECER NOS LOGS
+═══════════════════════════════════════════════════════════════
+
+✅ SUCESSO - Deve mostrar:
+🏓 Iniciando PING de todos os servidores...
+📊 Encontrados X servidores ativos para fazer PING
+🏓 PING srvcmonitor001 (192.168.31.161): X.Xms
+✅ Métrica PING salva: srvcmonitor001 = X.Xms (ok)
+✅ PING concluído para X servidores
+
+❌ ERRO - NÃO deve mais mostrar:
+❌ Erro ao fazer PING de servidores: column servers.updated_at does not exist
+
+═══════════════════════════════════════════════════════════════
+  PASSO 4: VERIFICAR NO DASHBOARD
+═══════════════════════════════════════════════════════════════
+
+1. ACESSAR DASHBOARD
+   http://192.168.31.161:3000
+   Login: admin@coruja.com / admin123
+
+2. IR PARA SERVIDORES
+   Menu lateral → "Servidores"
+
+3. SELECIONAR SRVCMONITOR001
+   Clicar no servidor
+
+4. VERIFICAR SENSOR PING
+   - Deve mostrar latência real (ex: 0.5ms)
+   - Status deve ser OK (verde)
+   - Timestamp recente
+
+5. VERIFICAR INCIDENTES
+   Menu lateral → "Incidentes"
+   - Incidente falso de PING deve ter sumido
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS RESUMIDOS
+═══════════════════════════════════════════════════════════════
+
+NOTEBOOK (POWERSHELL):
+cd "C:\Users\andre.quirino\Coruja Monitor"
+git add worker/tasks.py api/adicionar_coluna_updated_at.py
+git commit -m "feat: PING direto do servidor Linux + correção coluna updated_at"
+git push origin master
+
+LINUX (PUTTY):
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker exec -it coruja-api python /app/adicionar_coluna_updated_at.py
+docker-compose restart worker
+sleep 60
+docker logs coruja-worker --tail 200 | grep -i ping
+
+═══════════════════════════════════════════════════════════════
+  SE DER ERRO NO SCRIPT DE MIGRAÇÃO
+═══════════════════════════════════════════════════════════════
+
+Executar SQL manualmente:
+
+docker exec -it coruja-postgres psql -U coruja_user -d coruja_monitor
+
+-- Adicionar coluna
+ALTER TABLE servers ADD COLUMN updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+-- Atualizar registros existentes
+UPDATE servers SET updated_at = created_at WHERE updated_at IS NULL;
+
+-- Verificar
+\d servers
+
+-- Sair
+\q
+
+Depois reiniciar worker:
+docker-compose restart worker
+
+═══════════════════════════════════════════════════════════════
+  RESULTADO ESPERADO FINAL
+═══════════════════════════════════════════════════════════════
+
+✅ Worker faz PING a cada 60s em todos os servidores
+✅ Sensor PING criado automaticamente
+✅ Métricas com latência real
+✅ Status correto (OK se servidor está UP)
+✅ Incidentes falsos de PING somem
+✅ Independente de probe Windows
+✅ Funcionando igual PRTG
+
+═══════════════════════════════════════════════════════════════
+  IMPORTANTE
+═══════════════════════════════════════════════════════════════
+
+✓ 2 arquivos alterados: tasks.py e adicionar_coluna_updated_at.py
+✓ Migração do banco é necessária (adicionar coluna updated_at)
+✓ Worker precisa ser reiniciado
+✓ Aguardar 60 segundos para primeira execução
+✓ Sistema continua funcionando normalmente
+
+═══════════════════════════════════════════════════════════════

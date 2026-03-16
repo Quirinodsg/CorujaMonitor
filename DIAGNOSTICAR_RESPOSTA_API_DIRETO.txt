@@ -1,0 +1,37 @@
+========================================
+DIAGNOSTICAR RESPOSTA DA API - LINUX
+========================================
+
+EXECUTAR NO LINUX (SSH):
+
+curl -s "http://192.168.31.161:8000/api/v1/credentials/resolve/5?probe_token=V-PTetiHvbNsZgrkY14PFGRfyv6jPBZxdTb76Z2M7YY" | python3 -m json.tool
+
+========================================
+O QUE VERIFICAR:
+========================================
+
+Deve aparecer algo como:
+
+{
+  "id": 2,
+  "name": "Techbiz",
+  "credential_type": "wmi",
+  "inheritance_level": "tenant",
+  "username": "coruja.monitor",     <-- DEVE TER VALOR
+  "password": "senha_aqui",          <-- DEVE TER VALOR
+  "domain": "Techbiz"
+}
+
+========================================
+SE USERNAME OU PASSWORD ESTIVER VAZIO OU NULL:
+========================================
+
+Problema: API não está descriptografando ou mapeando corretamente.
+
+Verificar no banco se a senha está criptografada:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, name, wmi_username, LENGTH(wmi_password_encrypted) as senha_len FROM credentials WHERE id = 2;"
+
+Deve mostrar senha_len > 0
+
+========================================

@@ -1,0 +1,52 @@
+========================================
+VERIFICAR MODIFICAÇÕES NO GIT
+========================================
+
+Você está no Git Bash. Use estes comandos:
+
+1. Ver diferenças nos arquivos:
+   git diff api/routers/sensors.py | head -50
+   git diff frontend/src/components/Servers.js | head -50
+   git diff probe/collectors/disk_collector.py | head -50
+
+2. Ver status dos arquivos:
+   git status
+
+3. Se NÃO houver modificações (working tree clean):
+   - Significa que as correções JÁ FORAM ENVIADAS para o Git
+   - Ou que você está na pasta errada
+   - Ou que as modificações foram feitas em outra máquina
+
+========================================
+DIAGNÓSTICO DA SITUAÇÃO
+========================================
+
+PROBLEMA: Git diz "nothing to commit, working tree clean"
+
+POSSÍVEIS CAUSAS:
+1. As modificações já foram commitadas anteriormente
+2. As modificações foram feitas em C:\Users\andre.quirino\Coruja (sem "Monitor")
+3. As modificações estão apenas no servidor Linux
+
+SOLUÇÃO: Verificar se existe outra pasta Coruja
+
+Execute no Git Bash:
+cd /c/Users/andre.quirino
+ls -la | grep -i coruja
+
+Isso vai mostrar todas as pastas com "Coruja" no nome.
+
+========================================
+PRÓXIMOS PASSOS
+========================================
+
+1. Execute: git status
+
+2. Se mostrar "nothing to commit":
+   - As correções JÁ ESTÃO no Git
+   - Vá direto para o servidor Linux fazer git pull
+
+3. Se mostrar arquivos modificados:
+   - Execute os comandos do arquivo GIT_COMANDOS_SEPARADOS.txt
+
+========================================

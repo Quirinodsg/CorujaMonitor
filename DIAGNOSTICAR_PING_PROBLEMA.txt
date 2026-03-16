@@ -1,0 +1,77 @@
+═══════════════════════════════════════════════════════════════════════
+DIAGNOSTICAR PROBLEMA DO PING - 10 MAR 2026
+═══════════════════════════════════════════════════════════════════════
+
+SITUAÇÃO:
+✅ SNMP funcionando perfeitamente
+❌ PING não está funcionando
+
+POSSÍVEIS CAUSAS:
+1. Firewall bloqueando ICMP
+2. Permissões insuficientes para executar ping
+3. Erro no parsing da resposta do ping
+4. Timeout muito curto
+5. Problema com o hostname/IP
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 1: TESTAR PING MANUALMENTE
+═══════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, execute:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+python TESTAR_PING_AGORA.py
+
+Isso vai testar ping para:
+- 8.8.8.8 (Google DNS)
+- 192.168.31.161 (Servidor Linux)
+- localhost
+- 127.0.0.1
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 2: VERIFICAR LOGS DA PROBE
+═══════════════════════════════════════════════════════════════════════
+
+Procure por:
+- "PING" nos logs
+- "Using PING only"
+- Erros relacionados a ping
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 3: TESTAR PING DIRETO NO CMD
+═══════════════════════════════════════════════════════════════════════
+
+ping -n 1 192.168.31.161
+ping -n 1 8.8.8.8
+
+Verifique se funciona manualmente.
+
+═══════════════════════════════════════════════════════════════════════
+PASSO 4: VERIFICAR FIREWALL
+═══════════════════════════════════════════════════════════════════════
+
+Windows Firewall pode estar bloqueando ICMP.
+
+Verificar:
+1. Windows Defender Firewall
+2. Regras de saída para ICMP
+3. Regras de entrada para ICMP Echo Reply
+
+═══════════════════════════════════════════════════════════════════════
+INFORMAÇÕES NECESSÁRIAS:
+═══════════════════════════════════════════════════════════════════════
+
+1. Qual é o erro específico do ping?
+2. Ping funciona manualmente no CMD?
+3. Qual servidor está com problema de ping?
+4. Há alguma mensagem de erro nos logs?
+
+═══════════════════════════════════════════════════════════════════════
+ENVIAR:
+═══════════════════════════════════════════════════════════════════════
+
+1. Saída completa do TESTAR_PING_AGORA.py
+2. Logs da probe relacionados a PING
+3. Resultado do ping manual no CMD
+
+═══════════════════════════════════════════════════════════════════════

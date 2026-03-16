@@ -1,0 +1,88 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔧 COPIAR PROBE_CORE.PY ATUALIZADO PARA SONDA - 12/MAR 16:30
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ PROBLEMA IDENTIFICADO:
+   - Você copiou a pasta "probe" inteira (ANTIGA) para a sonda
+   - O arquivo local está CORRETO (modificado às 16:13)
+   - Mas a cópia na sonda está DESATUALIZADA
+
+═══════════════════════════════════════════════════════════════════════════════
+📋 PASSO A PASSO - COPIAR VIA RDP
+═══════════════════════════════════════════════════════════════════════════════
+
+1️⃣ PARAR A PROBE NA SONDA (se estiver rodando):
+   - Pressione CTRL+C no PowerShell da sonda
+
+2️⃣ NA SUA MÁQUINA LOCAL:
+   - Abrir pasta: C:\Users\[SEU_USUARIO]\Coruja Monitor\probe
+   - Localizar arquivo: probe_core.py
+   - Copiar (CTRL+C)
+
+3️⃣ VIA RDP NA SONDA (SRVSONDA001):
+   - Abrir pasta: C:\Program Files\CorujaMonitor\Probe
+   - Colar e SUBSTITUIR o arquivo: probe_core.py
+   - Confirmar substituição
+
+4️⃣ REINICIAR PROBE NA SONDA:
+   cd 'C:\Program Files\CorujaMonitor\Probe'
+   python .\probe_core.py
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ VALIDAÇÃO - LOGS ESPERADOS (após 60 segundos)
+═══════════════════════════════════════════════════════════════════════════════
+
+ANTES (logs atuais - ERRADO):
+   INFO:__main__:Using PING only for srvhvsprd010
+
+DEPOIS (logs esperados - CORRETO):
+   INFO:__main__:Using WMI for srvhvsprd010
+   INFO:__main__:🔐 Usando credencial: Techbiz (Nível: Empresa)
+   INFO:__main__:   Usuário: Techbiz\coruja.monitor
+   INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 RESULTADO ESPERADO NO DASHBOARD
+═══════════════════════════════════════════════════════════════════════════════
+
+Servidor: SRVHVSPRD010 (192.168.31.110)
+
+Sensores WMI (devem mostrar valores):
+   ✅ CPU Usage: 15% (exemplo)
+   ✅ Memory Usage: 45% (exemplo)
+   ✅ Disk C: Usage: 60% (exemplo)
+   ✅ Uptime: 5 dias (exemplo)
+   ✅ Network In: 1.2 MB/s (exemplo)
+   ✅ Network Out: 0.8 MB/s (exemplo)
+
+Sensor PING (continua funcionando):
+   ✅ PING: 0.44ms (coletado pelo worker Linux)
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 OBSERVAÇÕES IMPORTANTES
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Arquivo local está CORRETO (modificado às 16:13)
+✅ Credencial "Techbiz" já está configurada no banco
+✅ Servidor SRVHVSPRD010 já tem 7 sensores criados
+✅ PING continua funcionando (worker Linux)
+
+⚠️ NÃO copie a pasta inteira novamente
+⚠️ Copie APENAS o arquivo probe_core.py
+
+═══════════════════════════════════════════════════════════════════════════════
+🔍 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+Se após 60 segundos ainda mostrar "Using PING only":
+   1. Verificar se o arquivo foi realmente substituído
+   2. Verificar tamanho do arquivo (deve ter ~15KB)
+   3. Abrir probe_core.py e procurar por "_get_server_credential"
+   4. Se não encontrar, arquivo não foi copiado corretamente
+
+Se mostrar erro de credencial:
+   1. Verificar se credencial "Techbiz" existe no banco
+   2. Acessar: http://192.168.31.161:3000 → Configurações → Credenciais
+   3. Confirmar: Tipo=WMI, Nível=Empresa, Status=Padrão
+
+═══════════════════════════════════════════════════════════════════════════════

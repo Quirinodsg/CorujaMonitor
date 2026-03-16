@@ -1,0 +1,71 @@
+================================================================================
+REINICIAR PROBE (RODANDO MANUALMENTE) - APLICAR CORREÇÃO PING
+================================================================================
+
+SITUAÇÃO: Probe está rodando manualmente (não como serviço Windows)
+Arquivo atualizado: 11:55:39 AM ✓
+
+EXECUTAR NA SRVSONDA001 (PowerShell como Administrador):
+================================================================================
+
+# 1. Encontrar processo Python da probe
+Get-Process | Where-Object {$_.ProcessName -like "*python*"} | Select-Object Id, ProcessName, StartTime
+
+# 2. Matar processo Python (substitua XXXX pelo ID do processo)
+# Exemplo: se o ID for 1234, use: Stop-Process -Id 1234 -Force
+Stop-Process -Id XXXX -Force
+
+# OU matar TODOS os processos Python:
+Get-Process | Where-Object {$_.ProcessName -like "*python*"} | Stop-Process -Force
+
+# 3. Aguardar 5 segundos
+Start-Sleep -Seconds 5
+
+# 4. Iniciar probe novamente
+cd "C:\Program Files\CorujaMonitor\Probe"
+python probe_core.py
+
+================================================================================
+LOGS ESPERADOS (DEVE aparecer após ~60 segundos):
+================================================================================
+
+INFO:__main__:Collecting SNMP metrics from 192.168.31.161 (v2c)
+INFO:__main__:Parsed 4 metrics from SNMP data
+INFO:__main__:Collected 4 SNMP metrics from 192.168.31.161
+DEBUG:__main__:Collecting PING metric for SNMP server 192.168.31.161  ← NOVO!
+DEBUG:__main__:PING 192.168.31.161: OK (1ms)  ← NOVO!
+
+Se NÃO aparecer "Collecting PING metric", o arquivo não foi atualizado!
+
+================================================================================
+ALTERNATIVA: FECHAR JANELA E REABRIR
+================================================================================
+
+Se a probe estiver rodando em uma janela de console:
+1. Fechar a janela (X)
+2. Abrir PowerShell como Administrador
+3. cd "C:\Program Files\CorujaMonitor\Probe"
+4. python probe_core.py
+
+================================================================================
+VALIDAR NO LINUX (após 2 minutos):
+================================================================================
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+    s.id, 
+    srv.hostname,
+    COUNT(m.id) as total_metrics,
+    MAX(m.timestamp) as last_metric_time
+FROM sensors s
+LEFT JOIN servers srv ON s.server_id = srv.id
+LEFT JOIN metrics m ON m.sensor_id = s.id
+WHERE s.sensor_type = 'ping'
+GROUP BY s.id, srv.hostname
+ORDER BY s.id;
+"
+
+RESULTADO ESPERADO:
+- ID 23 (SRVCMONITOR001): DEVE TER MÉTRICAS NOVAS!
+
+================================================================================

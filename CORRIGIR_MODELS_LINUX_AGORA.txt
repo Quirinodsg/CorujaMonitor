@@ -1,0 +1,96 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔧 CORRIGIR api/models.py NO LINUX - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 PROBLEMA IDENTIFICADO:
+   - Classe Credential está DENTRO da classe AuthenticationConfig (linha 906)
+   - Isso causa IndentationError na linha 966
+   - O erro está no Git (commit f7aa7bd), então git checkout não resolve
+
+🎯 SOLUÇÃO:
+   Remover a classe Credential aninhada incorretamente
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 COPIAR E COLAR NO LINUX (SSH):
+═══════════════════════════════════════════════════════════════════════════════
+
+# 1. Criar script de correção
+cat > /tmp/fix_models_definitivo.py << 'SCRIPT_END'
+#!/usr/bin/env python3
+"""Corrigir api/models.py - Remover classe Credential aninhada"""
+
+# Ler arquivo
+with open('/home/administrador/CorujaMonitor/api/models.py', 'r', encoding='utf-8') as f:
+    lines = f.readlines()
+
+# Processar linhas
+fixed_lines = []
+skip_mode = False
+skip_count = 0
+
+for i, line in enumerate(lines, 1):
+    # Detectar início da classe Credential ANINHADA (linha ~906)
+    if '    class Credential(Base):' in line and not skip_mode:
+        print(f"⚠️  Linha {i}: Detectada classe Credential ANINHADA - REMOVENDO")
+        skip_mode = True
+        skip_count = 0
+        continue
+    
+    # Se estamos em modo skip, contar até encontrar próxima classe raiz
+    if skip_mode:
+        skip_count += 1
+        # Próxima classe no nível raiz (sem indentação) = fim da classe aninhada
+        if line.strip().startswith('class ') and not line.startswith('    '):
+            print(f"✅ Removidas {skip_count} linhas da classe Credential aninhada")
+            skip_mode = False
+            # NÃO adicionar esta linha ainda, ela será adicionada no próximo loop
+            fixed_lines.append(line)
+            continue
+        else:
+            continue  # Pular esta linha
+    
+    # Adicionar linha normal
+    fixed_lines.append(line)
+
+# Salvar
+with open('/home/administrador/CorujaMonitor/api/models.py', 'w', encoding='utf-8') as f:
+    f.writelines(fixed_lines)
+
+print(f"\n✅ Arquivo corrigido!")
+print(f"📊 {len(lines)} linhas → {len(fixed_lines)} linhas")
+print(f"🗑️  {len(lines) - len(fixed_lines)} linhas removidas")
+SCRIPT_END
+
+# 2. Executar correção
+python3 /tmp/fix_models_definitivo.py
+
+# 3. Verificar se corrigiu (deve mostrar apenas 1 classe AuthenticationConfig)
+echo ""
+echo "🔍 Verificando classes no arquivo:"
+grep -n "^class " /home/administrador/CorujaMonitor/api/models.py | tail -5
+
+# 4. Testar migração
+echo ""
+echo "🧪 Testando migração..."
+docker exec -it coruja-api python3 migrate_credentials.py
+
+# 5. Se deu certo, reiniciar serviços
+echo ""
+echo "🔄 Reiniciando serviços..."
+docker-compose restart api frontend
+
+echo ""
+echo "✅ PRONTO! Sistema de credenciais instalado!"
+echo "🌐 Acesse: http://192.168.31.161:3000"
+echo "📍 Menu: Configurações > Credenciais"
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ APÓS EXECUTAR NO LINUX:
+═══════════════════════════════════════════════════════════════════════════════
+
+Volte aqui e me avise o resultado para eu:
+1. Corrigir o arquivo no notebook (Windows)
+2. Fazer novo commit para o Git
+3. Testar a interface de credenciais
+
+═══════════════════════════════════════════════════════════════════════════════

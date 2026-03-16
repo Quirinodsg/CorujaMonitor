@@ -1,0 +1,58 @@
+# ========================================
+# CORREÇÕES CREDENCIAIS FRONTEND
+# ========================================
+
+# CORREÇÕES APLICADAS:
+# 1. ✅ Adicionado dropdown de Tenant com lista de empresas
+# 2. ✅ Corrigido erro "Network Error" (tenant_id no payload)
+# 3. ✅ Cores alteradas de cinza para roxo claro (legível)
+# 4. ✅ Adicionadas dicas explicativas em cada nível
+# 5. ✅ Melhorado visual dos cards com gradiente roxo
+
+# ========================================
+# PASSO 1: Commit no Windows (Notebook)
+# ========================================
+
+git add frontend/src/components/Credentials.js
+git add frontend/src/components/Credentials.css
+git commit -m "fix: Melhorar interface de Credenciais - dropdown tenant, cores roxas, corrigir network error"
+git push origin master
+
+# ========================================
+# PASSO 2: Atualizar no Linux
+# ========================================
+
+# No SSH do Linux, execute:
+
+cd /home/administrador/CorujaMonitor
+
+echo "📥 Baixando correções do Git..."
+git pull origin master
+
+echo ""
+echo "🔄 Reiniciando frontend..."
+docker-compose restart frontend
+
+echo ""
+echo "⏳ Aguardando frontend reiniciar (30 segundos)..."
+sleep 30
+
+echo ""
+echo "🧪 Testando frontend:"
+curl -I http://localhost:3000
+
+echo ""
+echo "📋 Logs do frontend (últimas 30 linhas):"
+docker logs coruja-frontend --tail 30
+
+echo ""
+echo "✅ PRÓXIMOS PASSOS:"
+echo "1. Acesse: http://192.168.31.161:3000"
+echo "2. Login: admin@coruja.com / admin123"
+echo "3. Vá em Configurações > Credenciais"
+echo "4. Clique em 'Nova Credencial'"
+echo "5. Veja as melhorias:"
+echo "   - Dropdown de Tenant mostra empresas"
+echo "   - Cores roxas legíveis"
+echo "   - Dicas explicativas em cada nível"
+echo "6. Crie credencial WMI para SRVHVSPRD010"

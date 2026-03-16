@@ -1,0 +1,48 @@
+========================================
+TESTAR MÉTODOS WMI NO WINDOWS
+========================================
+
+EXECUTAR NO WINDOWS SRVSONDA001 (PowerShell como Admin):
+
+# 1. Verificar se wmic existe
+where.exe wmic
+
+# 2. Testar wmic local
+wmic os get caption
+
+# 3. Testar wmic remoto (se existir)
+wmic /node:192.168.31.110 /user:Techbiz\coruja.monitor /password:Coruja@2025 os get caption
+
+# 4. Verificar WinRM no servidor remoto
+Test-NetConnection 192.168.31.110 -Port 5985
+
+# 5. Testar PowerShell Remoting
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -ScriptBlock { Get-WmiObject Win32_OperatingSystem | Select Caption }
+
+========================================
+RESULTADOS ESPERADOS:
+========================================
+
+Se wmic NÃO existir:
+→ Usar versão PowerShell (wmi_remote_collector_powershell.py)
+
+Se wmic existir MAS falhar remoto:
+→ Verificar firewall e credenciais
+
+Se PowerShell Remoting funcionar:
+→ Usar versão PowerShell (RECOMENDADO)
+
+Se PowerShell Remoting falhar:
+→ Habilitar WinRM no servidor remoto:
+   Enable-PSRemoting -Force
+
+========================================
+PRÓXIMOS PASSOS:
+========================================
+
+Após testar, informar qual método funcionou para
+atualizar o código da probe.
+
+========================================

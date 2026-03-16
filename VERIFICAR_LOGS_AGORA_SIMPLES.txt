@@ -1,0 +1,13 @@
+═══════════════════════════════════════════════════════════════════════════
+  VERIFICAR LOGS DO SERVIÇO - COPIE E COLE ESTE COMANDO
+═══════════════════════════════════════════════════════════════════════════
+
+AGUARDE 60 SEGUNDOS e depois copie e cole este comando no PowerShell:
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log" -Tail 100
+
+═══════════════════════════════════════════════════════════════════════════
+
+Depois cole aqui o resultado completo.
+
+═══════════════════════════════════════════════════════════════════════════

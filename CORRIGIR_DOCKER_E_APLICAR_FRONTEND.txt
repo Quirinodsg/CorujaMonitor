@@ -1,0 +1,85 @@
+═══════════════════════════════════════════════════════════════
+  🔧 CORRIGIR DOCKER E APLICAR CORREÇÃO DO FRONTEND
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA: Docker com erro "permission denied" ao reiniciar containers
+
+SOLUÇÃO RÁPIDA: Parar Docker, limpar iptables, reiniciar
+
+COPIE E COLE NO LINUX (PUTTY):
+
+# 1. PARAR DOCKER DAEMON
+sudo systemctl stop docker
+
+# 2. LIMPAR IPTABLES
+sudo iptables -t nat -F
+sudo iptables -t mangle -F
+sudo iptables -F
+sudo iptables -X
+
+# 3. REINICIAR DOCKER
+sudo systemctl start docker
+
+# 4. AGUARDAR 5 SEGUNDOS
+sleep 5
+
+# 5. RECRIAR CONTAINERS
+cd /home/administrador/CorujaMonitor
+sudo docker-compose up -d
+
+# 6. VERIFICAR SE ESTÃO RODANDO
+docker ps
+
+═══════════════════════════════════════════════════════════════
+  AGUARDAR CONTAINERS INICIAREM (30-60 SEGUNDOS)
+═══════════════════════════════════════════════════════════════
+
+Aguarde os containers subirem completamente antes de testar.
+
+Você pode acompanhar os logs:
+docker logs -f coruja-frontend
+
+Pressione CTRL+C para sair dos logs.
+
+═══════════════════════════════════════════════════════════════
+  TESTAR A CORREÇÃO
+═══════════════════════════════════════════════════════════════
+
+1. Limpar cache do navegador: CTRL + SHIFT + DELETE
+2. Acessar: http://192.168.31.161:3000
+3. Login: admin@coruja.com / admin123
+4. Menu "Servidores"
+5. Clicar no botão "✏️" ao lado de um servidor
+6. VERIFICAR: Campo "Grupo / Empresa" agora é DROPDOWN
+7. Selecionar grupo e salvar
+
+═══════════════════════════════════════════════════════════════
+  SE O PROBLEMA PERSISTIR
+═══════════════════════════════════════════════════════════════
+
+Se ainda der erro de permissão, execute:
+
+sudo systemctl stop docker
+sudo rm -rf /var/lib/docker/network/files/*
+sudo systemctl start docker
+cd /home/administrador/CorujaMonitor
+sudo docker-compose up -d
+
+═══════════════════════════════════════════════════════════════
+  VERIFICAR SAÚDE DO SISTEMA
+═══════════════════════════════════════════════════════════════
+
+Após containers subirem:
+
+# API
+curl http://localhost:8000/health
+
+# Frontend
+curl http://localhost:3000
+
+# Containers rodando
+docker ps
+
+Todos devem responder OK.
+
+═══════════════════════════════════════════════════════════════

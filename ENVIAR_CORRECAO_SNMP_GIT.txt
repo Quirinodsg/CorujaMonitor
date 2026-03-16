@@ -1,0 +1,12 @@
+════════════════════════════════════════════════════════════════
+ENVIAR CORREÇÃO SNMP PARA GIT
+════════════════════════════════════════════════════════════════
+
+Abrir Git Bash no notebook (DESKTOP-P9VGN04) e executar:
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+git add probe/probe_core.py
+git commit -m "fix: Corrige SNMP collector para converter dados brutos em métricas (09MAR)"
+git push origin master
+
+════════════════════════════════════════════════════════════════

@@ -1,0 +1,108 @@
+========================================
+⚠️ EXECUTAR AGORA NA SRVSONDA001 ⚠️
+========================================
+
+ERRO ATUAL:
+"A computer policy does not allow the delegation of the user credentials"
+
+SOLUÇÃO: Configurar Group Policy para CredSSP
+
+========================================
+PASSO 1: ABRIR POWERSHELL COMO ADMIN
+========================================
+
+Na SRVSONDA001 (192.168.31.162):
+- Botão direito no PowerShell
+- "Executar como Administrador"
+
+========================================
+PASSO 2: COPIAR E COLAR ESTE CÓDIGO
+========================================
+
+Write-Host "Configurando CredSSP..." -ForegroundColor Cyan
+
+$regPath1 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation"
+$regPath2 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentials"
+$regPath3 = "HKLM:\SOFTWARE\Policies\Microsoft\Windows\CredentialsDelegation\AllowFreshCredentialsWhenNTLMOnly"
+
+New-Item -Path $regPath1 -Force | Out-Null
+New-Item -Path $regPath2 -Force | Out-Null
+New-Item -Path $regPath3 -Force | Out-Null
+
+Set-ItemProperty -Path $regPath1 -Name "AllowFreshCredentials" -Value 1 -Type DWord
+Set-ItemProperty -Path $regPath1 -Name "AllowFreshCredentialsWhenNTLMOnly" -Value 1 -Type DWord
+Set-ItemProperty -Path $regPath1 -Name "ConcatenateDefaults_AllowFresh" -Value 1 -Type DWord
+Set-ItemProperty -Path $regPath1 -Name "ConcatenateDefaults_AllowFreshNTLMOnly" -Value 1 -Type DWord
+
+Set-ItemProperty -Path $regPath2 -Name "1" -Value "WSMAN/192.168.31.110" -Type String
+Set-ItemProperty -Path $regPath3 -Name "1" -Value "WSMAN/192.168.31.110" -Type String
+Set-ItemProperty -Path $regPath2 -Name "2" -Value "WSMAN/*" -Type String
+Set-ItemProperty -Path $regPath3 -Name "2" -Value "WSMAN/*" -Type String
+
+gpupdate /force | Out-Null
+
+Write-Host "✅ Políticas configuradas" -ForegroundColor Green
+Write-Host "Testando conexão..." -ForegroundColor Cyan
+
+try {
+    $password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+    $credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+    
+    $result = Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -Authentication CredSSP -ScriptBlock { 
+        Get-WmiObject Win32_OperatingSystem | Select-Object Caption
+    } -ErrorAction Stop
+    
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "✅ SUCESSO! CREDSSP FUNCIONANDO!" -ForegroundColor Green
+    Write-Host "========================================" -ForegroundColor Green
+    Write-Host "Sistema: $($result.Caption)" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Próximo passo: Reiniciar a probe" -ForegroundColor Yellow
+    
+} catch {
+    Write-Host ""
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host "❌ ERRO: Precisa reiniciar a máquina" -ForegroundColor Red
+    Write-Host "========================================" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "Executar: Restart-Computer -Force" -ForegroundColor Yellow
+}
+
+========================================
+PASSO 3A: SE DEU SUCESSO ✅
+========================================
+
+Reiniciar a probe:
+1. Parar probe (Ctrl+C na janela do iniciar_probe.bat)
+2. Iniciar novamente:
+   cd C:\Users\Administrator\Desktop
+   .\iniciar_probe.bat
+
+Aguardar 1 minuto e verificar logs:
+Deve aparecer: "Collected 7 WMI metrics from 192.168.31.110"
+
+========================================
+PASSO 3B: SE DEU ERRO ❌
+========================================
+
+Reiniciar a máquina:
+Restart-Computer -Force
+
+Após reiniciar, testar novamente:
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -Authentication CredSSP -ScriptBlock { hostname }
+
+Se funcionar, reiniciar a probe.
+
+========================================
+VERIFICAÇÃO FINAL
+========================================
+
+Dashboard (http://192.168.31.161:3000):
+- Ir em Servidores
+- Clicar em SRVHVSPRD010
+- Sensores devem mostrar valores (não "Unknown")
+
+========================================

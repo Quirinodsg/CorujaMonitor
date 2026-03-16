@@ -1,0 +1,105 @@
+═══════════════════════════════════════════════════════════════════════════
+  RESOLVER SERVIÇO PAUSED - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════
+
+PROBLEMA: Serviço fica em estado PAUSED e log está vazio
+CAUSA: Python não está iniciando corretamente
+
+═══════════════════════════════════════════════════════════════════════════
+SOLUÇÃO: RECONFIGURAR SERVIÇO COM CAMINHO COMPLETO DO PYTHON
+═══════════════════════════════════════════════════════════════════════════
+
+Execute na SRVSONDA001 (PowerShell como Administrador):
+
+# 1. Parar serviço
+nssm stop CorujaProbe
+
+# 2. Descobrir caminho completo do Python
+$pythonPath = (Get-Command python).Source
+Write-Host "Python encontrado em: $pythonPath"
+
+# 3. Reconfigurar serviço com caminho completo
+nssm set CorujaProbe Application $pythonPath
+nssm set CorujaProbe AppParameters "probe_core.py"
+nssm set CorujaProbe AppDirectory "C:\Program Files\CorujaMonitor\Probe"
+
+# 4. Garantir que logs existem
+New-Item -ItemType Directory -Force -Path "C:\Program Files\CorujaMonitor\Probe\logs"
+
+# 5. Reconfigurar logs
+nssm set CorujaProbe AppStdout "C:\Program Files\CorujaMonitor\Probe\logs\service.log"
+nssm set CorujaProbe AppStderr "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log"
+
+# 6. Iniciar serviço
+nssm start CorujaProbe
+
+# 7. Aguardar 10 segundos
+Start-Sleep -Seconds 10
+
+# 8. Verificar status
+nssm status CorujaProbe
+
+# 9. Ver logs
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service.log" -Tail 50
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log" -Tail 50
+
+═══════════════════════════════════════════════════════════════════════════
+ALTERNATIVA: USAR SC.EXE (MAIS SIMPLES)
+═══════════════════════════════════════════════════════════════════════════
+
+Se NSSM continuar com problemas, use sc.exe nativo:
+
+# 1. Remover serviço NSSM
+nssm stop CorujaProbe
+nssm remove CorujaProbe confirm
+
+# 2. Descobrir caminho do Python
+$pythonPath = (Get-Command python).Source
+Write-Host "Python: $pythonPath"
+
+# 3. Criar serviço com sc.exe
+$binPath = "`"$pythonPath`" `"C:\Program Files\CorujaMonitor\Probe\probe_core.py`""
+sc.exe create CorujaProbe binPath= $binPath start= auto obj= "TECHBIZ\coruja.monitor" password= "Dj8SXoXie!o6Tkc@"
+sc.exe description CorujaProbe "Coruja Monitor Probe com Kerberos"
+
+# 4. Iniciar serviço
+sc.exe start CorujaProbe
+
+# 5. Verificar status
+sc.exe query CorujaProbe
+
+# 6. Ver logs da probe (arquivo normal, não do serviço)
+Get-Content "C:\Program Files\CorujaMonitor\Probe\probe.log" -Tail 50
+
+═══════════════════════════════════════════════════════════════════════════
+ALTERNATIVA 2: EXECUTAR PROBE MANUALMENTE COMO USUÁRIO DE DOMÍNIO
+═══════════════════════════════════════════════════════════════════════════
+
+Mais simples para testar:
+
+# 1. Parar serviço
+nssm stop CorujaProbe
+
+# 2. Fazer login no Windows como TECHBIZ\coruja.monitor
+#    (ou usar RunAs)
+
+# 3. Executar probe manualmente
+cd "C:\Program Files\CorujaMonitor\Probe"
+python probe_core.py
+
+Isso vai mostrar os logs em tempo real e confirmar se WMI funciona.
+
+═══════════════════════════════════════════════════════════════════════════
+COPIE E COLE AQUI
+═══════════════════════════════════════════════════════════════════════════
+
+Execute os comandos da SOLUÇÃO acima e cole aqui:
+
+1. Caminho do Python encontrado
+2. Status após reiniciar: nssm status CorujaProbe
+3. Conteúdo de service.log
+4. Conteúdo de service_error.log (se houver)
+
+═══════════════════════════════════════════════════════════════════════════
+Data: 13/03/2026 - Coruja Monitor
+═══════════════════════════════════════════════════════════════════════════

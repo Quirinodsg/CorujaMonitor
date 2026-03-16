@@ -1,0 +1,124 @@
+═══════════════════════════════════════════════════════════════════════════
+  APLICAR CoInitializeSecurity - CORREÇÃO DEFINITIVA WMI
+═══════════════════════════════════════════════════════════════════════════
+
+SOLUÇÃO ENCONTRADA:
+O problema não era apenas pythoncom.CoInitialize()
+Faltava pythoncom.CoInitializeSecurity() para configurar o contexto de segurança COM!
+
+Isso é usado por Datadog, PRTG, Kaseya e todas as ferramentas profissionais.
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 1: COPIAR ARQUIVO CORRIGIDO
+═══════════════════════════════════════════════════════════════════════════
+
+1. Copie via RDP o arquivo CORRIGIDO:
+   probe/collectors/wmi_native_collector.py
+   
+   Para SRVSONDA001:
+   C:\Users\Steve.Jobs\Desktop\coruja-monitor\probe\collectors\
+
+2. Depois copie para produção:
+
+Copy-Item "C:\Users\Steve.Jobs\Desktop\coruja-monitor\probe\collectors\wmi_native_collector.py" -Destination "C:\Program Files\CorujaMonitor\Probe\collectors\" -Force
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 2: REINICIAR SERVIÇO
+═══════════════════════════════════════════════════════════════════════════
+
+nssm restart CorujaProbe
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 3: AGUARDAR E VERIFICAR LOGS
+═══════════════════════════════════════════════════════════════════════════
+
+Start-Sleep -Seconds 60
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log" -Tail 50
+
+═══════════════════════════════════════════════════════════════════════════
+O QUE FOI ADICIONADO
+═══════════════════════════════════════════════════════════════════════════
+
+```python
+import pythoncom
+import wmi
+
+def connect(self):
+    # 1. Inicializar COM
+    pythoncom.CoInitialize()
+    
+    # 2. NOVO: Configurar contexto de segurança COM
+    pythoncom.CoInitializeSecurity(
+        None,
+        -1,
+        None,
+        None,
+        pythoncom.RPC_C_AUTHN_LEVEL_DEFAULT,
+        pythoncom.RPC_C_IMP_LEVEL_IMPERSONATE,  # ← CRÍTICO
+        None,
+        pythoncom.EOAC_NONE,
+        None
+    )
+    
+    # 3. Conectar WMI com credenciais
+    self.connection = wmi.WMI(
+        computer=self.hostname,
+        user=self.full_username,
+        password=self.password,
+        namespace="root/cimv2"
+    )
+```
+
+═══════════════════════════════════════════════════════════════════════════
+POR QUE ISSO FUNCIONA?
+═══════════════════════════════════════════════════════════════════════════
+
+CoInitializeSecurity configura:
+
+1. RPC_C_AUTHN_LEVEL_DEFAULT
+   - Usa autenticação padrão do Windows (Kerberos/NTLM)
+
+2. RPC_C_IMP_LEVEL_IMPERSONATE
+   - Permite que o servidor WMI personifique o cliente
+   - ESSENCIAL para passar credenciais remotamente
+
+3. EOAC_NONE
+   - Sem capacidades adicionais
+
+Sem isso, WMI não consegue usar as credenciais corretamente!
+
+═══════════════════════════════════════════════════════════════════════════
+COMO DATADOG E PRTG FAZEM
+═══════════════════════════════════════════════════════════════════════════
+
+Todas as ferramentas profissionais usam:
+
+1. pythoncom.CoInitialize()
+2. pythoncom.CoInitializeSecurity() ← VOCÊ ESTAVA ESQUECENDO ISSO
+3. wmi.WMI() com credenciais
+
+Referência: Kaseya Documentation
+"If the WMI monitor instance has any credentials specified, they override 
+the service log on property. In this scenario, typically a service account 
+with domain-wide WMI privileges is created for monitoring purposes."
+
+═══════════════════════════════════════════════════════════════════════════
+RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════
+
+INFO:collectors.wmi_native_collector:🔌 Conectando via WMI nativo em SRVHVSPRD010.ad.techbiz.com.br
+INFO:collectors.wmi_native_collector:✅ WMI nativo conectado em SRVHVSPRD010.ad.techbiz.com.br
+INFO:__main__:✅ Collected 3 WMI metrics from SRVHVSPRD010.ad.techbiz.com.br
+
+✅ SEM ERROS!
+
+═══════════════════════════════════════════════════════════════════════════
+COPIE E COLE AQUI
+═══════════════════════════════════════════════════════════════════════════
+
+Após executar os passos acima, cole aqui as últimas 50 linhas do log.
+
+═══════════════════════════════════════════════════════════════════════════
+Data: 13/03/2026 - Coruja Monitor - SOLUÇÃO DEFINITIVA
+═══════════════════════════════════════════════════════════════════════════

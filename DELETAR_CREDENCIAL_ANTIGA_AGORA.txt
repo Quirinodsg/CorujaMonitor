@@ -1,0 +1,40 @@
+========================================
+DELETAR CREDENCIAL ANTIGA E TESTAR
+========================================
+
+PASSO 1 - Deletar credencial antiga no banco (Linux SSH):
+
+cd /home/administrador/CorujaMonitor
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "DELETE FROM credentials WHERE id = 1;"
+
+PASSO 2 - Verificar se deletou:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, name, wmi_username FROM credentials WHERE credential_type = 'wmi';"
+
+Deve aparecer apenas a credencial nova (ID 2 ou maior)
+
+PASSO 3 - Aguardar próxima coleta da probe (~60 segundos)
+
+PASSO 4 - Verificar logs da probe
+
+Deve aparecer:
+- INFO:__main__:Using WMI for srvhvsprd010
+- INFO:__main__:🔐 Usando credencial: Techbiz (Nível: Empresa)
+- INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+PASSO 5 - Verificar dashboard
+
+Sensores do SRVHVSPRD010 devem mostrar valores reais:
+- CPU: % de uso
+- Memória: % de uso
+- Disco C: % de uso
+
+========================================
+SE AINDA MOSTRAR "CREDENCIAL INCOMPLETA":
+========================================
+
+Verificar qual ID a API está retornando:
+
+docker logs coruja-api --tail 100 | grep credentials
+
+========================================

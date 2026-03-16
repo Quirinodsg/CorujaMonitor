@@ -1,0 +1,259 @@
+═══════════════════════════════════════════════════════════════
+🎯 RESOLVER WMI PARA WORKGROUP (SEM DOMÍNIO)
+═══════════════════════════════════════════════════════════════
+
+SITUAÇÃO:
+- SRVSONDA001 e SRVCMONITOR001: NÃO estão no domínio (workgroup)
+- Demais servidores: ESTÃO no domínio
+- Servidor 192.168.31.110 já tem firewall WMI liberado
+
+PROBLEMA ENCONTRADO:
+- PowerShell 7+ não tem parâmetro -Credential no Get-CimInstance
+- wmic.exe não existe no Windows Server 2022 (depreciado)
+
+✅ SOLUÇÃO: Usar Get-WmiObject ou CimSession
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 1: CONFIGURAR TRUSTEDHOSTS NA SRVSONDA001
+═══════════════════════════════════════════════════════════════
+
+Execute como ADMINISTRADOR na SRVSONDA001:
+
+# Adicionar rede aos TrustedHosts
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "192.168.31.*" -Force
+
+# Verificar
+Get-Item WSMan:\localhost\Client\TrustedHosts
+
+# Reiniciar WinRM
+Restart-Service WinRM
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 2: HABILITAR PSREMOTING NO 192.168.31.110
+═══════════════════════════════════════════════════════════════
+
+Execute como ADMINISTRADOR no 192.168.31.110:
+
+# Habilitar PSRemoting
+Enable-PSRemoting -Force
+
+# Verificar serviço WinRM
+Get-Service WinRM
+
+# Deve estar: Running
+
+# Verificar firewall WMI
+Get-NetFirewallRule -DisplayGroup "Windows Management Instrumentation (WMI)" | 
+  Where-Object {$_.Enabled -eq $true} | 
+  Select-Object DisplayName, Enabled
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 3: TESTAR WMI COM GET-WMIOBJECT
+═══════════════════════════════════════════════════════════════
+
+Execute na SRVSONDA001:
+
+# Criar credencial
+$cred = Get-Credential
+# Digitar: Administrator (ou 192.168.31.110\Administrator)
+# Senha: [senha do administrador do 192.168.31.110]
+
+# Testar WMI - Sistema Operacional
+Get-WmiObject -Class Win32_OperatingSystem `
+  -ComputerName 192.168.31.110 `
+  -Credential $cred | 
+  Select-Object Caption, Version, LastBootUpTime
+
+# Testar CPU
+Get-WmiObject -Class Win32_Processor `
+  -ComputerName 192.168.31.110 `
+  -Credential $cred | 
+  Select-Object Name, LoadPercentage, NumberOfLogicalProcessors
+
+# Testar Memória
+Get-WmiObject -Class Win32_OperatingSystem `
+  -ComputerName 192.168.31.110 `
+  -Credential $cred | 
+  Select-Object @{
+    Name='TotalMemoryGB';
+    Expression={[math]::Round($_.TotalVisibleMemorySize/1MB,2)}
+  }, @{
+    Name='FreeMemoryGB';
+    Expression={[math]::Round($_.FreePhysicalMemory/1MB,2)}
+  }
+
+# Testar Discos
+Get-WmiObject -Class Win32_LogicalDisk `
+  -ComputerName 192.168.31.110 `
+  -Credential $cred `
+  -Filter "DriveType=3" | 
+  Select-Object DeviceID, VolumeName, 
+    @{Name='SizeGB';Expression={[math]::Round($_.Size/1GB,2)}},
+    @{Name='FreeGB';Expression={[math]::Round($_.FreeSpace/1GB,2)}}
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 4: TESTAR COM CIMSESSION (ALTERNATIVA)
+═══════════════════════════════════════════════════════════════
+
+Execute na SRVSONDA001:
+
+# Criar credencial
+$cred = Get-Credential
+
+# Criar sessão CIM
+$session = New-CimSession -ComputerName 192.168.31.110 -Credential $cred
+
+# Testar WMI
+Get-CimInstance -CimSession $session -ClassName Win32_ComputerSystem
+
+# Testar CPU
+Get-CimInstance -CimSession $session -ClassName Win32_Processor | 
+  Select-Object Name, LoadPercentage
+
+# Fechar sessão
+Remove-CimSession $session
+
+═══════════════════════════════════════════════════════════════
+📋 PASSO 5: SCRIPT COMPLETO DE TESTE
+═══════════════════════════════════════════════════════════════
+
+Salve como: testar_wmi_192.168.31.110.ps1
+
+# Script de Teste WMI Completo
+$hostname = "192.168.31.110"
+
+Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "🔧 TESTE WMI - $hostname" -ForegroundColor Cyan
+Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+
+# Solicitar credenciais
+$cred = Get-Credential -Message "Digite as credenciais do $hostname"
+
+Write-Host "`n📊 Testando Sistema Operacional..." -ForegroundColor Yellow
+try {
+    $os = Get-WmiObject -Class Win32_OperatingSystem `
+      -ComputerName $hostname `
+      -Credential $cred `
+      -ErrorAction Stop
+    
+    Write-Host "✅ Sistema: $($os.Caption)" -ForegroundColor Green
+    Write-Host "   Versão: $($os.Version)" -ForegroundColor Gray
+    Write-Host "   Arquitetura: $($os.OSArchitecture)" -ForegroundColor Gray
+    
+} catch {
+    Write-Host "❌ Erro: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+
+Write-Host "`n📊 Testando CPU..." -ForegroundColor Yellow
+try {
+    $cpu = Get-WmiObject -Class Win32_Processor `
+      -ComputerName $hostname `
+      -Credential $cred `
+      -ErrorAction Stop
+    
+    Write-Host "✅ CPU: $($cpu.Name)" -ForegroundColor Green
+    Write-Host "   Cores: $($cpu.NumberOfLogicalProcessors)" -ForegroundColor Gray
+    Write-Host "   Uso: $($cpu.LoadPercentage)%" -ForegroundColor Gray
+    
+} catch {
+    Write-Host "❌ Erro: $($_.Exception.Message)" -ForegroundColor Red
+}
+
+Write-Host "`n📊 Testando Memória..." -ForegroundColor Yellow
+try {
+    $mem = Get-WmiObject -Class Win32_OperatingSystem `
+      -ComputerName $hostname `
+      -Credential $cred `
+      -ErrorAction Stop
+    
+    $totalGB = [math]::Round($mem.TotalVisibleMemorySize/1MB, 2)
+    $freeGB = [math]::Round($mem.FreePhysicalMemory/1MB, 2)
+    $usedGB = $totalGB - $freeGB
+    $usedPercent = [math]::Round(($usedGB / $totalGB) * 100, 1)
+    
+    Write-Host "✅ Memória Total: $totalGB GB" -ForegroundColor Green
+    Write-Host "   Usada: $usedGB GB ($usedPercent%)" -ForegroundColor Gray
+    Write-Host "   Livre: $freeGB GB" -ForegroundColor Gray
+    
+} catch {
+    Write-Host "❌ Erro: $($_.Exception.Message)" -ForegroundColor Red
+}
+
+Write-Host "`n📊 Testando Discos..." -ForegroundColor Yellow
+try {
+    $disks = Get-WmiObject -Class Win32_LogicalDisk `
+      -ComputerName $hostname `
+      -Credential $cred `
+      -Filter "DriveType=3" `
+      -ErrorAction Stop
+    
+    foreach ($disk in $disks) {
+        $sizeGB = [math]::Round($disk.Size/1GB, 2)
+        $freeGB = [math]::Round($disk.FreeSpace/1GB, 2)
+        $usedGB = $sizeGB - $freeGB
+        $usedPercent = [math]::Round(($usedGB / $sizeGB) * 100, 1)
+        
+        Write-Host "✅ Disco $($disk.DeviceID)" -ForegroundColor Green
+        Write-Host "   Nome: $($disk.VolumeName)" -ForegroundColor Gray
+        Write-Host "   Total: $sizeGB GB" -ForegroundColor Gray
+        Write-Host "   Usado: $usedGB GB ($usedPercent%)" -ForegroundColor Gray
+    }
+    
+} catch {
+    Write-Host "❌ Erro: $($_.Exception.Message)" -ForegroundColor Red
+}
+
+Write-Host "`n═══════════════════════════════════════════════════" -ForegroundColor Cyan
+Write-Host "✅ TESTE CONCLUÍDO!" -ForegroundColor Green
+Write-Host "═══════════════════════════════════════════════════" -ForegroundColor Cyan
+
+═══════════════════════════════════════════════════════════════
+🔍 DIAGNÓSTICO: SE DER ERRO
+═══════════════════════════════════════════════════════════════
+
+ERRO: "The WinRM client cannot process the request"
+SOLUÇÃO:
+1. Verificar TrustedHosts na SRVSONDA001
+2. Verificar PSRemoting no 192.168.31.110
+3. Verificar firewall WMI no 192.168.31.110
+
+ERRO: "Access is denied"
+SOLUÇÃO:
+1. Verificar se usuário é Administrador
+2. Verificar permissões WMI (wmimgmt.msc)
+3. Verificar UAC (User Account Control)
+
+ERRO: "RPC server is unavailable"
+SOLUÇÃO:
+1. Verificar serviço WinRM está rodando
+2. Verificar firewall (portas 135, 445, 5985)
+3. Verificar conectividade de rede (ping)
+
+═══════════════════════════════════════════════════════════════
+✅ SE FUNCIONAR
+═══════════════════════════════════════════════════════════════
+
+Parabéns! WMI está funcionando!
+
+PRÓXIMOS PASSOS:
+1. Configurar credenciais no frontend (futuro)
+2. Probe Python vai usar as mesmas credenciais
+3. Métricas serão coletadas automaticamente
+
+═══════════════════════════════════════════════════════════════
+📝 PARA SERVIDORES NO DOMÍNIO (FUTURO)
+═══════════════════════════════════════════════════════════════
+
+Para servidores no domínio, a configuração é MAIS SIMPLES:
+
+1. Criar usuário de serviço no AD: svc_monitor
+2. Adicionar ao grupo Domain Admins (ou Performance Monitor Users)
+3. Configurar GPO para firewall WMI
+4. Usar credenciais de domínio: DOMINIO\svc_monitor
+
+Não precisa configurar TrustedHosts!
+Não precisa PSRemoting!
+Funciona automaticamente via Kerberos!
+
+═══════════════════════════════════════════════════════════════

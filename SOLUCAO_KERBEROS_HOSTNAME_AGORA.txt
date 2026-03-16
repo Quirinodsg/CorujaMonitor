@@ -1,0 +1,127 @@
+========================================
+SOLUÇÃO DEFINITIVA: KERBEROS + HOSTNAME
+========================================
+
+PROBLEMA RAIZ IDENTIFICADO:
+✓ Kerberos NÃO autentica usando IP, apenas hostname/FQDN
+✓ Quando usa IP, Windows tenta NTLM
+✓ Se empresa bloqueia NTLM via GPO → "Access Denied"
+
+SOLUÇÃO:
+Usar HOSTNAME ao invés de IP no monitoramento
+
+========================================
+PASSO 1: ADICIONAR HOSTNAME NO HOSTS
+========================================
+
+Na SRVSONDA001 (.162), PowerShell como Admin:
+
+# Adicionar entrada no arquivo hosts
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.31.110    SRVHVSPRD010"
+
+# Verificar se foi adicionado
+Get-Content C:\Windows\System32\drivers\etc\hosts | Select-String "SRVHVSPRD010"
+
+# Testar resolução
+ping SRVHVSPRD010
+
+DEVE RESPONDER: 192.168.31.110
+
+========================================
+PASSO 2: ATUALIZAR HOSTNAME NO BANCO
+========================================
+
+No servidor Linux (.161):
+
+cd /root/coruja-monitor
+python3 atualizar_hostname_servidor_110.py
+
+DEVE MOSTRAR:
+✅ Hostname atualizado com sucesso!
+   Novo hostname: SRVHVSPRD010
+
+========================================
+PASSO 3: TESTAR CONEXÃO COM HOSTNAME
+========================================
+
+Na SRVSONDA001 (.162), PowerShell como Admin:
+
+$password = ConvertTo-SecureString 'Dj8SXoXie!o6Tkc@' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+
+# Testar com Kerberos (vai funcionar agora!)
+Invoke-Command -ComputerName SRVHVSPRD010 -Credential $credential -Authentication Kerberos -ScriptBlock { 
+    hostname 
+}
+
+DEVE RETORNAR: SRVHVSPRD010
+
+========================================
+PASSO 4: COPIAR COLLECTOR ATUALIZADO
+========================================
+
+1. Copiar arquivo atualizado:
+   probe/collectors/wmi_remote_collector.py
+
+2. Na SRVSONDA001, substituir:
+   C:\Program Files\CorujaMonitor\Probe\collectors\wmi_remote_collector.py
+
+========================================
+PASSO 5: REINICIAR PROBE
+========================================
+
+Na SRVSONDA001:
+
+1. Parar probe (Ctrl+C)
+
+2. Iniciar:
+   cd C:\Users\Administrator\Desktop
+   .\iniciar_probe.bat
+
+========================================
+PASSO 6: VERIFICAR LOGS (1 minuto)
+========================================
+
+✅ SUCESSO - Deve aparecer:
+INFO:__main__:🔐 Usando credencial: Techbiz (Nível: tenant)
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010
+INFO:__main__:Collected 7 WMI metrics from 192.168.31.110
+
+========================================
+POR QUE ISSO FUNCIONA?
+========================================
+
+1. Kerberos usa SPN (Service Principal Name)
+   - SPN é baseado em hostname, não IP
+   - Formato: HOST/SRVHVSPRD010
+
+2. Com IP (192.168.31.110):
+   - Kerberos falha (não tem SPN para IP)
+   - Windows tenta NTLM
+   - GPO bloqueia NTLM → Access Denied
+
+3. Com hostname (SRVHVSPRD010):
+   - Kerberos funciona (encontra SPN)
+   - Domain Admin tem acesso
+   - Autenticação bem-sucedida ✅
+
+========================================
+ORDEM DE AUTENTICAÇÃO ATUALIZADA
+========================================
+
+Collector agora tenta nesta ordem:
+1. Kerberos (funciona com hostname + Domain Admin)
+2. Negotiate (fallback se Kerberos falhar)
+3. CredSSP (fallback final)
+
+========================================
+OBSERVAÇÕES IMPORTANTES
+========================================
+
+1. Arquivo hosts é necessário se DNS não resolver
+2. Hostname deve ser exatamente como no AD
+3. Não precisa configurar WinRM no .110
+4. Não precisa CredSSP
+5. Domain Admin + Kerberos + Hostname = Funciona!
+
+========================================

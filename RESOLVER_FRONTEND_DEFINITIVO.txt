@@ -1,0 +1,98 @@
+#!/bin/bash
+# ========================================
+# RESOLVER FRONTEND DEFINITIVO
+# Execute este script no Linux
+# ========================================
+
+set -e  # Parar em caso de erro
+
+echo "🛑 PASSO 1: Parando todos os containers..."
+docker-compose down
+echo "✅ Containers parados"
+echo ""
+
+echo "🗑️  PASSO 2: Removendo container frontend antigo..."
+docker rm -f coruja-frontend 2>/dev/null || echo "Container não existia"
+echo ""
+
+echo "🗑️  PASSO 3: Removendo imagem frontend antiga..."
+docker rmi corujamonitor_frontend 2>/dev/null || echo "Imagem não existia"
+docker rmi corujamonitor-frontend 2>/dev/null || echo "Imagem não existia"
+echo ""
+
+echo "🔨 PASSO 4: Reconstruindo TODOS os containers (pode demorar 3-5 minutos)..."
+docker-compose build
+echo "✅ Build concluído"
+echo ""
+
+echo "🚀 PASSO 5: Iniciando TODOS os containers..."
+docker-compose up -d
+echo "✅ Containers iniciados"
+echo ""
+
+echo "⏳ PASSO 6: Aguardando containers estabilizarem (60 segundos)..."
+for i in {60..1}; do
+  echo -ne "   Aguardando $i segundos...\r"
+  sleep 1
+done
+echo ""
+echo ""
+
+echo "📋 PASSO 7: Status dos containers:"
+docker-compose ps
+echo ""
+
+echo "📊 PASSO 8: Logs do frontend (últimas 50 linhas):"
+docker logs coruja-frontend --tail 50
+echo ""
+
+echo "🧪 PASSO 9: Testando API..."
+API_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health)
+if [ "$API_STATUS" = "200" ] || [ "$API_STATUS" = "405" ]; then
+  echo "✅ API está respondendo (HTTP $API_STATUS)"
+else
+  echo "❌ API não está respondendo (HTTP $API_STATUS)"
+fi
+echo ""
+
+echo "🧪 PASSO 10: Testando Frontend..."
+sleep 5  # Aguardar mais 5 segundos
+FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000)
+if [ "$FRONTEND_STATUS" = "200" ]; then
+  echo "✅ Frontend está respondendo (HTTP $FRONTEND_STATUS)"
+  echo ""
+  echo "========================================
+  ✅ SUCESSO! FRONTEND FUNCIONANDO!
+  ========================================
+  
+  🌐 Acesse: http://192.168.31.161:3000
+  🔑 Login: admin@coruja.com
+  🔐 Senha: admin123
+  
+  📋 PRÓXIMOS PASSOS:
+  1. Acesse o portal
+  2. Vá em Configurações > Credenciais
+  3. Adicione credencial WMI:
+     - Nome: Domínio Principal
+     - Tipo: WMI
+     - Nível: Tenant (Empresa)
+     - Usuário: TECHBIZ\\administrador
+     - Senha: [senha do domínio]
+     - Domínio: TECHBIZ
+  4. Teste a conectividade
+  5. Aguarde coleta de métricas WMI
+  ========================================"
+else
+  echo "❌ Frontend não está respondendo (HTTP $FRONTEND_STATUS)"
+  echo ""
+  echo "🔍 DIAGNÓSTICO:"
+  echo "Execute: docker logs coruja-frontend -f"
+  echo ""
+  echo "Possíveis causas:"
+  echo "1. npm install ainda está rodando"
+  echo "2. Erro no package.json"
+  echo "3. Porta 3000 em uso"
+  echo ""
+  echo "Aguarde mais 2 minutos e teste novamente:"
+  echo "curl -I http://localhost:3000"
+fi

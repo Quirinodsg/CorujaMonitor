@@ -1,73 +1,29 @@
-════════════════════════════════════════════════════════════════════
-  DELETAR DISCO D DO BANCO - SERVIDOR LINUX
-════════════════════════════════════════════════════════════════════
+========================================
+DELETAR SENSOR DISCO D DO BANCO
+========================================
 
-Execute estes comandos no servidor Linux (via PuTTY):
+Execute no servidor Linux (via PuTTY):
 
-
-PASSO 1: Conectar ao banco
----------------------------
-
-docker-compose exec postgres psql -U coruja -d coruja_monitor
-
-
-PASSO 2: Deletar sensor DISCO D e dados relacionados
------------------------------------------------------
-
--- Ver sensores DISCO D
-SELECT id, name, server_id FROM sensors WHERE name LIKE '%DISCO D%';
-
--- Deletar métricas do DISCO D
-DELETE FROM metrics WHERE sensor_id IN (
-  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
-);
-
--- Deletar incidentes do DISCO D
-DELETE FROM incidents WHERE sensor_id IN (
-  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
-);
-
--- Deletar notas do DISCO D
-DELETE FROM sensor_notes WHERE sensor_id IN (
-  SELECT id FROM sensors WHERE name LIKE '%DISCO D%'
-);
-
--- Deletar sensor DISCO D
+docker-compose exec postgres psql -U coruja -d coruja_monitor -c "
+DELETE FROM metrics WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%');
+DELETE FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%');
+DELETE FROM sensor_notes WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%');
 DELETE FROM sensors WHERE name LIKE '%DISCO D%';
+"
 
--- Verificar que foi deletado
-SELECT id, name FROM sensors WHERE name LIKE '%DISCO D%';
--- Deve retornar 0 linhas
+Isso vai deletar o sensor Disco D do banco de dados.
 
+========================================
+IMPORTANTE
+========================================
 
-PASSO 3: Sair do banco
------------------------
+Depois de deletar, o sensor VAI REAPARECER porque:
+- A probe continua enviando métricas do Disco D
+- O filtro de CD-ROM NÃO ESTÁ no servidor Linux
 
-\q
+Para resolver definitivamente, precisamos:
+1. Enviar as correções para o Git (Windows)
+2. Fazer git pull no servidor Linux
+3. Reiniciar os containers
 
-
-PASSO 4: Aplicar filtro de CD-ROM na probe
--------------------------------------------
-
-Na máquina Windows (SRVSONDA001), execute:
-
-RESOLVER_DISCO_D_URGENTE.bat
-
-
-PASSO 5: Verificar
-------------------
-
-1. Aguarde 60 segundos
-2. Recarregue dashboard (Ctrl+F5)
-3. DISCO D não deve aparecer mais
-
-
-════════════════════════════════════════════════════════════════════
-
-IMPORTANTE:
-
-- Se você APENAS deletar do banco, a probe vai recriar o sensor
-- Você PRECISA aplicar o filtro de CD-ROM na probe
-- Use RESOLVER_DISCO_D_URGENTE.bat para aplicar o filtro
-
-════════════════════════════════════════════════════════════════════
+========================================

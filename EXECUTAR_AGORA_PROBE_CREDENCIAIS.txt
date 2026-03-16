@@ -1,0 +1,174 @@
+═══════════════════════════════════════════════════════════════════════════════
+🚀 EXECUTAR AGORA - ATUALIZAR PROBE COM CREDENCIAIS DO BANCO
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ ARQUIVO VERIFICADO: probe_core.py está atualizado (16:13)
+✅ IMPLEMENTAÇÃO: Função _get_server_credential() presente
+✅ INTEGRAÇÃO: _collect_wmi_remote() usando credenciais do banco
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO A PASSO (SIMPLES E DIRETO)
+═══════════════════════════════════════════════════════════════════════════════
+
+1. PARAR PROBE (na sonda SRVSONDA001)
+   - Pressionar Ctrl+C na janela do PowerShell
+
+2. COPIAR ARQUIVO (na sua máquina de desenvolvimento)
+   - Abrir: C:\Users\[SEU_USUARIO]\Coruja Monitor\probe\probe_core.py
+   - Selecionar tudo (Ctrl+A)
+   - Copiar (Ctrl+C)
+
+3. CONECTAR NA SONDA
+   - RDP para SRVSONDA001
+
+4. ABRIR ARQUIVO NA SONDA
+   - Ir para: C:\Program Files\CorujaMonitor\Probe
+   - Abrir probe_core.py com Notepad ou editor
+   - Selecionar tudo (Ctrl+A)
+   - Colar (Ctrl+V)
+   - Salvar (Ctrl+S)
+
+5. REINICIAR PROBE (na sonda)
+   cd 'C:\Program Files\CorujaMonitor\Probe'
+   python .\probe_core.py
+
+6. AGUARDAR 60 SEGUNDOS (intervalo de coleta)
+
+7. VERIFICAR LOGS (deve aparecer):
+   ✅ "Using WMI for srvhvsprd010"
+   ✅ "🔐 Usando credencial: Techbiz (Nível: Empresa)"
+   ✅ "Usuário: Techbiz\coruja.monitor"
+   ✅ "Collected WMI metrics from 192.168.31.110"
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 COMPARAÇÃO: ANTES vs DEPOIS
+═══════════════════════════════════════════════════════════════════════════════
+
+ANTES (logs atuais):
+   INFO:__main__:Collecting from remote server: srvhvsprd010 (192.168.31.110)
+   INFO:__main__:Using PING only for srvhvsprd010
+   INFO:__main__:⚠️ PING desabilitado na probe
+
+DEPOIS (logs esperados):
+   INFO:__main__:Collecting from remote server: srvhvsprd010 (192.168.31.110)
+   INFO:__main__:Using WMI for srvhvsprd010
+   INFO:__main__:🔐 Usando credencial: Techbiz (Nível: Empresa)
+   DEBUG:__main__:Usuário: Techbiz\coruja.monitor
+   INFO:__main__:Collected WMI metrics from 192.168.31.110
+   INFO:__main__:Sent 11 metrics successfully
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ O QUE FOI IMPLEMENTADO
+═══════════════════════════════════════════════════════════════════════════════
+
+1. NOVA FUNÇÃO: _get_server_credential(server_id)
+   - Busca credencial via: GET /api/v1/credentials/resolve/{server_id}
+   - API resolve herança: Servidor → Grupo → Empresa
+   - Retorna credencial descriptografada
+
+2. MODIFICAÇÃO: _collect_wmi_remote(server)
+   - Busca credencial do banco (não mais hardcoded)
+   - Valida tipo de credencial (deve ser 'wmi')
+   - Logs informativos com emojis
+   - Mostra nome da credencial e nível de herança
+
+3. SISTEMA DE HERANÇA (igual PRTG)
+   - Credencial específica do servidor (prioridade 1)
+   - Credencial do grupo (prioridade 2)
+   - Credencial padrão da empresa (prioridade 3)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎯 RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════════
+
+Após atualização e aguardar 60 segundos:
+
+1. DASHBOARD (http://192.168.31.161:3000)
+   - Ir em: Servidores → SRVHVSPRD010
+   - Sensores devem mostrar VALORES (não mais "Aguardando dados...")
+   
+   ✅ CPU Usage: XX%
+   ✅ Memory Usage: XX%
+   ✅ Disk C:: XX%
+   ✅ Uptime: X dias
+   ✅ Network In: XX MB/s
+   ✅ Network Out: XX MB/s
+
+2. LOGS DA PROBE
+   - Deve aparecer: "🔐 Usando credencial: Techbiz"
+   - Deve aparecer: "Collected WMI metrics from 192.168.31.110"
+
+3. BANCO DE DADOS
+   - Métricas WMI sendo salvas
+   - Timestamp recente (últimos 2 minutos)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+⚠️ TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ PROBLEMA: Logs mostram "⚠️ Nenhuma credencial WMI configurada"
+✅ SOLUÇÃO:
+   - Verificar se credencial "Techbiz" existe no dashboard
+   - Ir em: Configurações → Credenciais
+   - Verificar se está marcada como PADRÃO
+   - Verificar se Nível = "Empresa (Tenant)"
+
+❌ PROBLEMA: Logs mostram "Credencial para ... não é do tipo WMI"
+✅ SOLUÇÃO:
+   - Editar credencial "Techbiz"
+   - Verificar se Tipo = "WMI (Windows)"
+
+❌ PROBLEMA: Logs mostram "WMI collection failed"
+✅ SOLUÇÃO:
+   - Verificar se usuário/senha estão corretos
+   - Verificar se WMI está habilitado no servidor 192.168.31.110
+   - Testar WMI manualmente: wmic /node:192.168.31.110 /user:Techbiz\coruja.monitor computersystem get name
+
+❌ PROBLEMA: Dashboard ainda mostra "Aguardando dados..."
+✅ SOLUÇÃO:
+   - Aguardar 60 segundos (intervalo de coleta)
+   - Verificar logs da Probe
+   - Limpar cache do navegador (Ctrl+Shift+R)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+📚 DOCUMENTAÇÃO ADICIONAL
+═══════════════════════════════════════════════════════════════════════════════
+
+- COPIAR_PROBE_CORE_SONDA_RDP.txt (instruções resumidas)
+- RESUMO_PROBE_CREDENCIAIS_12MAR.md (documentação técnica completa)
+- DIAGNOSTICO_PROBE_ATUAL_12MAR.txt (análise dos logs atuais)
+- FLUXO_PROBE_CREDENCIAIS_VISUAL.txt (fluxo visual antes/depois)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ CHECKLIST RÁPIDO
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] 1. Parar Probe (Ctrl+C)
+[ ] 2. Copiar probe_core.py da sua máquina
+[ ] 3. RDP na sonda
+[ ] 4. Abrir probe_core.py na sonda
+[ ] 5. Colar conteúdo (Ctrl+A, Ctrl+V, Ctrl+S)
+[ ] 6. Reiniciar Probe (python .\probe_core.py)
+[ ] 7. Aguardar 60 segundos
+[ ] 8. Verificar logs (deve aparecer "🔐 Usando credencial: Techbiz")
+[ ] 9. Verificar dashboard (sensores devem mostrar valores)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+🎉 SUCESSO!
+═══════════════════════════════════════════════════════════════════════════════
+
+Sistema de credenciais centralizadas funcionando igual PRTG/SolarWinds:
+✅ Configure uma vez, use em todos os servidores
+✅ Herança automática (Servidor → Grupo → Empresa)
+✅ Probe busca credenciais do banco via API
+✅ Métricas WMI coletadas e exibidas no dashboard
+✅ Credenciais seguras (criptografia Fernet)
+
+═══════════════════════════════════════════════════════════════════════════════

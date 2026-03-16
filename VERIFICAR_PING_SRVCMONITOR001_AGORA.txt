@@ -1,0 +1,92 @@
+═══════════════════════════════════════════════════════════════
+  VERIFICAR PING SRVCMONITOR001 (0ms no frontend)
+═══════════════════════════════════════════════════════════════
+
+EXECUTAR NO LINUX:
+
+═══════════════════════════════════════════════════════════════
+1. VERIFICAR ÚLTIMAS MÉTRICAS DO SRVCMONITOR001
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+  s.name,
+  srv.hostname,
+  m.value,
+  m.timestamp,
+  NOW() as now_utc,
+  EXTRACT(EPOCH FROM (NOW() - m.timestamp)) as seconds_ago
+FROM metrics m
+JOIN sensors s ON m.sensor_id = s.id
+JOIN servers srv ON s.server_id = srv.id
+WHERE s.sensor_type = 'ping'
+  AND srv.hostname = 'SRVCMONITOR001'
+ORDER BY m.timestamp DESC
+LIMIT 10;
+"
+
+═══════════════════════════════════════════════════════════════
+2. VERIFICAR SENSOR ID DO SRVCMONITOR001
+═══════════════════════════════════════════════════════════════
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+  s.id as sensor_id,
+  s.name,
+  s.sensor_type,
+  srv.id as server_id,
+  srv.hostname,
+  s.is_active
+FROM sensors s
+JOIN servers srv ON s.server_id = srv.id
+WHERE s.sensor_type = 'ping'
+  AND srv.hostname = 'SRVCMONITOR001';
+"
+
+═══════════════════════════════════════════════════════════════
+3. AGUARDAR PRÓXIMO PING E MONITORAR LOGS
+═══════════════════════════════════════════════════════════════
+
+docker logs coruja-worker -f | grep -E "(SRVCMONITOR001|🏓)"
+
+Aguarde aparecer:
+"🏓 PING SRVCMONITOR001 (192.168.31.161): X.XXXms"
+"✅ Métrica PING salva: SRVCMONITOR001 = X.XXXms"
+
+Pressione Ctrl+C quando aparecer
+
+═══════════════════════════════════════════════════════════════
+4. LIMPAR CACHE DO NAVEGADOR
+═══════════════════════════════════════════════════════════════
+
+No navegador:
+- Pressione Ctrl+Shift+Delete
+- Selecione "Imagens e arquivos em cache"
+- Clique em "Limpar dados"
+- Ou abra em aba anônima: Ctrl+Shift+N
+
+═══════════════════════════════════════════════════════════════
+5. ATUALIZAR FRONTEND
+═══════════════════════════════════════════════════════════════
+
+Abra: http://192.168.31.161:3000
+Pressione Ctrl+F5 (atualização forçada)
+Vá em: Servidores
+
+Valores esperados:
+- SRVCMONITOR001: ~0.04-0.05ms (localhost)
+- SRVSONDA001: ~18-20ms (rede local)
+
+═══════════════════════════════════════════════════════════════
+ANÁLISE:
+═══════════════════════════════════════════════════════════════
+
+Se métricas existem no banco mas frontend mostra 0ms:
+  → Problema de cache do navegador
+  → Solução: Ctrl+Shift+Delete ou aba anônima
+
+Se não tem métricas recentes no banco:
+  → Worker não está fazendo PING do SRVCMONITOR001
+  → Verificar logs do worker
+
+═══════════════════════════════════════════════════════════════

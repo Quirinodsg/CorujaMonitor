@@ -1,0 +1,92 @@
+========================================
+RESOLVER PERMISSÕES WINRM NO SERVIDOR .110
+========================================
+
+PROBLEMA:
+"Access Denied" mesmo com Domain Admin
+WinRM está bloqueando a conexão
+
+SOLUÇÃO:
+Configurar permissões WinRM no servidor .110
+
+========================================
+EXECUTAR NO SERVIDOR .110 (192.168.31.110)
+========================================
+
+RDP no servidor, PowerShell como Administrador:
+
+# 1. Adicionar usuário ao grupo Remote Management Users
+net localgroup "Remote Management Users" "Techbiz\coruja.monitor" /add
+
+# 2. Configurar WinRM para aceitar conexões
+winrm set winrm/config/service/auth @{Basic="true"}
+winrm set winrm/config/service @{AllowUnencrypted="true"}
+
+# 3. Configurar listener
+winrm set winrm/config/listener?Address=*+Transport=HTTP @{Port="5985"}
+
+# 4. Adicionar permissão SDDL para o usuário
+$sddl = (Get-Item WSMan:\localhost\Service\RootSDDL).Value
+$newSDDL = $sddl + "(A;;GA;;;BA)"
+Set-Item WSMan:\localhost\Service\RootSDDL -Value $newSDDL -Force
+
+# 5. Reiniciar WinRM
+Restart-Service WinRM -Force
+
+# 6. Verificar configuração
+winrm get winrm/config
+
+Write-Host "✅ WinRM configurado!" -ForegroundColor Green
+
+========================================
+TESTAR NA SRVSONDA001 (.162)
+========================================
+
+PowerShell como Admin:
+
+$password = ConvertTo-SecureString 'Dj8SXoXie!o6Tkc@' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -ScriptBlock { hostname }
+
+DEVE RETORNAR: SRVHVSPRD010
+
+========================================
+SE AINDA DER ERRO
+========================================
+
+No servidor .110, executar:
+
+# Configurar WinRM mais permissivo
+Set-Item WSMan:\localhost\Client\TrustedHosts -Value "*" -Force
+Enable-PSRemoting -Force -SkipNetworkProfileCheck
+
+# Configurar firewall
+New-NetFirewallRule -Name "WinRM-HTTP-In" -DisplayName "Windows Remote Management (HTTP-In)" -Enabled True -Direction Inbound -Protocol TCP -LocalPort 5985 -Action Allow
+
+# Dar permissão total ao usuário
+$user = "Techbiz\coruja.monitor"
+$acl = Get-Acl "WSMan:\localhost\Service\RootSDDL"
+winrm configSDDL default
+
+# Na janela que abrir, adicionar o usuário com Full Control
+
+========================================
+REINICIAR PROBE
+========================================
+
+Na SRVSONDA001:
+
+1. Parar probe (Ctrl+C)
+2. Iniciar:
+   cd C:\Users\Administrator\Desktop
+   .\iniciar_probe.bat
+
+========================================
+VERIFICAR LOGS (1 minuto)
+========================================
+
+✅ SUCESSO:
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Negotiate em 192.168.31.110
+INFO:__main__:Collected 7 WMI metrics from 192.168.31.110
+
+========================================

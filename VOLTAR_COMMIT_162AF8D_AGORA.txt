@@ -1,0 +1,146 @@
+═══════════════════════════════════════════════════════════════
+  ⏮️ VOLTAR PARA COMMIT 162af8d (09MAR - SNMP FUNCIONANDO)
+═══════════════════════════════════════════════════════════════
+
+COMMIT: 162af8d
+DESCRIÇÃO: fix: Corrige SNMP collector para converter dados brutos em métricas
+DATA: 09 de Março
+STATUS: ✅ FUNCIONANDO (SNMP coletando métricas corretamente)
+
+COPIE E COLE NO LINUX (PUTTY):
+
+cd /home/administrador/CorujaMonitor
+
+# 1. PARAR CONTAINERS
+docker-compose down
+
+# 2. REVERTER CÓDIGO PARA COMMIT 162af8d
+git reset --hard 162af8d
+
+# 3. LIMPAR DOCKER (CORRIGIR IPTABLES)
+sudo systemctl stop docker
+sudo iptables -t nat -F
+sudo iptables -t mangle -F
+sudo iptables -F
+sudo iptables -X
+sudo systemctl start docker
+
+# 4. AGUARDAR 5 SEGUNDOS
+sleep 5
+
+# 5. SUBIR CONTAINERS COM CÓDIGO DO 09MAR
+docker-compose up -d
+
+# 6. AGUARDAR 60 SEGUNDOS (containers iniciarem)
+sleep 60
+
+# 7. VERIFICAR STATUS
+docker ps
+curl http://localhost:8000/health
+curl http://localhost:3000
+
+═══════════════════════════════════════════════════════════════
+  O QUE ESSE COMMIT TINHA
+═══════════════════════════════════════════════════════════════
+
+✓ SNMP funcionando perfeitamente
+✓ Coleta de 25 OIDs do servidor Linux
+✓ Parse de 4 métricas: CPU, Memória, Disco, Uptime
+✓ Correção PING para servidores SNMP
+✓ Auto-registro de servidores
+✓ Filtro de CD-ROM
+✓ Sistema estável
+
+✗ NÃO tinha: Correção de grupos (dropdown)
+
+═══════════════════════════════════════════════════════════════
+  APÓS REVERTER
+═══════════════════════════════════════════════════════════════
+
+1. LIMPAR CACHE NAVEGADOR
+   CTRL + SHIFT + DELETE
+
+2. ACESSAR DASHBOARD
+   http://192.168.31.161:3000
+   Login: admin@coruja.com / admin123
+
+3. VERIFICAR
+   ✓ API funcionando
+   ✓ Frontend funcionando
+   ✓ Login funcionando
+   ✓ Probes aparecem
+   ✓ Servidores aparecem
+   ✓ Sensores aparecem
+   ✓ Métricas sendo coletadas
+
+═══════════════════════════════════════════════════════════════
+  RESTAURAR BANCO DE DADOS (SE NECESSÁRIO)
+═══════════════════════════════════════════════════════════════
+
+Se o banco estiver vazio após reverter:
+
+cd /home/administrador/CorujaMonitor
+./restaurar_backup.sh
+
+Escolha o backup mais recente e confirme com "sim"
+
+═══════════════════════════════════════════════════════════════
+  COMANDOS RESUMIDOS (COPIAR TUDO DE UMA VEZ)
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor && \
+docker-compose down && \
+git reset --hard 162af8d && \
+sudo systemctl stop docker && \
+sudo iptables -t nat -F && \
+sudo iptables -t mangle -F && \
+sudo iptables -F && \
+sudo iptables -X && \
+sudo systemctl start docker && \
+sleep 5 && \
+docker-compose up -d && \
+echo "Aguardando containers iniciarem (60 segundos)..." && \
+sleep 60 && \
+echo "Verificando status:" && \
+docker ps && \
+echo "" && \
+echo "Testando API:" && \
+curl http://localhost:8000/health && \
+echo "" && \
+echo "Testando Frontend:" && \
+curl -I http://localhost:3000 2>&1 | head -1
+
+═══════════════════════════════════════════════════════════════
+  IMPORTANTE
+═══════════════════════════════════════════════════════════════
+
+⚠️ Isso vai APAGAR todas as mudanças após o commit 162af8d
+⚠️ Incluindo a correção de grupos que fiz hoje
+
+✓ Mas o sistema vai FUNCIONAR como estava no dia 09/MAR
+✓ SNMP coletando métricas
+✓ PING funcionando
+✓ Sem erros de Docker
+
+═══════════════════════════════════════════════════════════════
+  SE QUISER VOLTAR PARA A VERSÃO MAIS RECENTE DEPOIS
+═══════════════════════════════════════════════════════════════
+
+git pull origin master
+docker-compose down
+docker-compose up -d
+
+═══════════════════════════════════════════════════════════════
+  LOGS PARA ACOMPANHAR
+═══════════════════════════════════════════════════════════════
+
+# Ver logs da API
+docker logs -f coruja-api
+
+# Ver logs do Frontend
+docker logs -f frontend
+
+# Ver todos os containers
+docker ps -a
+
+═══════════════════════════════════════════════════════════════

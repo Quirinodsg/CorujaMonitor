@@ -1,0 +1,119 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔧 HABILITAR WMI NO BANCO PARA SRVHVSPRD010 - 12/MAR 16:40
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ PROBLEMA IDENTIFICADO:
+   Servidor SRVHVSPRD010 tem wmi_enabled = False no banco
+   Por isso probe usa "PING only" ao invés de "WMI"
+
+📋 CÓDIGO DA PROBE (linha 227):
+   if protocol == 'wmi' and server.get('wmi_enabled'):
+       logger.info(f"Using WMI for {hostname}")
+       self._collect_wmi_remote(server)
+   else:
+       logger.info(f"Using PING only for {hostname}")
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 SOLUÇÃO: HABILITAR WMI NO BANCO
+═══════════════════════════════════════════════════════════════════════════════
+
+NO LINUX (SRVCMONITOR001), criar arquivo Python:
+
+nano /root/habilitar_wmi_srvhvsprd010.py
+
+COPIAR E COLAR:
+
+#!/usr/bin/env python3
+import psycopg2
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Conectar ao banco
+conn = psycopg2.connect(
+    host=os.getenv('DB_HOST', 'localhost'),
+    port=os.getenv('DB_PORT', '5432'),
+    database=os.getenv('DB_NAME', 'coruja'),
+    user=os.getenv('DB_USER', 'coruja'),
+    password=os.getenv('DB_PASSWORD')
+)
+
+cur = conn.cursor()
+
+# Habilitar WMI para SRVHVSPRD010
+cur.execute("""
+    UPDATE servers 
+    SET 
+        wmi_enabled = true,
+        monitoring_protocol = 'wmi'
+    WHERE hostname = 'srvhvsprd010' OR ip_address = '192.168.31.110'
+    RETURNING id, hostname, ip_address, wmi_enabled, monitoring_protocol
+""")
+
+result = cur.fetchone()
+conn.commit()
+
+if result:
+    print(f"✅ WMI habilitado com sucesso!")
+    print(f"   ID: {result[0]}")
+    print(f"   Hostname: {result[1]}")
+    print(f"   IP: {result[2]}")
+    print(f"   WMI Enabled: {result[3]}")
+    print(f"   Protocol: {result[4]}")
+else:
+    print("❌ Servidor não encontrado")
+
+cur.close()
+conn.close()
+
+═══════════════════════════════════════════════════════════════════════════════
+
+SALVAR (CTRL+O, ENTER, CTRL+X)
+
+EXECUTAR:
+   cd /root
+   python3 habilitar_wmi_srvhvsprd010.py
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ WMI habilitado com sucesso!
+   ID: 2
+   Hostname: srvhvsprd010
+   IP: 192.168.31.110
+   WMI Enabled: True
+   Protocol: wmi
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 APÓS HABILITAR - AGUARDAR 60 SEGUNDOS
+═══════════════════════════════════════════════════════════════════════════════
+
+A probe na sonda vai detectar automaticamente no próximo ciclo (60s)
+
+LOGS ESPERADOS NA SONDA:
+   INFO:__main__:Collecting from remote server: srvhvsprd010 (192.168.31.110)
+   INFO:__main__:Using WMI for srvhvsprd010  ← MUDOU!
+   INFO:__main__:🔐 Usando credencial: Techbiz (Nível: Empresa)
+   INFO:__main__:   Usuário: Techbiz\coruja.monitor
+   INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 DASHBOARD - RESULTADO FINAL
+═══════════════════════════════════════════════════════════════════════════════
+
+Servidor: SRVHVSPRD010 (192.168.31.110)
+
+Sensores WMI (vão mostrar valores reais):
+   ✅ CPU Usage: 15%
+   ✅ Memory Usage: 45%
+   ✅ Disk C: Usage: 60%
+   ✅ Uptime: 5 dias
+   ✅ Network In: 1.2 MB/s
+   ✅ Network Out: 0.8 MB/s
+
+Sensor PING (continua funcionando):
+   ✅ PING: 0.44ms
+
+═══════════════════════════════════════════════════════════════════════════════

@@ -1,0 +1,15 @@
+═══════════════════════════════════════════════════════════════════════════
+  VERIFICAR FLAG use_inherited_credential
+═══════════════════════════════════════════════════════════════════════════
+
+Execute no Linux:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, hostname, credential_id, use_inherited_credential FROM servers WHERE id = 5;"
+
+Se use_inherited_credential = true, a API ignora o credential_id!
+
+SOLUÇÃO:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "UPDATE servers SET use_inherited_credential = false WHERE id = 5;"
+
+Depois reinicie a probe na SRVSONDA001.

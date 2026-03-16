@@ -1,0 +1,48 @@
+═══════════════════════════════════════════════════════════════
+  🔍 TESTE RÁPIDO: PING Worker + Sensores Unknown
+  📅 11 MARÇO 2026
+  ⏱️ TEMPO: 2 minutos
+═══════════════════════════════════════════════════════════════
+
+## 🚀 COPIAR E COLAR NO LINUX (SSH)
+
+cd /home/administrador/CorujaMonitor
+
+echo "═══════════════════════════════════════════════════════════════"
+echo "  1️⃣ LOGS DO WORKER (últimas 50 linhas com PING)"
+echo "═══════════════════════════════════════════════════════════════"
+docker logs coruja-worker --tail 50 | grep -i ping
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "  2️⃣ TESTAR PING DENTRO DO CONTAINER"
+echo "═══════════════════════════════════════════════════════════════"
+docker exec -it coruja-worker ping -c 1 -W 2 192.168.31.161
+docker exec -it coruja-worker ping -c 1 -W 2 192.168.31.100
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "  3️⃣ SENSORES NO BANCO (TODOS)"
+echo "═══════════════════════════════════════════════════════════════"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, s.id, s.name, s.sensor_type, s.is_active FROM servers srv JOIN sensors s ON s.server_id = srv.id ORDER BY srv.hostname, s.sensor_type, s.name;"
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "  4️⃣ MÉTRICAS PING RECENTES (últimas 10)"
+echo "═══════════════════════════════════════════════════════════════"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, s.name, m.value as latencia_ms, m.status, m.timestamp FROM metrics m JOIN sensors s ON s.id = m.sensor_id JOIN servers srv ON srv.id = s.server_id WHERE s.sensor_type = 'ping' ORDER BY m.timestamp DESC LIMIT 10;"
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "  5️⃣ SENSORES UNKNOWN"
+echo "═══════════════════════════════════════════════════════════════"
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT srv.hostname, s.id, s.name, s.sensor_type FROM servers srv JOIN sensors s ON s.server_id = srv.id WHERE s.sensor_type = 'unknown' OR s.name LIKE '%unknown%' OR s.name = '' OR s.name IS NULL ORDER BY srv.hostname, s.id;"
+
+echo ""
+echo "═══════════════════════════════════════════════════════════════"
+echo "  ✅ TESTE CONCLUÍDO"
+echo "═══════════════════════════════════════════════════════════════"
+
+═══════════════════════════════════════════════════════════════
+  📋 COPIAR RESULTADOS E ENVIAR
+═══════════════════════════════════════════════════════════════

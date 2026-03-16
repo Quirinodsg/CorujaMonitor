@@ -1,0 +1,133 @@
+═══════════════════════════════════════════════════════════════════════════
+  DESBLOQUEAR CONTA E INICIAR SERVIÇO - COPIE E COLE AGORA
+═══════════════════════════════════════════════════════════════════════════
+
+SITUAÇÃO:
+✅ Arquivo wmi_native_collector.py JÁ ESTÁ CORRIGIDO com pythoncom.CoInitializeSecurity
+✅ Serviço CorujaProbe JÁ ESTÁ INSTALADO
+❌ Conta TECHBIZ\coruja.monitor está BLOQUEADA (locked out)
+❌ Serviço não inicia: "The service did not start due to a logon failure"
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 1: DESBLOQUEAR CONTA NO ACTIVE DIRECTORY
+═══════════════════════════════════════════════════════════════════════════
+
+Opção A - Via Interface Gráfica:
+1. Abra "Active Directory Users and Computers" (dsa.msc)
+2. Procure: coruja.monitor
+3. Botão direito → Properties
+4. Aba "Account"
+5. Marque: ☑ "Unlock account"
+6. Clique OK
+
+Opção B - Via PowerShell (COPIE E COLE):
+
+Unlock-ADAccount -Identity coruja.monitor
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 2: VERIFICAR SE SENHA ESTÁ CORRETA
+═══════════════════════════════════════════════════════════════════════════
+
+Teste a senha (COPIE E COLE):
+
+runas /user:TECHBIZ\coruja.monitor cmd
+
+Quando pedir senha, digite: Dj8SXoXie!o6Tkc@
+
+Se abrir um CMD, a senha está correta! Feche o CMD e continue.
+Se der erro, a senha precisa ser resetada (veja PASSO 2B).
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 2B: SE SENHA ESTIVER ERRADA, RESETAR (OPCIONAL)
+═══════════════════════════════════════════════════════════════════════════
+
+Set-ADAccountPassword -Identity coruja.monitor -Reset -NewPassword (ConvertTo-SecureString -AsPlainText "Dj8SXoXie!o6Tkc@" -Force)
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 3: RECONFIGURAR CREDENCIAIS DO SERVIÇO
+═══════════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, abra PowerShell como Administrador e COPIE E COLE:
+
+nssm set CorujaProbe ObjectName "TECHBIZ\coruja.monitor" "Dj8SXoXie!o6Tkc@"
+
+Deve retornar: "Set parameter ObjectName for service CorujaProbe"
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 4: INICIAR SERVIÇO
+═══════════════════════════════════════════════════════════════════════════
+
+nssm start CorujaProbe
+
+Deve retornar: "CorujaProbe: START: The operation completed successfully."
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 5: VERIFICAR STATUS
+═══════════════════════════════════════════════════════════════════════════
+
+nssm status CorujaProbe
+
+Deve retornar: "SERVICE_RUNNING"
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 6: AGUARDAR 60 SEGUNDOS E VERIFICAR LOGS
+═══════════════════════════════════════════════════════════════════════════
+
+Start-Sleep -Seconds 60
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log" -Tail 50
+
+═══════════════════════════════════════════════════════════════════════════
+RESULTADO ESPERADO NOS LOGS
+═══════════════════════════════════════════════════════════════════════════
+
+✅ SUCESSO - Procure por estas linhas:
+
+INFO:collectors.wmi_native_collector:🔌 Conectando via WMI nativo em SRVHVSPRD010.ad.techbiz.com.br
+INFO:collectors.wmi_native_collector:✅ WMI nativo conectado em SRVHVSPRD010.ad.techbiz.com.br
+INFO:__main__:✅ Collected 3 WMI metrics from SRVHVSPRD010.ad.techbiz.com.br
+
+❌ ERRO - Se ainda aparecer:
+
+ERROR:collectors.wmi_native_collector:❌ Erro ao conectar WMI nativo: Access is denied
+
+Então há outro problema (GPO, firewall, etc.)
+
+═══════════════════════════════════════════════════════════════════════════
+SE AINDA DER ERRO DE LOGON APÓS DESBLOQUEAR
+═══════════════════════════════════════════════════════════════════════════
+
+Possíveis causas:
+
+1. Senha incorreta → Execute PASSO 2B para resetar
+2. Conta expirada → Verifique no AD se conta não está expirada
+3. Falta permissão "Log on as a service" → Execute:
+
+nssm set CorujaProbe ObjectName "TECHBIZ\coruja.monitor" "Dj8SXoXie!o6Tkc@"
+
+4. Política de domínio bloqueando → Verifique GPO
+
+═══════════════════════════════════════════════════════════════════════════
+ALTERNATIVA TEMPORÁRIA: RODAR COMO SISTEMA LOCAL
+═══════════════════════════════════════════════════════════════════════════
+
+Se não conseguir desbloquear, teste se o serviço inicia como LocalSystem:
+
+nssm set CorujaProbe ObjectName LocalSystem
+nssm start CorujaProbe
+
+⚠️ ATENÇÃO: Com LocalSystem, WMI remoto NÃO funcionará!
+Isso é apenas para confirmar que o problema é a conta, não o código.
+
+═══════════════════════════════════════════════════════════════════════════
+COPIE E COLE AQUI OS RESULTADOS
+═══════════════════════════════════════════════════════════════════════════
+
+Após executar, cole aqui:
+
+1. Resultado de: nssm status CorujaProbe
+2. Últimas 50 linhas do log
+
+═══════════════════════════════════════════════════════════════════════════
+Data: 13/03/2026 - Coruja Monitor
+═══════════════════════════════════════════════════════════════════════════

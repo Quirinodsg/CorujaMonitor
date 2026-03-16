@@ -1,0 +1,66 @@
+========================================
+CORRIGIR UTC TIMEZONE - PROBLEMA REAL
+========================================
+
+🔍 PROBLEMA IDENTIFICADO:
+- Worker salvava com datetime.now() (timezone local -03)
+- PostgreSQL interpretava como UTC e adicionava mais 3 horas
+- Resultado: timestamp 3 horas no futuro (16:53 vs 14:01)
+- API não encontrava métricas recentes (timestamp futuro)
+- Frontend mostrava 0ms
+
+
+✅ SOLUÇÃO APLICADA:
+Usar datetime.now(timezone.utc) em TODAS as ocorrências
+
+
+📋 EXECUTAR NO NOTEBOOK (GIT BASH):
+
+cd "C:\Users\andre.quirino\Coruja Monitor"
+git add worker/tasks.py worker/sla_calculator.py
+git commit -m "fix: usar UTC timezone para consistência com PostgreSQL
+
+- Corrigido datetime.now() para datetime.now(timezone.utc)
+- PostgreSQL usa UTC, Python precisa salvar em UTC também
+- Resolve problema de timestamp 3 horas no futuro
+- PING agora aparece corretamente no frontend"
+git push origin master
+
+
+📋 EXECUTAR NO SSH LINUX:
+
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker-compose restart worker
+
+
+⏱️ AGUARDAR 1 MINUTO (próximo ciclo PING)
+
+
+📋 VERIFICAR NO BANCO:
+
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT 
+    s.name,
+    srv.hostname,
+    m.value,
+    m.timestamp,
+    NOW() as now_time
+FROM metrics m
+JOIN sensors s ON m.sensor_id = s.id
+JOIN servers srv ON s.server_id = srv.id
+WHERE s.sensor_type = 'ping'
+ORDER BY m.timestamp DESC
+LIMIT 2;
+"
+
+
+✅ RESULTADO ESPERADO:
+- timestamp e now_time devem estar próximos (diferença < 1 minuto)
+- Não mais 3 horas de diferença
+
+
+🌐 VERIFICAR NO FRONTEND:
+http://192.168.31.161:3000
+
+PING deve mostrar valores reais (~0.05ms e ~0.4ms)

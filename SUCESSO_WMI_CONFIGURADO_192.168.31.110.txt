@@ -1,0 +1,178 @@
+═══════════════════════════════════════════════════════════════
+✅ SUCESSO: WMI CONFIGURADO NO SERVIDOR 192.168.31.110
+═══════════════════════════════════════════════════════════════
+
+Data: 11/03/2026 15:05
+Servidor: 192.168.31.110 (Steve.Jobs)
+
+═══════════════════════════════════════════════════════════════
+✅ COMANDOS EXECUTADOS COM SUCESSO
+═══════════════════════════════════════════════════════════════
+
+1. WMI Firewall: ✅ Updated 4 rule(s)
+   netsh advfirewall firewall set rule group="Windows Management Instrumentation (WMI)" new enable=yes
+
+2. File and Printer Sharing: ✅ Updated 30 rule(s)
+   netsh advfirewall firewall set rule group="File and Printer Sharing" new enable=yes
+
+3. Remote Administration: ⚠️ No rules match (NORMAL - nem todos os Windows têm)
+   netsh advfirewall firewall set rule group="Remote Administration" new enable=yes
+
+═══════════════════════════════════════════════════════════════
+📊 STATUS ATUAL
+═══════════════════════════════════════════════════════════════
+
+✅ Firewall configurado para WMI remoto
+✅ Compartilhamento de arquivos habilitado (necessário para WMI)
+✅ Servidor pronto para ser monitorado
+
+⏳ Aguardando primeira coleta da probe (até 5 minutos)
+
+═══════════════════════════════════════════════════════════════
+🔍 VERIFICAR SERVIÇO WMI (OPCIONAL)
+═══════════════════════════════════════════════════════════════
+
+Execute no servidor 192.168.31.110:
+
+sc query winmgmt
+
+Deve mostrar:
+  SERVICE_NAME: winmgmt
+  STATE: 4 RUNNING
+
+Se não aparecer nada, execute:
+sc start winmgmt
+
+═══════════════════════════════════════════════════════════════
+🧪 TESTAR CONECTIVIDADE WMI DA SRVSONDA001
+═══════════════════════════════════════════════════════════════
+
+Execute na SRVSONDA001 (máquina da probe):
+
+wmic /node:192.168.31.110 computersystem get name
+
+Deve retornar o nome do computador sem erro.
+
+Se der erro "Access Denied":
+- Usuário atual não tem permissão
+- Usar credenciais de administrador
+
+Se der erro "RPC Server Unavailable":
+- Firewall ainda bloqueando
+- Reiniciar servidor 192.168.31.110
+
+═══════════════════════════════════════════════════════════════
+⏱️ PRÓXIMOS PASSOS
+═══════════════════════════════════════════════════════════════
+
+1. AGUARDAR 5 MINUTOS
+   - Probe coleta métricas automaticamente a cada 5 minutos
+   - Primeira coleta pode demorar até 5 minutos
+
+2. ATUALIZAR FRONTEND
+   - Abrir: http://192.168.31.161:3000
+   - Pressionar F5 para atualizar
+   - Servidor 192.168.31.110 deve aparecer com métricas
+
+3. VERIFICAR MÉTRICAS ESPERADAS
+   - 📡 PING: latência em ms
+   - 🖥️ CPU: percentual de uso
+   - 💾 Memória: percentual de uso
+   - 💿 Disco C: percentual de uso
+   - ⏱️ Uptime: tempo ligado
+   - 🌐 Network IN/OUT: tráfego de rede
+
+═══════════════════════════════════════════════════════════════
+🔧 SE NÃO APARECER MÉTRICAS APÓS 5 MINUTOS
+═══════════════════════════════════════════════════════════════
+
+1. VERIFICAR LOGS DA PROBE (SRVSONDA001):
+   - Abrir: C:\Program Files\CorujaMonitor\Probe\logs\
+   - Ver arquivo mais recente
+   - Procurar por erros relacionados a 192.168.31.110
+
+2. TESTAR WMI MANUALMENTE (SRVSONDA001):
+   wmic /node:192.168.31.110 cpu get loadpercentage
+   wmic /node:192.168.31.110 os get freephysicalmemory
+
+3. VERIFICAR CONECTIVIDADE:
+   ping 192.168.31.110
+   
+   Deve responder com latência baixa (< 50ms)
+
+4. REINICIAR SERVIÇO DA PROBE (SRVSONDA001):
+   - Abrir: services.msc
+   - Localizar: "Coruja Monitor Probe"
+   - Clicar com direito > Reiniciar
+
+═══════════════════════════════════════════════════════════════
+📋 ARQUITETURA DO SISTEMA
+═══════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────┐
+│ SRVSONDA001 (Windows) - Probe Python                        │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ Coleta métricas via WMI de:                             │ │
+│ │ - 192.168.31.110 (Steve.Jobs) ✅ CONFIGURADO           │ │
+│ │ - Outros servidores Windows                             │ │
+│ └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+                          ↓
+┌─────────────────────────────────────────────────────────────┐
+│ SRVCMONITOR001 (Linux) - API + Frontend + PostgreSQL       │
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │ - Recebe métricas da probe                              │ │
+│ │ - Salva no PostgreSQL                                   │ │
+│ │ - Frontend exibe em tempo real                          │ │
+│ └─────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════
+✅ CHECKLIST FINAL
+═══════════════════════════════════════════════════════════════
+
+- [x] Firewall WMI habilitado (4 regras)
+- [x] Compartilhamento de arquivos habilitado (30 regras)
+- [x] Servidor adicionado no frontend (192.168.31.110)
+- [ ] Aguardar 5 minutos para primeira coleta
+- [ ] Verificar métricas no frontend
+- [ ] Confirmar PING funcionando
+- [ ] Confirmar CPU, Memória, Disco funcionando
+
+═══════════════════════════════════════════════════════════════
+📝 OBSERVAÇÕES
+═══════════════════════════════════════════════════════════════
+
+1. Remote Administration não encontrado é NORMAL
+   - Nem todas as versões do Windows têm esse grupo
+   - WMI funciona sem ele
+
+2. Serviço WMI (winmgmt) geralmente já está rodando
+   - Iniciado automaticamente com o Windows
+   - Não precisa configurar manualmente
+
+3. Primeira coleta pode demorar
+   - Probe coleta a cada 5 minutos
+   - Seja paciente e aguarde
+
+4. Se usar domínio Active Directory
+   - Credenciais do domínio podem ser necessárias
+   - Configurar no frontend: DOMINIO\usuario
+
+═══════════════════════════════════════════════════════════════
+🎯 RESULTADO ESPERADO EM 5 MINUTOS
+═══════════════════════════════════════════════════════════════
+
+Frontend deve mostrar:
+
+Servidor: 192.168.31.110 (Steve.Jobs)
+├─ 📡 PING: ~1-5 ms (rede local)
+├─ 🖥️ CPU: X% (uso atual)
+├─ 💾 Memória: X% (uso atual)
+├─ 💿 Disco C: X% (uso atual)
+├─ ⏱️ Uptime: Xd Xh Xm
+└─ 🌐 Network IN/OUT: X MB/s
+
+Status: OK (verde) ou Warning/Critical (amarelo/vermelho)
+
+═══════════════════════════════════════════════════════════════

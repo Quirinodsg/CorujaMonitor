@@ -1,0 +1,162 @@
+════════════════════════════════════════════════════════════════
+MONITORAR SERVIDOR LINUX VIA PROBE LOCAL
+════════════════════════════════════════════════════════════════
+
+OPÇÃO MAIS SIMPLES: Instalar probe Python no próprio servidor Linux
+
+VANTAGENS:
+✓ Não precisa configurar SNMP
+✓ Coleta mais detalhada (Docker, processos, etc)
+✓ Mesma tecnologia da probe Windows
+
+════════════════════════════════════════════════════════════════
+PASSO 1: Instalar Python e dependências
+════════════════════════════════════════════════════════════════
+
+Copiar e colar no PuTTY:
+
+sudo apt update
+sudo apt install -y python3 python3-pip python3-venv
+
+════════════════════════════════════════════════════════════════
+PASSO 2: Criar diretório da probe
+════════════════════════════════════════════════════════════════
+
+sudo mkdir -p /opt/coruja-probe
+sudo chown $USER:$USER /opt/coruja-probe
+cd /opt/coruja-probe
+
+════════════════════════════════════════════════════════════════
+PASSO 3: Copiar arquivos da probe do repositório
+════════════════════════════════════════════════════════════════
+
+cd /opt/coruja-probe
+cp -r /home/administrador/CorujaMonitor/probe/* .
+
+════════════════════════════════════════════════════════════════
+PASSO 4: Criar ambiente virtual e instalar dependências
+════════════════════════════════════════════════════════════════
+
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+════════════════════════════════════════════════════════════════
+PASSO 5: Criar config.yaml
+════════════════════════════════════════════════════════════════
+
+nano config.yaml
+
+Conteúdo:
+
+api_url: "http://localhost:8000"
+probe_token: "V-PTetiHvbNsZgrkY14PFGRfyv6jPBZxdTb76Z2M7YY"
+interval: 60
+log_level: "INFO"
+
+Salvar: Ctrl+O, Enter, Ctrl+X
+
+════════════════════════════════════════════════════════════════
+PASSO 6: Testar probe manualmente
+════════════════════════════════════════════════════════════════
+
+source venv/bin/activate
+python3 probe_core.py
+
+Deve mostrar:
+✅ API acessível
+✅ Servidor auto-registrado: SRVCMONITOR001
+✅ Métricas enviadas
+
+Pressione Ctrl+C para parar
+
+════════════════════════════════════════════════════════════════
+PASSO 7: Criar serviço systemd (auto-start)
+════════════════════════════════════════════════════════════════
+
+sudo nano /etc/systemd/system/coruja-probe.service
+
+Conteúdo:
+
+[Unit]
+Description=Coruja Monitor Probe
+After=network.target docker.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/coruja-probe
+ExecStart=/opt/coruja-probe/venv/bin/python3 /opt/coruja-probe/probe_core.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+
+Salvar: Ctrl+O, Enter, Ctrl+X
+
+════════════════════════════════════════════════════════════════
+PASSO 8: Ativar e iniciar serviço
+════════════════════════════════════════════════════════════════
+
+sudo systemctl daemon-reload
+sudo systemctl enable coruja-probe
+sudo systemctl start coruja-probe
+sudo systemctl status coruja-probe
+
+Deve mostrar "active (running)"
+
+════════════════════════════════════════════════════════════════
+PASSO 9: Ver logs
+════════════════════════════════════════════════════════════════
+
+sudo journalctl -u coruja-probe -f
+
+Pressione Ctrl+C para sair
+
+════════════════════════════════════════════════════════════════
+PASSO 10: Verificar no dashboard
+════════════════════════════════════════════════════════════════
+
+1. Abrir: http://192.168.31.161:3000
+2. Ir em "Servidores"
+3. Deve aparecer "SRVCMONITOR001" (auto-registrado)
+4. Aguardar 60 segundos
+5. Sensores devem aparecer automaticamente
+
+════════════════════════════════════════════════════════════════
+SENSORES COLETADOS VIA PROBE LOCAL:
+════════════════════════════════════════════════════════════════
+
+✓ CPU (%)
+✓ Memória (%)
+✓ Discos (%, todos os montados)
+✓ Rede (bytes in/out)
+✓ Uptime (dias)
+✓ Ping (ms)
+✓ Docker (containers total/running/stopped) - SE TIVER DOCKER
+✓ Processos (se configurado)
+
+════════════════════════════════════════════════════════════════
+COMANDOS ÚTEIS:
+════════════════════════════════════════════════════════════════
+
+# Ver status
+sudo systemctl status coruja-probe
+
+# Parar
+sudo systemctl stop coruja-probe
+
+# Iniciar
+sudo systemctl start coruja-probe
+
+# Reiniciar
+sudo systemctl restart coruja-probe
+
+# Ver logs
+sudo journalctl -u coruja-probe -f
+
+# Desabilitar auto-start
+sudo systemctl disable coruja-probe
+
+════════════════════════════════════════════════════════════════

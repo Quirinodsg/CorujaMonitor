@@ -1,0 +1,80 @@
+═══════════════════════════════════════════════════════════════
+  CORRIGIR DOCKER E IPTABLES - SCRIPT AUTOMÁTICO
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA: Console trava ao executar comandos iptables
+SOLUÇÃO: Script que executa tudo automaticamente
+
+═══════════════════════════════════════════════════════════════
+  PASSO 1: ENVIAR SCRIPT PARA O LINUX
+═══════════════════════════════════════════════════════════════
+
+NO NOTEBOOK (PowerShell):
+
+scp corrigir_docker_iptables.sh administrador@192.168.31.161:/home/administrador/
+
+═══════════════════════════════════════════════════════════════
+  PASSO 2: EXECUTAR SCRIPT NO LINUX
+═══════════════════════════════════════════════════════════════
+
+NO LINUX (PuTTY):
+
+cd /home/administrador
+chmod +x corrigir_docker_iptables.sh
+sudo ./corrigir_docker_iptables.sh
+
+═══════════════════════════════════════════════════════════════
+  O QUE O SCRIPT FAZ
+═══════════════════════════════════════════════════════════════
+
+1. Para o Docker
+2. Limpa todas as regras iptables
+3. Inicia o Docker (recria chains automaticamente)
+4. Aguarda 10 segundos
+5. Sobe os containers com docker-compose up -d
+6. Mostra status dos containers
+7. Testa a API
+
+═══════════════════════════════════════════════════════════════
+  ALTERNATIVA: EXECUTAR COMANDO POR COMANDO (MAIS LENTO)
+═══════════════════════════════════════════════════════════════
+
+Se não conseguir enviar o script, execute um por vez no Linux:
+
+sudo systemctl stop docker
+sudo iptables -t nat -F
+sudo iptables -t mangle -F  
+sudo iptables -F
+sudo iptables -X
+sudo systemctl start docker
+sleep 10
+cd /home/administrador/CorujaMonitor
+sudo docker-compose up -d
+docker ps
+curl http://localhost:8000/health
+
+IMPORTANTE: Se o console travar, aguarde 30 segundos e pressione ENTER
+
+═══════════════════════════════════════════════════════════════
+  APÓS CONTAINERS SUBIREM
+═══════════════════════════════════════════════════════════════
+
+NA SRVSONDA001:
+
+.\reiniciar_probe.bat
+
+═══════════════════════════════════════════════════════════════
+  CONFIGURAR AUTO-START
+═══════════════════════════════════════════════════════════════
+
+NO LINUX:
+
+sudo systemctl enable docker
+systemctl is-enabled docker
+
+Deve retornar: enabled
+
+Com "restart: always" no docker-compose.yml, os containers
+sobem automaticamente quando o servidor reiniciar!
+
+═══════════════════════════════════════════════════════════════

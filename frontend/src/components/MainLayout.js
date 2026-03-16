@@ -24,9 +24,13 @@ import AdvancedDashboard from './AdvancedDashboard';
 // import ServersGrouped from './ServersGrouped'; // Temporariamente desabilitado - arquivo incompleto
 import AutoRemediation from './AutoRemediation';
 import MetricsViewer from './MetricsViewer';
+import ProbeNodes from './ProbeNodes';
+import EventTimeline from './EventTimeline';
+import SystemHealth from './SystemHealth';
+import Discovery from './Discovery';
 import './MainLayout.css';
 
-function MainLayout({ user, onLogout }) {
+function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedServerId, setSelectedServerId] = useState(null);
   const [selectedSensorId, setSelectedSensorId] = useState(null);
@@ -93,6 +97,14 @@ function MainLayout({ user, onLogout }) {
         return <AutoRemediation />;
       case 'metrics-viewer':
         return <MetricsViewer />;
+      case 'probe-nodes':
+        return <ProbeNodes onNavigate={handleNavigate} />;
+      case 'event-timeline':
+        return <EventTimeline onNavigate={handleNavigate} />;
+      case 'system-health':
+        return <SystemHealth onNavigate={handleNavigate} />;
+      case 'discovery':
+        return <Discovery />;
       case 'users':
         return <Users />;
       case 'settings':
@@ -108,7 +120,7 @@ function MainLayout({ user, onLogout }) {
 
   return (
     <div className="main-layout">
-      <Sidebar currentPage={currentPage} onNavigate={(page) => handleNavigate(page)} />
+      <Sidebar currentPage={currentPage} onNavigate={(page) => handleNavigate(page)} darkMode={darkMode} onToggleDark={onToggleDark} />
       <div className="main-content">
         <div className="top-bar">
           <div className="top-bar-left">

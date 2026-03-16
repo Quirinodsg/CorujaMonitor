@@ -1,0 +1,195 @@
+========================================
+COLOCAR SRVSONDA001 NO DOMÍNIO TECHBIZ
+========================================
+
+VANTAGENS:
+✅ Kerberos funciona automaticamente
+✅ Não precisa arquivo hosts
+✅ DNS resolve hostnames automaticamente
+✅ GPO aplica configurações corretas
+✅ Autenticação integrada
+
+========================================
+PASSO 1: PREPARAR ANTES DE ENTRAR NO DOMÍNIO
+========================================
+
+Na SRVSONDA001 (.162), PowerShell como Admin:
+
+# 1. Verificar nome da máquina
+hostname
+# Deve ser: SRVSONDA001
+
+# 2. Se precisar renomear:
+# Rename-Computer -NewName "SRVSONDA001" -Restart
+
+# 3. Configurar DNS para apontar para o Domain Controller
+# Descobrir IP do DC:
+nslookup techbiz.local
+
+# Configurar DNS (ajustar IP do DC):
+$adapter = Get-NetAdapter | Where-Object {$_.Status -eq "Up"}
+Set-DnsClientServerAddress -InterfaceIndex $adapter.ifIndex -ServerAddresses "192.168.31.X"
+
+# Verificar:
+Get-DnsClientServerAddress
+
+========================================
+PASSO 2: ENTRAR NO DOMÍNIO
+========================================
+
+PowerShell como Admin:
+
+# Entrar no domínio (vai pedir credenciais de Domain Admin)
+Add-Computer -DomainName "techbiz.local" -Credential (Get-Credential) -Restart
+
+QUANDO PEDIR CREDENCIAIS:
+Usuário: Techbiz\Administrator (ou outro Domain Admin)
+Senha: [senha do Domain Admin]
+
+MÁQUINA VAI REINICIAR AUTOMATICAMENTE
+
+========================================
+PASSO 3: APÓS REINICIAR - FAZER LOGIN
+========================================
+
+1. Na tela de login, escolher "Outro usuário"
+
+2. Fazer login com conta de domínio:
+   Usuário: Techbiz\coruja.monitor
+   Senha: Dj8SXoXie!o6Tkc@
+
+OU fazer login com Administrator local primeiro e depois:
+
+========================================
+PASSO 4: VERIFICAR ENTRADA NO DOMÍNIO
+========================================
+
+PowerShell como Admin:
+
+# Verificar domínio
+(Get-WmiObject Win32_ComputerSystem).Domain
+# Deve retornar: techbiz.local
+
+# Verificar conectividade com DC
+Test-ComputerSecureChannel -Verbose
+
+# Testar resolução DNS
+nslookup SRVHVSPRD010
+nslookup SRVHVSPRD010.techbiz.local
+
+# Testar Kerberos
+klist purge
+klist
+
+========================================
+PASSO 5: TESTAR CONEXÃO WMI COM KERBEROS
+========================================
+
+PowerShell como Admin (logado com Techbiz\coruja.monitor):
+
+$password = ConvertTo-SecureString 'Dj8SXoXie!o6Tkc@' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+
+# Testar com hostname (Kerberos automático)
+Invoke-Command -ComputerName SRVHVSPRD010 -Credential $credential -ScriptBlock { 
+    Get-WmiObject Win32_OperatingSystem | Select-Object Caption, Version
+}
+
+DEVE FUNCIONAR! ✅
+
+========================================
+PASSO 6: ATUALIZAR BANCO DE DADOS
+========================================
+
+No servidor Linux (.161):
+
+cd /root/coruja-monitor
+python3 atualizar_hostname_servidor_110.py
+
+========================================
+PASSO 7: COPIAR COLLECTOR ATUALIZADO
+========================================
+
+Na SRVSONDA001 (agora no domínio):
+
+cd C:\Users\coruja.monitor\Desktop\coruja-monitor
+git pull
+
+copy probe\collectors\wmi_remote_collector.py "C:\Program Files\CorujaMonitor\Probe\collectors\"
+
+========================================
+PASSO 8: REINICIAR PROBE
+========================================
+
+1. Parar probe (Ctrl+C)
+
+2. Iniciar:
+   cd C:\Users\coruja.monitor\Desktop
+   .\iniciar_probe.bat
+
+========================================
+PASSO 9: VERIFICAR LOGS (1 minuto)
+========================================
+
+✅ SUCESSO - Deve aparecer:
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010
+INFO:__main__:Collected 7 WMI metrics from 192.168.31.110
+
+========================================
+OBSERVAÇÕES IMPORTANTES
+========================================
+
+1. ARQUIVOS DA PROBE:
+   - Podem estar em C:\Users\Administrator\Desktop
+   - Após entrar no domínio, copiar para C:\Users\coruja.monitor\Desktop
+
+2. SERVIÇO DA PROBE:
+   - Se instalado como serviço, configurar para rodar com Techbiz\coruja.monitor
+   - Ou rodar manualmente com o usuário de domínio
+
+3. PERMISSÕES:
+   - Techbiz\coruja.monitor precisa ser admin local da SRVSONDA001
+   - Já é Domain Admin, então tem acesso ao .110
+
+4. GPO:
+   - Máquina vai receber GPOs do domínio
+   - WinRM já configurado via GPO
+   - Kerberos funciona automaticamente
+
+========================================
+TROUBLESHOOTING
+========================================
+
+Se não conseguir entrar no domínio:
+
+1. Verificar conectividade com DC:
+   ping [IP_DO_DC]
+   Test-NetConnection [IP_DO_DC] -Port 389
+
+2. Verificar DNS:
+   nslookup techbiz.local
+
+3. Verificar firewall:
+   - Porta 389 (LDAP)
+   - Porta 88 (Kerberos)
+   - Porta 53 (DNS)
+
+4. Tentar com FQDN:
+   Add-Computer -DomainName "techbiz.local" -Credential (Get-Credential)
+
+========================================
+APÓS TUDO FUNCIONANDO
+========================================
+
+Vantagens de estar no domínio:
+
+✅ Kerberos automático (sem configuração)
+✅ DNS resolve todos os hostnames
+✅ GPO aplica configurações de segurança
+✅ Autenticação centralizada
+✅ Gerenciamento via AD
+✅ Não precisa arquivo hosts
+✅ Não precisa TrustedHosts
+✅ Não precisa CredSSP
+
+========================================

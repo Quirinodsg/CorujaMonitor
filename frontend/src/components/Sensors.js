@@ -10,6 +10,9 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
   const [servers, setServers] = useState({});
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState(initialFilter);
+  const [searchText, setSearchText] = useState('');
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 50;
   const [sensorIncidents, setSensorIncidents] = useState({});
   const [viewMode, setViewMode] = useState('sensors'); // 'sensors' ou 'library'
   const [expandedSensorGroups, setExpandedSensorGroups] = useState({
@@ -276,18 +279,23 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
   };
 
   const getFilteredSensors = () => {
-    if (filterStatus === 'all') return sensors;
-    
-    // Filtro especial para sensores reconhecidos
-    if (filterStatus === 'acknowledged') {
-      return sensors.filter(sensor => sensor.is_acknowledged);
+    let result = sensors;
+    if (filterStatus !== 'all') {
+      if (filterStatus === 'acknowledged') {
+        result = result.filter(sensor => sensor.is_acknowledged);
+      } else {
+        result = result.filter(sensor => {
+          const metric = metrics[sensor.id];
+          if (!metric) return filterStatus === 'unknown';
+          return metric.status === filterStatus;
+        });
+      }
     }
-    
-    return sensors.filter(sensor => {
-      const metric = metrics[sensor.id];
-      if (!metric) return filterStatus === 'unknown';
-      return metric.status === filterStatus;
-    });
+    if (searchText) {
+      const q = searchText.toLowerCase();
+      result = result.filter(s => s.name?.toLowerCase().includes(q) || s.sensor_type?.toLowerCase().includes(q));
+    }
+    return result;
   };
 
   const getStatusCounts = () => {
@@ -315,6 +323,8 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
 
   const statusCounts = getStatusCounts();
   const filteredSensors = getFilteredSensors();
+  const totalPages = Math.ceil(filteredSensors.length / PAGE_SIZE);
+  const paginatedSensors = filteredSensors.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   return (
     <div className="management-container">
@@ -428,7 +438,16 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       </div>
 
       <div className="sensors-grouped">
-        {groupSensorsByType(filteredSensors).map(([groupKey, group]) => {
+        <div style={{ marginBottom: '12px' }}>
+          <input
+            type="text"
+            placeholder="🔍 Buscar sensor por nome ou tipo..."
+            value={searchText}
+            onChange={e => { setSearchText(e.target.value); setPage(1); }}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
+          />
+        </div>
+        {groupSensorsByType(paginatedSensors).map(([groupKey, group]) => {
           const isExpanded = expandedSensorGroups[groupKey];
           const statusCounts = getGroupStatusCounts(group.sensors);
           
@@ -559,6 +578,14 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       {filteredSensors.length === 0 && (
         <div className="no-data">
           <p>Nenhum sensor encontrado com o filtro selecionado</p>
+        </div>
+      )}
+
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', padding: '16px 0' }}>
+          <button disabled={page === 1} onClick={() => setPage(p => p - 1)} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #ddd', cursor: page === 1 ? 'not-allowed' : 'pointer' }}>← Anterior</button>
+          <span style={{ fontSize: '14px', color: '#666' }}>Página {page} de {totalPages} ({filteredSensors.length} sensores)</span>
+          <button disabled={page === totalPages} onClick={() => setPage(p => p + 1)} style={{ padding: '6px 14px', borderRadius: '6px', border: '1px solid #ddd', cursor: page === totalPages ? 'not-allowed' : 'pointer' }}>Próxima →</button>
         </div>
       )}
       </>

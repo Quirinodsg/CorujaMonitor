@@ -1,0 +1,72 @@
+========================================
+⚠️ REINICIAR SRVSONDA001 AGORA ⚠️
+========================================
+
+SITUAÇÃO:
+✅ Políticas CredSSP configuradas com sucesso
+❌ Erro "Access is denied" (sem mensagem de policy)
+✅ Isso significa que as políticas foram aplicadas!
+
+PROBLEMA:
+As políticas de grupo precisam de reinicialização para
+entrar em vigor completamente no sistema.
+
+========================================
+EXECUTAR NA SRVSONDA001 (192.168.31.162)
+========================================
+
+PowerShell como Administrador:
+
+Restart-Computer -Force
+
+========================================
+APÓS REINICIAR (aguardar 2-3 minutos)
+========================================
+
+1. Conectar via RDP novamente
+
+2. Abrir PowerShell como Administrador
+
+3. Testar conexão CredSSP:
+
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -Authentication CredSSP -ScriptBlock { hostname }
+
+RESULTADO ESPERADO:
+SRVHVSPRD010
+
+========================================
+SE FUNCIONAR:
+========================================
+
+4. Iniciar a probe:
+   cd C:\Users\Administrator\Desktop
+   .\iniciar_probe.bat
+
+5. Aguardar 1 minuto
+
+6. Verificar logs:
+   Deve aparecer: "Collected 7 WMI metrics from 192.168.31.110"
+
+7. Verificar dashboard:
+   http://192.168.31.161:3000
+   Servidores → SRVHVSPRD010
+   Sensores devem ter valores
+
+========================================
+SE NÃO FUNCIONAR APÓS REINICIAR:
+========================================
+
+Vamos usar ALTERNATIVA: Usuário Local
+
+No servidor 192.168.31.110:
+$password = ConvertTo-SecureString 'Coruja@2025' -AsPlainText -Force
+New-LocalUser -Name "corujamonitor" -Password $password -FullName "Coruja Monitor"
+Add-LocalGroupMember -Group "Administrators" -Member "corujamonitor"
+
+Atualizar credencial no banco:
+- Usuário: 192.168.31.110\corujamonitor
+- Domínio: (vazio)
+
+========================================

@@ -1,0 +1,64 @@
+═══════════════════════════════════════════════════════════════════════════════
+🔧 HABILITAR WMI DIRETO NO BANCO - 12/MAR 16:45
+═══════════════════════════════════════════════════════════════════════════════
+
+NO LINUX (SRVSONDA001), executar direto no psql:
+
+cd /home/administrador/CorujaMonitor
+docker exec -it coruja-db psql -U coruja -d coruja
+
+COPIAR E COLAR NO PSQL:
+
+UPDATE servers 
+SET 
+    wmi_enabled = true,
+    monitoring_protocol = 'wmi'
+WHERE hostname = 'srvhvsprd010' OR ip_address = '192.168.31.110';
+
+SELECT id, hostname, ip_address, wmi_enabled, monitoring_protocol 
+FROM servers 
+WHERE hostname = 'srvhvsprd010' OR ip_address = '192.168.31.110';
+
+SAIR DO PSQL:
+   \q
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════════════════════
+
+UPDATE 1
+
+ id |   hostname    |  ip_address   | wmi_enabled | monitoring_protocol 
+----+---------------+---------------+-------------+---------------------
+  2 | srvhvsprd010  | 192.168.31.110|      t      | wmi
+
+═══════════════════════════════════════════════════════════════════════════════
+🔄 AGUARDAR 60 SEGUNDOS - PROBE VAI DETECTAR AUTOMATICAMENTE
+═══════════════════════════════════════════════════════════════════════════════
+
+LOGS ESPERADOS NA SONDA (após 60s):
+
+ANTES:
+   INFO:__main__:Using PING only for srvhvsprd010
+
+DEPOIS:
+   INFO:__main__:Using WMI for srvhvsprd010
+   INFO:__main__:🔐 Usando credencial: Techbiz (Nível: Empresa)
+   INFO:__main__:   Usuário: Techbiz\coruja.monitor
+   INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 DASHBOARD - SENSORES VÃO MOSTRAR VALORES REAIS
+═══════════════════════════════════════════════════════════════════════════════
+
+Servidor: SRVHVSPRD010 (192.168.31.110)
+
+✅ CPU Usage: 15% (exemplo)
+✅ Memory Usage: 45% (exemplo)
+✅ Disk C: Usage: 60% (exemplo)
+✅ Uptime: 5 dias (exemplo)
+✅ Network In: 1.2 MB/s (exemplo)
+✅ Network Out: 0.8 MB/s (exemplo)
+✅ PING: 0.44ms (worker Linux)
+
+═══════════════════════════════════════════════════════════════════════════════

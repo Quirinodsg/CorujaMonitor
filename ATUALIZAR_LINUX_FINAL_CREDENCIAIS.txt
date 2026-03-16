@@ -1,0 +1,100 @@
+═══════════════════════════════════════════════════════════════
+🎯 ATUALIZAR LINUX - CORREÇÃO FINAL (3 COMMITS)
+═══════════════════════════════════════════════════════════════
+
+📋 CORREÇÕES APLICADAS:
+- ✅ Commit 9f220a8: Classe Credential duplicada removida
+- ✅ Commit 2d94ee5: Import mfa adicionado
+- ✅ Commit 51ca05c: Imports security_monitor e system_reset adicionados
+
+═══════════════════════════════════════════════════════════════
+📝 COPIAR E COLAR NO LINUX (SSH):
+═══════════════════════════════════════════════════════════════
+
+cd /home/administrador/CorujaMonitor
+
+echo "📥 Baixando correções do Git..."
+git pull origin master
+
+echo ""
+echo "🔍 Verificando imports no main.py:"
+grep "from routers import" api/main.py | head -1
+
+echo ""
+echo "🔄 Reiniciando API..."
+docker-compose restart api
+
+echo ""
+echo "⏳ Aguardando API iniciar (20 segundos)..."
+sleep 20
+
+echo ""
+echo "🧪 Testando API:"
+curl http://localhost:8000/health
+echo ""
+
+echo ""
+echo "📋 Logs da API (últimas 30 linhas):"
+docker logs coruja-api --tail 30
+
+echo ""
+echo "🐳 Status dos containers:"
+docker-compose ps
+
+═══════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO:
+═══════════════════════════════════════════════════════════════
+
+1. git pull: "Updating 2d94ee5..51ca05c Fast-forward"
+2. grep: Deve mostrar "mfa, security_monitor, system_reset" no final
+3. curl health: {"status":"healthy"}
+4. Logs: SEM erros NameError
+5. Containers: Todos "Up"
+
+═══════════════════════════════════════════════════════════════
+
+🎉 SE API INICIAR COM SUCESSO - PRÓXIMOS PASSOS:
+═══════════════════════════════════════════════════════════════
+
+1. Acessar portal: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em: Configurações > Credenciais
+4. Adicionar credencial WMI para SRVHVSPRD010:
+   
+   Nome: Domínio Principal
+   Tipo: WMI
+   Nível: Tenant (Empresa)
+   Usuário: TECHBIZ\administrador
+   Senha: [senha do domínio]
+   Domínio: TECHBIZ
+   
+5. Clicar em "Testar Conectividade"
+6. Se teste OK, salvar credencial
+7. Aguardar probe coletar métricas WMI automaticamente
+
+═══════════════════════════════════════════════════════════════
+📊 SISTEMA DE CREDENCIAIS IMPLEMENTADO:
+═══════════════════════════════════════════════════════════════
+
+✅ Tabela credentials criada no banco
+✅ API completa com 7 endpoints (CRUD + Test + Resolve)
+✅ Interface React moderna (Credentials.js + .css)
+✅ Sistema de herança: Servidor → Grupo → Tenant
+✅ Suporte a WMI, SNMP v1/v2c/v3, SSH
+✅ Criptografia de senhas com Fernet
+✅ Teste de conectividade integrado
+
+═══════════════════════════════════════════════════════════════
+❌ SE API AINDA NÃO INICIAR:
+═══════════════════════════════════════════════════════════════
+
+# Ver logs completos
+docker logs coruja-api --tail 100
+
+# Rebuild completo (último recurso)
+docker-compose down
+docker-compose up -d --build api
+sleep 20
+curl http://localhost:8000/health
+
+═══════════════════════════════════════════════════════════════

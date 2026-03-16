@@ -1,0 +1,49 @@
+========================================
+DIAGNÓSTICO: ERRO WMI [WinError 2]
+========================================
+
+PROBLEMA IDENTIFICADO:
+❌ wmic.exe não encontrado ou deprecado no Windows
+
+ERRO:
+ERROR:collectors.wmi_remote_collector:Erro ao executar WMI query: 
+[WinError 2] The system cannot find the file specified
+
+CAUSA:
+- wmic.exe foi DEPRECADO pela Microsoft
+- Windows 11/Server 2022+ não incluem mais wmic.exe
+- Mesmo em versões antigas, pode não estar no PATH
+
+========================================
+SOLUÇÕES POSSÍVEIS:
+========================================
+
+OPÇÃO 1: Usar PowerShell (RECOMENDADO)
+- Substituir wmic.exe por Get-WmiObject/Get-CimInstance
+- Usar WinRM (Windows Remote Management)
+- Mais moderno e suportado
+
+OPÇÃO 2: Usar biblioteca pypsrp
+- pip install pypsrp
+- PowerShell Remoting via Python
+- Mais robusto
+
+OPÇÃO 3: Usar impacket
+- pip install impacket
+- Cross-platform WMI
+- Funciona de Linux para Windows
+
+========================================
+VERIFICAR NO WINDOWS SRVSONDA001:
+========================================
+
+1. Verificar se wmic existe:
+   where wmic
+
+2. Verificar versão do Windows:
+   systeminfo | findstr /B /C:"OS Name" /C:"OS Version"
+
+3. Testar WinRM (porta 5985):
+   Test-NetConnection 192.168.31.110 -Port 5985
+
+========================================

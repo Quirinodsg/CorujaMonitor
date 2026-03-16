@@ -1,0 +1,45 @@
+============================================================
+VERIFICAR CREDENCIAIS NO BANCO DE DADOS
+============================================================
+
+✅ PROGRESSO: Hostname está correto agora!
+   Antes: "Auth Kerberos falhou em 192.168.31.110"
+   Agora: "Auth Kerberos falhou em SRVHVSPRD010.ad.techbiz.com.br"
+
+❌ NOVO PROBLEMA: Credenciais incorretas
+   Erro: "The user name or password is incorrect"
+
+VERIFICAR NO LINUX (.161):
+--------------------------
+
+SSH para 192.168.31.161:
+
+# 1. Ver credencial WMI no banco
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, name, credential_type, wmi_username, wmi_domain, tenant_id FROM credentials WHERE credential_type = 'wmi';"
+
+# 2. Ver qual credencial está associada ao servidor
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT s.id, s.hostname, s.ip_address, c.name as credential_name, c.wmi_username, c.wmi_domain FROM servers s LEFT JOIN credentials c ON s.credential_id = c.id WHERE s.ip_address = '192.168.31.110';"
+
+CREDENCIAIS CORRETAS:
+---------------------
+Usuário: Techbiz\coruja.monitor
+Senha: Dj8SXoXie!o6Tkc@
+Domínio: Techbiz
+
+POSSÍVEIS PROBLEMAS:
+--------------------
+1. Senha está criptografada errada no banco
+2. Usuário está sem domínio (deve ser: Techbiz\coruja.monitor)
+3. Credencial não está associada ao servidor
+4. Encryption key diferente entre máquinas
+
+PRÓXIMOS PASSOS:
+----------------
+Após verificar, vamos:
+1. Atualizar credencial se necessário
+2. Associar credencial ao servidor
+3. Testar novamente
+
+============================================================
+EXECUTAR COMANDOS ACIMA NO LINUX
+============================================================

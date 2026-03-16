@@ -1,0 +1,118 @@
+═══════════════════════════════════════════════════════════════════════════
+  VERIFICAR SERVIÇO WMI - EXECUTAR AGORA
+═══════════════════════════════════════════════════════════════════════════
+
+O serviço foi instalado com sucesso!
+Status SERVICE_PAUSED é temporário durante inicialização.
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 1: VERIFICAR STATUS DO SERVIÇO
+═══════════════════════════════════════════════════════════════════════════
+
+Na SRVSONDA001, execute:
+
+nssm status CorujaProbe
+
+Deve aparecer: SERVICE_RUNNING
+
+Se aparecer SERVICE_PAUSED ou SERVICE_STOPPED, execute:
+
+nssm restart CorujaProbe
+
+Aguarde 10 segundos e verifique novamente:
+
+nssm status CorujaProbe
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 2: VERIFICAR LOGS DO SERVIÇO
+═══════════════════════════════════════════════════════════════════════════
+
+Ver últimas 50 linhas do log:
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service.log" -Tail 50
+
+OU ver em tempo real:
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service.log" -Wait
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 3: PROCURAR POR SUCESSO OU ERRO
+═══════════════════════════════════════════════════════════════════════════
+
+PROCURE POR (sucesso):
+✅ "Coruja Probe started"
+✅ "Collecting from remote server: srvhvsprd010.ad.techbiz.com.br"
+✅ "Using WMI for srvhvsprd010.ad.techbiz.com.br"
+✅ "WMI nativo conectado em SRVHVSPRD010.ad.techbiz.com.br"
+✅ "Collected X WMI metrics from SRVHVSPRD010.ad.techbiz.com.br"
+
+PROCURE POR (erro):
+❌ "Access is denied"
+❌ "Error"
+❌ "Failed"
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 4: VERIFICAR CONTA DO SERVIÇO
+═══════════════════════════════════════════════════════════════════════════
+
+Confirmar que serviço está rodando como conta de domínio:
+
+Get-WmiObject Win32_Service -Filter "Name='CorujaProbe'" | Select Name, StartName, State
+
+Deve mostrar:
+Name        : CorujaProbe
+StartName   : TECHBIZ\coruja.monitor
+State       : Running
+
+═══════════════════════════════════════════════════════════════════════════
+PASSO 5: SE AINDA DER ERRO
+═══════════════════════════════════════════════════════════════════════════
+
+Se ainda aparecer "Access denied" nos logs:
+
+1. Verificar se serviço realmente está rodando como TECHBIZ\coruja.monitor
+2. Verificar logs de erro:
+   Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log"
+
+3. Reiniciar serviço:
+   nssm restart CorujaProbe
+
+4. Verificar Event Viewer:
+   eventvwr.msc
+   Windows Logs → Application → Procurar por "CorujaProbe"
+
+═══════════════════════════════════════════════════════════════════════════
+COMANDOS RÁPIDOS
+═══════════════════════════════════════════════════════════════════════════
+
+# Status
+nssm status CorujaProbe
+
+# Reiniciar
+nssm restart CorujaProbe
+
+# Ver logs
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service.log" -Tail 50
+
+# Ver logs em tempo real
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service.log" -Wait
+
+# Verificar conta
+Get-WmiObject Win32_Service -Filter "Name='CorujaProbe'" | Select Name, StartName, State
+
+# Parar (se necessário)
+nssm stop CorujaProbe
+
+═══════════════════════════════════════════════════════════════════════════
+COPIE E COLE AQUI
+═══════════════════════════════════════════════════════════════════════════
+
+Por favor, execute os comandos acima e cole aqui:
+
+1. Resultado de: nssm status CorujaProbe
+2. Últimas 50 linhas do log (service.log)
+3. Resultado de: Get-WmiObject Win32_Service -Filter "Name='CorujaProbe'" | Select Name, StartName, State
+
+═══════════════════════════════════════════════════════════════════════════
+Data: 13/03/2026 - Coruja Monitor
+═══════════════════════════════════════════════════════════════════════════

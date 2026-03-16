@@ -1,0 +1,240 @@
+═══════════════════════════════════════════════════════════════
+🔧 CONFIGURAR WMI NO BANCO DE DADOS - SRVHVSPRD010
+═══════════════════════════════════════════════════════════════
+
+PROBLEMA IDENTIFICADO:
+- Probe detecta o servidor: ✅
+- Mas usa "PING only": ❌
+- Motivo: Servidor não tem WMI habilitado no banco de dados
+
+LOGS DA PROBE:
+INFO:__main__:Collecting from remote server: srvhvsprd010 (192.168.31.110)
+INFO:__main__:Using PING only for srvhvsprd010
+
+═══════════════════════════════════════════════════════════════
+📋 SOLUÇÃO: ATUALIZAR SERVIDOR NO BANCO DE DADOS
+═══════════════════════════════════════════════════════════════
+
+OPÇÃO 1: Via Frontend (Recomendado)
+------------------------------------
+1. Abrir: http://192.168.31.161:3000
+2. Login: admin@coruja.com / admin123
+3. Ir em: Servidores
+4. Encontrar: SRVHVSPRD010 (192.168.31.110)
+5. Clicar em: Editar (ícone de lápis)
+6. Configurar:
+   - Protocolo de Monitoramento: WMI
+   - Habilitar WMI Remoto: ✓ (marcar checkbox)
+   - Usuário WMI: Administrator
+   - Senha WMI: [senha usada no teste]
+   - Domínio WMI: [deixar vazio se workgroup]
+7. Salvar
+
+OPÇÃO 2: Via SQL Direto (Mais Rápido)
+--------------------------------------
+Execute no Linux (SRVCMONITOR001):
+
+# Conectar ao PostgreSQL
+docker exec -it coruja_monitor-postgres-1 psql -U coruja -d coruja_monitor
+
+# Atualizar servidor
+UPDATE servers 
+SET 
+  monitoring_protocol = 'wmi',
+  wmi_enabled = true,
+  wmi_username = 'Administrator',
+  wmi_password_encrypted = 'SUA_SENHA_AQUI',
+  wmi_domain = ''
+WHERE hostname = 'srvhvsprd010' OR ip_address = '192.168.31.110';
+
+# Verificar
+SELECT id, hostname, ip_address, monitoring_protocol, wmi_enabled, wmi_username 
+FROM servers 
+WHERE hostname = 'srvhvsprd010';
+
+# Sair
+\q
+
+IMPORTANTE: A senha será armazenada em texto plano por enquanto.
+No futuro, implementaremos criptografia.
+
+═══════════════════════════════════════════════════════════════
+📋 OPÇÃO 3: Script Python (Mais Seguro)
+═══════════════════════════════════════════════════════════════
+
+Criar arquivo: configurar_wmi_srvhvsprd010.py
+
+import os
+import sys
+sys.path.append('/home/administrador/CorujaMonitor/api')
+
+from database import SessionLocal
+from models import Server
+
+# Conectar ao banco
+db = SessionLocal()
+
+try:
+    # Buscar servidor
+    server = db.query(Server).filter(
+        (Server.hostname == 'srvhvsprd010') | 
+        (Server.ip_address == '192.168.31.110')
+    ).first()
+    
+    if not server:
+        print("❌ Servidor não encontrado!")
+        exit(1)
+    
+    print(f"✅ Servidor encontrado: {server.hostname} ({server.ip_address})")
+    
+    # Configurar WMI
+    server.monitoring_protocol = 'wmi'
+    server.wmi_enabled = True
+    server.wmi_username = 'Administrator'
+    server.wmi_password_encrypted = input("Digite a senha WMI: ")
+    server.wmi_domain = ''
+    
+    # Salvar
+    db.commit()
+    
+    print("✅ Servidor configurado com sucesso!")
+    print(f"   Protocolo: {server.monitoring_protocol}")
+    print(f"   WMI Habilitado: {server.wmi_enabled}")
+    print(f"   Usuário: {server.wmi_username}")
+    
+except Exception as e:
+    print(f"❌ Erro: {e}")
+    db.rollback()
+finally:
+    db.close()
+
+# Executar:
+cd /home/administrador/CorujaMonitor
+python3 configurar_wmi_srvhvsprd010.py
+
+═══════════════════════════════════════════════════════════════
+⚠️ IMPORTANTE: SENHA EM TEXTO PLANO
+═══════════════════════════════════════════════════════════════
+
+SITUAÇÃO ATUAL:
+- A senha será armazenada SEM criptografia
+- Isso é TEMPORÁRIO para testar
+- Funciona, mas não é seguro
+
+SOLUÇÃO FUTURA:
+- Implementar criptografia de senhas
+- Usar biblioteca: cryptography
+- Armazenar chave de criptografia em variável de ambiente
+- Criptografar antes de salvar no banco
+- Descriptografar ao usar na probe
+
+POR ENQUANTO:
+- Use senha temporária para teste
+- Não use senha de produção
+- Depois implementamos criptografia
+
+═══════════════════════════════════════════════════════════════
+📋 APÓS CONFIGURAR
+═══════════════════════════════════════════════════════════════
+
+1. AGUARDAR PRÓXIMA COLETA (60 segundos)
+   - Probe coleta a cada 60 segundos
+   - Aguarde 1-2 minutos
+
+2. VERIFICAR LOGS DA PROBE
+   - Deve aparecer: "Using WMI for srvhvsprd010"
+   - Deve aparecer: "Collected WMI metrics from 192.168.31.110"
+
+3. VERIFICAR FRONTEND
+   - Abrir: http://192.168.31.161:3000
+   - Ir em: Servidores
+   - Servidor SRVHVSPRD010 deve mostrar métricas:
+     * CPU
+     * Memória
+     * Disco C:
+
+4. SE NÃO FUNCIONAR
+   - Verificar logs da probe (arquivo acima)
+   - Verificar credenciais no banco
+   - Testar WMI manualmente (script PowerShell)
+
+═══════════════════════════════════════════════════════════════
+🔍 DIAGNÓSTICO: VERIFICAR SE FUNCIONOU
+═══════════════════════════════════════════════════════════════
+
+# No Linux - Verificar configuração no banco
+docker exec -it coruja_monitor-postgres-1 psql -U coruja -d coruja_monitor -c "
+SELECT 
+  id, 
+  hostname, 
+  ip_address, 
+  monitoring_protocol, 
+  wmi_enabled, 
+  wmi_username,
+  CASE WHEN wmi_password_encrypted IS NOT NULL THEN '***' ELSE NULL END as has_password
+FROM servers 
+WHERE hostname = 'srvhvsprd010';
+"
+
+# Verificar sensores criados
+docker exec -it coruja_monitor-postgres-1 psql -U coruja -d coruja_monitor -c "
+SELECT 
+  s.id,
+  s.name,
+  s.sensor_type,
+  srv.hostname
+FROM sensors s
+JOIN servers srv ON s.server_id = srv.id
+WHERE srv.hostname = 'srvhvsprd010'
+ORDER BY s.sensor_type;
+"
+
+# Verificar métricas recentes
+docker exec -it coruja_monitor-postgres-1 psql -U coruja -d coruja_monitor -c "
+SELECT 
+  s.name,
+  s.sensor_type,
+  m.value,
+  m.unit,
+  m.timestamp
+FROM metrics m
+JOIN sensors s ON m.sensor_id = s.id
+JOIN servers srv ON s.server_id = srv.id
+WHERE srv.hostname = 'srvhvsprd010'
+ORDER BY m.timestamp DESC
+LIMIT 20;
+"
+
+═══════════════════════════════════════════════════════════════
+✅ RESULTADO ESPERADO
+═══════════════════════════════════════════════════════════════
+
+LOGS DA PROBE (após 1-2 minutos):
+INFO:__main__:Collecting from remote server: srvhvsprd010 (192.168.31.110)
+INFO:__main__:Using WMI for srvhvsprd010
+INFO:__main__:Collected WMI metrics from 192.168.31.110
+
+FRONTEND:
+- CPU: ~2% (ou valor atual)
+- Memória: ~70% (358 GB usado de 511 GB)
+- Disco C:: ~45% (201 GB usado de 445 GB)
+
+BANCO DE DADOS:
+- Sensores criados: cpu_usage, memory_usage, disk_C
+- Métricas recentes: valores coletados nos últimos minutos
+
+═══════════════════════════════════════════════════════════════
+🎯 COMECE AQUI
+═══════════════════════════════════════════════════════════════
+
+PASSO 1: Escolher método (recomendo OPÇÃO 1 - Frontend)
+
+PASSO 2: Configurar credenciais WMI
+
+PASSO 3: Aguardar 1-2 minutos
+
+PASSO 4: Verificar logs da probe
+
+PASSO 5: Verificar frontend
+
+═══════════════════════════════════════════════════════════════

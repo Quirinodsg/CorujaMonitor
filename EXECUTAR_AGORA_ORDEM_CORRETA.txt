@@ -1,0 +1,60 @@
+========================================
+EXECUTAR AGORA - ORDEM CORRETA
+========================================
+
+Siga esta ordem EXATAMENTE:
+
+========================================
+1. DESKTOP-P9VGN04 (Notebook - Git Bash)
+========================================
+
+cd "/c/Users/andre.quirino/Coruja Monitor"
+git add api/routers/sensors.py frontend/src/components/Servers.js probe/collectors/disk_collector.py probe/config.yaml
+git commit -m "fix: Filtro CD-ROM e exclusao sensores"
+git push origin master
+
+========================================
+2. SRVCMONITOR001 (Servidor Linux - PuTTY)
+========================================
+
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker-compose restart api frontend
+
+Aguarde 30 segundos para containers reiniciarem.
+
+========================================
+3. SRVCMONITOR001 (Deletar do Banco - PuTTY)
+========================================
+
+docker-compose exec postgres psql -U coruja -d coruja_monitor -c "DELETE FROM metrics WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%'); DELETE FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%'); DELETE FROM sensor_notes WHERE sensor_id IN (SELECT id FROM sensors WHERE name LIKE '%DISCO D%'); DELETE FROM sensors WHERE name LIKE '%DISCO D%');"
+
+========================================
+4. SRVSONDA001 (Máquina Windows Monitorada)
+========================================
+
+Copiar manualmente de DESKTOP-P9VGN04 para SRVSONDA001:
+- Origem: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\disk_collector.py
+- Destino: C:\Program Files\CorujaMonitor\Probe\collectors\disk_collector.py
+
+Depois executar em SRVSONDA001:
+C:\Program Files\CorujaMonitor\Probe\REINICIAR_PROBE_AGORA.bat
+
+========================================
+5. TESTE FINAL
+========================================
+
+1. Abra: http://192.168.31.161:3000
+2. Vá em: Servidores → SRVSONDA001
+3. Verifique que Disco D NÃO está na lista
+4. Aguarde 2 minutos
+5. Recarregue a página (F5)
+6. Confirme que Disco D NÃO reapareceu
+
+========================================
+PRONTO!
+========================================
+
+Se Disco D não reaparecer, o problema está resolvido!
+
+========================================

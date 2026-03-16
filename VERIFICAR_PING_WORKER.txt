@@ -1,0 +1,44 @@
+═══════════════════════════════════════════════════════════════
+  VERIFICAR SE PING ESTÁ INSTALADO NO WORKER
+═══════════════════════════════════════════════════════════════
+
+# Verificar se comando ping existe
+docker exec -it coruja-worker which ping
+
+# Ver logs com mais detalhes (DEBUG)
+docker logs coruja-worker --tail 200 | grep -A 5 -B 5 "ping_all_servers"
+
+# Ver se há erros de comando não encontrado
+docker logs coruja-worker --tail 200 | grep -i "not found\|command not found\|no such file"
+
+═══════════════════════════════════════════════════════════════
+  SE PING NÃO ESTIVER INSTALADO
+═══════════════════════════════════════════════════════════════
+
+# Instalar temporariamente (será perdido ao reiniciar container)
+docker exec -it coruja-worker apt-get update
+docker exec -it coruja-worker apt-get install -y iputils-ping
+
+# Verificar instalação
+docker exec -it coruja-worker ping -c 1 8.8.8.8
+
+# Aguardar próxima execução da task (60s)
+sleep 60
+
+# Ver logs
+docker logs coruja-worker --tail 100 | grep -i ping
+
+═══════════════════════════════════════════════════════════════
+  PARA INSTALAR PERMANENTEMENTE
+═══════════════════════════════════════════════════════════════
+
+# Verificar se Dockerfile já tem iputils-ping
+cat worker/Dockerfile | grep iputils-ping
+
+# Se não tiver, adicionar e reconstruir:
+cd /home/administrador/CorujaMonitor
+git pull origin master
+docker-compose build worker
+docker-compose up -d worker
+
+═══════════════════════════════════════════════════════════════

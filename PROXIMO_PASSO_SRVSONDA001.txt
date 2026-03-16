@@ -1,0 +1,49 @@
+========================================
+PRÓXIMO PASSO - SRVSONDA001 (.162)
+========================================
+
+✅ CONCLUÍDO: Push para Git feito com sucesso!
+
+========================================
+AGORA: CONECTAR NA SRVSONDA001 VIA RDP
+========================================
+
+1. Abrir RDP para 192.168.31.162
+
+2. Abrir PowerShell como Admin
+
+3. Executar:
+
+cd C:\Users\Steve.Jobs\Desktop\coruja-monitor
+
+# Baixar mudanças do Git
+git pull
+
+# Copiar arquivos para probe instalada
+copy probe\probe_core.py "C:\Program Files\CorujaMonitor\Probe\"
+copy probe\collectors\wmi_remote_collector.py "C:\Program Files\CorujaMonitor\Probe\collectors\"
+
+# Reiniciar probe (Ctrl+C na janela atual do iniciar_probe.bat)
+cd C:\Users\Steve.Jobs\Desktop
+.\iniciar_probe.bat
+
+========================================
+DEPOIS: LINUX (.161)
+========================================
+
+SSH para 192.168.31.161:
+
+cd /root/coruja-monitor
+git pull
+python3 atualizar_hostname_servidor_110.py
+
+========================================
+VERIFICAR LOGS (aguardar 1 minuto)
+========================================
+
+Na janela da probe (SRVSONDA001), procurar por:
+
+✅ SUCESSO:
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010.ad.techbiz.com.br
+
+========================================

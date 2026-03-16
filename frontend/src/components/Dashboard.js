@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import './Dashboard.css';
+
+const WS_URL = (process.env.REACT_APP_API_URL || 'http://localhost:8000')
+  .replace(/^http/, 'ws') + '/ws/dashboard';
 
 function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const [overview, setOverview] = useState(null);
@@ -11,27 +14,56 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const [filterCompany, setFilterCompany] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const [filterCriticality, setFilterCriticality] = useState('all');
+  const [wsConnected, setWsConnected] = useState(false);
+  const wsRef = useRef(null);
+  const reconnectRef = useRef(null);
 
   useEffect(() => {
-    // Ensure token is set before loading data
     const token = localStorage.getItem('token');
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      console.log('Token configured for dashboard requests');
       loadDashboardData();
     } else {
-      console.error('No token found, redirecting to login');
       onLogout();
     }
-    
+
+    // WebSocket para refresh em tempo real
+    const connectWS = () => {
+      try {
+        const token = localStorage.getItem('token');
+        const ws = new WebSocket(`${WS_URL}?token=${token}`);
+        wsRef.current = ws;
+
+        ws.onopen = () => setWsConnected(true);
+        ws.onclose = () => {
+          setWsConnected(false);
+          // Reconectar após 5s
+          reconnectRef.current = setTimeout(connectWS, 5000);
+        };
+        ws.onerror = () => ws.close();
+        ws.onmessage = (evt) => {
+          try {
+            const msg = JSON.parse(evt.data);
+            if (msg.type === 'overview') setOverview(msg.data);
+            if (msg.type === 'health') setHealthSummary(msg.data);
+            if (msg.type === 'incident') setIncidents(prev => [msg.data, ...prev].slice(0, 10));
+          } catch (_) {}
+        };
+      } catch (_) {}
+    };
+
+    connectWS();
+
+    // Fallback polling a cada 30s
     const interval = setInterval(() => {
-      const currentToken = localStorage.getItem('token');
-      if (currentToken) {
-        loadDashboardData();
-      }
+      if (!wsConnected) loadDashboardData();
     }, 30000);
-    
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(reconnectRef.current);
+      if (wsRef.current) wsRef.current.close();
+    };
   }, [onLogout]);
 
   const loadDashboardData = async () => {
@@ -134,6 +166,12 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
         <div className="header-left">
           <h1>🦉 Coruja Monitor</h1>
           <span className="tenant-name">{user.full_name}</span>
+          {wsConnected && (
+            <span style={{ fontSize: '11px', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+              Tempo real
+            </span>
+          )}
         </div>
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
           <button 

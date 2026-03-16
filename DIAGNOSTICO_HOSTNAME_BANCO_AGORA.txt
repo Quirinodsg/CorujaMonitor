@@ -1,0 +1,54 @@
+============================================================
+DIAGNÓSTICO: HOSTNAME NO BANCO DE DADOS
+============================================================
+
+PROBLEMA IDENTIFICADO:
+----------------------
+Probe está usando IP (192.168.31.110) ao invés de hostname
+Logs mostram: "Auth Kerberos falhou em 192.168.31.110"
+
+CAUSA:
+------
+Você executou o UPDATE no banco, mas pode ter:
+1. Atualizado o servidor errado
+2. Probe ainda tem cache
+3. Hostname não foi salvo corretamente
+
+VERIFICAR AGORA NO LINUX:
+-------------------------
+
+SSH para 192.168.31.161:
+
+# 1. Verificar TODOS os servidores no banco
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, hostname, ip_address, monitoring_protocol FROM servers ORDER BY id;"
+
+# 2. Verificar especificamente o servidor .110
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, hostname, ip_address, monitoring_protocol, wmi_enabled FROM servers WHERE ip_address = '192.168.31.110';"
+
+# 3. Se hostname ainda estiver errado, atualizar novamente
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "UPDATE servers SET hostname = 'SRVHVSPRD010.ad.techbiz.com.br' WHERE ip_address = '192.168.31.110';"
+
+# 4. Confirmar atualização
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, hostname, ip_address FROM servers WHERE ip_address = '192.168.31.110';"
+
+DEPOIS DE ATUALIZAR:
+--------------------
+
+Na SRVSONDA001 (.162):
+1. Parar a probe (Ctrl+C)
+2. Aguardar 5 segundos
+3. Reiniciar: .\iniciar_probe.bat
+
+LOGS ESPERADOS:
+---------------
+✅ CORRETO:
+INFO:__main__:Collecting from remote server: srvhvsprd010.ad.techbiz.com.br (192.168.31.110)
+INFO:__main__:🔐 Usando credencial: Techbiz (Nível: tenant)
+INFO:collectors.wmi_remote_collector:✅ PowerShell remoto OK via Kerberos em SRVHVSPRD010.ad.techbiz.com.br
+
+❌ ERRADO (atual):
+WARNING:collectors.wmi_remote_collector:⚠️ Auth Kerberos falhou em 192.168.31.110
+
+============================================================
+EXECUTAR COMANDOS ACIMA NO LINUX AGORA
+============================================================
