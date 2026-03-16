@@ -15,9 +15,50 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
+# Thread-local storage para rastrear se CoInitializeSecurity já foi chamado nesta thread
+_thread_local = threading.local()
+
 MAX_CONNECTIONS_PER_HOST = 3
 CONNECTION_TIMEOUT_SEC = 30
 IDLE_TIMEOUT_SEC = 300  # Fecha conexão ociosa após 5 minutos
+
+
+def _init_thread_com():
+    """
+    Inicializa COM e CoInitializeSecurity para a thread atual.
+    Deve ser chamado em CADA thread que usa WMI.
+    CoInitializeSecurity só pode ser chamado UMA VEZ por processo,
+    mas CoInitialize deve ser chamado por thread.
+    """
+    try:
+        import pythoncom
+
+        # CoInitialize por thread (obrigatório)
+        pythoncom.CoInitialize()
+
+        # CoInitializeSecurity: apenas uma vez por processo
+        if not getattr(_thread_local, 'com_security_initialized', False):
+            try:
+                pythoncom.CoInitializeSecurity(
+                    None,
+                    -1,
+                    None,
+                    None,
+                    pythoncom.RPC_C_AUTHN_LEVEL_DEFAULT,
+                    pythoncom.RPC_C_IMP_LEVEL_IMPERSONATE,
+                    None,
+                    pythoncom.EOAC_NONE,
+                    None,
+                )
+                _thread_local.com_security_initialized = True
+                logger.info("✅ CoInitializeSecurity configurado com sucesso (thread: %s)", threading.current_thread().name)
+            except Exception as e:
+                # RPC_E_TOO_LATE (0x80010119) = já foi chamado neste processo, tudo bem
+                _thread_local.com_security_initialized = True
+                logger.debug(f"CoInitializeSecurity já configurado: {e}")
+
+    except Exception as e:
+        logger.warning(f"Erro ao inicializar COM: {e}")
 
 
 @dataclass
@@ -39,7 +80,7 @@ class PooledConnection:
 class WMIConnectionPool:
     """
     Pool de conexões WMI por host.
-    
+
     Uso:
         pool = WMIConnectionPool()
         conn = pool.acquire("SRVHVSPRD010.ad.techbiz.com.br", username, password, domain)
@@ -58,29 +99,12 @@ class WMIConnectionPool:
         self._cleanup_thread.start()
 
     def _create_connection(self, host: str, username: str, password: str, domain: str) -> Optional[object]:
-        """Cria nova conexão WMI com CoInitializeSecurity"""
+        """Cria nova conexão WMI com COM inicializado corretamente para esta thread"""
         try:
-            import pythoncom
             import wmi
 
-            # Inicializar COM para esta thread
-            pythoncom.CoInitialize()
-
-            # Configurar contexto de segurança COM (CRÍTICO para serviços Windows)
-            try:
-                pythoncom.CoInitializeSecurity(
-                    None,
-                    -1,
-                    None,
-                    None,
-                    pythoncom.RPC_C_AUTHN_LEVEL_DEFAULT,
-                    pythoncom.RPC_C_IMP_LEVEL_IMPERSONATE,
-                    None,
-                    pythoncom.EOAC_NONE,
-                    None,
-                )
-            except Exception:
-                pass  # Pode já ter sido inicializado nesta thread
+            # CRÍTICO: inicializar COM + CoInitializeSecurity para esta thread
+            _init_thread_com()
 
             # Formatar usuário
             full_user = f"{domain}\\{username}" if domain and "\\" not in username else username
