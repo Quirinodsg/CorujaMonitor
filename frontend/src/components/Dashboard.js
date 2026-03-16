@@ -2,8 +2,15 @@ import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import './Dashboard.css';
 
-const WS_URL = (process.env.REACT_APP_API_URL || 'http://localhost:8000')
-  .replace(/^http/, 'ws') + '/ws/dashboard';
+const WS_URL = (() => {
+  const apiUrl = process.env.REACT_APP_API_URL;
+  if (apiUrl && !apiUrl.includes('localhost')) {
+    return apiUrl.replace(/^http/, 'ws') + '/ws/dashboard';
+  }
+  // Usar o host atual da página (funciona em produção sem precisar de rebuild)
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${proto}//${window.location.hostname}:8000/ws/dashboard`;
+})();
 
 function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const [overview, setOverview] = useState(null);
