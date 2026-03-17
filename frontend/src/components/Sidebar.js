@@ -1,7 +1,7 @@
 import React from 'react';
 import './Sidebar.css';
 
-function Sidebar({ currentPage, onNavigate, darkMode, onToggleDark }) {
+function Sidebar({ currentPage, onNavigate, darkMode, onToggleDark, collapsed, onToggleCollapse }) {
   const menuItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard' },
     { id: 'companies', icon: '🏢', label: 'Empresas' },
@@ -22,9 +22,10 @@ function Sidebar({ currentPage, onNavigate, darkMode, onToggleDark }) {
   ];
 
   return (
-    <div className="sidebar">
+    <div className={`sidebar${collapsed ? ' sidebar--collapsed' : ''}`}>
       <div className="sidebar-header" onClick={() => onNavigate('dashboard')} style={{cursor: 'pointer'}}>
-        <h2>🦉 Coruja</h2>
+        {!collapsed && <h2>🦉 Coruja</h2>}
+        {collapsed && <span style={{fontSize: '24px'}}>🦉</span>}
       </div>
       <nav className="sidebar-nav">
         {menuItems.map(item => (
@@ -32,16 +33,21 @@ function Sidebar({ currentPage, onNavigate, darkMode, onToggleDark }) {
             key={item.id}
             className={`sidebar-item ${currentPage === item.id ? 'active' : ''}`}
             onClick={() => onNavigate(item.id)}
+            title={collapsed ? item.label : undefined}
           >
             <span className="sidebar-icon">{item.icon}</span>
-            <span className="sidebar-label">{item.label}</span>
+            {!collapsed && <span className="sidebar-label">{item.label}</span>}
           </button>
         ))}
       </nav>
       <div className="sidebar-footer">
         <button className="sidebar-theme-toggle" onClick={onToggleDark} title={darkMode ? 'Modo claro' : 'Modo escuro'}>
           <span>{darkMode ? '☀️' : '🌙'}</span>
-          <span className="sidebar-label">{darkMode ? 'Modo Claro' : 'Modo Escuro'}</span>
+          {!collapsed && <span className="sidebar-label">{darkMode ? 'Modo Claro' : 'Modo Escuro'}</span>}
+        </button>
+        <button className="sidebar-collapse-btn" onClick={onToggleCollapse} title={collapsed ? 'Expandir menu' : 'Recolher menu'}>
+          <span>{collapsed ? '▶' : '◀'}</span>
+          {!collapsed && <span className="sidebar-label">Recolher</span>}
         </button>
       </div>
     </div>

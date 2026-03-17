@@ -36,6 +36,7 @@ function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
   const [selectedSensorId, setSelectedSensorId] = useState(null);
   const [sensorFilter, setSensorFilter] = useState('all');
   const [nocMode, setNocMode] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
   const handleNavigate = (page, filter = null) => {
     setCurrentPage(page);
@@ -120,8 +121,8 @@ function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
 
   return (
     <div className="main-layout">
-      <Sidebar currentPage={currentPage} onNavigate={(page) => handleNavigate(page)} darkMode={darkMode} onToggleDark={onToggleDark} />
-      <div className="main-content">
+      <Sidebar currentPage={currentPage} onNavigate={(page) => handleNavigate(page)} darkMode={darkMode} onToggleDark={onToggleDark} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(c => !c)} />
+      <div className={`main-content${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
         <div className="top-bar">
           <div className="top-bar-left">
             <img src="/coruja-logo.png" alt="Coruja Monitor" className="header-logo" />

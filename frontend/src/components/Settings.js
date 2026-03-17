@@ -5,6 +5,7 @@ import SecurityMonitor from './SecurityMonitor';
 import MFASetup from './MFASetup';
 import SystemReset from './SystemReset';
 import Credentials from './Credentials';
+import TestTools from './TestTools';
 import './Management.css';
 import './Settings.css';
 
@@ -2833,12 +2834,7 @@ function Settings({ onNavigate }) {
         </button>
         <button 
           className={`tab ${activeTab === 'tests' ? 'active' : ''}`}
-          onClick={(e) => {
-            e.preventDefault();
-            if (onNavigate) {
-              onNavigate('test-tools');
-            }
-          }}
+          onClick={() => setActiveTab('tests')}
         >
           🧪 Testes de Sensores
         </button>
@@ -2869,6 +2865,7 @@ function Settings({ onNavigate }) {
         {activeTab === 'users' && renderUsers()}
         {activeTab === 'security' && renderSecurity()}
         {activeTab === 'credentials' && <Credentials />}
+        {activeTab === 'tests' && <TestTools />}
         {activeTab === 'backup' && renderBackup()}
         {activeTab === 'admin' && renderAdminTools()}
         {activeTab === 'advanced' && renderAdvanced()}

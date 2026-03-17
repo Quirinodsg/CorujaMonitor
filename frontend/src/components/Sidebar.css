@@ -173,3 +173,48 @@
   background: rgba(255, 255, 255, 0.08);
   color: rgba(255, 255, 255, 0.9);
 }
+
+/* Sidebar colapsada */
+.sidebar--collapsed {
+  width: 64px;
+}
+
+.sidebar--collapsed .sidebar-header {
+  display: flex;
+  justify-content: center;
+  padding: 20px 8px;
+}
+
+.sidebar--collapsed .sidebar-item {
+  justify-content: center;
+  padding: 12px;
+}
+
+.sidebar--collapsed .sidebar-theme-toggle,
+.sidebar--collapsed .sidebar-collapse-btn {
+  justify-content: center;
+  padding: 10px;
+}
+
+.sidebar-collapse-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: left;
+  margin-top: 4px;
+}
+
+.sidebar-collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.9);
+}
