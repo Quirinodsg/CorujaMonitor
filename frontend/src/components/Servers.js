@@ -62,7 +62,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     name: '',
     parent_id: null,
     description: '',
-    icon: '📁',
+    icon: '≡ƒôü',
     color: '#2196f3'
   });
   const [azureConfig, setAzureConfig] = useState({
@@ -167,14 +167,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
   }, [selectedServerId, servers]);
 
   useEffect(() => {
-    // Se também foi passado um sensor específico, destacá-lo após os sensores serem carregados
+    // Se tamb├⌐m foi passado um sensor espec├¡fico, destac├í-lo ap├│s os sensores serem carregados
     if (selectedSensorId && sensors.length > 0) {
-      console.log('🎯 Navegando para sensor ID:', selectedSensorId, 'Total sensores:', sensors.length);
+      console.log('≡ƒÄ» Navegando para sensor ID:', selectedSensorId, 'Total sensores:', sensors.length);
       
       // Encontrar o sensor e expandir seu grupo
       const sensor = sensors.find(s => s.id === selectedSensorId);
       if (sensor) {
-        console.log('✅ Sensor encontrado:', sensor.name, 'Tipo:', sensor.sensor_type);
+        console.log('Γ£à Sensor encontrado:', sensor.name, 'Tipo:', sensor.sensor_type);
         // Determinar qual grupo o sensor pertence
         let groupKey = null;
         const type = sensor.sensor_type;
@@ -193,36 +193,36 @@ function Servers({ selectedServerId, selectedSensorId }) {
         
         // Expandir o grupo do sensor
         if (groupKey) {
-          console.log('📂 Expandindo grupo:', groupKey);
+          console.log('≡ƒôé Expandindo grupo:', groupKey);
           setExpandedSensorGroups(prev => ({
             ...prev,
             [groupKey]: true
           }));
         }
       } else {
-        console.log('❌ Sensor NÃO encontrado! ID procurado:', selectedSensorId);
+        console.log('Γ¥î Sensor N├âO encontrado! ID procurado:', selectedSensorId);
       }
       
       setHighlightedSensorId(selectedSensorId);
       
-      // Rolar até o sensor após um delay maior para garantir que o grupo foi expandido
+      // Rolar at├⌐ o sensor ap├│s um delay maior para garantir que o grupo foi expandido
       setTimeout(() => {
         const sensorElement = document.getElementById(`sensor-${selectedSensorId}`);
         if (sensorElement) {
-          console.log('📜 Rolando até o sensor');
+          console.log('≡ƒô£ Rolando at├⌐ o sensor');
           sensorElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
           
-          // Remover destaque após 3 segundos
+          // Remover destaque ap├│s 3 segundos
           setTimeout(() => {
             setHighlightedSensorId(null);
           }, 3000);
         } else {
-          console.log('❌ Elemento DOM não encontrado: sensor-' + selectedSensorId);
+          console.log('Γ¥î Elemento DOM n├úo encontrado: sensor-' + selectedSensorId);
         }
       }, 800);
     } else {
       if (selectedSensorId) {
-        console.log('⏳ Aguardando sensores... ID:', selectedSensorId, 'Sensores:', sensors.length);
+        console.log('ΓÅ│ Aguardando sensores... ID:', selectedSensorId, 'Sensores:', sensors.length);
       }
     }
   }, [selectedSensorId, sensors]);
@@ -258,7 +258,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         name: '',
         parent_id: null,
         description: '',
-        icon: '📁',
+        icon: '≡ƒôü',
         color: '#2196f3'
       });
       loadServerGroups();
@@ -270,14 +270,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
   };
 
   const handleDeleteGroup = async (groupId, groupName) => {
-    if (!window.confirm(`Tem certeza que deseja excluir o grupo "${groupName}"?\n\nOs servidores/sensores deste grupo ficarão sem grupo.`)) {
+    if (!window.confirm(`Tem certeza que deseja excluir o grupo "${groupName}"?\n\nOs servidores/sensores deste grupo ficar├úo sem grupo.`)) {
       return;
     }
 
     try {
       await api.delete(`/sensor-groups/${groupId}`);
       loadServerGroups();
-      alert('Grupo excluído com sucesso!');
+      alert('Grupo exclu├¡do com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir grupo:', error);
       alert('Erro ao excluir grupo: ' + (error.response?.data?.detail || error.message));
@@ -297,7 +297,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         name: '',
         parent_id: null,
         description: '',
-        icon: '📁',
+        icon: '≡ƒôü',
         color: '#2196f3'
       });
       loadServerGroups();
@@ -383,7 +383,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
           const batchResponse = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`);
           setMetrics(batchResponse.data);
         } catch (err) {
-          console.error('Erro ao carregar métricas em batch:', err);
+          console.error('Erro ao carregar m├⌐tricas em batch:', err);
         }
       }
     } catch (error) {
@@ -426,61 +426,61 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const getSensorIcon = (type) => {
     switch (type) {
-      case 'ping': return '📡';
-      case 'cpu': return '🖥️';
-      case 'memory': return '💾';
-      case 'disk': return '💿';
-      case 'network': return '🌐';
-      case 'service': return '⚙️';
-      case 'system': return '⏱️';
-      case 'hyperv': return '🖼️';
-      case 'udm': return '📡';
-      case 'docker': return '🐳';
-      case 'snmp': return '🌐';
-      case 'snmp_uptime': return '⏱️';
-      case 'snmp_cpu': return '🖥️';
-      case 'snmp_memory': return '💾';
-      case 'snmp_traffic': return '📊';
-      case 'snmp_interface': return '🔌';
-      default: return '📊';
+      case 'ping': return '≡ƒôí';
+      case 'cpu': return '≡ƒûÑ∩╕Å';
+      case 'memory': return '≡ƒÆ╛';
+      case 'disk': return '≡ƒÆ┐';
+      case 'network': return '≡ƒîÉ';
+      case 'service': return 'ΓÜÖ∩╕Å';
+      case 'system': return 'ΓÅ▒∩╕Å';
+      case 'hyperv': return '≡ƒû╝∩╕Å';
+      case 'udm': return '≡ƒôí';
+      case 'docker': return '≡ƒÉ│';
+      case 'snmp': return '≡ƒîÉ';
+      case 'snmp_uptime': return 'ΓÅ▒∩╕Å';
+      case 'snmp_cpu': return '≡ƒûÑ∩╕Å';
+      case 'snmp_memory': return '≡ƒÆ╛';
+      case 'snmp_traffic': return '≡ƒôè';
+      case 'snmp_interface': return '≡ƒöî';
+      default: return '≡ƒôè';
     }
   };
 
-  // Função para agrupar sensores por tipo
+  // Fun├º├úo para agrupar sensores por tipo
   const groupSensorsByType = (sensors) => {
     const groups = {
       system: {
         name: 'Sistema',
-        icon: '🖥️',
+        icon: '≡ƒûÑ∩╕Å',
         sensors: [],
         priority: 1,
         color: '#4caf50'
       },
       docker: {
         name: 'Docker',
-        icon: '🐳',
+        icon: '≡ƒÉ│',
         sensors: [],
         priority: 2,
         color: '#2196f3',
         showSummary: true
       },
       services: {
-        name: 'Serviços',
-        icon: '⚙️',
+        name: 'Servi├ºos',
+        icon: 'ΓÜÖ∩╕Å',
         sensors: [],
         priority: 3,
         color: '#ff9800'
       },
       applications: {
-        name: 'Aplicações',
-        icon: '📦',
+        name: 'Aplica├º├╡es',
+        icon: '≡ƒôª',
         sensors: [],
         priority: 4,
         color: '#9c27b0'
       },
       network: {
         name: 'Rede',
-        icon: '🌐',
+        icon: '≡ƒîÉ',
         sensors: [],
         priority: 5,
         color: '#00bcd4'
@@ -514,7 +514,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     setExpandedSensorGroups(prev => {
       const isCurrentlyExpanded = prev[groupKey];
       
-      // Se está expandindo, colapsa todos os outros
+      // Se est├í expandindo, colapsa todos os outros
       if (!isCurrentlyExpanded) {
         return {
           system: false,
@@ -526,7 +526,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         };
       }
       
-      // Se está colapsando, apenas colapsa este
+      // Se est├í colapsando, apenas colapsa este
       return {
         ...prev,
         [groupKey]: false
@@ -564,21 +564,21 @@ function Servers({ selectedServerId, selectedSensorId }) {
       <div className="docker-summary">
         {totalMetric && (
           <div className="summary-card">
-            <div className="summary-icon">📦</div>
+            <div className="summary-icon">≡ƒôª</div>
             <div className="summary-value">{totalMetric.value || 0}</div>
             <div className="summary-label">Total</div>
           </div>
         )}
         {runningMetric && (
           <div className="summary-card">
-            <div className="summary-icon">✅</div>
+            <div className="summary-icon">Γ£à</div>
             <div className="summary-value">{runningMetric.value || 0}</div>
             <div className="summary-label">Rodando</div>
           </div>
         )}
         {stoppedMetric && (
           <div className="summary-card">
-            <div className="summary-icon">⏸️</div>
+            <div className="summary-icon">ΓÅ╕∩╕Å</div>
             <div className="summary-value">{stoppedMetric.value || 0}</div>
             <div className="summary-label">Parados</div>
           </div>
@@ -605,17 +605,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
     return (
       <div className="docker-summary">
         <div className="summary-card">
-          <div className="summary-icon">📊</div>
+          <div className="summary-icon">≡ƒôè</div>
           <div className="summary-value">{total}</div>
           <div className="summary-label">Total</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">✅</div>
+          <div className="summary-icon">Γ£à</div>
           <div className="summary-value">{ok}</div>
           <div className="summary-label">OK</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">⚠️</div>
+          <div className="summary-icon">ΓÜá∩╕Å</div>
           <div className="summary-value">{problems}</div>
           <div className="summary-label">Problemas</div>
         </div>
@@ -641,17 +641,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
     return (
       <div className="docker-summary">
         <div className="summary-card">
-          <div className="summary-icon">📊</div>
+          <div className="summary-icon">≡ƒôè</div>
           <div className="summary-value">{total}</div>
           <div className="summary-label">Total</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">✅</div>
+          <div className="summary-icon">Γ£à</div>
           <div className="summary-value">{running}</div>
           <div className="summary-label">Rodando</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">⏸️</div>
+          <div className="summary-icon">ΓÅ╕∩╕Å</div>
           <div className="summary-value">{stopped}</div>
           <div className="summary-label">Parados</div>
         </div>
@@ -677,17 +677,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
     return (
       <div className="docker-summary">
         <div className="summary-card">
-          <div className="summary-icon">📦</div>
+          <div className="summary-icon">≡ƒôª</div>
           <div className="summary-value">{total}</div>
           <div className="summary-label">Total</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">✅</div>
+          <div className="summary-icon">Γ£à</div>
           <div className="summary-value">{active}</div>
           <div className="summary-label">Ativas</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">⏸️</div>
+          <div className="summary-icon">ΓÅ╕∩╕Å</div>
           <div className="summary-value">{inactive}</div>
           <div className="summary-label">Inativas</div>
         </div>
@@ -713,17 +713,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
     return (
       <div className="docker-summary">
         <div className="summary-card">
-          <div className="summary-icon">🌐</div>
+          <div className="summary-icon">≡ƒîÉ</div>
           <div className="summary-value">{total}</div>
           <div className="summary-label">Total</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">✅</div>
+          <div className="summary-icon">Γ£à</div>
           <div className="summary-value">{online}</div>
           <div className="summary-label">Online</div>
         </div>
         <div className="summary-card">
-          <div className="summary-icon">❌</div>
+          <div className="summary-icon">Γ¥î</div>
           <div className="summary-value">{offline}</div>
           <div className="summary-label">Offline</div>
         </div>
@@ -745,22 +745,22 @@ function Servers({ selectedServerId, selectedSensorId }) {
         data-sensor-type={sensor.sensor_type}
         data-sensor-name-length={sensorNameLength}
         data-status={sensor.status}
-        title={hasNote ? `Última nota: ${sensor.last_note}\n\nPor: ${sensor.last_note_by_name || 'Técnico'}\nEm: ${sensor.last_note_at ? new Date(sensor.last_note_at).toLocaleString('pt-BR') : ''}` : ''}
+        title={hasNote ? `├Ültima nota: ${sensor.last_note}\n\nPor: ${sensor.last_note_by_name || 'T├⌐cnico'}\nEm: ${sensor.last_note_at ? new Date(sensor.last_note_at).toLocaleString('pt-BR') : ''}` : ''}
       >
         <div className="sensor-card-actions">
           <button 
             className="sensor-action-btn"
             onClick={(e) => handleViewSensorDetails(sensor, e)}
-            title="Ver detalhes e análise da IA"
+            title="Ver detalhes e an├ílise da IA"
           >
-            🔍
+            ≡ƒöì
           </button>
           <button 
             className="sensor-action-btn"
             onClick={(e) => handleOpenMoveSensorModal(sensor, e)}
             title="Mover para outra categoria"
           >
-            📁
+            ≡ƒôü
           </button>
           <button 
             className="sensor-action-btn"
@@ -770,7 +770,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
             }}
             title="Editar sensor"
           >
-            ✏️
+            Γ£Å∩╕Å
           </button>
           <button 
             className="sensor-delete-btn"
@@ -780,13 +780,13 @@ function Servers({ selectedServerId, selectedSensorId }) {
             }}
             title="Remover sensor"
           >
-            ×
+            ├ù
           </button>
         </div>
         
         {isAcknowledged && (
           <div className="sensor-acknowledged-badge" title="Verificado pela TI - Alertas suprimidos">
-            ✓ Verificado pela TI
+            Γ£ô Verificado pela TI
           </div>
         )}
         
@@ -803,7 +803,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               className={`sensor-status-bar ${isAcknowledged ? 'acknowledged' : ''}`}
               style={{ backgroundColor: isAcknowledged ? '#2196f3' : getStatusColor(metric.status) }}
             >
-              {isAcknowledged ? 'EM ANÁLISE' : metric.status.toUpperCase()}
+              {isAcknowledged ? 'EM AN├üLISE' : metric.status.toUpperCase()}
             </div>
             <div className="sensor-timestamp">
               Atualizado: {new Date(metric.timestamp).toLocaleString('pt-BR')}
@@ -814,17 +814,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
         )}
         <div className="sensor-thresholds">
           {sensor.sensor_type === 'ping' ? (
-            <>⚠️ {sensor.threshold_warning || 100}ms | 🔥 {sensor.threshold_critical || 200}ms</>
+            <>ΓÜá∩╕Å {sensor.threshold_warning || 100}ms | ≡ƒöÑ {sensor.threshold_critical || 200}ms</>
           ) : sensor.sensor_type === 'network' ? (
-            <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s</>
+            <>ΓÜá∩╕Å {sensor.threshold_warning || 80}MB/s | ≡ƒöÑ {sensor.threshold_critical || 95}MB/s</>
           ) : (
-            <>⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%</>
+            <>ΓÜá∩╕Å {sensor.threshold_warning || 80}% | ≡ƒöÑ {sensor.threshold_critical || 95}%</>
           )}
         </div>
         
         {hasNote && (
           <div className="sensor-last-note">
-            <span className="note-icon">📝</span>
+            <span className="note-icon">≡ƒô¥</span>
             <span className="note-preview">{sensor.last_note.substring(0, 50)}{sensor.last_note.length > 50 ? '...' : ''}</span>
           </div>
         )}
@@ -852,11 +852,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <span className="group-name">{group.name}</span>
                 <span className="group-count">({group.sensors.length})</span>
                 <span className="group-status">
-                  {statusCounts.ok > 0 && <span className="status-badge status-ok">● {statusCounts.ok}</span>}
-                  {statusCounts.warning > 0 && <span className="status-badge status-warning">● {statusCounts.warning}</span>}
-                  {statusCounts.critical > 0 && <span className="status-badge status-critical">● {statusCounts.critical}</span>}
+                  {statusCounts.ok > 0 && <span className="status-badge status-ok">ΓùÅ {statusCounts.ok}</span>}
+                  {statusCounts.warning > 0 && <span className="status-badge status-warning">ΓùÅ {statusCounts.warning}</span>}
+                  {statusCounts.critical > 0 && <span className="status-badge status-critical">ΓùÅ {statusCounts.critical}</span>}
                 </span>
-                <span className="group-toggle">{isExpanded ? '▼' : '▶'}</span>
+                <span className="group-toggle">{isExpanded ? 'Γû╝' : 'Γû╢'}</span>
               </div>
               
               {isExpanded && (
@@ -890,7 +890,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
           className={`category-card ${isExpanded ? 'expanded' : ''}`}
           style={{ borderLeftColor: group.color }}
         >
-          {/* Header compacto - só ícone e contador */}
+          {/* Header compacto - s├│ ├¡cone e contador */}
           <div 
             className="category-header"
             onClick={() => toggleSensorGroup(groupKey)}
@@ -902,13 +902,13 @@ function Servers({ selectedServerId, selectedSensorId }) {
             {/* Status badges */}
             {group.sensors.length > 0 && (
               <div className="category-status">
-                {statusCounts.ok > 0 && <span className="status-badge ok">✓ {statusCounts.ok}</span>}
-                {statusCounts.warning > 0 && <span className="status-badge warning">⚠ {statusCounts.warning}</span>}
-                {statusCounts.critical > 0 && <span className="status-badge critical">🔥 {statusCounts.critical}</span>}
+                {statusCounts.ok > 0 && <span className="status-badge ok">Γ£ô {statusCounts.ok}</span>}
+                {statusCounts.warning > 0 && <span className="status-badge warning">ΓÜá {statusCounts.warning}</span>}
+                {statusCounts.critical > 0 && <span className="status-badge critical">≡ƒöÑ {statusCounts.critical}</span>}
               </div>
             )}
             
-            <span className="category-toggle">{isExpanded ? '▲' : '▼'}</span>
+            <span className="category-toggle">{isExpanded ? 'Γû▓' : 'Γû╝'}</span>
           </div>
           
           {/* Sensores aparecem DENTRO do card quando expandido */}
@@ -956,12 +956,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
       // Se DELETE falhar, tentar desativar o sensor
       // CORRECAO 09MAR: Fallback para quando sensor nao existe no banco mas probe continua enviando
       if (error.response && error.response.status === 404) {
-        console.log('Sensor não encontrado no banco, tentando desativar...');
+        console.log('Sensor n├úo encontrado no banco, tentando desativar...');
         try {
           await api.put(`/sensors/${sensorId}`, { is_active: false });
           console.log('Sensor desativado com sucesso');
           loadSensors(selectedServer.id);
-          alert('Sensor não pôde ser deletado, mas foi desativado. Ele não aparecerá mais no dashboard.');
+          alert('Sensor n├úo p├┤de ser deletado, mas foi desativado. Ele n├úo aparecer├í mais no dashboard.');
         } catch (deactivateError) {
           console.error('Erro ao desativar sensor:', deactivateError);
           alert('Erro ao remover/desativar sensor. Verifique os logs do console (F12).');
@@ -972,10 +972,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
           // Servidor respondeu com erro
           errorMessage = error.response.data?.detail || `Erro ${error.response.status}`;
         } else if (error.request) {
-          // Requisição foi feita mas sem resposta
-          errorMessage = 'Sem resposta do servidor. Verifique se a API está rodando.';
+          // Requisi├º├úo foi feita mas sem resposta
+          errorMessage = 'Sem resposta do servidor. Verifique se a API est├í rodando.';
         } else {
-          // Erro ao configurar requisição
+          // Erro ao configurar requisi├º├úo
           errorMessage = error.message;
         }
         
@@ -987,7 +987,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
   const handleDeleteServer = async (serverId, serverName, e) => {
     e.stopPropagation(); // Prevent server selection
     
-    if (!window.confirm(`⚠️ ATENÇÃO: Tem certeza que deseja remover o servidor "${serverName}"?\n\nIsso irá remover:\n- O servidor\n- Todos os sensores\n- Todas as métricas\n- Todos os incidentes\n\nEsta ação NÃO pode ser desfeita!`)) {
+    if (!window.confirm(`ΓÜá∩╕Å ATEN├ç├âO: Tem certeza que deseja remover o servidor "${serverName}"?\n\nIsso ir├í remover:\n- O servidor\n- Todos os sensores\n- Todas as m├⌐tricas\n- Todos os incidentes\n\nEsta a├º├úo N├âO pode ser desfeita!`)) {
       return;
     }
 
@@ -1011,25 +1011,25 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const handleAddServer = async () => {
     if (!newServer.probe_id || !newServer.hostname || !newServer.ip_address) {
-      alert('Preencha todos os campos obrigatórios');
+      alert('Preencha todos os campos obrigat├│rios');
       return;
     }
 
-    // VALIDAÇÃO: Hostname não pode ser um IP (requisito para Kerberos)
+    // VALIDA├ç├âO: Hostname n├úo pode ser um IP (requisito para Kerberos)
     const ipPattern = /^(\d{1,3}\.){3}\d{1,3}$/;
     if (ipPattern.test(newServer.hostname)) {
-      alert('❌ ERRO: Hostname não pode ser um endereço IP!\n\n' +
-            '⚠️ Para autenticação Kerberos funcionar, você DEVE usar:\n' +
-            '✅ Hostname completo (FQDN): SRVHVSPRD010.ad.techbiz.com.br\n' +
-            '✅ Hostname curto: SRVHVSPRD010\n\n' +
-            '❌ NÃO use IP no campo Hostname: ' + newServer.hostname + '\n\n' +
-            'O IP deve ser preenchido no campo "Endereço IP" separadamente.');
+      alert('Γ¥î ERRO: Hostname n├úo pode ser um endere├ºo IP!\n\n' +
+            'ΓÜá∩╕Å Para autentica├º├úo Kerberos funcionar, voc├¬ DEVE usar:\n' +
+            'Γ£à Hostname completo (FQDN): SRVHVSPRD010.ad.techbiz.com.br\n' +
+            'Γ£à Hostname curto: SRVHVSPRD010\n\n' +
+            'Γ¥î N├âO use IP no campo Hostname: ' + newServer.hostname + '\n\n' +
+            'O IP deve ser preenchido no campo "Endere├ºo IP" separadamente.');
       return;
     }
 
-    // Validação adicional: hostname deve ter pelo menos 3 caracteres
+    // Valida├º├úo adicional: hostname deve ter pelo menos 3 caracteres
     if (newServer.hostname.length < 3) {
-      alert('❌ Hostname muito curto. Use o nome completo do servidor (ex: SRVHVSPRD010)');
+      alert('Γ¥î Hostname muito curto. Use o nome completo do servidor (ex: SRVHVSPRD010)');
       return;
     }
 
@@ -1064,7 +1064,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         group_name: ''
       });
       loadServers();
-      alert('Servidor adicionado com sucesso! A probe começará a monitorá-lo automaticamente.');
+      alert('Servidor adicionado com sucesso! A probe come├ºar├í a monitor├í-lo automaticamente.');
     } catch (error) {
       console.error('Erro ao adicionar servidor:', error);
       alert('Erro ao adicionar servidor: ' + (error.response?.data?.detail || error.message));
@@ -1073,7 +1073,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const handleAddSensor = async (sensorData) => {
     if (!selectedServer || !sensorData || !sensorData.name) {
-      alert('Preencha todos os campos obrigatórios');
+      alert('Preencha todos os campos obrigat├│rios');
       return;
     }
 
@@ -1103,7 +1103,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
       const response = await api.get(`/probe-commands/services/${selectedServer.id}`);
       setAvailableServices(response.data.services || []);
     } catch (error) {
-      console.error('Erro ao carregar serviços:', error);
+      console.error('Erro ao carregar servi├ºos:', error);
       // Fallback to common services
       setAvailableServices([
         {name: "W3SVC", display_name: "IIS Web Server"},
@@ -1287,7 +1287,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
 
     if (targetCategory === movingSensor.sensor_type) {
-      alert('O sensor já está nesta categoria');
+      alert('O sensor j├í est├í nesta categoria');
       return;
     }
 
@@ -1311,14 +1311,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
     const categories = {
       'ping': 'Sistema (Ping)',
       'cpu': 'Sistema (CPU)',
-      'memory': 'Sistema (Memória)',
+      'memory': 'Sistema (Mem├│ria)',
       'disk': 'Sistema (Disco)',
       'system': 'Sistema (Uptime)',
       'network': 'Sistema (Rede)',
       'docker': 'Docker',
-      'service': 'Serviços',
-      'hyperv': 'Aplicações (Hyper-V)',
-      'kubernetes': 'Aplicações (Kubernetes)',
+      'service': 'Servi├ºos',
+      'hyperv': 'Aplica├º├╡es (Hyper-V)',
+      'kubernetes': 'Aplica├º├╡es (Kubernetes)',
       'http': 'Rede (HTTP)',
       'port': 'Rede (Porta)',
       'dns': 'Rede (DNS)',
@@ -1370,7 +1370,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
             }}
           >
             <span style={{ marginRight: '6px', fontSize: '14px' }}>
-              {isExpanded ? '📂' : '📁'}
+              {isExpanded ? '≡ƒôé' : '≡ƒôü'}
             </span>
             <span style={{ flex: 1, fontWeight: isSelected ? 'bold' : 'normal' }}>
               {group.icon} {group.name}
@@ -1403,7 +1403,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 cursor: 'pointer'
               }}
             >
-              ↔️
+              Γåö∩╕Å
             </button>
             <button
               onClick={(e) => {
@@ -1421,7 +1421,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 cursor: 'pointer'
               }}
             >
-              🗑️
+              ≡ƒùæ∩╕Å
             </button>
           </div>
           {isExpanded && renderGroupTree(groups, group.id, level + 1)}
@@ -1440,10 +1440,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
       grouped[group].push(server);
     });
     
-    // Adicionar pastas vazias que foram criadas (estão em expandedGroups mas não têm servidores)
+    // Adicionar pastas vazias que foram criadas (est├úo em expandedGroups mas n├úo t├¬m servidores)
     Object.keys(expandedGroups).forEach(groupName => {
       if (!grouped[groupName] && groupName.includes(' / ')) {
-        // É uma subpasta criada manualmente
+        // ├ë uma subpasta criada manualmente
         grouped[groupName] = [];
       }
     });
@@ -1468,7 +1468,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
             onClick={() => setShowMonitorServicesModal(true)}
             style={{ background: '#2196f3' }}
           >
-            ☁️ Monitorar Serviços
+            Γÿü∩╕Å Monitorar Servi├ºos
           </button>
         </div>
       </div>
@@ -1478,7 +1478,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
         title={sidebarCollapsed ? "Mostrar Servidores" : "Ocultar Servidores"}
       >
-        {sidebarCollapsed ? '☰' : '✕'}
+        {sidebarCollapsed ? 'Γÿ░' : 'Γ£ò'}
       </button>
 
       <div className={`servers-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
@@ -1489,21 +1489,21 @@ function Servers({ selectedServerId, selectedSensorId }) {
               <button 
                 className={viewMode === 'tree' ? 'active' : ''}
                 onClick={() => setViewMode('tree')}
-                title="Visualização em Árvore"
+                title="Visualiza├º├úo em ├ürvore"
               >
-                🌳
+                ≡ƒî│
               </button>
               <button 
                 className={viewMode === 'list' ? 'active' : ''}
                 onClick={() => setViewMode('list')}
-                title="Visualização em Lista"
+                title="Visualiza├º├úo em Lista"
               >
-                📋
+                ≡ƒôï
               </button>
             </div>
           </div>
 
-          {/* Seção de Grupos Hierárquicos - Colapsável */}
+          {/* Se├º├úo de Grupos Hier├írquicos - Colaps├ível */}
           <div style={{ borderBottom: '1px solid #e0e0e0' }}>
             <button
               onClick={() => setShowGroupsSection(!showGroupsSection)}
@@ -1527,13 +1527,13 @@ function Servers({ selectedServerId, selectedSensorId }) {
               onMouseOver={(e) => e.currentTarget.style.background = '#f5f5f5'}
               onMouseOut={(e) => e.currentTarget.style.background = showGroupsSection ? '#f5f5f5' : 'white'}
             >
-              <span>⚙️ Gerenciar Grupos {serverGroups.length > 0 && `(${serverGroups.length})`}</span>
-              <span style={{ fontSize: '10px' }}>{showGroupsSection ? '▲' : '▼'}</span>
+              <span>ΓÜÖ∩╕Å Gerenciar Grupos {serverGroups.length > 0 && `(${serverGroups.length})`}</span>
+              <span style={{ fontSize: '10px' }}>{showGroupsSection ? 'Γû▓' : 'Γû╝'}</span>
             </button>
 
             {showGroupsSection && (
               <div style={{ background: '#fafafa' }}>
-                {/* Botões de Ação */}
+                {/* Bot├╡es de A├º├úo */}
                 <div style={{ padding: '10px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                   <button
                     onClick={() => {
@@ -1541,7 +1541,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         name: '',
                         parent_id: null,
                         description: '',
-                        icon: '📁',
+                        icon: '≡ƒôü',
                         color: '#2196f3'
                       });
                       setShowCreateGroupModal(true);
@@ -1558,7 +1558,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     }}
                     title="Criar grupo raiz"
                   >
-                    ➕ Grupo
+                    Γ₧ò Grupo
                   </button>
                   {selectedGroup && (
                     <>
@@ -1568,7 +1568,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             name: '',
                             parent_id: selectedGroup.id,
                             description: '',
-                            icon: '📁',
+                            icon: '≡ƒôü',
                             color: '#2196f3'
                           });
                           setShowCreateGroupModal(true);
@@ -1585,7 +1585,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         }}
                         title={`Criar subgrupo em "${selectedGroup.name}"`}
                       >
-                        ➕ Subgrupo
+                        Γ₧ò Subgrupo
                       </button>
                       <button
                         onClick={() => setSelectedGroup(null)}
@@ -1600,13 +1600,13 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           fontWeight: 'bold'
                         }}
                       >
-                        ✕
+                        Γ£ò
                       </button>
                     </>
                   )}
                 </div>
 
-                {/* Árvore de Grupos */}
+                {/* ├ürvore de Grupos */}
                 {serverGroups.length > 0 ? (
                   <div style={{ 
                     padding: '10px',
@@ -1657,7 +1657,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   >
                     <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
                       <span className="tree-icon">
-                        {expandedGroups[groupName] ? '📂' : '📁'}
+                        {expandedGroups[groupName] ? '≡ƒôé' : '≡ƒôü'}
                       </span>
                       <span className="tree-label">{groupName}</span>
                       <span className="tree-count">({groupServers.length})</span>
@@ -1686,7 +1686,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         title="Renomear pasta"
                         style={{ padding: '2px 6px', fontSize: '11px' }}
                       >
-                        ✏️
+                        Γ£Å∩╕Å
                       </button>
                       <button
                         className="btn-edit-small"
@@ -1694,14 +1694,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           e.stopPropagation();
                           const subfolderName = prompt(`Criar subpasta dentro de "${groupName}":`);
                           if (subfolderName) {
-                            // Criar nome hierárquico: "Pai / Filho"
+                            // Criar nome hier├írquico: "Pai / Filho"
                             const newGroupName = `${groupName} / ${subfolderName}`;
                             
                             // Perguntar se quer mover um servidor existente ou criar novo
                             const action = window.confirm(
-                              `Subpasta "${newGroupName}" será criada.\n\n` +
+                              `Subpasta "${newGroupName}" ser├í criada.\n\n` +
                               `Clique OK para mover um servidor existente para esta pasta.\n` +
-                              `Clique CANCELAR para criar a pasta vazia (você poderá adicionar servidores depois).`
+                              `Clique CANCELAR para criar a pasta vazia (voc├¬ poder├í adicionar servidores depois).`
                             );
                             
                             if (action) {
@@ -1734,7 +1734,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                               alert(
                                 `Subpasta "${subfolderName}" criada!\n\n` +
                                 `Para adicionar servidores:\n` +
-                                `1. Clique em ✏️ em um servidor\n` +
+                                `1. Clique em Γ£Å∩╕Å em um servidor\n` +
                                 `2. No campo "Grupo / Empresa", digite: ${newGroupName}\n` +
                                 `3. Salve`
                               );
@@ -1744,20 +1744,20 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         title="Criar subpasta"
                         style={{ padding: '2px 6px', fontSize: '11px', background: '#4caf50', color: 'white' }}
                       >
-                        ➕
+                        Γ₧ò
                       </button>
                       <button
                         className="btn-delete-small"
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (window.confirm(`Excluir pasta "${groupName}"?\n\nOs ${groupServers.length} servidor(es) ficarão sem pasta.`)) {
+                          if (window.confirm(`Excluir pasta "${groupName}"?\n\nOs ${groupServers.length} servidor(es) ficar├úo sem pasta.`)) {
                             Promise.all(
                               groupServers.map(server => 
                                 api.put(`/servers/${server.id}`, { group_name: null })
                               )
                             ).then(() => {
                               loadServers();
-                              alert('Pasta excluída com sucesso!');
+                              alert('Pasta exclu├¡da com sucesso!');
                             }).catch(err => {
                               console.error('Erro ao excluir pasta:', err);
                               alert('Erro ao excluir pasta');
@@ -1767,7 +1767,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         title="Excluir pasta"
                         style={{ padding: '2px 6px', fontSize: '11px' }}
                       >
-                        🗑️
+                        ≡ƒùæ∩╕Å
                       </button>
                     </div>
                   </div>
@@ -1782,8 +1782,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           >
                             <div className="server-info">
                               <h3>{server.hostname}</h3>
-                              <p>{server.ip_address || 'IP não disponível'}</p>
-                              {server.public_ip && <p className="public-ip">🌐 {server.public_ip}</p>}
+                              <p>{server.ip_address || 'IP n├úo dispon├¡vel'}</p>
+                              {server.public_ip && <p className="public-ip">≡ƒîÉ {server.public_ip}</p>}
                               {server.tags && server.tags.length > 0 && (
                                 <div className="server-tags">
                                   {server.tags.map((tag, idx) => (
@@ -1798,17 +1798,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
                                 onClick={(e) => handleEditServer(server, e)}
                                 title="Editar servidor"
                               >
-                                ✏️
+                                Γ£Å∩╕Å
                               </button>
                               <button 
                                 className="btn-delete-small"
                                 onClick={(e) => handleDeleteServer(server.id, server.hostname, e)}
                                 title="Excluir servidor"
                               >
-                                🗑️
+                                ≡ƒùæ∩╕Å
                               </button>
                               <div className={`server-status ${server.is_active ? 'active' : 'inactive'}`}>
-                              {server.is_active ? '●' : '○'}
+                              {server.is_active ? 'ΓùÅ' : 'Γùï'}
                             </div>
                           </div>
                         </div>
@@ -1821,7 +1821,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           fontSize: '12px',
                           fontStyle: 'italic'
                         }}>
-                          📭 Pasta vazia
+                          ≡ƒô¡ Pasta vazia
                           <div style={{ fontSize: '11px', marginTop: '5px' }}>
                             Edite um servidor e defina o grupo como: {groupName}
                           </div>
@@ -1842,10 +1842,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 >
                   <div className="server-info">
                     <h3>{server.hostname}</h3>
-                    <p>{server.ip_address || 'IP não disponível'}</p>
-                    {server.public_ip && <p className="public-ip">🌐 {server.public_ip}</p>}
+                    <p>{server.ip_address || 'IP n├úo dispon├¡vel'}</p>
+                    {server.public_ip && <p className="public-ip">≡ƒîÉ {server.public_ip}</p>}
                     <p className="server-os">{server.os_type} {server.os_version}</p>
-                    {server.group_name && <p className="server-group">📁 {server.group_name}</p>}
+                    {server.group_name && <p className="server-group">≡ƒôü {server.group_name}</p>}
                   </div>
                   <div className="server-actions">
                     <button 
@@ -1853,17 +1853,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       onClick={(e) => handleEditServer(server, e)}
                       title="Editar servidor"
                     >
-                      ✏️
+                      Γ£Å∩╕Å
                     </button>
                     <button 
                       className="btn-delete-small"
                       onClick={(e) => handleDeleteServer(server.id, server.hostname, e)}
                       title="Excluir servidor"
                     >
-                      🗑️
+                      ≡ƒùæ∩╕Å
                     </button>
                     <div className={`server-status ${server.is_active ? 'active' : 'inactive'}`}>
-                      {server.is_active ? '●' : '○'}
+                      {server.is_active ? 'ΓùÅ' : 'Γùï'}
                     </div>
                   </div>
                 </div>
@@ -1881,10 +1881,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   <button 
                     className="btn-add" 
                     onClick={async () => {
-                      if (window.confirm('Deseja corrigir automaticamente as categorias de todos os sensores baseado no nome?\n\nExemplo: Sensores com "Docker" no nome serão movidos para categoria Docker.')) {
+                      if (window.confirm('Deseja corrigir automaticamente as categorias de todos os sensores baseado no nome?\n\nExemplo: Sensores com "Docker" no nome ser├úo movidos para categoria Docker.')) {
                         try {
                           const response = await api.post('/sensors/fix-categories');
-                          alert(`✅ Correção concluída!\n\nTotal: ${response.data.total_sensors} sensores\nCorrigidos: ${response.data.fixed_count} sensores\n\nRecarregando...`);
+                          alert(`Γ£à Corre├º├úo conclu├¡da!\n\nTotal: ${response.data.total_sensors} sensores\nCorrigidos: ${response.data.fixed_count} sensores\n\nRecarregando...`);
                           loadSensors(selectedServer.id);
                         } catch (error) {
                           console.error('Erro ao corrigir categorias:', error);
@@ -1894,7 +1894,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     }}
                     style={{ background: '#ff9800' }}
                   >
-                    🔧 Corrigir Categorias
+                    ≡ƒöº Corrigir Categorias
                   </button>
                   <button className="btn-add" onClick={handleOpenAddSensorModal}>
                     + Adicionar Sensor
@@ -1902,14 +1902,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 </div>
               </div>
               <div className="info-banner">
-                <p>ℹ️ <strong>Sensores Padrão:</strong> Ping, CPU, Memória, Disco, Uptime, Network IN, Network OUT</p>
-                <p>Os sensores padrão são criados automaticamente. Use "Adicionar Sensor" para monitorar serviços Windows, discos adicionais ou criar sensores customizados.</p>
+                <p>Γä╣∩╕Å <strong>Sensores Padr├úo:</strong> Ping, CPU, Mem├│ria, Disco, Uptime, Network IN, Network OUT</p>
+                <p>Os sensores padr├úo s├úo criados automaticamente. Use "Adicionar Sensor" para monitorar servi├ºos Windows, discos adicionais ou criar sensores customizados.</p>
               </div>
               {renderMixedSensors()}
               {sensors.length === 0 && (
                 <div className="no-data">
                   <p>Nenhum sensor configurado para este servidor</p>
-                  <p>Os sensores padrão são criados automaticamente. Clique em "Adicionar Sensor" para monitorar serviços ou discos adicionais.</p>
+                  <p>Os sensores padr├úo s├úo criados automaticamente. Clique em "Adicionar Sensor" para monitorar servi├ºos ou discos adicionais.</p>
                 </div>
               )}
             </>
@@ -1928,7 +1928,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
             
             <div className="form-row">
               <div className="form-group">
-                <label>Probe Responsável: *</label>
+                <label>Probe Respons├ível: *</label>
                 <select 
                   value={newServer.probe_id}
                   onChange={(e) => setNewServer({...newServer, probe_id: e.target.value})}
@@ -1941,7 +1941,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     </option>
                   ))}
                 </select>
-                <small>A probe que irá monitorar este dispositivo</small>
+                <small>A probe que ir├í monitorar este dispositivo</small>
               </div>
 
               <div className="form-group">
@@ -1950,14 +1950,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   value={newServer.device_type}
                   onChange={(e) => setNewServer({...newServer, device_type: e.target.value})}
                 >
-                  <option value="server">🖥️ Servidor</option>
-                  <option value="switch">🔀 Switch</option>
-                  <option value="router">📡 Roteador</option>
-                  <option value="firewall">🔥 Firewall</option>
-                  <option value="printer">🖨️ Impressora</option>
-                  <option value="storage">💾 Storage</option>
-                  <option value="ups">🔋 Nobreak</option>
-                  <option value="other">📦 Outro</option>
+                  <option value="server">≡ƒûÑ∩╕Å Servidor</option>
+                  <option value="switch">≡ƒöÇ Switch</option>
+                  <option value="router">≡ƒôí Roteador</option>
+                  <option value="firewall">≡ƒöÑ Firewall</option>
+                  <option value="printer">≡ƒû¿∩╕Å Impressora</option>
+                  <option value="storage">≡ƒÆ╛ Storage</option>
+                  <option value="ups">≡ƒöï Nobreak</option>
+                  <option value="other">≡ƒôª Outro</option>
                 </select>
                 <small>Tipo do dispositivo a ser monitorado</small>
               </div>
@@ -1977,7 +1977,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               </div>
 
               <div className="form-group">
-                <label>Endereço IP: *</label>
+                <label>Endere├ºo IP: *</label>
                 <input
                   type="text"
                   value={newServer.ip_address}
@@ -1985,7 +1985,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   required
                   placeholder="Ex: 192.168.1.100"
                 />
-                <small>Endereço IP do dispositivo na rede local</small>
+                <small>Endere├ºo IP do dispositivo na rede local</small>
               </div>
             </div>
 
@@ -2008,7 +2008,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <label>Ou criar novo grupo:</label>
                 <input
                   type="text"
-                  placeholder="Ex: Empresa A, Datacenter SP, Produção"
+                  placeholder="Ex: Empresa A, Datacenter SP, Produ├º├úo"
                   value={newServer.newGroupInput || ''}
                   onChange={(e) => setNewServer({...newServer, newGroupInput: e.target.value, group_name: e.target.value})}
                 />
@@ -2017,7 +2017,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
             </div>
 
             <div className="form-section">
-              <h3>⚙️ Protocolo de Monitoramento</h3>
+              <h3>ΓÜÖ∩╕Å Protocolo de Monitoramento</h3>
               <div className="form-row">
                 <div className="form-group">
                   <label>Protocolo: *</label>
@@ -2035,7 +2035,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               {newServer.monitoring_protocol === 'snmp' && (
                 <div className="form-row">
                   <div className="form-group">
-                    <label>Versão SNMP:</label>
+                    <label>Vers├úo SNMP:</label>
                     <select
                       value={newServer.snmp_version}
                       onChange={(e) => setNewServer({...newServer, snmp_version: e.target.value})}
@@ -2065,44 +2065,44 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       onChange={(e) => setNewServer({...newServer, snmp_port: e.target.value})}
                       placeholder="161"
                     />
-                    <small>Porta padrão: 161</small>
+                    <small>Porta padr├úo: 161</small>
                   </div>
                 </div>
               )}
             </div>
 
             <div className="form-section">
-              <h3>🏷️ Classificação de Ambiente</h3>
+              <h3>≡ƒÅ╖∩╕Å Classifica├º├úo de Ambiente</h3>
               <div className="form-group">
                 <label>Ambiente: *</label>
                 <select
                   value={newServer.environment}
                   onChange={(e) => setNewServer({...newServer, environment: e.target.value})}
                 >
-                  <option value="production">🔴 Produção (24x7 - Ligações em caso de queda)</option>
-                  <option value="staging">🟡 Homologação (Horário comercial 08-18h)</option>
-                  <option value="development">🟢 Desenvolvimento (Horário comercial 08-18h)</option>
-                  <option value="custom">⚙️ Personalizado (Definir horários)</option>
+                  <option value="production">≡ƒö┤ Produ├º├úo (24x7 - Liga├º├╡es em caso de queda)</option>
+                  <option value="staging">≡ƒƒí Homologa├º├úo (Hor├írio comercial 08-18h)</option>
+                  <option value="development">≡ƒƒó Desenvolvimento (Hor├írio comercial 08-18h)</option>
+                  <option value="custom">ΓÜÖ∩╕Å Personalizado (Definir hor├írios)</option>
                 </select>
-                <small>Define quando o sistema enviará notificações e ligações</small>
+                <small>Define quando o sistema enviar├í notifica├º├╡es e liga├º├╡es</small>
               </div>
 
               {newServer.environment === 'custom' && (
                 <div className="custom-schedule-info">
-                  <p>ℹ️ <strong>Horário Personalizado:</strong></p>
-                  <p>Você poderá configurar horários específicos após criar o servidor.</p>
+                  <p>Γä╣∩╕Å <strong>Hor├írio Personalizado:</strong></p>
+                  <p>Voc├¬ poder├í configurar hor├írios espec├¡ficos ap├│s criar o servidor.</p>
                 </div>
               )}
             </div>
 
             <div className="info-box">
-              <p>ℹ️ <strong>Importante:</strong></p>
+              <p>Γä╣∩╕Å <strong>Importante:</strong></p>
               <ul>
-                <li>O dispositivo deve estar acessível pela probe selecionada</li>
-                <li><strong>WMI:</strong> Certifique-se que o firewall permite conexões WMI/RPC</li>
-                <li><strong>SNMP:</strong> Verifique se o SNMP está habilitado no dispositivo</li>
-                <li><strong>Produção:</strong> Sistema ligará 24x7 em caso de problemas críticos</li>
-                <li><strong>Homologação/Dev:</strong> Notificações apenas em horário comercial</li>
+                <li>O dispositivo deve estar acess├¡vel pela probe selecionada</li>
+                <li><strong>WMI:</strong> Certifique-se que o firewall permite conex├╡es WMI/RPC</li>
+                <li><strong>SNMP:</strong> Verifique se o SNMP est├í habilitado no dispositivo</li>
+                <li><strong>Produ├º├úo:</strong> Sistema ligar├í 24x7 em caso de problemas cr├¡ticos</li>
+                <li><strong>Homologa├º├úo/Dev:</strong> Notifica├º├╡es apenas em hor├írio comercial</li>
               </ul>
             </div>
 
@@ -2149,7 +2149,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               <label>Ou criar novo grupo:</label>
               <input
                 type="text"
-                placeholder="Ex: Empresa A, Datacenter SP, Produção"
+                placeholder="Ex: Empresa A, Datacenter SP, Produ├º├úo"
                 value=""
                 onChange={(e) => {
                   if (e.target.value.trim()) {
@@ -2160,17 +2160,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
               <small>Digite um novo nome de grupo para criar</small>
             </div>
             <div className="form-group">
-              <label>Tags (separadas por vírgula):</label>
+              <label>Tags (separadas por v├¡rgula):</label>
               <input
                 type="text"
-                placeholder="Ex: crítico, produção, web-server"
+                placeholder="Ex: cr├¡tico, produ├º├úo, web-server"
                 value={editingServer.tags ? editingServer.tags.join(', ') : ''}
                 onChange={(e) => setEditingServer({
                   ...editingServer, 
                   tags: e.target.value.split(',').map(t => t.trim()).filter(t => t)
                 })}
               />
-              <small>Use tags para classificar por criticidade, função, etc</small>
+              <small>Use tags para classificar por criticidade, fun├º├úo, etc</small>
             </div>
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setShowEditServerModal(false)}>
@@ -2196,7 +2196,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 onChange={(e) => setEditingSensor({...editingSensor, display_name: e.target.value})}
                 placeholder="Ex: Ping Google, CPU Principal, Disco C:"
               />
-              <small>Personalize o nome do sensor para facilitar identificação</small>
+              <small>Personalize o nome do sensor para facilitar identifica├º├úo</small>
             </div>
             <div className="form-group">
               <label>Tipo:</label>
@@ -2214,14 +2214,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 onChange={(e) => setEditingSensor({...editingSensor, threshold_warning: e.target.value})}
               />
               <small>
-                {editingSensor.sensor_type === 'ping' ? 'Alerta amarelo quando latência ultrapassar este valor' :
-                 editingSensor.sensor_type === 'network' ? 'Alerta amarelo quando tráfego ultrapassar este valor' :
+                {editingSensor.sensor_type === 'ping' ? 'Alerta amarelo quando lat├¬ncia ultrapassar este valor' :
+                 editingSensor.sensor_type === 'network' ? 'Alerta amarelo quando tr├ífego ultrapassar este valor' :
                  'Alerta amarelo quando ultrapassar este valor'}
               </small>
             </div>
             <div className="form-group">
               <label>
-                Limite Crítico 
+                Limite Cr├¡tico 
                 {editingSensor.sensor_type === 'ping' ? ' (ms)' : 
                  editingSensor.sensor_type === 'network' ? ' (MB/s)' : ' (%)'}:
               </label>
@@ -2231,8 +2231,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 onChange={(e) => setEditingSensor({...editingSensor, threshold_critical: e.target.value})}
               />
               <small>
-                {editingSensor.sensor_type === 'ping' ? 'Alerta vermelho quando latência ultrapassar este valor' :
-                 editingSensor.sensor_type === 'network' ? 'Alerta vermelho quando tráfego ultrapassar este valor' :
+                {editingSensor.sensor_type === 'ping' ? 'Alerta vermelho quando lat├¬ncia ultrapassar este valor' :
+                 editingSensor.sensor_type === 'network' ? 'Alerta vermelho quando tr├ífego ultrapassar este valor' :
                  'Alerta vermelho quando ultrapassar este valor'}
               </small>
             </div>
@@ -2251,7 +2251,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
       {showMoveSensorModal && movingSensor && (
         <div className="modal-overlay" onClick={() => setShowMoveSensorModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>📁 Mover Sensor para Outra Categoria</h2>
+            <h2>≡ƒôü Mover Sensor para Outra Categoria</h2>
             <div className="info-banner" style={{ marginBottom: '20px', background: '#fff3cd', padding: '15px', borderRadius: '8px', border: '1px solid #ffc107' }}>
               <p><strong>Sensor:</strong> {movingSensor.name}</p>
               <p><strong>Categoria Atual:</strong> {getCategoryName(movingSensor.sensor_type)}</p>
@@ -2264,32 +2264,32 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 style={{ width: '100%', padding: '10px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ddd' }}
               >
                 <optgroup label="Sistema">
-                  <option value="ping">📡 Ping</option>
-                  <option value="cpu">🖥️ CPU</option>
-                  <option value="memory">💾 Memória</option>
-                  <option value="disk">💿 Disco</option>
-                  <option value="system">⏱️ Uptime</option>
-                  <option value="network">🌐 Rede</option>
+                  <option value="ping">≡ƒôí Ping</option>
+                  <option value="cpu">≡ƒûÑ∩╕Å CPU</option>
+                  <option value="memory">≡ƒÆ╛ Mem├│ria</option>
+                  <option value="disk">≡ƒÆ┐ Disco</option>
+                  <option value="system">ΓÅ▒∩╕Å Uptime</option>
+                  <option value="network">≡ƒîÉ Rede</option>
                 </optgroup>
                 <optgroup label="Docker">
-                  <option value="docker">🐳 Docker</option>
+                  <option value="docker">≡ƒÉ│ Docker</option>
                 </optgroup>
-                <optgroup label="Serviços">
-                  <option value="service">⚙️ Serviço Windows</option>
+                <optgroup label="Servi├ºos">
+                  <option value="service">ΓÜÖ∩╕Å Servi├ºo Windows</option>
                 </optgroup>
-                <optgroup label="Aplicações">
-                  <option value="hyperv">🖼️ Hyper-V</option>
-                  <option value="kubernetes">☸️ Kubernetes</option>
+                <optgroup label="Aplica├º├╡es">
+                  <option value="hyperv">≡ƒû╝∩╕Å Hyper-V</option>
+                  <option value="kubernetes">Γÿ╕∩╕Å Kubernetes</option>
                 </optgroup>
                 <optgroup label="Rede">
-                  <option value="http">🌐 HTTP</option>
-                  <option value="port">🔌 Porta</option>
-                  <option value="dns">🔍 DNS</option>
-                  <option value="ssl">🔒 SSL</option>
-                  <option value="snmp">📊 SNMP</option>
+                  <option value="http">≡ƒîÉ HTTP</option>
+                  <option value="port">≡ƒöî Porta</option>
+                  <option value="dns">≡ƒöì DNS</option>
+                  <option value="ssl">≡ƒöÆ SSL</option>
+                  <option value="snmp">≡ƒôè SNMP</option>
                 </optgroup>
               </select>
-              <small>O sensor será movido para a categoria selecionada e aparecerá no card correspondente</small>
+              <small>O sensor ser├í movido para a categoria selecionada e aparecer├í no card correspondente</small>
             </div>
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setShowMoveSensorModal(false)}>
@@ -2307,14 +2307,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
         <div className="modal-overlay" onClick={() => setShowSensorDetailsModal(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>🔍 Detalhes do Sensor: {selectedSensorDetails.name}</h2>
-              <button className="btn-close" onClick={() => setShowSensorDetailsModal(false)}>×</button>
+              <h2>≡ƒöì Detalhes do Sensor: {selectedSensorDetails.name}</h2>
+              <button className="btn-close" onClick={() => setShowSensorDetailsModal(false)}>├ù</button>
             </div>
 
             <div className="sensor-details-content">
               {/* AI Analysis Section */}
               <div className="ai-analysis-section">
-                <h3>🤖 Análise da IA</h3>
+                <h3>≡ƒñû An├ílise da IA</h3>
                 {loadingAnalysis ? (
                   <div className="loading-analysis">Analisando sensor...</div>
                 ) : aiAnalysis ? (
@@ -2323,12 +2323,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       <h4>Causa Raiz:</h4>
                       <p>{aiAnalysis.root_cause}</p>
                       <div className="confidence-badge">
-                        Confiança: {(aiAnalysis.confidence * 100).toFixed(0)}%
+                        Confian├ºa: {(aiAnalysis.confidence * 100).toFixed(0)}%
                       </div>
                     </div>
 
                     <div className="evidence">
-                      <h4>Evidências:</h4>
+                      <h4>Evid├¬ncias:</h4>
                       <ul>
                         {aiAnalysis.evidence.map((item, idx) => (
                           <li key={idx}>{item}</li>
@@ -2337,7 +2337,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     </div>
 
                     <div className="suggested-actions">
-                      <h4>💡 Ações Sugeridas:</h4>
+                      <h4>≡ƒÆí A├º├╡es Sugeridas:</h4>
                       {aiAnalysis.suggested_actions.map((action, idx) => (
                         <div key={idx} className={`action-card priority-${action.priority}`}>
                           <div className="action-header">
@@ -2355,34 +2355,34 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                     <div className="remediation-info">
                       <div className="info-item">
-                        <strong>Auto-remediação disponível:</strong> 
-                        {aiAnalysis.auto_remediation_available ? ' ✅ Sim' : ' ❌ Não'}
+                        <strong>Auto-remedia├º├úo dispon├¡vel:</strong> 
+                        {aiAnalysis.auto_remediation_available ? ' Γ£à Sim' : ' Γ¥î N├úo'}
                       </div>
                       <div className="info-item">
-                        <strong>Tempo estimado de resolução:</strong> {aiAnalysis.estimated_resolution_time}
+                        <strong>Tempo estimado de resolu├º├úo:</strong> {aiAnalysis.estimated_resolution_time}
                       </div>
                     </div>
                   </div>
                 ) : (
-                  <div className="no-analysis">Análise não disponível</div>
+                  <div className="no-analysis">An├ílise n├úo dispon├¡vel</div>
                 )}
               </div>
 
               {/* Technician Notes Section */}
               <div className="technician-notes-section">
-                <h3>📝 Notas do Técnico</h3>
+                <h3>≡ƒô¥ Notas do T├⌐cnico</h3>
                 
                 <div className="add-note-form">
                   <div className="form-group">
-                    <label>Status de Verificação:</label>
+                    <label>Status de Verifica├º├úo:</label>
                     <select 
                       value={newNote.status}
                       onChange={(e) => setNewNote({...newNote, status: e.target.value})}
                     >
-                      <option value="pending">⏳ Pendente</option>
-                      <option value="in_analysis">🔍 Em Análise</option>
-                      <option value="verified">✅ Verificado</option>
-                      <option value="resolved">🎉 Resolvido</option>
+                      <option value="pending">ΓÅ│ Pendente</option>
+                      <option value="in_analysis">≡ƒöì Em An├ílise</option>
+                      <option value="verified">Γ£à Verificado</option>
+                      <option value="resolved">≡ƒÄë Resolvido</option>
                     </select>
                   </div>
                   <div className="form-group">
@@ -2390,7 +2390,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     <textarea
                       value={newNote.note}
                       onChange={(e) => setNewNote({...newNote, note: e.target.value})}
-                      placeholder="Descreva as ações tomadas, observações ou próximos passos..."
+                      placeholder="Descreva as a├º├╡es tomadas, observa├º├╡es ou pr├│ximos passos..."
                       rows="4"
                     />
                   </div>
@@ -2400,23 +2400,23 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 </div>
 
                 <div className="notes-history">
-                  <h4>Histórico de Notas:</h4>
+                  <h4>Hist├│rico de Notas:</h4>
                   {sensorNotes.length > 0 ? (
                     <div className="notes-list">
                       {sensorNotes.map(note => (
                         <div key={note.id} className="note-card">
                           <div className="note-header">
-                            <span className="note-author">{note.user_name || 'Usuário'}</span>
+                            <span className="note-author">{note.user_name || 'Usu├írio'}</span>
                             <span className="note-date">
                               {new Date(note.created_at).toLocaleString('pt-BR')}
                             </span>
                           </div>
                           <div className="note-status">
                             Status: {
-                              note.status === 'pending' ? '⏳ Pendente' :
-                              note.status === 'in_analysis' ? '🔍 Em Análise' :
-                              note.status === 'verified' ? '✅ Verificado' :
-                              '🎉 Resolvido'
+                              note.status === 'pending' ? 'ΓÅ│ Pendente' :
+                              note.status === 'in_analysis' ? '≡ƒöì Em An├ílise' :
+                              note.status === 'verified' ? 'Γ£à Verificado' :
+                              '≡ƒÄë Resolvido'
                             }
                           </div>
                           <div className="note-content">{note.note}</div>
@@ -2444,8 +2444,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
         <div className="modal-overlay" onClick={() => setShowCreateGroupModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>{newGroup.parent_id ? '➕ Criar Subgrupo' : '➕ Criar Grupo Raiz'}</h2>
-              <button className="modal-close" onClick={() => setShowCreateGroupModal(false)}>×</button>
+              <h2>{newGroup.parent_id ? 'Γ₧ò Criar Subgrupo' : 'Γ₧ò Criar Grupo Raiz'}</h2>
+              <button className="modal-close" onClick={() => setShowCreateGroupModal(false)}>├ù</button>
             </div>
 
             <div className="modal-body">
@@ -2455,38 +2455,38 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   type="text"
                   value={newGroup.name}
                   onChange={(e) => setNewGroup({...newGroup, name: e.target.value})}
-                  placeholder="Ex: Produção, Datacenter SP, Clientes"
+                  placeholder="Ex: Produ├º├úo, Datacenter SP, Clientes"
                   autoFocus
                 />
               </div>
 
               <div className="form-group">
-                <label>Descrição:</label>
+                <label>Descri├º├úo:</label>
                 <textarea
                   value={newGroup.description}
                   onChange={(e) => setNewGroup({...newGroup, description: e.target.value})}
-                  placeholder="Descrição opcional do grupo"
+                  placeholder="Descri├º├úo opcional do grupo"
                   rows="3"
                 />
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Ícone:</label>
+                  <label>├ìcone:</label>
                   <select
                     value={newGroup.icon}
                     onChange={(e) => setNewGroup({...newGroup, icon: e.target.value})}
                   >
-                    <option value="📁">📁 Pasta</option>
-                    <option value="🏢">🏢 Empresa</option>
-                    <option value="🏭">🏭 Fábrica</option>
-                    <option value="🏪">🏪 Loja</option>
-                    <option value="🏥">🏥 Hospital</option>
-                    <option value="🏫">🏫 Escola</option>
-                    <option value="🌐">🌐 Rede</option>
-                    <option value="☁️">☁️ Nuvem</option>
-                    <option value="🖥️">🖥️ Servidores</option>
-                    <option value="📊">📊 Monitoramento</option>
+                    <option value="≡ƒôü">≡ƒôü Pasta</option>
+                    <option value="≡ƒÅó">≡ƒÅó Empresa</option>
+                    <option value="≡ƒÅ¡">≡ƒÅ¡ F├íbrica</option>
+                    <option value="≡ƒÅ¬">≡ƒÅ¬ Loja</option>
+                    <option value="≡ƒÅÑ">≡ƒÅÑ Hospital</option>
+                    <option value="≡ƒÅ½">≡ƒÅ½ Escola</option>
+                    <option value="≡ƒîÉ">≡ƒîÉ Rede</option>
+                    <option value="Γÿü∩╕Å">Γÿü∩╕Å Nuvem</option>
+                    <option value="≡ƒûÑ∩╕Å">≡ƒûÑ∩╕Å Servidores</option>
+                    <option value="≡ƒôè">≡ƒôè Monitoramento</option>
                   </select>
                 </div>
 
@@ -2502,7 +2502,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
               {newGroup.parent_id && (
                 <div className="info-banner">
-                  <p>ℹ️ Este será um subgrupo dentro de: <strong>{serverGroups.find(g => g.id === newGroup.parent_id)?.name}</strong></p>
+                  <p>Γä╣∩╕Å Este ser├í um subgrupo dentro de: <strong>{serverGroups.find(g => g.id === newGroup.parent_id)?.name}</strong></p>
                 </div>
               )}
             </div>
@@ -2524,14 +2524,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
         <div className="modal-overlay" onClick={() => setShowMoveGroupModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2>↔️ Mover Grupo</h2>
-              <button className="modal-close" onClick={() => setShowMoveGroupModal(false)}>×</button>
+              <h2>Γåö∩╕Å Mover Grupo</h2>
+              <button className="modal-close" onClick={() => setShowMoveGroupModal(false)}>├ù</button>
             </div>
 
             <div className="modal-body">
               <div className="info-banner" style={{ marginBottom: '20px' }}>
                 <p><strong>Grupo:</strong> {selectedGroup.icon} {selectedGroup.name}</p>
-                <p><strong>Posição Atual:</strong> {selectedGroup.parent_id ? 'Subgrupo' : 'Raiz'}</p>
+                <p><strong>Posi├º├úo Atual:</strong> {selectedGroup.parent_id ? 'Subgrupo' : 'Raiz'}</p>
               </div>
 
               <div className="form-group">
@@ -2540,9 +2540,9 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   value={newGroup.parent_id || ''}
                   onChange={(e) => setNewGroup({...newGroup, parent_id: e.target.value ? parseInt(e.target.value) : null})}
                 >
-                  <option value="">📁 Raiz (sem pai)</option>
+                  <option value="">≡ƒôü Raiz (sem pai)</option>
                   {serverGroups
-                    .filter(g => g.id !== selectedGroup.id) // Não pode mover para si mesmo
+                    .filter(g => g.id !== selectedGroup.id) // N├úo pode mover para si mesmo
                     .map(group => (
                       <option key={group.id} value={group.id}>
                         {'  '.repeat(group.level || 0)}{group.icon} {group.name}
@@ -2565,22 +2565,22 @@ function Servers({ selectedServerId, selectedSensorId }) {
         </div>
       )}
 
-      {/* Modal Monitorar Serviços */}
+      {/* Modal Monitorar Servi├ºos */}
       {showMonitorServicesModal && (
         <div className="modal-overlay" onClick={() => setShowMonitorServicesModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '900px', maxHeight: '90vh', overflow: 'auto' }}>
             <div className="modal-header">
-              <h2>☁️ Monitorar Serviços e Dispositivos</h2>
-              <button className="modal-close" onClick={() => setShowMonitorServicesModal(false)}>×</button>
+              <h2>Γÿü∩╕Å Monitorar Servi├ºos e Dispositivos</h2>
+              <button className="modal-close" onClick={() => setShowMonitorServicesModal(false)}>├ù</button>
             </div>
 
             <div className="modal-body">
               <p style={{ marginBottom: '20px', color: '#666', fontSize: '15px' }}>
-                Escolha o tipo de dispositivo ou serviço que deseja monitorar. Todos abrem na Biblioteca de Sensores Independentes.
+                Escolha o tipo de dispositivo ou servi├ºo que deseja monitorar. Todos abrem na Biblioteca de Sensores Independentes.
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
-                {/* SNMP Genérico */}
+                {/* SNMP Gen├⌐rico */}
                 <button
                   onClick={() => {
                     setShowMonitorServicesModal(false);
@@ -2611,8 +2611,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>📡</div>
-                  <div>SNMP Genérico</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒôí</div>
+                  <div>SNMP Gen├⌐rico</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Switches, Roteadores, Impressoras
                   </div>
@@ -2649,7 +2649,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>📶</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒô╢</div>
                   <div>Access Point WiFi</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Monitore APs via SNMP
@@ -2685,7 +2685,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>☁️</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>Γÿü∩╕Å</div>
                   <div>Microsoft Azure</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     VMs, Storage, Databases
@@ -2723,7 +2723,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌡️</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒîí∩╕Å</div>
                   <div>Temperatura</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Sensores de temperatura SNMP
@@ -2759,7 +2759,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🌐</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒîÉ</div>
                   <div>HTTP/HTTPS</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Websites, APIs, Endpoints
@@ -2797,7 +2797,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>💾</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒÆ╛</div>
                   <div>Storage/NAS</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Armazenamento em rede
@@ -2832,7 +2832,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🗄️</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒùä∩╕Å</div>
                   <div>Banco de Dados</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     MySQL, PostgreSQL, SQL Server
@@ -2870,7 +2870,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🖨️</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒû¿∩╕Å</div>
                   <div>Impressora</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Status, toner, papel via SNMP
@@ -2908,7 +2908,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>🔋</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>≡ƒöï</div>
                   <div>UPS/Nobreak</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Bateria, carga, autonomia
@@ -2944,7 +2944,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.1)';
                   }}
                 >
-                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>☸️</div>
+                  <div style={{ fontSize: '28px', marginBottom: '8px' }}>Γÿ╕∩╕Å</div>
                   <div>Kubernetes</div>
                   <div style={{ fontSize: '12px', opacity: 0.9, marginTop: '5px', fontWeight: 'normal' }}>
                     Clusters, Pods, Deployments
@@ -2953,7 +2953,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               </div>
 
               <div className="info-banner" style={{ marginTop: '20px' }}>
-                <p>💡 <strong>Dica:</strong> Todos os tipos abrem na Biblioteca de Sensores Independentes com o tipo pré-selecionado para facilitar a configuração.</p>
+                <p>≡ƒÆí <strong>Dica:</strong> Todos os tipos abrem na Biblioteca de Sensores Independentes com o tipo pr├⌐-selecionado para facilitar a configura├º├úo.</p>
               </div>
             </div>
 
@@ -2971,25 +2971,25 @@ function Servers({ selectedServerId, selectedSensorId }) {
         <div className="modal-overlay" onClick={() => setShowAzureWizard(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
             <div className="modal-header">
-              <h2>☁️ Configurar Monitoramento Azure - Passo {azureWizardStep} de 4</h2>
-              <button className="modal-close" onClick={() => setShowAzureWizard(false)}>×</button>
+              <h2>Γÿü∩╕Å Configurar Monitoramento Azure - Passo {azureWizardStep} de 4</h2>
+              <button className="modal-close" onClick={() => setShowAzureWizard(false)}>├ù</button>
             </div>
 
             <div className="modal-body">
-              {/* Passo 1: Requisitos e Instruções */}
+              {/* Passo 1: Requisitos e Instru├º├╡es */}
               {azureWizardStep === 1 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>📋 Requisitos para Monitoramento Azure</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>≡ƒôï Requisitos para Monitoramento Azure</h3>
                   
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3', marginBottom: '20px' }}>
                     <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
-                      <strong>ℹ️ Baseado nas melhores práticas do PRTG, SolarWinds e Zabbix</strong><br/>
-                      Para monitorar recursos Azure, você precisa criar um Service Principal (App Registration) com permissões adequadas.
+                      <strong>Γä╣∩╕Å Baseado nas melhores pr├íticas do PRTG, SolarWinds e Zabbix</strong><br/>
+                      Para monitorar recursos Azure, voc├¬ precisa criar um Service Principal (App Registration) com permiss├╡es adequadas.
                     </p>
                   </div>
 
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0, color: '#333' }}>🔐 Passo a Passo - Azure Portal</h4>
+                    <h4 style={{ marginTop: 0, color: '#333' }}>≡ƒöÉ Passo a Passo - Azure Portal</h4>
                     <ol style={{ lineHeight: '1.8', fontSize: '14px', paddingLeft: '20px' }}>
                       <li>
                         <strong>Acesse o Azure Portal:</strong> <a href="https://portal.azure.com" target="_blank" rel="noopener noreferrer">portal.azure.com</a>
@@ -2997,16 +2997,16 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       <li>
                         <strong>Criar App Registration:</strong>
                         <ul style={{ marginTop: '8px' }}>
-                          <li>Vá em <code>Azure Active Directory</code> → <code>App registrations</code></li>
+                          <li>V├í em <code>Azure Active Directory</code> ΓåÆ <code>App registrations</code></li>
                           <li>Clique em <code>+ New registration</code></li>
-                          <li>Nome: "Coruja Monitor" (ou nome de sua preferência)</li>
+                          <li>Nome: "Coruja Monitor" (ou nome de sua prefer├¬ncia)</li>
                           <li>Supported account types: "Single tenant"</li>
                           <li>Redirect URI: Deixe em branco</li>
                           <li>Clique em <code>Register</code></li>
                         </ul>
                       </li>
                       <li>
-                        <strong>Copiar IDs necessários:</strong>
+                        <strong>Copiar IDs necess├írios:</strong>
                         <ul style={{ marginTop: '8px' }}>
                           <li><strong>Application (client) ID</strong> - Copie este valor</li>
                           <li><strong>Directory (tenant) ID</strong> - Copie este valor</li>
@@ -3019,22 +3019,22 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           <li>Clique em <code>+ New client secret</code></li>
                           <li>Description: "Coruja Monitor Key"</li>
                           <li>Expires: 24 months (recomendado)</li>
-                          <li><strong>⚠️ IMPORTANTE:</strong> Copie o <strong>Value</strong> imediatamente (não será mostrado novamente!)</li>
+                          <li><strong>ΓÜá∩╕Å IMPORTANTE:</strong> Copie o <strong>Value</strong> imediatamente (n├úo ser├í mostrado novamente!)</li>
                         </ul>
                       </li>
                       <li>
                         <strong>Obter Subscription ID:</strong>
                         <ul style={{ marginTop: '8px' }}>
-                          <li>Vá em <code>Subscriptions</code> no menu principal</li>
+                          <li>V├í em <code>Subscriptions</code> no menu principal</li>
                           <li>Copie o <strong>Subscription ID</strong> da assinatura que deseja monitorar</li>
                         </ul>
                       </li>
                       <li>
-                        <strong>Atribuir Permissões (CRÍTICO):</strong>
+                        <strong>Atribuir Permiss├╡es (CR├ìTICO):</strong>
                         <ul style={{ marginTop: '8px' }}>
-                          <li>Vá em <code>Subscriptions</code> → Selecione sua assinatura</li>
+                          <li>V├í em <code>Subscriptions</code> ΓåÆ Selecione sua assinatura</li>
                           <li>Clique em <code>Access control (IAM)</code></li>
-                          <li>Clique em <code>+ Add</code> → <code>Add role assignment</code></li>
+                          <li>Clique em <code>+ Add</code> ΓåÆ <code>Add role assignment</code></li>
                           <li>Role: <strong>"Monitoring Reader"</strong> (recomendado) ou "Reader"</li>
                           <li>Assign access to: <strong>"User, group, or service principal"</strong></li>
                           <li>Select members: Busque pelo nome do App Registration criado</li>
@@ -3046,14 +3046,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div className="info-banner" style={{ background: '#fff3cd', border: '1px solid #ffc107', marginBottom: '20px' }}>
                     <p style={{ margin: 0, fontSize: '13px' }}>
-                      <strong>⚠️ Segurança:</strong> O role "Monitoring Reader" fornece acesso somente leitura às métricas.
-                      Nunca use roles com permissões de escrita (Contributor, Owner) para monitoramento.
+                      <strong>ΓÜá∩╕Å Seguran├ºa:</strong> O role "Monitoring Reader" fornece acesso somente leitura ├ás m├⌐tricas.
+                      Nunca use roles com permiss├╡es de escrita (Contributor, Owner) para monitoramento.
                     </p>
                   </div>
 
                   <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '8px', border: '1px solid #4caf50' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>✅ Recursos que podem ser monitorados:</strong><br/>
+                      <strong>Γ£à Recursos que podem ser monitorados:</strong><br/>
                       Virtual Machines, Storage Accounts, SQL Databases, Web Apps, Function Apps, AKS Clusters, 
                       Load Balancers, Application Gateways, Cosmos DB, Redis Cache, Service Bus, Event Hubs, Key Vaults, Backups
                     </p>
@@ -3064,7 +3064,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               {/* Passo 2: Inserir Credenciais */}
               {azureWizardStep === 2 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>🔑 Credenciais Azure</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>≡ƒöæ Credenciais Azure</h3>
                   
                   <div className="form-group">
                     <label>Subscription ID: *</label>
@@ -3087,7 +3087,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                       style={{ fontFamily: 'monospace' }}
                     />
-                    <small>ID do diretório (Azure Active Directory)</small>
+                    <small>ID do diret├│rio (Azure Active Directory)</small>
                   </div>
 
                   <div className="form-group">
@@ -3099,7 +3099,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
                       style={{ fontFamily: 'monospace' }}
                     />
-                    <small>ID da aplicação registrada (App Registration)</small>
+                    <small>ID da aplica├º├úo registrada (App Registration)</small>
                   </div>
 
                   <div className="form-group">
@@ -3108,7 +3108,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       type="password"
                       value={azureConfig.client_secret}
                       onChange={(e) => setAzureConfig({...azureConfig, client_secret: e.target.value})}
-                      placeholder="••••••••••••••••••••••••••••••••"
+                      placeholder="ΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇóΓÇó"
                       style={{ fontFamily: 'monospace' }}
                     />
                     <small>Secret gerado no App Registration (Certificates & secrets)</small>
@@ -3127,17 +3127,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3', marginTop: '20px' }}>
                     <p style={{ margin: 0, fontSize: '13px' }}>
-                      💡 <strong>Dica:</strong> Todos os campos marcados com * são obrigatórios. 
-                      Certifique-se de que o Service Principal tem o role "Monitoring Reader" atribuído.
+                      ≡ƒÆí <strong>Dica:</strong> Todos os campos marcados com * s├úo obrigat├│rios. 
+                      Certifique-se de que o Service Principal tem o role "Monitoring Reader" atribu├¡do.
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Passo 3: Testar Conexão */}
+              {/* Passo 3: Testar Conex├úo */}
               {azureWizardStep === 3 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>🔌 Testar Conexão Azure</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>≡ƒöî Testar Conex├úo Azure</h3>
                   
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
                     <h4 style={{ marginTop: 0 }}>Credenciais Configuradas:</h4>
@@ -3145,19 +3145,19 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       <tbody>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold', width: '180px' }}>Subscription ID:</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{azureConfig.subscription_id || '(não informado)'}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{azureConfig.subscription_id || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Tenant ID:</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{azureConfig.tenant_id || '(não informado)'}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{azureConfig.tenant_id || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Client ID:</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{azureConfig.client_id || '(não informado)'}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{azureConfig.client_id || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Client Secret:</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{'•'.repeat(32)}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{'ΓÇó'.repeat(32)}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Resource Group:</td>
@@ -3169,7 +3169,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <button
                     onClick={async () => {
-                      alert('🔌 Teste de conexão Azure será implementado no backend.\n\nVerificará:\n✓ Autenticação com Azure AD\n✓ Permissões do Service Principal\n✓ Acesso à Subscription\n✓ Listagem de recursos disponíveis');
+                      alert('≡ƒöî Teste de conex├úo Azure ser├í implementado no backend.\n\nVerificar├í:\nΓ£ô Autentica├º├úo com Azure AD\nΓ£ô Permiss├╡es do Service Principal\nΓ£ô Acesso ├á Subscription\nΓ£ô Listagem de recursos dispon├¡veis');
                     }}
                     style={{
                       width: '100%',
@@ -3184,16 +3184,16 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       marginBottom: '15px'
                     }}
                   >
-                    🔌 Testar Conexão com Azure
+                    ≡ƒöî Testar Conex├úo com Azure
                   </button>
 
                   <div className="info-banner" style={{ background: '#fff3cd', border: '1px solid #ffc107' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>⚠️ Possíveis erros:</strong><br/>
-                      • <strong>401 Unauthorized:</strong> Client Secret inválido ou expirado<br/>
-                      • <strong>403 Forbidden:</strong> Service Principal sem permissões adequadas<br/>
-                      • <strong>404 Not Found:</strong> Subscription ID incorreto<br/>
-                      • <strong>Timeout:</strong> Firewall bloqueando acesso ao Azure
+                      <strong>ΓÜá∩╕Å Poss├¡veis erros:</strong><br/>
+                      ΓÇó <strong>401 Unauthorized:</strong> Client Secret inv├ílido ou expirado<br/>
+                      ΓÇó <strong>403 Forbidden:</strong> Service Principal sem permiss├╡es adequadas<br/>
+                      ΓÇó <strong>404 Not Found:</strong> Subscription ID incorreto<br/>
+                      ΓÇó <strong>Timeout:</strong> Firewall bloqueando acesso ao Azure
                     </p>
                   </div>
                 </div>
@@ -3202,24 +3202,24 @@ function Servers({ selectedServerId, selectedSensorId }) {
               {/* Passo 4: Selecionar Recursos */}
               {azureWizardStep === 4 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>📦 Selecionar Recursos para Monitorar</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#0078d4' }}>≡ƒôª Selecionar Recursos para Monitorar</h3>
                   
                   <div className="info-banner" style={{ background: '#e8f5e9', border: '1px solid #4caf50', marginBottom: '20px' }}>
                     <p style={{ margin: 0, fontSize: '13px' }}>
-                      ✅ Conexão estabelecida com sucesso! Selecione os recursos Azure que deseja monitorar.
+                      Γ£à Conex├úo estabelecida com sucesso! Selecione os recursos Azure que deseja monitorar.
                     </p>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
                     {[
-                      { type: 'vm', icon: '🖥️', name: 'Virtual Machines' },
-                      { type: 'webapp', icon: '🌐', name: 'Web Apps' },
-                      { type: 'sql', icon: '🗄️', name: 'SQL Databases' },
-                      { type: 'storage', icon: '💾', name: 'Storage Accounts' },
-                      { type: 'aks', icon: '☸️', name: 'AKS Clusters' },
-                      { type: 'function', icon: '⚡', name: 'Azure Functions' },
-                      { type: 'backup', icon: '💼', name: 'Backup Vaults' },
-                      { type: 'loadbalancer', icon: '⚖️', name: 'Load Balancers' }
+                      { type: 'vm', icon: '≡ƒûÑ∩╕Å', name: 'Virtual Machines' },
+                      { type: 'webapp', icon: '≡ƒîÉ', name: 'Web Apps' },
+                      { type: 'sql', icon: '≡ƒùä∩╕Å', name: 'SQL Databases' },
+                      { type: 'storage', icon: '≡ƒÆ╛', name: 'Storage Accounts' },
+                      { type: 'aks', icon: 'Γÿ╕∩╕Å', name: 'AKS Clusters' },
+                      { type: 'function', icon: 'ΓÜí', name: 'Azure Functions' },
+                      { type: 'backup', icon: '≡ƒÆ╝', name: 'Backup Vaults' },
+                      { type: 'loadbalancer', icon: 'ΓÜû∩╕Å', name: 'Load Balancers' }
                     ].map(resource => (
                       <button
                         key={resource.type}
@@ -3250,7 +3250,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         <div style={{ fontSize: '24px', marginBottom: '5px' }}>{resource.icon}</div>
                         <div>{resource.name}</div>
                         {azureConfig.selected_resources.includes(resource.type) && (
-                          <div style={{ marginTop: '5px', fontSize: '16px' }}>✓</div>
+                          <div style={{ marginTop: '5px', fontSize: '16px' }}>Γ£ô</div>
                         )}
                       </button>
                     ))}
@@ -3258,8 +3258,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3' }}>
                     <p style={{ margin: 0, fontSize: '13px' }}>
-                      💡 Selecionados: <strong>{azureConfig.selected_resources.length}</strong> tipo(s) de recurso.
-                      Sensores serão criados automaticamente para cada recurso encontrado.
+                      ≡ƒÆí Selecionados: <strong>{azureConfig.selected_resources.length}</strong> tipo(s) de recurso.
+                      Sensores ser├úo criados automaticamente para cada recurso encontrado.
                     </p>
                   </div>
                 </div>
@@ -3277,28 +3277,28 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   }
                 }}
               >
-                {azureWizardStep === 1 ? 'Cancelar' : '← Voltar'}
+                {azureWizardStep === 1 ? 'Cancelar' : 'ΓåÉ Voltar'}
               </button>
               
               <button 
                 className="btn-primary" 
                 onClick={() => {
                   if (azureWizardStep < 4) {
-                    // Validar campos obrigatórios no passo 2
+                    // Validar campos obrigat├│rios no passo 2
                     if (azureWizardStep === 2) {
                       if (!azureConfig.subscription_id || !azureConfig.tenant_id || 
                           !azureConfig.client_id || !azureConfig.client_secret) {
-                        alert('⚠️ Preencha todos os campos obrigatórios antes de continuar.');
+                        alert('ΓÜá∩╕Å Preencha todos os campos obrigat├│rios antes de continuar.');
                         return;
                       }
                     }
                     setAzureWizardStep(azureWizardStep + 1);
                   } else {
                     // Finalizar e criar sensores
-                    alert(`✅ Configuração Azure concluída!\n\n${azureConfig.selected_resources.length} tipo(s) de recurso selecionado(s).\n\nOs sensores serão criados na Biblioteca de Sensores Independentes.`);
+                    alert(`Γ£à Configura├º├úo Azure conclu├¡da!\n\n${azureConfig.selected_resources.length} tipo(s) de recurso selecionado(s).\n\nOs sensores ser├úo criados na Biblioteca de Sensores Independentes.`);
                     setShowAzureWizard(false);
                     setAzureWizardStep(1);
-                    // Redirecionar para biblioteca com Azure pré-selecionado
+                    // Redirecionar para biblioteca com Azure pr├⌐-selecionado
                     window.location.hash = '#/sensor-library?type=azure';
                   }
                 }}
@@ -3308,55 +3308,55 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   cursor: (azureWizardStep === 4 && azureConfig.selected_resources.length === 0) ? 'not-allowed' : 'pointer'
                 }}
               >
-                {azureWizardStep === 4 ? '✓ Finalizar e Criar Sensores' : 'Próximo →'}
+                {azureWizardStep === 4 ? 'Γ£ô Finalizar e Criar Sensores' : 'Pr├│ximo ΓåÆ'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Wizard SNMP Genérico - Adaptável para vários tipos */}
+      {/* Wizard SNMP Gen├⌐rico - Adapt├ível para v├írios tipos */}
       {showSNMPWizard && (
         <div className="modal-overlay" onClick={() => setShowSNMPWizard(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
             <div className="modal-header">
               <h2>
-                {currentWizardType === 'snmp' && '📡 Configurar SNMP Genérico'}
-                {currentWizardType === 'ap' && '📶 Configurar Access Point'}
-                {currentWizardType === 'temp' && '🌡️ Configurar Sensor de Temperatura'}
-                {currentWizardType === 'storage' && '💾 Configurar Storage/NAS'}
-                {currentWizardType === 'printer' && '🖨️ Configurar Impressora'}
-                {currentWizardType === 'ups' && '🔋 Configurar UPS/Nobreak'}
+                {currentWizardType === 'snmp' && '≡ƒôí Configurar SNMP Gen├⌐rico'}
+                {currentWizardType === 'ap' && '≡ƒô╢ Configurar Access Point'}
+                {currentWizardType === 'temp' && '≡ƒîí∩╕Å Configurar Sensor de Temperatura'}
+                {currentWizardType === 'storage' && '≡ƒÆ╛ Configurar Storage/NAS'}
+                {currentWizardType === 'printer' && '≡ƒû¿∩╕Å Configurar Impressora'}
+                {currentWizardType === 'ups' && '≡ƒöï Configurar UPS/Nobreak'}
                 {' - Passo '}{snmpWizardStep} de 3
               </h2>
-              <button className="modal-close" onClick={() => setShowSNMPWizard(false)}>×</button>
+              <button className="modal-close" onClick={() => setShowSNMPWizard(false)}>├ù</button>
             </div>
 
             <div className="modal-body">
               {/* Passo 1: Requisitos */}
               {snmpWizardStep === 1 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#667eea' }}>📋 Requisitos SNMP</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#667eea' }}>≡ƒôï Requisitos SNMP</h3>
                   
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3', marginBottom: '20px' }}>
                     <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
-                      <strong>ℹ️ Baseado em PRTG, SolarWinds, CheckMK e Zabbix</strong><br/>
+                      <strong>Γä╣∩╕Å Baseado em PRTG, SolarWinds, CheckMK e Zabbix</strong><br/>
                       SNMP (Simple Network Management Protocol) permite monitorar dispositivos de rede remotamente.
                     </p>
                   </div>
 
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0 }}>🔧 Configuração no Dispositivo:</h4>
+                    <h4 style={{ marginTop: 0 }}>≡ƒöº Configura├º├úo no Dispositivo:</h4>
                     <ol style={{ lineHeight: '1.8', fontSize: '14px', paddingLeft: '20px' }}>
                       <li><strong>Habilitar SNMP</strong> no dispositivo (v1, v2c ou v3)</li>
-                      <li><strong>Configurar Community String</strong> (padrão: "public" para leitura)</li>
-                      <li><strong>Porta SNMP</strong>: 161/UDP (padrão)</li>
+                      <li><strong>Configurar Community String</strong> (padr├úo: "public" para leitura)</li>
+                      <li><strong>Porta SNMP</strong>: 161/UDP (padr├úo)</li>
                       <li><strong>Permitir acesso</strong> do IP da probe no firewall</li>
                     </ol>
 
                     {currentWizardType === 'ap' && (
                       <div style={{ marginTop: '15px', padding: '12px', background: '#fff3cd', borderRadius: '6px' }}>
-                        <strong>📶 Access Points WiFi - Métricas Detalhadas:</strong>
+                        <strong>≡ƒô╢ Access Points WiFi - M├⌐tricas Detalhadas:</strong>
                         <div style={{ marginTop: '10px' }}>
                           <div style={{ marginBottom: '8px' }}>
                             <strong style={{ color: '#2196f3' }}>1. Status:</strong>
@@ -3367,46 +3367,46 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           <div style={{ marginBottom: '8px' }}>
                             <strong style={{ color: '#2196f3' }}>2. Carga:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
-                              <li>CPU % e Memória %</li>
-                              <li>Número de clientes conectados (2.4GHz + 5GHz)</li>
-                              <li>Capacidade máxima vs atual</li>
+                              <li>CPU % e Mem├│ria %</li>
+                              <li>N├║mero de clientes conectados (2.4GHz + 5GHz)</li>
+                              <li>Capacidade m├íxima vs atual</li>
                             </ul>
                           </div>
                           <div style={{ marginBottom: '8px' }}>
-                            <strong style={{ color: '#2196f3' }}>3. Tráfego:</strong>
+                            <strong style={{ color: '#2196f3' }}>3. Tr├ífego:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
                               <li>TX/RX bytes e pacotes por interface</li>
-                              <li>Erros, Drops, Retransmissões</li>
+                              <li>Erros, Drops, Retransmiss├╡es</li>
                               <li>Throughput em Mbps</li>
                             </ul>
                           </div>
                           <div style={{ marginBottom: '8px' }}>
                             <strong style={{ color: '#2196f3' }}>4. Sinais:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
-                              <li>RSSI médio (dBm) - força do sinal</li>
+                              <li>RSSI m├⌐dio (dBm) - for├ºa do sinal</li>
                               <li>SNR (Signal-to-Noise Ratio)</li>
                               <li>Qualidade do sinal (%)</li>
-                              <li>Interferência e ruído</li>
+                              <li>Interfer├¬ncia e ru├¡do</li>
                             </ul>
                           </div>
                           <div style={{ marginBottom: '8px' }}>
                             <strong style={{ color: '#2196f3' }}>5. Acesso:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
                               <li>SSIDs ativos e seus status</li>
-                              <li>Autenticações bem-sucedidas/falhadas</li>
-                              <li>Associações e desassociações</li>
+                              <li>Autentica├º├╡es bem-sucedidas/falhadas</li>
+                              <li>Associa├º├╡es e desassocia├º├╡es</li>
                               <li>Eventos de roaming</li>
                             </ul>
                           </div>
                         </div>
                         <div style={{ marginTop: '12px', padding: '8px', background: '#e3f2fd', borderRadius: '4px' }}>
-                          <strong>🔧 Configuração por Fabricante:</strong>
+                          <strong>≡ƒöº Configura├º├úo por Fabricante:</strong>
                           <ul style={{ marginTop: '5px', fontSize: '12px' }}>
-                            <li><strong>Ubiquiti UniFi:</strong> Settings → Services → SNMP → Enable</li>
-                            <li><strong>MikroTik:</strong> IP → SNMP → Communities → Add</li>
-                            <li><strong>Cisco Aironet:</strong> configure terminal → snmp-server community public RO</li>
-                            <li><strong>TP-Link EAP:</strong> Management → SNMP Settings → Enable v2c</li>
-                            <li><strong>Aruba:</strong> Configuration → System → SNMP</li>
+                            <li><strong>Ubiquiti UniFi:</strong> Settings ΓåÆ Services ΓåÆ SNMP ΓåÆ Enable</li>
+                            <li><strong>MikroTik:</strong> IP ΓåÆ SNMP ΓåÆ Communities ΓåÆ Add</li>
+                            <li><strong>Cisco Aironet:</strong> configure terminal ΓåÆ snmp-server community public RO</li>
+                            <li><strong>TP-Link EAP:</strong> Management ΓåÆ SNMP Settings ΓåÆ Enable v2c</li>
+                            <li><strong>Aruba:</strong> Configuration ΓåÆ System ΓåÆ SNMP</li>
                           </ul>
                         </div>
                       </div>
@@ -3414,21 +3414,21 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                     {currentWizardType === 'printer' && (
                       <div style={{ marginTop: '15px', padding: '12px', background: '#fff3cd', borderRadius: '6px' }}>
-                        <strong>🖨️ Impressoras:</strong>
+                        <strong>≡ƒû¿∩╕Å Impressoras:</strong>
                         <ul style={{ marginTop: '8px', fontSize: '13px' }}>
-                          <li>HP: Menu → Network → SNMP → Enable</li>
-                          <li>Canon: Setup → Network → SNMP Settings</li>
-                          <li>Epson: Network → SNMP → Enable</li>
+                          <li>HP: Menu ΓåÆ Network ΓåÆ SNMP ΓåÆ Enable</li>
+                          <li>Canon: Setup ΓåÆ Network ΓåÆ SNMP Settings</li>
+                          <li>Epson: Network ΓåÆ SNMP ΓåÆ Enable</li>
                         </ul>
                       </div>
                     )}
 
                     {currentWizardType === 'ups' && (
                       <div style={{ marginTop: '15px', padding: '12px', background: '#fff3cd', borderRadius: '6px' }}>
-                        <strong>🔋 UPS/Nobreak:</strong>
+                        <strong>≡ƒöï UPS/Nobreak:</strong>
                         <ul style={{ marginTop: '8px', fontSize: '13px' }}>
-                          <li>APC: Network → SNMP → Access Control</li>
-                          <li>SMS: Web Interface → SNMP Settings</li>
+                          <li>APC: Network ΓåÆ SNMP ΓåÆ Access Control</li>
+                          <li>SMS: Web Interface ΓåÆ SNMP Settings</li>
                           <li>Requer Network Management Card em alguns modelos</li>
                         </ul>
                       </div>
@@ -3437,25 +3437,25 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '8px', border: '1px solid #4caf50' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>✅ Métricas Monitoradas:</strong><br/>
-                      {currentWizardType === 'snmp' && 'Status, Uptime, Interfaces, Tráfego, CPU, Memória'}
-                      {currentWizardType === 'ap' && 'Status, Carga (CPU/Mem/Clientes), Tráfego (TX/RX), Sinais (RSSI/SNR), Acesso (SSIDs/Auth)'}
+                      <strong>Γ£à M├⌐tricas Monitoradas:</strong><br/>
+                      {currentWizardType === 'snmp' && 'Status, Uptime, Interfaces, Tr├ífego, CPU, Mem├│ria'}
+                      {currentWizardType === 'ap' && 'Status, Carga (CPU/Mem/Clientes), Tr├ífego (TX/RX), Sinais (RSSI/SNR), Acesso (SSIDs/Auth)'}
                       {currentWizardType === 'temp' && 'Temperatura, Umidade, Alarmes'}
-                      {currentWizardType === 'storage' && 'Espaço em disco, RAID status, Temperatura'}
-                      {currentWizardType === 'printer' && 'Status, Níveis de toner, Papel, Total de páginas'}
-                      {currentWizardType === 'ups' && 'Status, Bateria %, Tempo restante, Carga, Tensão'}
+                      {currentWizardType === 'storage' && 'Espa├ºo em disco, RAID status, Temperatura'}
+                      {currentWizardType === 'printer' && 'Status, N├¡veis de toner, Papel, Total de p├íginas'}
+                      {currentWizardType === 'ups' && 'Status, Bateria %, Tempo restante, Carga, Tens├úo'}
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Passo 2: Configuração */}
+              {/* Passo 2: Configura├º├úo */}
               {snmpWizardStep === 2 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#667eea' }}>⚙️ Configuração do Sensor</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#667eea' }}>ΓÜÖ∩╕Å Configura├º├úo do Sensor</h3>
                   
                   <div className="form-group">
-                    <label>Probe Responsável: *</label>
+                    <label>Probe Respons├ível: *</label>
                     <select 
                       value={snmpConfig.probe_id}
                       onChange={(e) => setSNMPConfig({...snmpConfig, probe_id: e.target.value})}
@@ -3483,7 +3483,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   </div>
 
                   <div className="form-group">
-                    <label>Endereço IP: *</label>
+                    <label>Endere├ºo IP: *</label>
                     <input
                       type="text"
                       value={snmpConfig.ip_address}
@@ -3494,7 +3494,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Versão SNMP:</label>
+                      <label>Vers├úo SNMP:</label>
                       <select
                         value={snmpConfig.snmp_version}
                         onChange={(e) => setSNMPConfig({...snmpConfig, snmp_version: e.target.value})}
@@ -3527,12 +3527,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   </div>
 
                   <div className="form-group">
-                    <label>Descrição (Opcional):</label>
+                    <label>Descri├º├úo (Opcional):</label>
                     <textarea
                       value={snmpConfig.description}
                       onChange={(e) => setSNMPConfig({...snmpConfig, description: e.target.value})}
                       rows="2"
-                      placeholder="Informações adicionais sobre o dispositivo..."
+                      placeholder="Informa├º├╡es adicionais sobre o dispositivo..."
                     />
                   </div>
                 </div>
@@ -3541,22 +3541,22 @@ function Servers({ selectedServerId, selectedSensorId }) {
               {/* Passo 3: Testar e Finalizar */}
               {snmpWizardStep === 3 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#667eea' }}>🔌 Testar Conexão SNMP</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#667eea' }}>≡ƒöî Testar Conex├úo SNMP</h3>
                   
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0 }}>Configuração:</h4>
+                    <h4 style={{ marginTop: 0 }}>Configura├º├úo:</h4>
                     <table style={{ width: '100%', fontSize: '13px' }}>
                       <tbody>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold', width: '150px' }}>Nome:</td>
-                          <td>{snmpConfig.name || '(não informado)'}</td>
+                          <td>{snmpConfig.name || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>IP:</td>
-                          <td style={{ fontFamily: 'monospace' }}>{snmpConfig.ip_address || '(não informado)'}</td>
+                          <td style={{ fontFamily: 'monospace' }}>{snmpConfig.ip_address || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Versão:</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Vers├úo:</td>
                           <td>{snmpConfig.snmp_version}</td>
                         </tr>
                         <tr>
@@ -3573,7 +3573,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <button
                     onClick={() => {
-                      alert('🔌 Teste de conexão SNMP será implementado no backend.\n\nVerificará:\n✓ Conectividade de rede\n✓ Porta SNMP acessível\n✓ Community string válido\n✓ Resposta do dispositivo');
+                      alert('≡ƒöî Teste de conex├úo SNMP ser├í implementado no backend.\n\nVerificar├í:\nΓ£ô Conectividade de rede\nΓ£ô Porta SNMP acess├¡vel\nΓ£ô Community string v├ílido\nΓ£ô Resposta do dispositivo');
                     }}
                     style={{
                       width: '100%',
@@ -3588,15 +3588,15 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       marginBottom: '15px'
                     }}
                   >
-                    🔌 Testar Conexão SNMP
+                    ≡ƒöî Testar Conex├úo SNMP
                   </button>
 
                   <div className="info-banner" style={{ background: '#fff3cd', border: '1px solid #ffc107' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>⚠️ Troubleshooting:</strong><br/>
-                      • <strong>Timeout:</strong> Verifique firewall e conectividade<br/>
-                      • <strong>Auth Failed:</strong> Community string incorreto<br/>
-                      • <strong>No Response:</strong> SNMP não habilitado no dispositivo
+                      <strong>ΓÜá∩╕Å Troubleshooting:</strong><br/>
+                      ΓÇó <strong>Timeout:</strong> Verifique firewall e conectividade<br/>
+                      ΓÇó <strong>Auth Failed:</strong> Community string incorreto<br/>
+                      ΓÇó <strong>No Response:</strong> SNMP n├úo habilitado no dispositivo
                     </p>
                   </div>
                 </div>
@@ -3614,7 +3614,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   }
                 }}
               >
-                {snmpWizardStep === 1 ? 'Cancelar' : '← Voltar'}
+                {snmpWizardStep === 1 ? 'Cancelar' : 'ΓåÉ Voltar'}
               </button>
               
               <button 
@@ -3623,20 +3623,20 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   if (snmpWizardStep < 3) {
                     if (snmpWizardStep === 2) {
                       if (!snmpConfig.probe_id || !snmpConfig.name || !snmpConfig.ip_address) {
-                        alert('⚠️ Preencha todos os campos obrigatórios.');
+                        alert('ΓÜá∩╕Å Preencha todos os campos obrigat├│rios.');
                         return;
                       }
                     }
                     setSNMPWizardStep(snmpWizardStep + 1);
                   } else {
-                    alert(`✅ Sensor SNMP configurado!\n\nO sensor será criado na Biblioteca de Sensores Independentes.`);
+                    alert(`Γ£à Sensor SNMP configurado!\n\nO sensor ser├í criado na Biblioteca de Sensores Independentes.`);
                     setShowSNMPWizard(false);
                     setSNMPWizardStep(1);
                     window.location.hash = '#/sensor-library?type=snmp';
                   }
                 }}
               >
-                {snmpWizardStep === 3 ? '✓ Criar Sensor' : 'Próximo →'}
+                {snmpWizardStep === 3 ? 'Γ£ô Criar Sensor' : 'Pr├│ximo ΓåÆ'}
               </button>
             </div>
           </div>
@@ -3648,50 +3648,50 @@ function Servers({ selectedServerId, selectedSensorId }) {
         <div className="modal-overlay" onClick={() => setShowHTTPWizard(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '700px' }}>
             <div className="modal-header">
-              <h2>🌐 Configurar Monitoramento HTTP/HTTPS - Passo {httpWizardStep} de 3</h2>
-              <button className="modal-close" onClick={() => setShowHTTPWizard(false)}>×</button>
+              <h2>≡ƒîÉ Configurar Monitoramento HTTP/HTTPS - Passo {httpWizardStep} de 3</h2>
+              <button className="modal-close" onClick={() => setShowHTTPWizard(false)}>├ù</button>
             </div>
 
             <div className="modal-body">
               {/* Passo 1: Requisitos */}
               {httpWizardStep === 1 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#4facfe' }}>📋 Monitoramento HTTP/HTTPS</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#4facfe' }}>≡ƒôï Monitoramento HTTP/HTTPS</h3>
                   
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3', marginBottom: '20px' }}>
                     <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
-                      <strong>ℹ️ Monitore websites, APIs e endpoints</strong><br/>
-                      Verifique disponibilidade, tempo de resposta e conteúdo de páginas web.
+                      <strong>Γä╣∩╕Å Monitore websites, APIs e endpoints</strong><br/>
+                      Verifique disponibilidade, tempo de resposta e conte├║do de p├íginas web.
                     </p>
                   </div>
 
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0 }}>✅ Verificações Disponíveis:</h4>
+                    <h4 style={{ marginTop: 0 }}>Γ£à Verifica├º├╡es Dispon├¡veis:</h4>
                     <ul style={{ lineHeight: '1.8', fontSize: '14px' }}>
                       <li><strong>Status Code:</strong> 200 (OK), 301 (Redirect), 404 (Not Found), 500 (Error)</li>
-                      <li><strong>Tempo de Resposta:</strong> Latência em milissegundos</li>
-                      <li><strong>Certificado SSL:</strong> Validade e expiração (HTTPS)</li>
-                      <li><strong>Conteúdo:</strong> Busca por palavras-chave na página</li>
-                      <li><strong>Redirecionamentos:</strong> Seguir ou não seguir redirects</li>
+                      <li><strong>Tempo de Resposta:</strong> Lat├¬ncia em milissegundos</li>
+                      <li><strong>Certificado SSL:</strong> Validade e expira├º├úo (HTTPS)</li>
+                      <li><strong>Conte├║do:</strong> Busca por palavras-chave na p├ígina</li>
+                      <li><strong>Redirecionamentos:</strong> Seguir ou n├úo seguir redirects</li>
                     </ul>
                   </div>
 
                   <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '8px', border: '1px solid #4caf50' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>🔐 Autenticação Suportada:</strong><br/>
+                      <strong>≡ƒöÉ Autentica├º├úo Suportada:</strong><br/>
                       Basic Auth, Bearer Token, API Key, Custom Headers
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Passo 2: Configuração */}
+              {/* Passo 2: Configura├º├úo */}
               {httpWizardStep === 2 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#4facfe' }}>⚙️ Configuração do Monitoramento</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#4facfe' }}>ΓÜÖ∩╕Å Configura├º├úo do Monitoramento</h3>
                   
                   <div className="form-group">
-                    <label>Probe Responsável: *</label>
+                    <label>Probe Respons├ível: *</label>
                     <select 
                       value={httpConfig.probe_id}
                       onChange={(e) => setHTTPConfig({...httpConfig, probe_id: e.target.value})}
@@ -3726,7 +3726,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div className="form-row">
                     <div className="form-group">
-                      <label>Método HTTP:</label>
+                      <label>M├⌐todo HTTP:</label>
                       <select
                         value={httpConfig.method}
                         onChange={(e) => setHTTPConfig({...httpConfig, method: e.target.value})}
@@ -3771,14 +3771,14 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   </div>
 
                   <div className="form-group">
-                    <label>Palavra-chave no conteúdo (Opcional):</label>
+                    <label>Palavra-chave no conte├║do (Opcional):</label>
                     <input
                       type="text"
                       value={httpConfig.keyword}
                       onChange={(e) => setHTTPConfig({...httpConfig, keyword: e.target.value})}
                       placeholder="Ex: Welcome, Success, OK"
                     />
-                    <small>Alerta se a palavra NÃO for encontrada na página</small>
+                    <small>Alerta se a palavra N├âO for encontrada na p├ígina</small>
                   </div>
                 </div>
               )}
@@ -3786,22 +3786,22 @@ function Servers({ selectedServerId, selectedSensorId }) {
               {/* Passo 3: Testar */}
               {httpWizardStep === 3 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#4facfe' }}>🔌 Testar Conexão HTTP</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#4facfe' }}>≡ƒöî Testar Conex├úo HTTP</h3>
                   
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0 }}>Configuração:</h4>
+                    <h4 style={{ marginTop: 0 }}>Configura├º├úo:</h4>
                     <table style={{ width: '100%', fontSize: '13px' }}>
                       <tbody>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold', width: '150px' }}>Nome:</td>
-                          <td>{httpConfig.name || '(não informado)'}</td>
+                          <td>{httpConfig.name || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>URL:</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>{httpConfig.url || '(não informado)'}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>{httpConfig.url || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Método:</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>M├⌐todo:</td>
                           <td>{httpConfig.method}</td>
                         </tr>
                         <tr>
@@ -3810,7 +3810,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Verificar SSL:</td>
-                          <td>{httpConfig.check_ssl ? 'Sim' : 'Não'}</td>
+                          <td>{httpConfig.check_ssl ? 'Sim' : 'N├úo'}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -3818,7 +3818,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <button
                     onClick={() => {
-                      alert('🔌 Teste de conexão HTTP será implementado no backend.\n\nVerificará:\n✓ Conectividade com a URL\n✓ Status code retornado\n✓ Tempo de resposta\n✓ Certificado SSL (se HTTPS)\n✓ Palavra-chave (se configurada)');
+                      alert('≡ƒöî Teste de conex├úo HTTP ser├í implementado no backend.\n\nVerificar├í:\nΓ£ô Conectividade com a URL\nΓ£ô Status code retornado\nΓ£ô Tempo de resposta\nΓ£ô Certificado SSL (se HTTPS)\nΓ£ô Palavra-chave (se configurada)');
                     }}
                     style={{
                       width: '100%',
@@ -3833,15 +3833,15 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       marginBottom: '15px'
                     }}
                   >
-                    🔌 Testar Conexão HTTP
+                    ≡ƒöî Testar Conex├úo HTTP
                   </button>
 
                   <div className="info-banner" style={{ background: '#fff3cd', border: '1px solid #ffc107' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>⚠️ Troubleshooting:</strong><br/>
-                      • <strong>Connection Refused:</strong> Servidor offline ou firewall bloqueando<br/>
-                      • <strong>SSL Error:</strong> Certificado inválido ou expirado<br/>
-                      • <strong>Timeout:</strong> Servidor lento ou não responde
+                      <strong>ΓÜá∩╕Å Troubleshooting:</strong><br/>
+                      ΓÇó <strong>Connection Refused:</strong> Servidor offline ou firewall bloqueando<br/>
+                      ΓÇó <strong>SSL Error:</strong> Certificado inv├ílido ou expirado<br/>
+                      ΓÇó <strong>Timeout:</strong> Servidor lento ou n├úo responde
                     </p>
                   </div>
                 </div>
@@ -3859,7 +3859,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   }
                 }}
               >
-                {httpWizardStep === 1 ? 'Cancelar' : '← Voltar'}
+                {httpWizardStep === 1 ? 'Cancelar' : 'ΓåÉ Voltar'}
               </button>
               
               <button 
@@ -3868,7 +3868,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   if (httpWizardStep < 3) {
                     if (httpWizardStep === 2) {
                       if (!httpConfig.probe_id || !httpConfig.name || !httpConfig.url) {
-                        alert('⚠️ Preencha todos os campos obrigatórios.');
+                        alert('ΓÜá∩╕Å Preencha todos os campos obrigat├│rios.');
                         return;
                       }
                     }
@@ -3886,7 +3886,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         threshold_critical: httpConfig.threshold_critical,
                         description: httpConfig.description || `Monitor HTTP: ${httpConfig.url}`
                       });
-                      alert(`✅ Sensor HTTP "${httpConfig.name}" criado com sucesso!\n\nAcesse "Biblioteca de Sensores" para visualizá-lo.`);
+                      alert(`Γ£à Sensor HTTP "${httpConfig.name}" criado com sucesso!\n\nAcesse "Biblioteca de Sensores" para visualiz├í-lo.`);
                       setShowHTTPWizard(false);
                       setHTTPWizardStep(1);
                       setHTTPConfig({
@@ -3903,12 +3903,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         description: ''
                       });
                     } catch (error) {
-                      alert('❌ Erro ao criar sensor: ' + (error.response?.data?.detail || error.message));
+                      alert('Γ¥î Erro ao criar sensor: ' + (error.response?.data?.detail || error.message));
                     }
                   }
                 }}
               >
-                {httpWizardStep === 3 ? '✓ Criar Sensor' : 'Próximo →'}
+                {httpWizardStep === 3 ? 'Γ£ô Criar Sensor' : 'Pr├│ximo ΓåÆ'}
               </button>
             </div>
           </div>
@@ -3920,33 +3920,33 @@ function Servers({ selectedServerId, selectedSensorId }) {
         <div className="modal-overlay" onClick={() => setShowK8sWizard(false)}>
           <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '800px' }}>
             <div className="modal-header">
-              <h2>☸️ Configurar Monitoramento Kubernetes - Passo {k8sWizardStep} de 4</h2>
-              <button className="modal-close" onClick={() => setShowK8sWizard(false)}>×</button>
+              <h2>Γÿ╕∩╕Å Configurar Monitoramento Kubernetes - Passo {k8sWizardStep} de 4</h2>
+              <button className="modal-close" onClick={() => setShowK8sWizard(false)}>├ù</button>
             </div>
 
             <div className="modal-body">
-              {/* Passo 1: Requisitos e Instruções */}
+              {/* Passo 1: Requisitos e Instru├º├╡es */}
               {k8sWizardStep === 1 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>📋 Requisitos para Monitoramento Kubernetes</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>≡ƒôï Requisitos para Monitoramento Kubernetes</h3>
                   
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3', marginBottom: '20px' }}>
                     <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
-                      <strong>ℹ️ Baseado em CheckMK, Prometheus e Grafana</strong><br/>
+                      <strong>Γä╣∩╕Å Baseado em CheckMK, Prometheus e Grafana</strong><br/>
                       Monitore clusters Kubernetes completos com auto-discovery de pods, deployments e recursos.
                     </p>
                   </div>
 
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0, color: '#333' }}>🔐 Métodos de Autenticação Suportados</h4>
+                    <h4 style={{ marginTop: 0, color: '#333' }}>≡ƒöÉ M├⌐todos de Autentica├º├úo Suportados</h4>
                     
                     <div style={{ marginBottom: '15px', padding: '12px', background: 'white', borderRadius: '6px', border: '1px solid #e0e0e0' }}>
                       <strong style={{ color: '#326ce5' }}>1. Kubeconfig File (Recomendado)</strong>
                       <ul style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.6' }}>
-                        <li>Arquivo de configuração padrão do kubectl</li>
-                        <li>Localização: <code>~/.kube/config</code></li>
-                        <li>Contém certificados e credenciais</li>
-                        <li>Suporta múltiplos clusters e contextos</li>
+                        <li>Arquivo de configura├º├úo padr├úo do kubectl</li>
+                        <li>Localiza├º├úo: <code>~/.kube/config</code></li>
+                        <li>Cont├⌐m certificados e credenciais</li>
+                        <li>Suporta m├║ltiplos clusters e contextos</li>
                       </ul>
                       <div style={{ marginTop: '8px', padding: '8px', background: '#f5f5f5', borderRadius: '4px', fontFamily: 'monospace', fontSize: '11px' }}>
                         # Obter kubeconfig<br/>
@@ -3957,7 +3957,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     <div style={{ marginBottom: '15px', padding: '12px', background: 'white', borderRadius: '6px', border: '1px solid #e0e0e0' }}>
                       <strong style={{ color: '#326ce5' }}>2. Service Account Token</strong>
                       <ul style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.6' }}>
-                        <li>Criar Service Account com permissões de leitura</li>
+                        <li>Criar Service Account com permiss├╡es de leitura</li>
                         <li>Extrair token do secret</li>
                         <li>Requer RBAC configurado</li>
                       </ul>
@@ -3974,7 +3974,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     <div style={{ padding: '12px', background: 'white', borderRadius: '6px', border: '1px solid #e0e0e0' }}>
                       <strong style={{ color: '#326ce5' }}>3. Bearer Token</strong>
                       <ul style={{ marginTop: '8px', fontSize: '13px', lineHeight: '1.6' }}>
-                        <li>Token de autenticação direto</li>
+                        <li>Token de autentica├º├úo direto</li>
                         <li>Usado em clusters gerenciados (AKS, EKS, GKE)</li>
                         <li>Pode expirar periodicamente</li>
                       </ul>
@@ -3982,26 +3982,26 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   </div>
 
                   <div style={{ background: '#fff3cd', padding: '15px', borderRadius: '8px', border: '1px solid #ffc107', marginBottom: '20px' }}>
-                    <strong>🎯 Tipos de Cluster Suportados:</strong>
+                    <strong>≡ƒÄ» Tipos de Cluster Suportados:</strong>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginTop: '10px' }}>
                       <div style={{ padding: '8px', background: 'white', borderRadius: '4px', textAlign: 'center', fontSize: '12px' }}>
-                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>☸️</div>
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>Γÿ╕∩╕Å</div>
                         <strong>Vanilla K8s</strong>
                       </div>
                       <div style={{ padding: '8px', background: 'white', borderRadius: '4px', textAlign: 'center', fontSize: '12px' }}>
-                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>☁️</div>
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>Γÿü∩╕Å</div>
                         <strong>Azure AKS</strong>
                       </div>
                       <div style={{ padding: '8px', background: 'white', borderRadius: '4px', textAlign: 'center', fontSize: '12px' }}>
-                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>🟠</div>
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>≡ƒƒá</div>
                         <strong>AWS EKS</strong>
                       </div>
                       <div style={{ padding: '8px', background: 'white', borderRadius: '4px', textAlign: 'center', fontSize: '12px' }}>
-                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>🔵</div>
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>≡ƒö╡</div>
                         <strong>Google GKE</strong>
                       </div>
                       <div style={{ padding: '8px', background: 'white', borderRadius: '4px', textAlign: 'center', fontSize: '12px' }}>
-                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>🔴</div>
+                        <div style={{ fontSize: '20px', marginBottom: '4px' }}>≡ƒö┤</div>
                         <strong>OpenShift</strong>
                       </div>
                     </div>
@@ -4009,24 +4009,24 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '8px', border: '1px solid #4caf50' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>✅ Recursos Monitorados Automaticamente:</strong><br/>
-                      • <strong>Cluster:</strong> Status geral, nodes disponíveis, capacidade total<br/>
-                      • <strong>Nodes:</strong> CPU, memória, disco, pods por node<br/>
-                      • <strong>Pods:</strong> Status, restarts, CPU/memória por pod<br/>
-                      • <strong>Deployments:</strong> Réplicas desejadas vs disponíveis<br/>
-                      • <strong>DaemonSets:</strong> Pods rodando vs esperados<br/>
-                      • <strong>StatefulSets:</strong> Status e réplicas<br/>
-                      • <strong>Services:</strong> Endpoints disponíveis<br/>
-                      • <strong>PersistentVolumes:</strong> Uso de armazenamento
+                      <strong>Γ£à Recursos Monitorados Automaticamente:</strong><br/>
+                      ΓÇó <strong>Cluster:</strong> Status geral, nodes dispon├¡veis, capacidade total<br/>
+                      ΓÇó <strong>Nodes:</strong> CPU, mem├│ria, disco, pods por node<br/>
+                      ΓÇó <strong>Pods:</strong> Status, restarts, CPU/mem├│ria por pod<br/>
+                      ΓÇó <strong>Deployments:</strong> R├⌐plicas desejadas vs dispon├¡veis<br/>
+                      ΓÇó <strong>DaemonSets:</strong> Pods rodando vs esperados<br/>
+                      ΓÇó <strong>StatefulSets:</strong> Status e r├⌐plicas<br/>
+                      ΓÇó <strong>Services:</strong> Endpoints dispon├¡veis<br/>
+                      ΓÇó <strong>PersistentVolumes:</strong> Uso de armazenamento
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Passo 2: Configuração do Cluster */}
+              {/* Passo 2: Configura├º├úo do Cluster */}
               {k8sWizardStep === 2 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>⚙️ Configuração do Cluster</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>ΓÜÖ∩╕Å Configura├º├úo do Cluster</h3>
                   
                   <div className="form-group">
                     <label>Nome do Cluster: *</label>
@@ -4045,11 +4045,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       value={k8sConfig.cluster_type}
                       onChange={(e) => setK8sConfig({...k8sConfig, cluster_type: e.target.value})}
                     >
-                      <option value="vanilla">☸️ Vanilla Kubernetes</option>
-                      <option value="aks">☁️ Azure AKS</option>
-                      <option value="eks">🟠 AWS EKS</option>
-                      <option value="gke">🔵 Google GKE</option>
-                      <option value="openshift">🔴 Red Hat OpenShift</option>
+                      <option value="vanilla">Γÿ╕∩╕Å Vanilla Kubernetes</option>
+                      <option value="aks">Γÿü∩╕Å Azure AKS</option>
+                      <option value="eks">≡ƒƒá AWS EKS</option>
+                      <option value="gke">≡ƒö╡ Google GKE</option>
+                      <option value="openshift">≡ƒö┤ Red Hat OpenShift</option>
                     </select>
                   </div>
 
@@ -4066,28 +4066,28 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   </div>
 
                   <div className="form-group">
-                    <label>Método de Autenticação: *</label>
+                    <label>M├⌐todo de Autentica├º├úo: *</label>
                     <select
                       value={k8sConfig.auth_method}
                       onChange={(e) => setK8sConfig({...k8sConfig, auth_method: e.target.value})}
                     >
-                      <option value="kubeconfig">📄 Kubeconfig File (Recomendado)</option>
-                      <option value="service_account">🔑 Service Account Token</option>
-                      <option value="token">🎫 Bearer Token</option>
+                      <option value="kubeconfig">≡ƒôä Kubeconfig File (Recomendado)</option>
+                      <option value="service_account">≡ƒöæ Service Account Token</option>
+                      <option value="token">≡ƒÄ½ Bearer Token</option>
                     </select>
                   </div>
 
                   {k8sConfig.auth_method === 'kubeconfig' && (
                     <div className="form-group">
-                      <label>Conteúdo do Kubeconfig: *</label>
+                      <label>Conte├║do do Kubeconfig: *</label>
                       <textarea
                         value={k8sConfig.kubeconfig_content}
                         onChange={(e) => setK8sConfig({...k8sConfig, kubeconfig_content: e.target.value})}
-                        placeholder="Cole aqui o conteúdo do arquivo kubeconfig..."
+                        placeholder="Cole aqui o conte├║do do arquivo kubeconfig..."
                         rows="8"
                         style={{ fontFamily: 'monospace', fontSize: '11px' }}
                       />
-                      <small>Cole o conteúdo completo do arquivo ~/.kube/config</small>
+                      <small>Cole o conte├║do completo do arquivo ~/.kube/config</small>
                     </div>
                   )}
 
@@ -4102,7 +4102,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           rows="4"
                           style={{ fontFamily: 'monospace', fontSize: '11px' }}
                         />
-                        <small>Token do Service Account com permissões de leitura</small>
+                        <small>Token do Service Account com permiss├╡es de leitura</small>
                       </div>
                       <div className="form-group">
                         <label>CA Certificate (Opcional):</label>
@@ -4113,7 +4113,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                           rows="4"
                           style={{ fontFamily: 'monospace', fontSize: '11px' }}
                         />
-                        <small>Certificado CA do cluster (deixe em branco para usar o padrão do sistema)</small>
+                        <small>Certificado CA do cluster (deixe em branco para usar o padr├úo do sistema)</small>
                       </div>
                     </>
                   )}
@@ -4124,53 +4124,53 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       <textarea
                         value={k8sConfig.service_account_token}
                         onChange={(e) => setK8sConfig({...k8sConfig, service_account_token: e.target.value})}
-                        placeholder="Token de autenticação..."
+                        placeholder="Token de autentica├º├úo..."
                         rows="3"
                         style={{ fontFamily: 'monospace', fontSize: '11px' }}
                       />
-                      <small>Token de autenticação do cluster</small>
+                      <small>Token de autentica├º├úo do cluster</small>
                     </div>
                   )}
 
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3', marginTop: '20px' }}>
                     <p style={{ margin: 0, fontSize: '13px' }}>
-                      💡 <strong>Dica:</strong> Para clusters gerenciados (AKS, EKS, GKE), use o comando CLI específico para obter as credenciais:<br/>
-                      • <strong>AKS:</strong> <code>az aks get-credentials --resource-group RG --name CLUSTER</code><br/>
-                      • <strong>EKS:</strong> <code>aws eks update-kubeconfig --name CLUSTER</code><br/>
-                      • <strong>GKE:</strong> <code>gcloud container clusters get-credentials CLUSTER</code>
+                      ≡ƒÆí <strong>Dica:</strong> Para clusters gerenciados (AKS, EKS, GKE), use o comando CLI espec├¡fico para obter as credenciais:<br/>
+                      ΓÇó <strong>AKS:</strong> <code>az aks get-credentials --resource-group RG --name CLUSTER</code><br/>
+                      ΓÇó <strong>EKS:</strong> <code>aws eks update-kubeconfig --name CLUSTER</code><br/>
+                      ΓÇó <strong>GKE:</strong> <code>gcloud container clusters get-credentials CLUSTER</code>
                     </p>
                   </div>
                 </div>
               )}
 
-              {/* Passo 3: Testar Conexão */}
+              {/* Passo 3: Testar Conex├úo */}
               {k8sWizardStep === 3 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>🔌 Testar Conexão com Cluster</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>≡ƒöî Testar Conex├úo com Cluster</h3>
                   
                   <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0 }}>Configuração do Cluster:</h4>
+                    <h4 style={{ marginTop: 0 }}>Configura├º├úo do Cluster:</h4>
                     <table style={{ width: '100%', fontSize: '13px' }}>
                       <tbody>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold', width: '180px' }}>Nome:</td>
-                          <td>{k8sConfig.cluster_name || '(não informado)'}</td>
+                          <td>{k8sConfig.cluster_name || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Tipo:</td>
-                          <td>{k8sConfig.cluster_type === 'vanilla' ? '☸️ Vanilla Kubernetes' : 
-                               k8sConfig.cluster_type === 'aks' ? '☁️ Azure AKS' :
-                               k8sConfig.cluster_type === 'eks' ? '🟠 AWS EKS' :
-                               k8sConfig.cluster_type === 'gke' ? '🔵 Google GKE' : '🔴 OpenShift'}</td>
+                          <td>{k8sConfig.cluster_type === 'vanilla' ? 'Γÿ╕∩╕Å Vanilla Kubernetes' : 
+                               k8sConfig.cluster_type === 'aks' ? 'Γÿü∩╕Å Azure AKS' :
+                               k8sConfig.cluster_type === 'eks' ? '≡ƒƒá AWS EKS' :
+                               k8sConfig.cluster_type === 'gke' ? '≡ƒö╡ Google GKE' : '≡ƒö┤ OpenShift'}</td>
                         </tr>
                         <tr>
                           <td style={{ padding: '8px 0', fontWeight: 'bold' }}>API Endpoint:</td>
-                          <td style={{ fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>{k8sConfig.api_endpoint || '(não informado)'}</td>
+                          <td style={{ fontFamily: 'monospace', fontSize: '12px', wordBreak: 'break-all' }}>{k8sConfig.api_endpoint || '(n├úo informado)'}</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Autenticação:</td>
-                          <td>{k8sConfig.auth_method === 'kubeconfig' ? '📄 Kubeconfig' : 
-                               k8sConfig.auth_method === 'service_account' ? '🔑 Service Account' : '🎫 Bearer Token'}</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Autentica├º├úo:</td>
+                          <td>{k8sConfig.auth_method === 'kubeconfig' ? '≡ƒôä Kubeconfig' : 
+                               k8sConfig.auth_method === 'service_account' ? '≡ƒöæ Service Account' : '≡ƒÄ½ Bearer Token'}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -4178,7 +4178,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <button
                     onClick={async () => {
-                      alert('🔌 Teste de conexão Kubernetes será implementado no backend.\n\nVerificará:\n✓ Conectividade com API Server\n✓ Autenticação válida\n✓ Permissões RBAC\n✓ Listagem de namespaces\n✓ Acesso aos recursos\n✓ Metrics Server disponível');
+                      alert('≡ƒöî Teste de conex├úo Kubernetes ser├í implementado no backend.\n\nVerificar├í:\nΓ£ô Conectividade com API Server\nΓ£ô Autentica├º├úo v├ílida\nΓ£ô Permiss├╡es RBAC\nΓ£ô Listagem de namespaces\nΓ£ô Acesso aos recursos\nΓ£ô Metrics Server dispon├¡vel');
                     }}
                     style={{
                       width: '100%',
@@ -4193,17 +4193,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       marginBottom: '15px'
                     }}
                   >
-                    🔌 Testar Conexão com Cluster
+                    ≡ƒöî Testar Conex├úo com Cluster
                   </button>
 
                   <div className="info-banner" style={{ background: '#fff3cd', border: '1px solid #ffc107' }}>
                     <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>⚠️ Possíveis erros:</strong><br/>
-                      • <strong>Connection Refused:</strong> API Server inacessível ou firewall bloqueando<br/>
-                      • <strong>401 Unauthorized:</strong> Credenciais inválidas ou expiradas<br/>
-                      • <strong>403 Forbidden:</strong> Service Account sem permissões RBAC adequadas<br/>
-                      • <strong>Certificate Error:</strong> CA certificate inválido ou não confiável<br/>
-                      • <strong>Metrics Server Not Found:</strong> Metrics Server não instalado no cluster
+                      <strong>ΓÜá∩╕Å Poss├¡veis erros:</strong><br/>
+                      ΓÇó <strong>Connection Refused:</strong> API Server inacess├¡vel ou firewall bloqueando<br/>
+                      ΓÇó <strong>401 Unauthorized:</strong> Credenciais inv├ílidas ou expiradas<br/>
+                      ΓÇó <strong>403 Forbidden:</strong> Service Account sem permiss├╡es RBAC adequadas<br/>
+                      ΓÇó <strong>Certificate Error:</strong> CA certificate inv├ílido ou n├úo confi├ível<br/>
+                      ΓÇó <strong>Metrics Server Not Found:</strong> Metrics Server n├úo instalado no cluster
                     </p>
                   </div>
                 </div>
@@ -4212,11 +4212,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
               {/* Passo 4: Selecionar Namespaces e Recursos */}
               {k8sWizardStep === 4 && (
                 <div>
-                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>📦 Selecionar Recursos para Monitorar</h3>
+                  <h3 style={{ marginBottom: '15px', color: '#326ce5' }}>≡ƒôª Selecionar Recursos para Monitorar</h3>
                   
                   <div className="info-banner" style={{ background: '#e8f5e9', border: '1px solid #4caf50', marginBottom: '20px' }}>
                     <p style={{ margin: 0, fontSize: '13px' }}>
-                      ✅ Conexão estabelecida com sucesso! Configure quais recursos deseja monitorar.
+                      Γ£à Conex├úo estabelecida com sucesso! Configure quais recursos deseja monitorar.
                     </p>
                   </div>
 
@@ -4229,33 +4229,33 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       />
                       {' '}Monitorar todos os namespaces
                     </label>
-                    <small>Se desmarcado, você poderá selecionar namespaces específicos</small>
+                    <small>Se desmarcado, voc├¬ poder├í selecionar namespaces espec├¡ficos</small>
                   </div>
 
                   {!k8sConfig.monitor_all_namespaces && (
                     <div className="form-group">
-                      <label>Namespaces Específicos:</label>
+                      <label>Namespaces Espec├¡ficos:</label>
                       <input
                         type="text"
                         value={k8sConfig.namespaces.join(', ')}
                         onChange={(e) => setK8sConfig({...k8sConfig, namespaces: e.target.value.split(',').map(ns => ns.trim()).filter(ns => ns)})}
                         placeholder="default, production, staging"
                       />
-                      <small>Separe múltiplos namespaces por vírgula</small>
+                      <small>Separe m├║ltiplos namespaces por v├¡rgula</small>
                     </div>
                   )}
 
                   <h4 style={{ marginTop: '20px', marginBottom: '15px' }}>Tipos de Recursos:</h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', marginBottom: '20px' }}>
                     {[
-                      { type: 'nodes', icon: '🖥️', name: 'Nodes', desc: 'CPU, memória, disco' },
-                      { type: 'pods', icon: '📦', name: 'Pods', desc: 'Status, restarts, recursos' },
-                      { type: 'deployments', icon: '🚀', name: 'Deployments', desc: 'Réplicas, rollouts' },
-                      { type: 'daemonsets', icon: '👥', name: 'DaemonSets', desc: 'Pods por node' },
-                      { type: 'statefulsets', icon: '💾', name: 'StatefulSets', desc: 'Réplicas ordenadas' },
-                      { type: 'services', icon: '🌐', name: 'Services', desc: 'Endpoints, portas' },
-                      { type: 'ingress', icon: '🚪', name: 'Ingress', desc: 'Rotas HTTP/HTTPS' },
-                      { type: 'pv', icon: '💿', name: 'Persistent Volumes', desc: 'Armazenamento' }
+                      { type: 'nodes', icon: '≡ƒûÑ∩╕Å', name: 'Nodes', desc: 'CPU, mem├│ria, disco' },
+                      { type: 'pods', icon: '≡ƒôª', name: 'Pods', desc: 'Status, restarts, recursos' },
+                      { type: 'deployments', icon: '≡ƒÜÇ', name: 'Deployments', desc: 'R├⌐plicas, rollouts' },
+                      { type: 'daemonsets', icon: '≡ƒæÑ', name: 'DaemonSets', desc: 'Pods por node' },
+                      { type: 'statefulsets', icon: '≡ƒÆ╛', name: 'StatefulSets', desc: 'R├⌐plicas ordenadas' },
+                      { type: 'services', icon: '≡ƒîÉ', name: 'Services', desc: 'Endpoints, portas' },
+                      { type: 'ingress', icon: '≡ƒÜ¬', name: 'Ingress', desc: 'Rotas HTTP/HTTPS' },
+                      { type: 'pv', icon: '≡ƒÆ┐', name: 'Persistent Volumes', desc: 'Armazenamento' }
                     ].map(resource => (
                       <button
                         key={resource.type}
@@ -4288,7 +4288,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         </div>
                         <div style={{ fontSize: '11px', opacity: 0.9 }}>{resource.desc}</div>
                         {k8sConfig.selected_resources.includes(resource.type) && (
-                          <div style={{ marginTop: '8px', fontSize: '16px', textAlign: 'center' }}>✓</div>
+                          <div style={{ marginTop: '8px', fontSize: '16px', textAlign: 'center' }}>Γ£ô</div>
                         )}
                       </button>
                     ))}
@@ -4296,10 +4296,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
                   <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3' }}>
                     <p style={{ margin: 0, fontSize: '13px' }}>
-                      💡 Selecionados: <strong>{k8sConfig.selected_resources.length}</strong> tipo(s) de recurso.
+                      ≡ƒÆí Selecionados: <strong>{k8sConfig.selected_resources.length}</strong> tipo(s) de recurso.
                       {k8sConfig.monitor_all_namespaces ? ' Monitorando todos os namespaces.' : ` Monitorando ${k8sConfig.namespaces.length} namespace(s).`}
                       <br/><br/>
-                      <strong>⏱️ Intervalo de coleta:</strong> Métricas atualizadas a cada 60 segundos (configurável).
+                      <strong>ΓÅ▒∩╕Å Intervalo de coleta:</strong> M├⌐tricas atualizadas a cada 60 segundos (configur├ível).
                     </p>
                   </div>
                 </div>
@@ -4317,25 +4317,25 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   }
                 }}
               >
-                {k8sWizardStep === 1 ? 'Cancelar' : '← Voltar'}
+                {k8sWizardStep === 1 ? 'Cancelar' : 'ΓåÉ Voltar'}
               </button>
               
               <button 
                 className="btn-primary" 
                 onClick={() => {
                   if (k8sWizardStep < 4) {
-                    // Validar campos obrigatórios no passo 2
+                    // Validar campos obrigat├│rios no passo 2
                     if (k8sWizardStep === 2) {
                       if (!k8sConfig.cluster_name || !k8sConfig.api_endpoint) {
-                        alert('⚠️ Preencha o nome do cluster e o API endpoint.');
+                        alert('ΓÜá∩╕Å Preencha o nome do cluster e o API endpoint.');
                         return;
                       }
                       if (k8sConfig.auth_method === 'kubeconfig' && !k8sConfig.kubeconfig_content) {
-                        alert('⚠️ Cole o conteúdo do kubeconfig.');
+                        alert('ΓÜá∩╕Å Cole o conte├║do do kubeconfig.');
                         return;
                       }
                       if ((k8sConfig.auth_method === 'service_account' || k8sConfig.auth_method === 'token') && !k8sConfig.service_account_token) {
-                        alert('⚠️ Informe o token de autenticação.');
+                        alert('ΓÜá∩╕Å Informe o token de autentica├º├úo.');
                         return;
                       }
                     }
@@ -4343,10 +4343,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   } else {
                     // Finalizar e criar sensores
                     const namespaceInfo = k8sConfig.monitor_all_namespaces ? 'todos os namespaces' : `${k8sConfig.namespaces.length} namespace(s)`;
-                    alert(`✅ Configuração Kubernetes concluída!\n\nCluster: ${k8sConfig.cluster_name}\nRecursos: ${k8sConfig.selected_resources.length} tipo(s)\nNamespaces: ${namespaceInfo}\n\nOs sensores serão criados na Biblioteca de Sensores Independentes com auto-discovery ativado.`);
+                    alert(`Γ£à Configura├º├úo Kubernetes conclu├¡da!\n\nCluster: ${k8sConfig.cluster_name}\nRecursos: ${k8sConfig.selected_resources.length} tipo(s)\nNamespaces: ${namespaceInfo}\n\nOs sensores ser├úo criados na Biblioteca de Sensores Independentes com auto-discovery ativado.`);
                     setShowK8sWizard(false);
                     setK8sWizardStep(1);
-                    // Redirecionar para biblioteca com Kubernetes pré-selecionado
+                    // Redirecionar para biblioteca com Kubernetes pr├⌐-selecionado
                     window.location.hash = '#/sensor-library?type=kubernetes';
                   }
                 }}
@@ -4356,7 +4356,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   cursor: (k8sWizardStep === 4 && k8sConfig.selected_resources.length === 0) ? 'not-allowed' : 'pointer'
                 }}
               >
-                {k8sWizardStep === 4 ? '✓ Finalizar e Criar Sensores' : 'Próximo →'}
+                {k8sWizardStep === 4 ? 'Γ£ô Finalizar e Criar Sensores' : 'Pr├│ximo ΓåÆ'}
               </button>
             </div>
           </div>

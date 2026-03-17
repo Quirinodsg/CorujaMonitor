@@ -1142,29 +1142,46 @@ def ping_all_servers():
 def execute_ping(ip_address: str) -> float:
     """
     Executa PING e retorna latência em ms (0 se offline).
-    Usa comando ping nativo do Linux.
+    Usa TCP connect como fallback quando ping não está disponível.
     """
+    import socket
+    import time
+
+    # Tenta ping nativo primeiro
     try:
-        # Linux ping command: -c 1 (1 pacote), -W 2 (timeout 2s)
         result = subprocess.run(
             ['ping', '-c', '1', '-W', '2', ip_address],
             capture_output=True,
             text=True,
             timeout=3
         )
-        
         if result.returncode == 0:
-            # Parse output: "time=1.23 ms"
             output = result.stdout
             if 'time=' in output:
                 time_str = output.split('time=')[1].split()[0]
                 return float(time_str)
-        
-        return 0  # Offline
-        
+        return 0
+    except FileNotFoundError:
+        # ping não instalado — usa TCP connect nas portas comuns
+        pass
     except subprocess.TimeoutExpired:
-        logger.debug(f"⏱️ Timeout ao fazer PING em {ip_address}")
         return 0
     except Exception as e:
-        logger.error(f"❌ Erro ao executar PING para {ip_address}: {e}")
-        return 0
+        logger.debug(f"ping nativo falhou para {ip_address}: {e}")
+
+    # Fallback: TCP connect (porta 135 WMI, 445 SMB, 22 SSH, 80 HTTP)
+    ports = [135, 445, 22, 80, 443, 3389]
+    for port in ports:
+        try:
+            start = time.time()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(2)
+            result = sock.connect_ex((ip_address, port))
+            elapsed = (time.time() - start) * 1000
+            sock.close()
+            if result == 0:
+                return round(elapsed, 2)
+        except Exception:
+            continue
+
+    return 0  # Offline
