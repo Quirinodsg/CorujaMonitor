@@ -378,12 +378,12 @@ const NetworkDashboard = ({ data }) => {
         {devices.map(device => (
           <div key={device.id} className={`server-card status-${device.status}`}>
             <div className="server-header">
-              <h4>
+              <h4 title={device.name}>
                 {device.type === 'snmp' ? '📡' : device.type === 'network' ? '🔌' : '📶'} {device.name}
               </h4>
               <span className={`status-badge ${device.status}`}>
                 {device.status === 'ok' ? '● Online' : 
-                 device.status === 'warning' ? '⚠ Warning' : 
+                 device.status === 'warning' ? '⚠ Warn' : 
                  '● Offline'}
               </span>
             </div>
@@ -467,17 +467,17 @@ const WebAppsDashboard = ({ data }) => {
         {apps.map(app => (
           <div key={app.id} className={`server-card status-${app.status}`}>
             <div className="server-header">
-              <h4>🌐 {app.name}</h4>
+              <h4 title={app.name}>🌐 {app.name}</h4>
               <span className={`status-badge ${app.status}`}>
                 {app.status === 'ok' ? '● Online' : 
-                 app.status === 'warning' ? '⚠ Warning' : 
+                 app.status === 'warning' ? '⚠ Warn' : 
                  '● Offline'}
               </span>
             </div>
             <div className="server-metrics">
               <div className="metric">
                 <span className="metric-label">URL</span>
-                <span className="metric-value" style={{ fontSize: '0.85em', wordBreak: 'break-all' }}>
+                <span className="metric-value" style={{ fontSize: '0.85em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={app.url || 'N/A'}>
                   {app.url || 'N/A'}
                 </span>
               </div>
@@ -564,10 +564,10 @@ const KubernetesDashboard = ({ data }) => {
         {clusters.map(cluster => (
           <div key={cluster.id} className={`server-card status-${cluster.status}`}>
             <div className="server-header">
-              <h4>☸️ {cluster.name}</h4>
+              <h4 title={cluster.name}>☸️ {cluster.name}</h4>
               <span className={`status-badge ${cluster.status}`}>
                 {cluster.status === 'ok' ? '● Healthy' : 
-                 cluster.status === 'warning' ? '⚠ Warning' : 
+                 cluster.status === 'warning' ? '⚠ Warn' : 
                  '● Critical'}
               </span>
             </div>
@@ -684,11 +684,11 @@ const HttpDashboard = ({ data }) => {
       {/* Site Cards */}
       <div className="server-cards">
         {sites.map(site => (
-          <div key={site.id} className={`server-card status-${site.status}`} style={{ borderLeft: `4px solid ${statusColor(site.status)}` }}>
+          <div key={site.id} className={`server-card status-${site.status}`}>
             <div className="server-header">
-              <h4>🌐 {site.name}</h4>
-              <span className="status-badge" style={{ background: statusColor(site.status), color: 'white', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>
-                {site.status === 'ok' ? '● ONLINE' : site.status === 'warning' ? '⚠ WARNING' : site.status === 'unknown' ? '○ Aguardando' : '● OFFLINE'}
+              <h4 title={site.name}>🌐 {site.name}</h4>
+              <span className={`status-badge ${site.status}`} style={{ background: statusColor(site.status), color: 'white', padding: '3px 8px', borderRadius: 10, fontSize: 11, fontWeight: 700 }}>
+                {site.status === 'ok' ? '● ONLINE' : site.status === 'warning' ? '⚠ WARN' : site.status === 'unknown' ? '○ Aguard.' : '● OFFLINE'}
               </span>
             </div>
 
@@ -696,7 +696,7 @@ const HttpDashboard = ({ data }) => {
               {site.url && (
                 <div className="metric">
                   <span className="metric-label">URL</span>
-                  <span className="metric-value" style={{ fontSize: '0.82em', wordBreak: 'break-all', color: '#2196f3' }}>
+                  <span className="metric-value" style={{ fontSize: '0.82em', color: '#2196f3', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={site.url}>
                     {site.url}
                   </span>
                 </div>
