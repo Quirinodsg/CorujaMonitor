@@ -17,6 +17,7 @@ const MetricsViewer = () => {
   const [networkData, setNetworkData] = useState(null);
   const [webappsData, setWebappsData] = useState(null);
   const [kubernetesData, setKubernetesData] = useState(null);
+  const [httpData, setHttpData] = useState(null);
 
   // Fetch data
   useEffect(() => {
@@ -46,6 +47,10 @@ const MetricsViewer = () => {
         case 'kubernetes':
           const k8sRes = await api.get(`/metrics/dashboard/kubernetes?range=${timeRange}`);
           setKubernetesData(k8sRes.data);
+          break;
+        case 'http':
+          const httpRes = await api.get(`/metrics/dashboard/http?range=${timeRange}`);
+          setHttpData(httpRes.data);
           break;
       }
     } catch (error) {
@@ -125,6 +130,12 @@ const MetricsViewer = () => {
         >
           ⚙️ Personalizado
         </button>
+        <button
+          className={`tab ${activeTab === 'http' ? 'active' : ''}`}
+          onClick={() => setActiveTab('http')}
+        >
+          🌐 HTTP/Sites
+        </button>
       </div>
 
       {/* Content */}
@@ -134,6 +145,7 @@ const MetricsViewer = () => {
         {activeTab === 'webapps' && <WebAppsDashboard data={webappsData} />}
         {activeTab === 'kubernetes' && <KubernetesDashboard data={kubernetesData} />}
         {activeTab === 'custom' && <CustomDashboard />}
+        {activeTab === 'http' && <HttpDashboard data={httpData} />}
       </div>
     </div>
   );
@@ -614,6 +626,173 @@ const KubernetesDashboard = ({ data }) => {
     </div>
   );
 };
+
+// HTTP/Sites Dashboard
+const HttpDashboard = ({ data }) => {
+  if (!data) return <div className="loading">Carregando dados de sites HTTP...</div>;
+
+  const { summary, sites } = data;
+
+  const statusColor = (status) => {
+    if (status === 'ok') return '#10b981';
+    if (status === 'warning') return '#f59e0b';
+    if (status === 'critical' || status === 'offline') return '#ef4444';
+    return '#6b7280';
+  };
+
+  const rtColor = (ms) => {
+    if (!ms) return '#6b7280';
+    if (ms < 500) return '#10b981';
+    if (ms < 1500) return '#f59e0b';
+    return '#ef4444';
+  };
+
+  return (
+    <div className="dashboard-content">
+      {/* Summary Cards */}
+      <div className="summary-cards">
+        <div className="status-card">
+          <div className="status-label">Sites Online</div>
+          <div className="status-value">
+            <span className="status-online">{summary.sites_online}</span>
+            <span className="status-separator">/</span>
+            <span className="status-total">{summary.sites_total}</span>
+          </div>
+          <div className="status-subtitle">Disponíveis</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Disponibilidade</div>
+          <div className="status-value">
+            <span className={summary.availability >= 99 ? 'status-online' : summary.availability >= 95 ? 'status-warning' : 'status-critical'}>
+              {summary.availability}%
+            </span>
+          </div>
+          <div className="status-subtitle">Uptime</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Tempo Resposta</div>
+          <div className="status-value">
+            <span className={summary.avg_response_time < 500 ? 'status-online' : summary.avg_response_time < 1500 ? 'status-warning' : 'status-critical'}>
+              {summary.avg_response_time}
+            </span>
+          </div>
+          <div className="status-subtitle">ms (média)</div>
+        </div>
+        <div className="status-card">
+          <div className="status-label">Sites Offline</div>
+          <div className="status-value">
+            <span className={summary.sites_offline > 0 ? 'status-critical' : 'status-online'}>
+              {summary.sites_offline}
+            </span>
+          </div>
+          <div className="status-subtitle">Com falha</div>
+        </div>
+      </div>
+
+      {/* Site Cards */}
+      <div className="server-cards">
+        {sites.map(site => (
+          <div key={site.id} className={`server-card status-${site.status}`} style={{ borderLeft: `4px solid ${statusColor(site.status)}` }}>
+            <div className="server-header">
+              <h4>🌐 {site.name}</h4>
+              <span className="status-badge" style={{ background: statusColor(site.status), color: 'white', padding: '3px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700 }}>
+                {site.status === 'ok' ? '● ONLINE' : site.status === 'warning' ? '⚠ WARNING' : site.status === 'unknown' ? '○ Aguardando' : '● OFFLINE'}
+              </span>
+            </div>
+
+            <div className="server-metrics">
+              {site.url && (
+                <div className="metric">
+                  <span className="metric-label">URL</span>
+                  <span className="metric-value" style={{ fontSize: '0.82em', wordBreak: 'break-all', color: '#2196f3' }}>
+                    {site.url}
+                  </span>
+                </div>
+              )}
+
+              <div className="metric">
+                <span className="metric-label">Tempo de Resposta</span>
+                <span className="metric-value" style={{ color: rtColor(site.response_time), fontWeight: 700 }}>
+                  {site.response_time != null ? `${site.response_time} ms` : '—'}
+                </span>
+                {site.response_time != null && (
+                  <div className="metric-bar">
+                    <div
+                      className="metric-bar-fill"
+                      style={{
+                        width: `${Math.min(site.response_time / 30, 100)}%`,
+                        backgroundColor: rtColor(site.response_time)
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {site.status_code && (
+                <div className="metric">
+                  <span className="metric-label">HTTP Status</span>
+                  <span className="metric-value" style={{ color: site.status_code >= 200 && site.status_code < 300 ? '#10b981' : '#ef4444' }}>
+                    {site.status_code}
+                  </span>
+                </div>
+              )}
+
+              {site.last_check && (
+                <div className="metric">
+                  <span className="metric-label">Última verificação</span>
+                  <span className="metric-value" style={{ fontSize: '0.82em', color: '#9ca3af' }}>
+                    {new Date(site.last_check).toLocaleString('pt-BR')}
+                  </span>
+                </div>
+              )}
+
+              {/* Sparkline */}
+              {site.history && site.history.length > 1 && (
+                <div style={{ marginTop: 10 }}>
+                  <span className="metric-label">Histórico de resposta</span>
+                  <ResponsiveContainer width="100%" height={60}>
+                    <AreaChart data={site.history} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id={`grad-${site.id}`} x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor={rtColor(site.response_time)} stopOpacity={0.3} />
+                          <stop offset="95%" stopColor={rtColor(site.response_time)} stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="time" hide />
+                      <YAxis hide />
+                      <Tooltip
+                        formatter={(v) => [`${v} ms`, 'Resposta']}
+                        labelStyle={{ fontSize: 11 }}
+                        contentStyle={{ fontSize: 11, padding: '4px 8px' }}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke={rtColor(site.response_time)}
+                        strokeWidth={2}
+                        fill={`url(#grad-${site.id})`}
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {sites.length === 0 && (
+        <div className="empty-state">
+          <p>🌐 Nenhum sensor HTTP encontrado</p>
+          <p className="empty-subtitle">Adicione sensores HTTP na Biblioteca de Sensores para monitorar seus sites</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 // Custom Dashboard
 const CustomDashboard = () => {

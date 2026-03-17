@@ -450,3 +450,108 @@ async def get_kubernetes_dashboard(
     
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/dashboard/http")
+async def get_http_dashboard(
+    time_range: str = Query('24h', alias="range"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Get HTTP/HTTPS standalone sensors dashboard with response time history"""
+    from sqlalchemy import or_
+    from models import Probe
+    import pytz
+
+    try:
+        start_time = parse_time_range(time_range)
+
+        # Fetch HTTP sensors: both server-linked and standalone
+        http_sensors = (
+            db.query(Sensor)
+            .outerjoin(Server, Sensor.server_id == Server.id)
+            .outerjoin(Probe, Sensor.probe_id == Probe.id)
+            .filter(
+                Sensor.sensor_type == 'http',
+                or_(
+                    Server.tenant_id == current_user.tenant_id,
+                    Probe.tenant_id == current_user.tenant_id,
+                )
+            )
+            .all()
+        )
+
+        sites = []
+        sites_online = 0
+        response_times = []
+
+        for sensor in http_sensors:
+            latest = (
+                db.query(Metric)
+                .filter(Metric.sensor_id == sensor.id)
+                .order_by(Metric.timestamp.desc())
+                .first()
+            )
+
+            status = latest.status if latest else 'unknown'
+            resp_time = round(latest.value, 1) if latest else None
+            if status == 'ok':
+                sites_online += 1
+            if resp_time is not None:
+                response_times.append(resp_time)
+
+            metadata = (latest.extra_metadata or {}) if latest else {}
+            url = (
+                metadata.get('url')
+                or (sensor.config.get('http_url') if sensor.config else None)
+                or getattr(sensor, 'http_url', None)
+                or ''
+            )
+
+            # History for sparkline (last N points)
+            history_metrics = (
+                db.query(Metric)
+                .filter(
+                    Metric.sensor_id == sensor.id,
+                    Metric.timestamp >= start_time,
+                )
+                .order_by(Metric.timestamp.asc())
+                .limit(60)
+                .all()
+            )
+            history = [
+                {
+                    "time": m.timestamp.strftime('%H:%M' if time_range in ['1h', '6h', '24h'] else '%d/%m'),
+                    "value": round(m.value, 1),
+                    "status": m.status or 'ok',
+                }
+                for m in history_metrics
+            ]
+
+            sites.append({
+                "id": sensor.id,
+                "name": sensor.name,
+                "url": url,
+                "status": status,
+                "response_time": resp_time,
+                "status_code": metadata.get('status_code'),
+                "last_check": latest.timestamp.isoformat() if latest else None,
+                "history": history,
+            })
+
+        avg_rt = round(sum(response_times) / len(response_times), 1) if response_times else 0
+        availability = round(sites_online / len(http_sensors) * 100, 1) if http_sensors else 0
+
+        return {
+            "summary": {
+                "sites_total": len(http_sensors),
+                "sites_online": sites_online,
+                "sites_offline": len(http_sensors) - sites_online,
+                "avg_response_time": avg_rt,
+                "availability": availability,
+            },
+            "sites": sites,
+        }
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
