@@ -376,19 +376,16 @@ function Servers({ selectedServerId, selectedSensorId }) {
       
       setSensors(sortedSensors);
       
-      // Load latest metrics for each sensor
-      const metricsData = {};
-      for (const sensor of sortedSensors) {
+      // Load latest metrics for ALL sensors in a single batch request
+      if (sortedSensors.length > 0) {
         try {
-          const metricsResponse = await api.get(`/metrics/?sensor_id=${sensor.id}&limit=1`);
-          if (metricsResponse.data.length > 0) {
-            metricsData[sensor.id] = metricsResponse.data[0];
-          }
+          const ids = sortedSensors.map(s => s.id).join(',');
+          const batchResponse = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`);
+          setMetrics(batchResponse.data);
         } catch (err) {
-          console.error(`Erro ao carregar métricas do sensor ${sensor.id}:`, err);
+          console.error('Erro ao carregar métricas em batch:', err);
         }
       }
-      setMetrics(metricsData);
     } catch (error) {
       console.error('Erro ao carregar sensores:', error);
     }
@@ -2012,12 +2009,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <input
                   type="text"
                   placeholder="Ex: Empresa A, Datacenter SP, Produção"
-                  value=""
-                  onChange={(e) => {
-                    if (e.target.value.trim()) {
-                      setNewServer({...newServer, group_name: e.target.value});
-                    }
-                  }}
+                  value={newServer.group_name && !Array.from(new Set(servers.map(s => s.group_name).filter(g => g))).includes(newServer.group_name) ? newServer.group_name : ''}
+                  onChange={(e) => setNewServer({...newServer, group_name: e.target.value})}
                 />
                 <small>Digite um novo nome de grupo para criar</small>
               </div>
@@ -3871,7 +3864,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               
               <button 
                 className="btn-primary" 
-                onClick={() => {
+                onClick={async () => {
                   if (httpWizardStep < 3) {
                     if (httpWizardStep === 2) {
                       if (!httpConfig.probe_id || !httpConfig.name || !httpConfig.url) {
@@ -3881,10 +3874,37 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     }
                     setHTTPWizardStep(httpWizardStep + 1);
                   } else {
-                    alert(`✅ Sensor HTTP configurado!\n\nO sensor será criado na Biblioteca de Sensores Independentes.`);
-                    setShowHTTPWizard(false);
-                    setHTTPWizardStep(1);
-                    window.location.hash = '#/sensor-library?type=http';
+                    try {
+                      await api.post('/sensors/standalone', {
+                        probe_id: parseInt(httpConfig.probe_id),
+                        name: httpConfig.name,
+                        sensor_type: 'http',
+                        category: 'network',
+                        http_url: httpConfig.url,
+                        http_method: httpConfig.method,
+                        threshold_warning: httpConfig.threshold_warning,
+                        threshold_critical: httpConfig.threshold_critical,
+                        description: httpConfig.description || `Monitor HTTP: ${httpConfig.url}`
+                      });
+                      alert(`✅ Sensor HTTP "${httpConfig.name}" criado com sucesso!\n\nAcesse "Biblioteca de Sensores" para visualizá-lo.`);
+                      setShowHTTPWizard(false);
+                      setHTTPWizardStep(1);
+                      setHTTPConfig({
+                        probe_id: '',
+                        name: '',
+                        url: '',
+                        method: 'GET',
+                        expected_status: 200,
+                        timeout: 10,
+                        check_ssl: true,
+                        keyword: '',
+                        threshold_warning: 2000,
+                        threshold_critical: 5000,
+                        description: ''
+                      });
+                    } catch (error) {
+                      alert('❌ Erro ao criar sensor: ' + (error.response?.data?.detail || error.message));
+                    }
                   }
                 }}
               >

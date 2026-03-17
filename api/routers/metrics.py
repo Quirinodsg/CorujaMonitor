@@ -299,3 +299,52 @@ async def list_metrics(
             metric.status = "ok"
     
     return metrics
+
+
+@router.get("/latest/batch")
+async def get_latest_metrics_batch(
+    sensor_ids: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Get the latest metric for multiple sensors at once.
+    sensor_ids: comma-separated list of sensor IDs
+    Returns: dict { sensor_id: metric }
+    """
+    ids = [int(i) for i in sensor_ids.split(',') if i.strip().isdigit()]
+    if not ids:
+        return {}
+
+    # Verify all sensors belong to user's tenant
+    sensors = db.query(Sensor).join(Server).filter(
+        Sensor.id.in_(ids),
+        Server.tenant_id == current_user.tenant_id
+    ).all()
+    valid_ids = {s.id for s in sensors}
+
+    # Get latest metric per sensor using a subquery
+    from sqlalchemy import func
+    subq = (
+        db.query(Metric.sensor_id, func.max(Metric.id).label('max_id'))
+        .filter(Metric.sensor_id.in_(valid_ids))
+        .group_by(Metric.sensor_id)
+        .subquery()
+    )
+    latest_metrics = (
+        db.query(Metric)
+        .join(subq, Metric.id == subq.c.max_id)
+        .all()
+    )
+
+    result = {}
+    for m in latest_metrics:
+        result[str(m.sensor_id)] = {
+            "id": m.id,
+            "sensor_id": m.sensor_id,
+            "value": m.value,
+            "unit": m.unit,
+            "status": m.status or "ok",
+            "timestamp": m.timestamp.isoformat()
+        }
+    return result
