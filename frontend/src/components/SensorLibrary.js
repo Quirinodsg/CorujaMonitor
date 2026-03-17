@@ -376,9 +376,11 @@ function SensorLibrary() {
               background: statusBg,
               position: 'relative'
             }}>
-              <div className="sensor-card-actions">
-                <button 
-                  className="sensor-action-btn"
+              <div style={{
+                position: 'absolute', top: '10px', right: '10px',
+                display: 'flex', flexDirection: 'row', gap: '6px', alignItems: 'center'
+              }}>
+                <button
                   onClick={() => {
                     setEditingSensor({
                       id: sensor.id,
@@ -390,16 +392,22 @@ function SensorLibrary() {
                     setShowEditModal(true);
                   }}
                   title="Editar sensor"
-                >
-                  ✏️
-                </button>
-                <button 
-                  className="sensor-delete-btn"
+                  style={{
+                    width: 28, height: 28, border: 'none', borderRadius: 6,
+                    background: '#f0f4ff', cursor: 'pointer', fontSize: 14,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  }}
+                >✏️</button>
+                <button
                   onClick={() => handleDeleteSensor(sensor.id, sensor.name)}
                   title="Remover sensor"
-                >
-                  ×
-                </button>
+                  style={{
+                    width: 28, height: 28, border: 'none', borderRadius: 6,
+                    background: '#fff0f0', color: '#ef4444', cursor: 'pointer',
+                    fontSize: 18, fontWeight: 'bold',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                  }}
+                >×</button>
               </div>
 
               {/* Badge de status */}
@@ -425,9 +433,9 @@ function SensorLibrary() {
                 {statusLabel}
               </div>
               
-              <div className="sensor-header">
-                <span className="sensor-icon">{getSensorIcon(sensor.category)}</span>
-                <h3 style={{ fontSize: '14px' }}>{sensor.name}</h3>
+              <div className="sensor-header" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, paddingRight: 70 }}>
+                <span style={{ fontSize: 20, flexShrink: 0 }}>{getSensorIcon(sensor.category)}</span>
+                <h3 style={{ fontSize: 14, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{sensor.name}</h3>
               </div>
               
               <div className="sensor-details" style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
