@@ -81,14 +81,24 @@ async def list_probes(
 async def probe_heartbeat(
     probe_token: str,
     version: str,
+    cpu_percent: Optional[float] = None,
+    memory_mb: Optional[float] = None,
     db: Session = Depends(get_db)
 ):
     probe = db.query(Probe).filter(Probe.token == probe_token).first()
     if not probe:
         raise HTTPException(status_code=404, detail="Probe not found")
     
+    from sqlalchemy.orm.attributes import flag_modified
+
     probe.last_heartbeat = datetime.utcnow()
     probe.version = version
+    if cpu_percent is not None:
+        probe.cpu_percent = float(cpu_percent)
+        flag_modified(probe, "cpu_percent")
+    if memory_mb is not None:
+        probe.memory_mb = float(memory_mb)
+        flag_modified(probe, "memory_mb")
     db.commit()
     
     return {"status": "ok", "probe_id": probe.id}
