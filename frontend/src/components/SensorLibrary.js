@@ -16,6 +16,8 @@ function SensorLibrary() {
   const [testingConnection, setTestingConnection] = useState(false);
   const [connectionTestResult, setConnectionTestResult] = useState(null);
   const [sensorMetrics, setSensorMetrics] = useState({});
+  const [addSuccess, setAddSuccess] = useState(false);
+  const [addError, setAddError] = useState('');
   
   const [newSensor, setNewSensor] = useState({
     probe_id: '',
@@ -86,10 +88,11 @@ function SensorLibrary() {
 
   const handleAddSensor = async () => {
     if (!newSensor.probe_id || !newSensor.name) {
-      alert('Preencha os campos obrigatórios: Probe e Nome');
+      setAddError('Preencha os campos obrigatórios: Probe e Nome');
       return;
     }
 
+    setAddError('');
     try {
       await api.post('/sensors/standalone', {
         probe_id: parseInt(newSensor.probe_id),
@@ -114,13 +117,16 @@ function SensorLibrary() {
         description: newSensor.description || null
       });
 
-      setShowAddModal(false);
-      resetForm();
+      setAddSuccess(true);
       loadSensors();
-      alert('Sensor adicionado com sucesso!');
+      setTimeout(() => {
+        setShowAddModal(false);
+        setAddSuccess(false);
+        resetForm();
+      }, 1500);
     } catch (error) {
       console.error('Erro ao adicionar sensor:', error);
-      alert('Erro ao adicionar sensor: ' + (error.response?.data?.detail || error.message));
+      setAddError('Erro ao adicionar sensor: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -184,6 +190,8 @@ function SensorLibrary() {
       description: ''
     });
     setConnectionTestResult(null);
+    setAddError('');
+    setAddSuccess(false);
   };
 
   const handleTestConnection = async () => {
@@ -484,7 +492,11 @@ function SensorLibrary() {
                 <label>Categoria: *</label>
                 <select
                   value={newSensor.category}
-                  onChange={(e) => setNewSensor({...newSensor, category: e.target.value})}
+                  onChange={(e) => {
+                    const cat = e.target.value;
+                    const typeMap = { network: 'http', azure: 'azure', snmp: 'snmp' };
+                    setNewSensor({...newSensor, category: cat, sensor_type: typeMap[cat] || cat});
+                  }}
                 >
                   {Object.entries(sensorCategories).map(([key, cat]) => (
                     <option key={key} value={key}>
@@ -502,6 +514,7 @@ function SensorLibrary() {
                 {sensorTemplates[newSensor.category]?.slice(0, 6).map(template => (
                   <button
                     key={template.id}
+                    type="button"
                     onClick={() => handleTemplateSelect(template)}
                     style={{
                       padding: '10px',
@@ -909,10 +922,20 @@ function SensorLibrary() {
             </div>
 
             <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => { setShowAddModal(false); resetForm(); }}>
+              {addError && (
+                <div style={{ color: '#dc3545', fontSize: '13px', marginBottom: '8px', width: '100%' }}>
+                  ❌ {addError}
+                </div>
+              )}
+              {addSuccess && (
+                <div style={{ color: '#28a745', fontSize: '13px', marginBottom: '8px', width: '100%' }}>
+                  ✅ Sensor adicionado com sucesso!
+                </div>
+              )}
+              <button className="btn-cancel" onClick={() => { setShowAddModal(false); resetForm(); setAddError(''); setAddSuccess(false); }}>
                 Cancelar
               </button>
-              <button className="btn-save" onClick={handleAddSensor}>
+              <button className="btn-save" type="button" onClick={handleAddSensor} disabled={addSuccess}>
                 Adicionar Sensor
               </button>
             </div>

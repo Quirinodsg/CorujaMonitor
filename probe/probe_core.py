@@ -415,7 +415,7 @@ class ProbeCore:
             timestamp = datetime.now()
 
             for sensor in sensors:
-                if sensor.get('sensor_type') == 'http' and sensor.get('http_url'):
+                if (sensor.get('sensor_type') == 'http' or sensor.get('http_url')) and sensor.get('http_url'):
                     try:
                         start = time.time()
                         with httpx.Client(timeout=15.0, verify=False, follow_redirects=True) as http_client:
