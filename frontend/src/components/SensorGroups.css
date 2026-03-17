@@ -370,3 +370,80 @@
 .sensor-group[data-group="network"] .sensor-group-header {
   background: linear-gradient(135deg, #00bcd4 0%, #0097a7 100%);
 }
+
+/* Sensor Library Cards */
+.sensors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.sensor-card {
+  background: white;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  position: relative;
+  transition: box-shadow 0.2s;
+}
+
+.sensor-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.sensor-card-actions {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  align-items: center;
+}
+
+.sensor-action-btn,
+.sensor-delete-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: background 0.15s;
+  padding: 0;
+}
+
+.sensor-action-btn {
+  background: #f0f4ff;
+  color: #3b82f6;
+}
+
+.sensor-action-btn:hover {
+  background: #dbeafe;
+}
+
+.sensor-delete-btn {
+  background: #fff0f0;
+  color: #ef4444;
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.sensor-delete-btn:hover {
+  background: #fee2e2;
+}
+
+.sensor-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+  padding-right: 70px;
+}
+
+.sensor-icon {
+  font-size: 20px;
+}

@@ -112,10 +112,19 @@ async def create_probe_metrics_bulk(
         # STANDALONE SENSOR: se metadata contém sensor_id, gravar direto sem criar servidor
         if metric_data.metadata and metric_data.metadata.get('sensor_id'):
             direct_sensor_id = metric_data.metadata['sensor_id']
+            # Aceitar sensor da mesma probe OU do mesmo tenant (caso probe_id divergente)
             sensor = db.query(Sensor).filter(
                 Sensor.id == direct_sensor_id,
                 Sensor.probe_id == probe.id
             ).first()
+            if not sensor:
+                # Fallback: aceitar se sensor pertence ao tenant da probe
+                sensor = db.query(Sensor).filter(
+                    Sensor.id == direct_sensor_id,
+                    Sensor.server_id == None
+                ).join(Probe, Probe.id == Sensor.probe_id).filter(
+                    Probe.tenant_id == probe.tenant_id
+                ).first()
             if sensor:
                 from datetime import timezone as tz
                 import pytz
@@ -134,7 +143,7 @@ async def create_probe_metrics_bulk(
                 db.add(metric)
                 metrics_created += 1
             else:
-                logger.warning(f"Standalone sensor_id {direct_sensor_id} not found for probe {probe.id}")
+                logger.warning(f"Standalone sensor_id {direct_sensor_id} not found for probe {probe.id} (tenant {probe.tenant_id})")
             continue  # Não cria servidor para sensores standalone
         
         # Get or create server
