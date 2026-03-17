@@ -688,12 +688,22 @@ class ProbeCore:
     def _send_heartbeat(self):
         """Send heartbeat to API"""
         try:
+            import psutil
+            cpu_percent = psutil.cpu_percent(interval=1)
+            memory_mb = psutil.Process().memory_info().rss / 1024 / 1024
+        except Exception:
+            cpu_percent = 0.0
+            memory_mb = 0.0
+
+        try:
             with httpx.Client(timeout=10.0, verify=False) as client:
                 response = client.post(
                     f"{self.config.api_url}/api/v1/probes/heartbeat",
                     params={
                         "probe_token": self.config.probe_token,
-                        "version": "1.0.0"
+                        "version": "1.0.0",
+                        "cpu_percent": round(cpu_percent, 1),
+                        "memory_mb": round(memory_mb, 1)
                     }
                 )
                 

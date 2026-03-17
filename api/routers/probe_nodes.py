@@ -68,9 +68,9 @@ def list_nodes(db: Session = Depends(get_db), current_user=Depends(get_current_u
             "capacity": 500,
             "sensors_active": sensors_count,
             "servers_monitored": servers_count,
-            # Métricas de runtime não disponíveis via heartbeat simples
-            "cpu_percent": 0.0,
-            "memory_mb": 0.0,
+            # Métricas de runtime do processo da probe
+            "cpu_percent": probe.cpu_percent or 0.0,
+            "memory_mb": probe.memory_mb or 0.0,
             "queue_depth": 0,
             "wmi_connections": 0,
             "snmp_connections": 0,
