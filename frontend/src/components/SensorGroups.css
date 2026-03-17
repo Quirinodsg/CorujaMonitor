@@ -447,13 +447,21 @@
 }
 
 .sensor-header h3 {
-  font-size: 14px;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 14px !important;
+  margin: 0 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
   min-width: 0;
   flex: 1;
+  /* Reset conflicting styles from Management-override.css */
+  display: block !important;
+  -webkit-line-clamp: unset !important;
+  -webkit-box-orient: horizontal !important;
+  word-break: normal !important;
+  hyphens: none !important;
+  max-height: none !important;
+  line-height: 1.4 !important;
 }
 
 .sensor-icon {
