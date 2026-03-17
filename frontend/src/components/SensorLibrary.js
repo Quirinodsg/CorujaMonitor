@@ -374,11 +374,13 @@ function SensorLibrary() {
             <div key={sensor.id} className="sensor-card" style={{
               borderLeft: `4px solid ${statusColor}`,
               background: statusBg,
-              position: 'relative'
+              position: 'relative',
+              overflow: 'hidden'
             }}>
               <div style={{
-                position: 'absolute', top: '10px', right: '10px',
-                display: 'flex', flexDirection: 'row', gap: '6px', alignItems: 'center'
+                position: 'absolute', top: '8px', right: '8px',
+                display: 'flex', flexDirection: 'row', gap: '4px', alignItems: 'center',
+                zIndex: 2
               }}>
                 <button
                   onClick={() => {
@@ -393,19 +395,21 @@ function SensorLibrary() {
                   }}
                   title="Editar sensor"
                   style={{
-                    width: 28, height: 28, border: 'none', borderRadius: 6,
-                    background: '#f0f4ff', cursor: 'pointer', fontSize: 14,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                    width: 26, height: 26, border: 'none', borderRadius: 5,
+                    background: '#f0f4ff', cursor: 'pointer', fontSize: 13,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                    flexShrink: 0
                   }}
                 >✏️</button>
                 <button
                   onClick={() => handleDeleteSensor(sensor.id, sensor.name)}
                   title="Remover sensor"
                   style={{
-                    width: 28, height: 28, border: 'none', borderRadius: 6,
+                    width: 26, height: 26, border: 'none', borderRadius: 5,
                     background: '#fff0f0', color: '#ef4444', cursor: 'pointer',
-                    fontSize: 18, fontWeight: 'bold',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0
+                    fontSize: 16, fontWeight: 'bold',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
+                    flexShrink: 0
                   }}
                 >×</button>
               </div>
@@ -433,9 +437,9 @@ function SensorLibrary() {
                 {statusLabel}
               </div>
               
-              <div className="sensor-header" style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, paddingRight: 70 }}>
+              <div className="sensor-header">
                 <span style={{ fontSize: 20, flexShrink: 0 }}>{getSensorIcon(sensor.category)}</span>
-                <h3 style={{ fontSize: 14, margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>{sensor.name}</h3>
+                <h3>{sensor.name}</h3>
               </div>
               
               <div className="sensor-details" style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
