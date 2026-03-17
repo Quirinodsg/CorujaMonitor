@@ -287,49 +287,41 @@ const ServersDashboard = ({ data }) => {
       {/* Server Cards */}
       <div className="server-cards">
         {servers.map(server => (
-          <div key={server.id} className={`server-card status-${server.status}`}>
-            <div className="server-header">
-              <h4>{server.name}</h4>
-              <span className={`status-badge ${server.status}`}>
-                {server.status === 'ok' ? '● Online' : 
-                 server.status === 'warning' ? '⚠ Warning' : 
-                 '● Offline'}
+          <div key={server.id} className={`server-card server-card-compact status-${server.status}`}>
+            {/* Header compacto */}
+            <div className="sc-header">
+              <span className={`sc-dot sc-dot-${server.status}`} />
+              <h4 className="sc-name" title={server.name}>{server.name}</h4>
+              <span className={`sc-badge sc-badge-${server.status}`}>
+                {server.status === 'ok' ? 'ON' : server.status === 'warning' ? 'WARN' : 'OFF'}
               </span>
             </div>
-            <div className="server-metrics">
-              <div className="metric">
-                <span className="metric-label">CPU</span>
-                <span className="metric-value">{server.cpu}%</span>
-                <div className="metric-bar">
-                  <div 
-                    className="metric-bar-fill" 
-                    style={{ width: `${server.cpu}%`, backgroundColor: getMetricColor(server.cpu) }}
-                  />
+            {/* Métricas em grid 2x2 */}
+            <div className="sc-metrics">
+              <div className="sc-metric">
+                <div className="sc-metric-top">
+                  <span className="sc-metric-label">CPU</span>
+                  <span className="sc-metric-val" style={{ color: getMetricColor(server.cpu) }}>{server.cpu}%</span>
                 </div>
+                <div className="sc-bar"><div className="sc-bar-fill" style={{ width: `${server.cpu}%`, background: getMetricColor(server.cpu) }} /></div>
               </div>
-              <div className="metric">
-                <span className="metric-label">Memória</span>
-                <span className="metric-value">{server.memory}%</span>
-                <div className="metric-bar">
-                  <div 
-                    className="metric-bar-fill" 
-                    style={{ width: `${server.memory}%`, backgroundColor: getMetricColor(server.memory) }}
-                  />
+              <div className="sc-metric">
+                <div className="sc-metric-top">
+                  <span className="sc-metric-label">MEM</span>
+                  <span className="sc-metric-val" style={{ color: getMetricColor(server.memory) }}>{server.memory}%</span>
                 </div>
+                <div className="sc-bar"><div className="sc-bar-fill" style={{ width: `${server.memory}%`, background: getMetricColor(server.memory) }} /></div>
               </div>
-              <div className="metric">
-                <span className="metric-label">Disco</span>
-                <span className="metric-value">{server.disk}%</span>
-                <div className="metric-bar">
-                  <div 
-                    className="metric-bar-fill" 
-                    style={{ width: `${server.disk}%`, backgroundColor: getMetricColor(server.disk) }}
-                  />
+              <div className="sc-metric">
+                <div className="sc-metric-top">
+                  <span className="sc-metric-label">DISCO</span>
+                  <span className="sc-metric-val" style={{ color: getMetricColor(server.disk) }}>{server.disk}%</span>
                 </div>
+                <div className="sc-bar"><div className="sc-bar-fill" style={{ width: `${server.disk}%`, background: getMetricColor(server.disk) }} /></div>
               </div>
-              <div className="metric">
-                <span className="metric-label">Uptime</span>
-                <span className="metric-value">{server.uptime}</span>
+              <div className="sc-metric sc-metric-uptime">
+                <span className="sc-metric-label">UPTIME</span>
+                <span className="sc-metric-val sc-metric-val-sm">{server.uptime}</span>
               </div>
             </div>
           </div>
