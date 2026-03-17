@@ -65,7 +65,7 @@ class StandaloneSensorCreate(BaseModel):
 
 class SensorResponse(BaseModel):
     id: int
-    server_id: int
+    server_id: Optional[int] = None
     name: str
     sensor_type: str
     config: Optional[Dict[str, Any]]

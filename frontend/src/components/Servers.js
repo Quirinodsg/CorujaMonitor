@@ -1994,7 +1994,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <label>Grupo / Empresa:</label>
                 <select
                   value={newServer.group_name || ''}
-                  onChange={(e) => setNewServer({...newServer, group_name: e.target.value})}
+                  onChange={(e) => setNewServer({...newServer, group_name: e.target.value, newGroupInput: ''})}
                 >
                   <option value="">Sem grupo</option>
                   {Array.from(new Set(servers.map(s => s.group_name).filter(g => g))).sort().map(group => (
@@ -2009,8 +2009,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <input
                   type="text"
                   placeholder="Ex: Empresa A, Datacenter SP, Produção"
-                  value={newServer.group_name && !Array.from(new Set(servers.map(s => s.group_name).filter(g => g))).includes(newServer.group_name) ? newServer.group_name : ''}
-                  onChange={(e) => setNewServer({...newServer, group_name: e.target.value})}
+                  value={newServer.newGroupInput || ''}
+                  onChange={(e) => setNewServer({...newServer, newGroupInput: e.target.value, group_name: e.target.value})}
                 />
                 <small>Digite um novo nome de grupo para criar</small>
               </div>
