@@ -312,10 +312,16 @@ async def list_metrics(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    # Verify sensor belongs to user's tenant
-    sensor = db.query(Sensor).join(Server).filter(
+    # Verify sensor belongs to user's tenant (outerjoin to support standalone sensors)
+    from sqlalchemy import or_
+    sensor = db.query(Sensor).outerjoin(Server, Sensor.server_id == Server.id).outerjoin(
+        Probe, Sensor.probe_id == Probe.id
+    ).filter(
         Sensor.id == sensor_id,
-        Server.tenant_id == current_user.tenant_id
+        or_(
+            Server.tenant_id == current_user.tenant_id,
+            Probe.tenant_id == current_user.tenant_id
+        )
     ).first()
     
     if not sensor:
@@ -354,9 +360,16 @@ async def get_latest_metrics_batch(
         return {}
 
     # Verify all sensors belong to user's tenant
-    sensors = db.query(Sensor).join(Server).filter(
+    # Use outerjoin to include standalone sensors (server_id = NULL)
+    from sqlalchemy import or_
+    sensors = db.query(Sensor).outerjoin(Server, Sensor.server_id == Server.id).outerjoin(
+        Probe, Sensor.probe_id == Probe.id
+    ).filter(
         Sensor.id.in_(ids),
-        Server.tenant_id == current_user.tenant_id
+        or_(
+            Server.tenant_id == current_user.tenant_id,
+            Probe.tenant_id == current_user.tenant_id
+        )
     ).all()
     valid_ids = {s.id for s in sensors}
 
