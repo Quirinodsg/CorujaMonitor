@@ -381,6 +381,95 @@ async def delete_server(
     return {"message": f"Server '{server.hostname}' and all associated data deleted successfully"}
 
 
+@router.post("/{server_id}/create-ping")
+async def create_ping_sensor(
+    server_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create PING sensor for an existing server if it doesn't exist yet"""
+    server = db.query(Server).filter(
+        Server.id == server_id,
+        Server.tenant_id == current_user.tenant_id
+    ).first()
+    
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+    
+    if not server.ip_address:
+        raise HTTPException(status_code=400, detail="Server has no IP address configured")
+    
+    from models import Sensor
+    existing = db.query(Sensor).filter(
+        Sensor.server_id == server_id,
+        Sensor.sensor_type == 'ping'
+    ).first()
+    
+    if existing:
+        return {"message": "PING sensor already exists", "sensor_id": existing.id}
+    
+    ping_sensor = Sensor(
+        server_id=server_id,
+        sensor_type='ping',
+        name='PING',
+        threshold_warning=100,
+        threshold_critical=200,
+        is_active=True
+    )
+    db.add(ping_sensor)
+    db.commit()
+    db.refresh(ping_sensor)
+    
+    return {"message": "PING sensor created", "sensor_id": ping_sensor.id}
+
+
+@router.post("/create-ping-all")
+async def create_ping_all_servers(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Create PING sensor for all servers that don't have one yet"""
+    from models import Sensor
+    
+    servers = db.query(Server).filter(
+        Server.tenant_id == current_user.tenant_id,
+        Server.is_active == True,
+        Server.ip_address != None
+    ).all()
+    
+    created = []
+    skipped = []
+    
+    for server in servers:
+        existing = db.query(Sensor).filter(
+            Sensor.server_id == server.id,
+            Sensor.sensor_type == 'ping'
+        ).first()
+        
+        if existing:
+            skipped.append(server.hostname)
+            continue
+        
+        ping_sensor = Sensor(
+            server_id=server.id,
+            sensor_type='ping',
+            name='PING',
+            threshold_warning=100,
+            threshold_critical=200,
+            is_active=True
+        )
+        db.add(ping_sensor)
+        created.append(server.hostname)
+    
+    db.commit()
+    
+    return {
+        "created": created,
+        "skipped": skipped,
+        "total_created": len(created)
+    }
+
+
 # Auto-registration endpoints for probes
 @router.get("/check")
 async def check_server_exists(

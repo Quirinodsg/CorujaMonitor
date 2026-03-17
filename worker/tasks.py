@@ -1067,6 +1067,11 @@ def ping_all_servers():
         
         for server in servers:
             try:
+                # Skip servers without IP address
+                if not server.ip_address:
+                    logger.warning(f"⚠️ Servidor {server.hostname} sem IP configurado - pulando PING")
+                    continue
+
                 # Execute ping
                 latency_ms = execute_ping(server.ip_address)
                 logger.debug(f"🏓 PING {server.hostname} ({server.ip_address}): {latency_ms}ms")
