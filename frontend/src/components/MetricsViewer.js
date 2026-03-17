@@ -107,6 +107,12 @@ const MetricsViewer = () => {
           🖥️ Servidores
         </button>
         <button
+          className={`tab ${activeTab === 'http' ? 'active' : ''}`}
+          onClick={() => setActiveTab('http')}
+        >
+          🌐 HTTP/Sites
+        </button>
+        <button
           className={`tab ${activeTab === 'network' ? 'active' : ''}`}
           onClick={() => setActiveTab('network')}
         >
@@ -129,12 +135,6 @@ const MetricsViewer = () => {
           onClick={() => setActiveTab('custom')}
         >
           ⚙️ Personalizado
-        </button>
-        <button
-          className={`tab ${activeTab === 'http' ? 'active' : ''}`}
-          onClick={() => setActiveTab('http')}
-        >
-          🌐 HTTP/Sites
         </button>
       </div>
 
