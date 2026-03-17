@@ -144,38 +144,38 @@ async def create_server(
         # PING removido - agora é criado automaticamente pelo worker a cada 60s
         default_sensors = [
             {
-                "name": "cpu_usage",
+                "name": "CPU Usage",
                 "sensor_type": "cpu",
                 "threshold_warning": 80,
                 "threshold_critical": 95
             },
             {
-                "name": "memory_usage",
+                "name": "Memory Usage",
                 "sensor_type": "memory",
                 "threshold_warning": 80,
                 "threshold_critical": 95
             },
             {
-                "name": "disk_C_",
+                "name": "Disk C:",
                 "sensor_type": "disk",
                 "threshold_warning": 80,
                 "threshold_critical": 95
             },
             {
-                "name": "uptime",
-                "sensor_type": "system",
+                "name": "Uptime",
+                "sensor_type": "uptime",
+                "threshold_warning": None,
+                "threshold_critical": None
+            },
+            {
+                "name": "Network IN",
+                "sensor_type": "network_in",
                 "threshold_warning": 80,
                 "threshold_critical": 95
             },
             {
-                "name": "network_in",
-                "sensor_type": "network",
-                "threshold_warning": 80,
-                "threshold_critical": 95
-            },
-            {
-                "name": "network_out",
-                "sensor_type": "network",
+                "name": "Network OUT",
+                "sensor_type": "network_out",
                 "threshold_warning": 80,
                 "threshold_critical": 95
             }

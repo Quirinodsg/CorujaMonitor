@@ -174,6 +174,42 @@ async def create_probe_metrics_bulk(
             ).first()
         
         if not sensor:
+            # Mapeamento de tipos equivalentes criados pelo portal vs sonda
+            # Portal cria com tipos antigos; sonda envia com tipos novos
+            EQUIVALENT_TYPES = {
+                'uptime':      ['system', 'uptime'],
+                'system':      ['uptime', 'system'],
+                'network_in':  ['network', 'network_in'],
+                'network_out': ['network', 'network_out'],
+                'network':     ['network_in', 'network_out', 'network'],
+            }
+
+            # Tentar encontrar sensor equivalente pelo tipo (match por tipo alternativo)
+            alt_types = EQUIVALENT_TYPES.get(metric_data.sensor_type, [])
+            for alt_type in alt_types:
+                sensor = db.query(Sensor).filter(
+                    Sensor.server_id == server.id,
+                    Sensor.sensor_type == alt_type
+                ).first()
+                if sensor:
+                    # Atualizar tipo e nome para o padrão da sonda
+                    sensor.sensor_type = metric_data.sensor_type
+                    sensor.name = sensor_name
+                    db.flush()
+                    break
+
+        if not sensor:
+            # Tentar encontrar sensor pelo tipo exato (ignorando nome diferente)
+            sensor = db.query(Sensor).filter(
+                Sensor.server_id == server.id,
+                Sensor.sensor_type == metric_data.sensor_type
+            ).first()
+            if sensor:
+                # Atualizar nome para o padrão da sonda
+                sensor.name = sensor_name
+                db.flush()
+
+        if not sensor:
             # Set default thresholds based on sensor type
             threshold_warning = 80.0
             threshold_critical = 95.0
@@ -182,14 +218,14 @@ async def create_probe_metrics_bulk(
             if metric_data.sensor_type == 'ping':
                 threshold_warning = 100.0  # 100ms
                 threshold_critical = 200.0  # 200ms
-            elif metric_data.sensor_type == 'system':  # uptime
+            elif metric_data.sensor_type in ('uptime', 'system'):
                 threshold_warning = None
                 threshold_critical = None
             
             sensor = Sensor(
                 server_id=server.id,
                 sensor_type=metric_data.sensor_type,
-                name=sensor_name,  # Use normalized name
+                name=sensor_name,
                 threshold_warning=threshold_warning,
                 threshold_critical=threshold_critical,
                 is_active=True
