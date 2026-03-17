@@ -177,6 +177,9 @@ class ProbeCore:
         # Collect from remote servers (PRTG-style agentless)
         self._collect_remote_servers()
         
+        # Collect standalone sensors (HTTP, SNMP, etc.)
+        self._collect_standalone_sensors()
+        
         # Collect from Kubernetes clusters (if collector is available)
         if self.kubernetes_collector:
             try:
@@ -392,6 +395,57 @@ class ProbeCore:
         """
         logger.info(f"⚠️ PING desabilitado na probe - feito pelo servidor central (worker)")
         return  # Não coleta PING
+    def _collect_standalone_sensors(self):
+        """Coleta sensores standalone: HTTP, etc. (estilo PRTG - probe faz o request)"""
+        try:
+            with httpx.Client(timeout=10.0, verify=False) as client:
+                response = client.get(
+                    f"{self.config.api_url}/api/v1/sensors/standalone/by-probe",
+                    params={"probe_token": self.config.probe_token}
+                )
+                if response.status_code != 200:
+                    logger.warning(f"Failed to fetch standalone sensors: {response.status_code}")
+                    return
+                sensors = response.json()
+
+            if not sensors:
+                return
+
+            logger.info(f"Collecting {len(sensors)} standalone sensors")
+            timestamp = datetime.now()
+
+            for sensor in sensors:
+                if sensor.get('sensor_type') == 'http' and sensor.get('http_url'):
+                    try:
+                        start = time.time()
+                        with httpx.Client(timeout=15.0, verify=False, follow_redirects=True) as http_client:
+                            resp = http_client.request(
+                                method=sensor.get('http_method', 'GET'),
+                                url=sensor['http_url']
+                            )
+                        elapsed_ms = (time.time() - start) * 1000
+                        status = 'ok' if resp.status_code < 400 else 'critical'
+                        logger.info(f"HTTP {sensor['name']}: {resp.status_code} in {elapsed_ms:.0f}ms")
+                    except Exception as e:
+                        elapsed_ms = 0
+                        status = 'critical'
+                        logger.warning(f"HTTP {sensor['name']} unreachable: {e}")
+
+                    self.buffer.append({
+                        'sensor_id': sensor['id'],
+                        'sensor_type': 'http',
+                        'name': sensor['name'],
+                        'value': round(elapsed_ms, 2),
+                        'unit': 'ms',
+                        'status': status,
+                        'timestamp': timestamp.isoformat(),
+                        'hostname': '__standalone__',
+                        'metadata': {'sensor_id': sensor['id']}
+                    })
+
+        except Exception as e:
+            logger.error(f"Error collecting standalone sensors: {e}")
+
     def _parse_snmp_metrics(self, snmp_result, server):
         """Parse SNMP raw data into metrics format"""
         metrics = []

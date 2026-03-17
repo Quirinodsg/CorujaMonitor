@@ -128,12 +128,21 @@ async def delete_sensor(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    # Verify sensor belongs to user's tenant
-    sensor = db.query(Sensor).join(Server).filter(
+    # Try sensor linked to a server first
+    sensor = db.query(Sensor).join(Server, Sensor.server_id == Server.id).filter(
         Sensor.id == sensor_id,
         Server.tenant_id == current_user.tenant_id
     ).first()
-    
+
+    # Fallback: standalone sensor (server_id is NULL) — verify via probe tenant
+    if not sensor:
+        from models import Probe
+        sensor = db.query(Sensor).join(Probe, Sensor.probe_id == Probe.id).filter(
+            Sensor.id == sensor_id,
+            Sensor.server_id == None,
+            Probe.tenant_id == current_user.tenant_id
+        ).first()
+
     if not sensor:
         raise HTTPException(status_code=404, detail="Sensor not found")
     
@@ -399,6 +408,42 @@ async def list_standalone_sensors(
             sensor.ip_address = sensor.config['ip_address']
     
     return sensors
+
+
+@router.get("/standalone/by-probe")
+async def list_standalone_sensors_by_probe(
+    probe_token: str,
+    db: Session = Depends(get_db)
+):
+    """Endpoint para a probe buscar seus sensores standalone (HTTP, SNMP, etc.)"""
+    from models import Probe
+    probe = db.query(Probe).filter(Probe.token == probe_token).first()
+    if not probe:
+        raise HTTPException(status_code=401, detail="Invalid probe token")
+
+    sensors = db.query(Sensor).filter(
+        Sensor.probe_id == probe.id,
+        Sensor.server_id == None,
+        Sensor.is_active == True
+    ).all()
+
+    result = []
+    for s in sensors:
+        cfg = s.config or {}
+        # http config can be stored as cfg["http"]["url"] or cfg["http_url"] (legacy)
+        http_cfg = cfg.get("http") or {}
+        http_url = http_cfg.get("url") or cfg.get("http_url")
+        http_method = http_cfg.get("method") or cfg.get("http_method", "GET")
+        result.append({
+            "id": s.id,
+            "name": s.name,
+            "sensor_type": s.sensor_type,
+            "http_url": http_url,
+            "http_method": http_method,
+            "threshold_warning": s.threshold_warning,
+            "threshold_critical": s.threshold_critical,
+        })
+    return result
 
 
 class ConnectionTestRequest(BaseModel):

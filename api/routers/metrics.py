@@ -108,6 +108,34 @@ async def create_probe_metrics_bulk(
         # VALIDAÇÃO: Rejeitar sensores com tipo 'unknown'
         if metric_data.sensor_type == 'unknown':
             continue  # Pula este sensor
+
+        # STANDALONE SENSOR: se metadata contém sensor_id, gravar direto sem criar servidor
+        if metric_data.metadata and metric_data.metadata.get('sensor_id'):
+            direct_sensor_id = metric_data.metadata['sensor_id']
+            sensor = db.query(Sensor).filter(
+                Sensor.id == direct_sensor_id,
+                Sensor.probe_id == probe.id
+            ).first()
+            if sensor:
+                from datetime import timezone as tz
+                import pytz
+                timestamp = metric_data.timestamp
+                if timestamp.tzinfo is None:
+                    brazil_tz = pytz.timezone('America/Sao_Paulo')
+                    timestamp = brazil_tz.localize(timestamp).astimezone(pytz.UTC)
+                metric = Metric(
+                    sensor_id=sensor.id,
+                    value=metric_data.value,
+                    unit=metric_data.unit,
+                    status=metric_data.status,
+                    timestamp=timestamp,
+                    extra_metadata=metric_data.metadata
+                )
+                db.add(metric)
+                metrics_created += 1
+            else:
+                logger.warning(f"Standalone sensor_id {direct_sensor_id} not found for probe {probe.id}")
+            continue  # Não cria servidor para sensores standalone
         
         # Get or create server
         server = db.query(Server).filter(
