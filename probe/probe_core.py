@@ -688,10 +688,13 @@ class ProbeCore:
     def _send_heartbeat(self):
         """Send heartbeat to API"""
         try:
-            import psutil
-            cpu_percent = psutil.cpu_percent(interval=1)
-            memory_mb = psutil.Process().memory_info().rss / 1024 / 1024
-        except Exception:
+            import psutil, os
+            cpu_percent = psutil.cpu_percent(interval=None)
+            if cpu_percent == 0.0:
+                cpu_percent = psutil.cpu_percent(interval=0.5)
+            memory_mb = psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024
+        except Exception as e:
+            logger.warning(f"psutil error: {e}")
             cpu_percent = 0.0
             memory_mb = 0.0
 
