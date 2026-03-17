@@ -442,7 +442,8 @@ async def list_standalone_sensors_by_probe(
             "http_method": http_method,
             "threshold_warning": s.threshold_warning,
             "threshold_critical": s.threshold_critical,
-        })    return result
+        })
+    return result
 
 
 class ConnectionTestRequest(BaseModel):
