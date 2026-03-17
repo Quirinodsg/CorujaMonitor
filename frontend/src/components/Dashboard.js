@@ -22,6 +22,8 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const [filterType, setFilterType] = useState('all');
   const [filterCriticality, setFilterCriticality] = useState('all');
   const [wsConnected, setWsConnected] = useState(false);
+  const [httpSensors, setHttpSensors] = useState([]);
+  const [httpMetrics, setHttpMetrics] = useState({});
   const wsRef = useRef(null);
   const reconnectRef = useRef(null);
 
@@ -86,13 +88,21 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
       setHealthSummary(healthRes.data);
       setIncidents(incidentsRes.data);
       setServers(serversRes.data);
+
+      // Carregar sensores HTTP standalone
+      try {
+        const standaloneRes = await api.get('/sensors/standalone');
+        const http = standaloneRes.data.filter(s => s.sensor_type === 'http' || s.category === 'network');
+        setHttpSensors(http);
+        if (http.length > 0) {
+          const ids = http.map(s => s.id).join(',');
+          const metricsRes = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`);
+          setHttpMetrics(metricsRes.data);
+        }
+      } catch (_) {}
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      
-      // If unauthorized, logout
-      if (error.response?.status === 401) {
-        onLogout();
-      }
+      if (error.response?.status === 401) onLogout();
     } finally {
       setLoading(false);
     }
@@ -361,6 +371,85 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
             </div>
           </div>
         </div>
+
+        {/* Seção Sites HTTP */}
+        {httpSensors.length > 0 && (
+          <div style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
+              <h2 style={{ margin: 0 }}>🌐 Sites Monitorados</h2>
+              <button
+                onClick={() => onNavigate('sensor-library')}
+                style={{ fontSize: '13px', color: '#2196f3', background: 'none', border: 'none', cursor: 'pointer', textDecoration: 'underline' }}
+              >
+                Ver todos →
+              </button>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '12px' }}>
+              {httpSensors.map(sensor => {
+                const metric = httpMetrics[String(sensor.id)];
+                const isOnline = metric?.status === 'ok';
+                const hasData = !!metric;
+                const color = !hasData ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
+                const label = !hasData ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
+                const url = sensor.config?.http_url || sensor.http_url || '';
+                const responseMs = metric?.value ? Math.round(metric.value) : null;
+
+                return (
+                  <div key={sensor.id} style={{
+                    background: 'var(--card-bg, #1e2130)',
+                    border: `1px solid ${color}40`,
+                    borderLeft: `4px solid ${color}`,
+                    borderRadius: '10px',
+                    padding: '14px 16px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}>
+                    {/* Status badge */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{
+                        display: 'inline-flex', alignItems: 'center', gap: '5px',
+                        padding: '3px 10px', borderRadius: '20px',
+                        background: color, color: 'white',
+                        fontSize: '11px', fontWeight: '700', letterSpacing: '0.5px'
+                      }}>
+                        <span style={{
+                          width: 7, height: 7, borderRadius: '50%', background: 'white',
+                          boxShadow: isOnline ? '0 0 5px white' : 'none'
+                        }} />
+                        {label}
+                      </span>
+                      {responseMs !== null && (
+                        <span style={{ fontSize: '12px', color: color, fontWeight: '600' }}>
+                          {responseMs} ms
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Nome */}
+                    <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-primary, #e2e8f0)' }}>
+                      {sensor.name}
+                    </div>
+
+                    {/* URL */}
+                    {url && (
+                      <div style={{ fontSize: '11px', color: '#6b7280', wordBreak: 'break-all' }}>
+                        {url}
+                      </div>
+                    )}
+
+                    {/* Última verificação */}
+                    {metric?.timestamp && (
+                      <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                        🕐 {new Date(metric.timestamp).toLocaleString('pt-BR')}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="incidents-section">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>

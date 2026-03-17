@@ -15,6 +15,7 @@ function SensorLibrary() {
   const [probes, setProbes] = useState([]);
   const [testingConnection, setTestingConnection] = useState(false);
   const [connectionTestResult, setConnectionTestResult] = useState(null);
+  const [sensorMetrics, setSensorMetrics] = useState({});
   
   const [newSensor, setNewSensor] = useState({
     probe_id: '',
@@ -68,6 +69,15 @@ function SensorLibrary() {
       const response = await api.get('/sensors/standalone');
       setSensors(response.data);
       setLoading(false);
+
+      // Carregar métricas em batch para todos os sensores
+      if (response.data.length > 0) {
+        try {
+          const ids = response.data.map(s => s.id).join(',');
+          const metricsRes = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`);
+          setSensorMetrics(metricsRes.data);
+        } catch (_) {}
+      }
     } catch (error) {
       console.error('Erro ao carregar sensores:', error);
       setLoading(false);
@@ -343,8 +353,21 @@ function SensorLibrary() {
 
       <div className="sensors-grid">
         {filteredSensors.length > 0 ? (
-          filteredSensors.map(sensor => (
-            <div key={sensor.id} className="sensor-card">
+          filteredSensors.map(sensor => {
+            const metric = sensorMetrics[String(sensor.id)];
+            const isHttp = sensor.sensor_type === 'http' || sensor.category === 'network';
+            const isOnline = metric?.status === 'ok';
+            const isOffline = metric && metric.status !== 'ok';
+            const statusColor = !metric ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
+            const statusLabel = !metric ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
+            const statusBg = !metric ? '#6b728015' : isOnline ? '#10b98115' : '#ef444415';
+
+            return (
+            <div key={sensor.id} className="sensor-card" style={{
+              borderLeft: `4px solid ${statusColor}`,
+              background: statusBg,
+              position: 'relative'
+            }}>
               <div className="sensor-card-actions">
                 <button 
                   className="sensor-action-btn"
@@ -370,23 +393,61 @@ function SensorLibrary() {
                   ×
                 </button>
               </div>
+
+              {/* Badge de status */}
+              <div style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '4px 10px',
+                borderRadius: '20px',
+                background: statusColor,
+                color: 'white',
+                fontSize: '11px',
+                fontWeight: '700',
+                marginBottom: '10px',
+                letterSpacing: '0.5px'
+              }}>
+                <span style={{
+                  width: 8, height: 8, borderRadius: '50%',
+                  background: 'white',
+                  boxShadow: isOnline ? '0 0 6px white' : 'none',
+                  animation: isOnline ? 'pulse 2s infinite' : 'none'
+                }} />
+                {statusLabel}
+              </div>
               
               <div className="sensor-header">
                 <span className="sensor-icon">{getSensorIcon(sensor.category)}</span>
-                <h3>{sensor.name}</h3>
+                <h3 style={{ fontSize: '14px' }}>{sensor.name}</h3>
               </div>
               
-              <div className="sensor-details" style={{ fontSize: '13px', color: '#666', marginTop: '10px' }}>
+              <div className="sensor-details" style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
+                {isHttp && sensor.config?.http_url && (
+                  <p style={{ wordBreak: 'break-all', fontSize: '12px', color: '#2196f3' }}>
+                    🔗 {sensor.config.http_url}
+                  </p>
+                )}
                 {sensor.ip_address && <p>📍 {sensor.ip_address}</p>}
                 {sensor.description && <p>📝 {sensor.description}</p>}
                 <p>🏷️ {sensorCategories[sensor.category]?.name || sensor.category}</p>
-              </div>
-              
-              <div className="sensor-thresholds">
-                ⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%
+                {metric && (
+                  <p style={{ color: statusColor, fontWeight: '600' }}>
+                    {isHttp
+                      ? `⏱️ ${metric.value ? Math.round(metric.value) + ' ms' : '-'}`
+                      : `📊 ${metric.value?.toFixed(1) || '-'} ${metric.unit || ''}`
+                    }
+                  </p>
+                )}
+                {metric?.timestamp && (
+                  <p style={{ fontSize: '11px', color: '#999' }}>
+                    🕐 {new Date(metric.timestamp).toLocaleString('pt-BR')}
+                  </p>
+                )}
               </div>
             </div>
-          ))
+            );
+          })
         ) : (
           <div className="no-data" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
             <p>Nenhum sensor encontrado</p>
