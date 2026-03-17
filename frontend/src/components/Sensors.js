@@ -49,34 +49,37 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
 
   const loadAllSensors = async () => {
     try {
-      // Load all servers first
-      const serversResponse = await api.get('/servers/');
+      // Load servers and sensors in parallel
+      const [serversResponse, sensorsResponse] = await Promise.all([
+        api.get('/servers/'),
+        api.get('/sensors/')
+      ]);
+
       const serversMap = {};
       serversResponse.data.forEach(server => {
         serversMap[server.id] = server;
       });
       setServers(serversMap);
-
-      // Load all sensors
-      const sensorsResponse = await api.get('/sensors/');
       setSensors(sensorsResponse.data);
 
       // Load incidents
       await loadSensorIncidents();
 
-      // Load latest metrics for each sensor
-      const metricsData = {};
-      for (const sensor of sensorsResponse.data) {
+      // Load all metrics in a single batch request instead of N individual requests
+      if (sensorsResponse.data.length > 0) {
         try {
-          const metricsResponse = await api.get(`/metrics/?sensor_id=${sensor.id}&limit=1`);
-          if (metricsResponse.data.length > 0) {
-            metricsData[sensor.id] = metricsResponse.data[0];
-          }
+          const sensorIds = sensorsResponse.data.map(s => s.id).join(',');
+          const batchResponse = await api.get(`/metrics/latest/batch?sensor_ids=${sensorIds}`);
+          // Normalize keys to numbers to match sensor.id (API returns string keys)
+          const normalized = {};
+          Object.entries(batchResponse.data).forEach(([k, v]) => {
+            normalized[parseInt(k, 10)] = v;
+          });
+          setMetrics(normalized);
         } catch (err) {
-          console.error(`Erro ao carregar métricas do sensor ${sensor.id}:`, err);
+          console.error('Erro ao carregar métricas em batch:', err);
         }
       }
-      setMetrics(metricsData);
     } catch (error) {
       console.error('Erro ao carregar sensores:', error);
     } finally {
