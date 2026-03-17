@@ -51,6 +51,8 @@ class Probe(Base):
     is_active = Column(Boolean, default=True)
     last_heartbeat = Column(DateTime(timezone=True))
     version = Column(String(50))
+    cpu_percent = Column(Float, nullable=True)
+    memory_mb = Column(Float, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     tenant = relationship("Tenant", back_populates="probes")
