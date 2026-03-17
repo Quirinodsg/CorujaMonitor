@@ -58,18 +58,17 @@ def list_nodes(db: Session = Depends(get_db), current_user=Depends(get_current_u
         ).count()
         sensors_count = sensors_via_server + sensors_standalone
 
-            # Conexões ativas por protocolo (servidores monitorados por tipo)
-            from models import Server
-            wmi_count = db.query(Server).filter(
-                Server.probe_id == probe.id,
-                Server.is_active == True,
-                Server.monitoring_protocol == 'wmi'
-            ).count()
-            snmp_count = db.query(Server).filter(
-                Server.probe_id == probe.id,
-                Server.is_active == True,
-                Server.monitoring_protocol == 'snmp'
-            ).count()
+        # Conexões ativas por protocolo (servidores monitorados por tipo)
+        wmi_count = db.query(Server).filter(
+            Server.probe_id == probe.id,
+            Server.is_active == True,
+            Server.monitoring_protocol == 'wmi'
+        ).count()
+        snmp_count = db.query(Server).filter(
+            Server.probe_id == probe.id,
+            Server.is_active == True,
+            Server.monitoring_protocol == 'snmp'
+        ).count()
 
         result.append({
             "id": str(probe.id),
