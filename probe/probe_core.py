@@ -142,7 +142,13 @@ class ProbeCore:
                     return None
                 
                 credential = response.json()
-                logger.debug(f"Credencial resolvida: {credential.get('name')} (Nível: {credential.get('inheritance_level')})")
+                
+                # Verificar se realmente encontrou uma credencial
+                if credential.get('source') == 'none' or not credential.get('credential_type'):
+                    logger.debug(f"Nenhuma credencial configurada para servidor ID {server_id}")
+                    return None
+                
+                logger.info(f"🔑 Credencial: {credential.get('name')} | Nível: {credential.get('inheritance_level')}")
                 return credential
                 
         except Exception as e:
@@ -223,16 +229,18 @@ class ProbeCore:
                         # Collect based on protocol
                         protocol = server.get('monitoring_protocol', 'wmi')
                         
-                        if protocol == 'wmi' and server.get('wmi_enabled'):
-                            logger.info(f"Using WMI for {hostname}")
-                            self._collect_wmi_remote(server)
-                        elif protocol == 'snmp':
+                        if protocol == 'snmp':
                             logger.info(f"Using SNMP for {hostname}")
                             self._collect_snmp_remote(server)
+                        elif protocol == 'wmi' or server.get('wmi_enabled'):
+                            # Tenta WMI: verifica credencial via herança (Servidor → Grupo → Tenant)
+                            # wmi_enabled não é mais obrigatório — basta existir credencial WMI no tenant
+                            logger.info(f"Using WMI for {hostname}")
+                            self._collect_wmi_remote(server)
                         else:
-                            # No credentials or SNMP - try PING only
-                            logger.info(f"Using PING only for {hostname}")
-                            self._collect_ping_only(server)
+                            # Protocolo desconhecido - tenta WMI via credencial herdada antes de desistir
+                            logger.info(f"Protocol '{protocol}' - trying WMI credential fallback for {hostname}")
+                            self._collect_wmi_remote(server)
                             
                     except Exception as e:
                         logger.error(f"Error collecting from {server.get('hostname')}: {e}", exc_info=True)
@@ -256,11 +264,13 @@ class ProbeCore:
             credential = self._get_server_credential(server_id)
 
             if not credential:
-                logger.warning(f"⚠️ Nenhuma credencial WMI para {hostname} (ID: {server_id})")
+                logger.warning(f"⚠️ Nenhuma credencial WMI para {hostname} (ID: {server_id}) - usando PING only")
+                self._collect_ping_only(server)
                 return
 
             if credential.get('credential_type') != 'wmi':
-                logger.warning(f"Credencial para {hostname} não é do tipo WMI")
+                logger.warning(f"Credencial para {hostname} não é do tipo WMI - usando PING only")
+                self._collect_ping_only(server)
                 return
 
             username = credential.get('wmi_username')

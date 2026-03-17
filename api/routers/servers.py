@@ -54,7 +54,7 @@ class ServerCreate(BaseModel):
     wmi_username: Optional[str] = None
     wmi_password: Optional[str] = None
     wmi_domain: Optional[str] = None
-    wmi_enabled: Optional[bool] = False
+    wmi_enabled: Optional[bool] = True  # True por padrão para servidores WMI
 
 class ServerResponse(BaseModel):
     id: int
