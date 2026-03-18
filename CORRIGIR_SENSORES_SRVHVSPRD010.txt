@@ -1,0 +1,32 @@
+## PASSO 1: Verificar server_id e tenant_id do SRVHVSPRD010
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, tenant_id, hostname, monitoring_protocol, wmi_enabled FROM servers WHERE hostname ILIKE '%srvhvsprd010%';"
+
+## PASSO 2: Verificar protocolo do SRVCMONITOR001
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "SELECT id, tenant_id, hostname, monitoring_protocol, wmi_enabled FROM servers WHERE hostname ILIKE '%srvcmonitor%';"
+
+## PASSO 3: Criar sensores faltantes para SRVHVSPRD010
+## (substitua <server_id> e <tenant_id> pelos valores do PASSO 1)
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+INSERT INTO sensors (server_id, tenant_id, name, sensor_type, is_active, warning_threshold, critical_threshold)
+SELECT id, tenant_id, 'Uptime', 'uptime', true, 80, 95
+FROM servers WHERE hostname ILIKE '%srvhvsprd010%'
+AND NOT EXISTS (SELECT 1 FROM sensors s WHERE s.server_id = servers.id AND s.sensor_type = 'uptime');
+
+INSERT INTO sensors (server_id, tenant_id, name, sensor_type, is_active, warning_threshold, critical_threshold)
+SELECT id, tenant_id, 'Network IN', 'network_in', true, 80, 95
+FROM servers WHERE hostname ILIKE '%srvhvsprd010%'
+AND NOT EXISTS (SELECT 1 FROM sensors s WHERE s.server_id = servers.id AND s.sensor_type = 'network_in');
+
+INSERT INTO sensors (server_id, tenant_id, name, sensor_type, is_active, warning_threshold, critical_threshold)
+SELECT id, tenant_id, 'Network OUT', 'network_out', true, 80, 95
+FROM servers WHERE hostname ILIKE '%srvhvsprd010%'
+AND NOT EXISTS (SELECT 1 FROM sensors s WHERE s.server_id = servers.id AND s.sensor_type = 'network_out');
+"
+
+## PASSO 4: Confirmar sensores criados
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+SELECT s.id, s.name, s.sensor_type, s.is_active
+FROM sensors s
+JOIN servers sv ON sv.id = s.server_id
+WHERE sv.hostname ILIKE '%srvhvsprd010%'
+ORDER BY s.id;"

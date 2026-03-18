@@ -56,7 +56,7 @@ function ProbeNodes({ onNavigate }) {
 
   const utilizationPct = (node) => {
     if (!node.capacity) return 0;
-    return Math.round((node.sensors_active / node.capacity) * 100);
+    return Math.round((node.servers_monitored / node.capacity) * 100);
   };
 
   if (loading) return <div className="pn-loading">Carregando probe nodes...</div>;
@@ -116,11 +116,11 @@ function ProbeNodes({ onNavigate }) {
                 </div>
                 <div className="pn-info-row">
                   <span className="pn-label">📊 Sensores</span>
-                  <span className="pn-value">{node.sensors_active} / {node.capacity}</span>
+                  <span className="pn-value">{node.sensors_active}</span>
                 </div>
                 <div className="pn-info-row">
                   <span className="pn-label">🖥️ Servidores</span>
-                  <span className="pn-value">{node.servers_monitored}</span>
+                  <span className="pn-value">{node.servers_monitored} / {node.capacity}</span>
                 </div>
                 <div className="pn-info-row">
                   <span className="pn-label">⚡ CPU</span>
@@ -188,7 +188,7 @@ function ProbeNodes({ onNavigate }) {
                 value={newNode.version}
                 onChange={e => setNewNode({ ...newNode, version: e.target.value })}
               />
-              <label>Capacidade (sensores)</label>
+              <label>Capacidade (servidores)</label>
               <input
                 type="number"
                 value={newNode.capacity}
