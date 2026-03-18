@@ -304,6 +304,12 @@ class ProbeCore:
                     metric['timestamp'] = timestamp
                     metric['hostname'] = server.get('hostname')
                     metric['server_id'] = server_id
+                    # Incluir ip_address no metadata para que a API atualize o servidor
+                    # (mesmo comportamento do PRTG/Zabbix: a sonda conhece o IP do host monitorado)
+                    if 'metadata' not in metric:
+                        metric['metadata'] = {}
+                    if server.get('ip_address'):
+                        metric['metadata']['ip_address'] = server.get('ip_address')
                     self.buffer.append(metric)
 
                 # Log do método usado (diagnóstico de performance)
@@ -370,6 +376,10 @@ class ProbeCore:
                 for metric in metrics:
                     metric['timestamp'] = timestamp
                     metric['hostname'] = server.get('hostname')
+                    if 'metadata' not in metric:
+                        metric['metadata'] = {}
+                    if server.get('ip_address'):
+                        metric['metadata']['ip_address'] = server.get('ip_address')
                     self.buffer.append(metric)
 
                 logger.info(f"Collected {len(metrics)} SNMP metrics from {hostname}")
