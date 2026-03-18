@@ -59,6 +59,7 @@ services:
     volumes:
       - ./api:/app
       - api_logs:/app/logs
+      - backups_data:/app/backups
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
   worker:
@@ -78,6 +79,7 @@ services:
     volumes:
       - ./worker:/app
       - worker_logs:/app/logs
+      - backups_data:/app/backups
     command: celery -A tasks worker --beat --loglevel=info --concurrency=4
 
   ollama:
@@ -142,3 +144,4 @@ volumes:
   api_logs:
   worker_logs:
   ai_logs:
+  backups_data:
