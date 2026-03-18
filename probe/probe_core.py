@@ -6,6 +6,19 @@ from pathlib import Path
 import httpx
 from typing import List, Dict, Any
 
+# Componentes enterprise
+try:
+    from engine.global_rate_limiter import get_limiter as get_rate_limiter
+    RATE_LIMITER_AVAILABLE = True
+except ImportError:
+    RATE_LIMITER_AVAILABLE = False
+
+try:
+    from engine.wmi_batch_collector import get_batch_collector
+    WMI_BATCH_AVAILABLE = True
+except ImportError:
+    WMI_BATCH_AVAILABLE = False
+
 from collectors.cpu_collector import CPUCollector
 from collectors.memory_collector import MemoryCollector
 from collectors.disk_collector import DiskCollector
@@ -217,36 +230,50 @@ class ProbeCore:
                 local_hostname = socket.gethostname().lower()
                 local_ip = socket.gethostbyname(socket.gethostname())
                 
+                # Rate limiter global — evita sobrecarga com muitos servidores simultâneos
+                rate_limiter = get_rate_limiter() if RATE_LIMITER_AVAILABLE else None
+
                 for server in servers:
+                    hostname = server.get('hostname', '').lower()
+                    ip_address = server.get('ip_address', '')
+
+                    # Skip local machine (already collected above)
+                    if hostname == local_hostname or ip_address == local_ip:
+                        logger.debug(f"Skipping local machine: {hostname}")
+                        continue
+
+                    slot = None
                     try:
-                        hostname = server.get('hostname', '').lower()
-                        ip_address = server.get('ip_address', '')
-                        
-                        # Skip local machine (already collected above)
-                        if hostname == local_hostname or ip_address == local_ip:
-                            logger.debug(f"Skipping local machine: {hostname}")
-                            continue
-                        
+                        # Rate limiter via context manager (GlobalRateLimiter)
+                        if rate_limiter:
+                            slot = rate_limiter.acquire_slot(sensor_id=hostname, timeout=30)
+                            try:
+                                slot.__enter__()
+                            except RuntimeError:
+                                logger.warning(f"Rate limiter: fila cheia, pulando {hostname}")
+                                slot = None
+                                continue
+
                         logger.info(f"Collecting from remote server: {hostname} ({ip_address})")
-                        
+
                         # Collect based on protocol
                         protocol = server.get('monitoring_protocol', 'wmi')
-                        
+
                         if protocol == 'snmp':
                             logger.info(f"Using SNMP for {hostname}")
                             self._collect_snmp_remote(server)
                         elif protocol == 'wmi' or server.get('wmi_enabled'):
-                            # Tenta WMI: verifica credencial via herança (Servidor → Grupo → Tenant)
-                            # wmi_enabled não é mais obrigatório — basta existir credencial WMI no tenant
                             logger.info(f"Using WMI for {hostname}")
                             self._collect_wmi_remote(server)
                         else:
-                            # Protocolo desconhecido - tenta WMI via credencial herdada antes de desistir
                             logger.info(f"Protocol '{protocol}' - trying WMI credential fallback for {hostname}")
                             self._collect_wmi_remote(server)
-                            
+
                     except Exception as e:
                         logger.error(f"Error collecting from {server.get('hostname')}: {e}", exc_info=True)
+                    finally:
+                        if slot:
+                            slot.__exit__(None, None, None)
                         
         except Exception as e:
             logger.error(f"Error fetching remote servers: {e}", exc_info=True)
