@@ -175,6 +175,8 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       }
     };
 
+    const others = [];
+
     sensors.forEach(sensor => {
       const type = sensor.sensor_type;
       
@@ -188,11 +190,24 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
         groups.applications.sensors.push(sensor);
       } else if (['http', 'port', 'dns', 'ssl', 'snmp'].includes(type)) {
         groups.network.sensors.push(sensor);
+      } else {
+        others.push(sensor);
       }
     });
 
-    // Retornar TODOS os grupos, mesmo vazios, ordenados por prioridade
-    return Object.entries(groups).sort((a, b) => a[1].priority - b[1].priority);
+    const result = Object.entries(groups).sort((a, b) => a[1].priority - b[1].priority);
+
+    if (others.length > 0) {
+      result.push(['others', {
+        name: 'Outros / Desconhecidos',
+        icon: '❓',
+        sensors: others,
+        priority: 99,
+        color: '#9e9e9e'
+      }]);
+    }
+
+    return result;
   };
 
   const toggleSensorGroup = (groupKey) => {
@@ -493,7 +508,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
                           key={sensor.id} 
                           className="sensor-card clickable"
                           onClick={() => handleSensorClick(sensor)}
-                          style={{ cursor: 'pointer' }}
+                          style={{ cursor: sensor.server_id ? 'pointer' : 'default', opacity: sensor.server_id ? 1 : 0.7 }}
                           title={hasNote ? `Última nota: ${sensor.last_note}\n\nPor: ${sensor.last_note_by_name || 'Técnico'}\nEm: ${sensor.last_note_at ? new Date(sensor.last_note_at).toLocaleString('pt-BR') : ''}` : ''}
                         >
                           {isAcknowledged && (
@@ -506,7 +521,8 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
                             <span className="sensor-icon">{getSensorIcon(sensor.sensor_type)}</span>
                             <div className="sensor-title">
                               <h3>{sensor.name}</h3>
-                              <p className="sensor-server">{server?.hostname || 'Servidor desconhecido'}</p>
+                              <p className="sensor-server">{server?.hostname || (sensor.server_id ? `Servidor #${sensor.server_id}` : '⚠️ Sem servidor')}</p>
+                              <p style={{ fontSize: '11px', color: '#999', margin: '2px 0 0' }}>Tipo: {sensor.sensor_type || 'desconhecido'}</p>
                             </div>
                           </div>
                           {metric ? (
@@ -525,7 +541,9 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
                               </div>
                             </>
                           ) : (
-                            <div className="sensor-no-data">Aguardando dados...</div>
+                            <div className="sensor-no-data">
+                              {sensor.server_id ? 'Aguardando dados...' : '⚠️ Sensor sem servidor associado'}
+                            </div>
                           )}
                           <div className="sensor-thresholds">
                             {sensor.sensor_type === 'ping' ? (
