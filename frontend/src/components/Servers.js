@@ -58,6 +58,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
   const [showMoveGroupModal, setShowMoveGroupModal] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState(null);
   const [showGroupsSection, setShowGroupsSection] = useState(false);
+  const [reorderingGroup, setReorderingGroup] = useState(null); // nome do grupo sendo reordenado
   const [newGroup, setNewGroup] = useState({
     name: '',
     parent_id: null,
@@ -1443,7 +1444,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 cursor: 'pointer'
               }}
             >
-              🖱️
+              🗑️
             </button>
           </div>
           {isExpanded && renderGroupTree(groups, group.id, level + 1)}
@@ -1706,6 +1707,17 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         className="btn-edit-small"
                         onClick={(e) => {
                           e.stopPropagation();
+                          setReorderingGroup(reorderingGroup === groupName ? null : groupName);
+                        }}
+                        title="Reordenar servidores"
+                        style={{ padding: '2px 6px', fontSize: '11px', background: '#9c27b0', color: 'white' }}
+                      >
+                        ⇅
+                      </button>
+                      <button
+                        className="btn-edit-small"
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const newName = prompt(`Renomear pasta "${groupName}":`, groupName);
                           if (newName && newName !== groupName) {
                             // Atualizar todos os servidores deste grupo
@@ -1725,7 +1737,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         title="Renomear pasta"
                         style={{ padding: '2px 6px', fontSize: '11px' }}
                       >
-                        ✅
+                        ✏️
                       </button>
                       <button
                         className="btn-edit-small"
@@ -1806,12 +1818,33 @@ function Servers({ selectedServerId, selectedSensorId }) {
                         title="Excluir pasta"
                         style={{ padding: '2px 6px', fontSize: '11px' }}
                       >
-                        🖱️
+                        🗑️
                       </button>
                     </div>
                   </div>
                   {expandedGroups[groupName] && (
                     <div className="tree-group-content">
+                      {reorderingGroup === groupName && (
+                        <div style={{ padding: '8px 12px', background: '#f3e5f5', borderBottom: '1px solid #ce93d8', fontSize: '12px' }}>
+                          <div style={{ fontWeight: 'bold', marginBottom: '6px', color: '#7b1fa2' }}>⇅ Reordenar servidores:</div>
+                          {groupServers.map((server, idx) => (
+                            <div key={server.id} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e1bee7' }}>
+                              <span style={{ flex: 1, fontSize: '12px', fontWeight: '500' }}>{server.hostname}</span>
+                              <button
+                                onClick={() => handleReorderServer(server, groupServers, -1)}
+                                disabled={idx === 0}
+                                style={{ padding: '1px 6px', fontSize: '11px', cursor: idx === 0 ? 'not-allowed' : 'pointer', opacity: idx === 0 ? 0.4 : 1 }}
+                              >▲</button>
+                              <button
+                                onClick={() => handleReorderServer(server, groupServers, 1)}
+                                disabled={idx === groupServers.length - 1}
+                                style={{ padding: '1px 6px', fontSize: '11px', cursor: idx === groupServers.length - 1 ? 'not-allowed' : 'pointer', opacity: idx === groupServers.length - 1 ? 0.4 : 1 }}
+                              >▼</button>
+                            </div>
+                          ))}
+                          <button onClick={() => setReorderingGroup(null)} style={{ marginTop: '6px', padding: '3px 10px', fontSize: '11px', background: '#7b1fa2', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>Fechar</button>
+                        </div>
+                      )}
                       {groupServers.length > 0 ? (
                         groupServers.map(server => (
                           <div
@@ -1834,22 +1867,6 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             <div className="server-actions">
                               <button 
                                 className="btn-edit-small"
-                                onClick={(e) => { e.stopPropagation(); handleReorderServer(server, groupServers, -1); }}
-                                title="Mover para cima"
-                                style={{ fontSize: '10px', padding: '2px 5px' }}
-                              >
-                                ▲
-                              </button>
-                              <button 
-                                className="btn-edit-small"
-                                onClick={(e) => { e.stopPropagation(); handleReorderServer(server, groupServers, 1); }}
-                                title="Mover para baixo"
-                                style={{ fontSize: '10px', padding: '2px 5px' }}
-                              >
-                                ▼
-                              </button>
-                              <button 
-                                className="btn-edit-small"
                                 onClick={(e) => handleEditServer(server, e)}
                                 title="Editar servidor"
                               >
@@ -1860,7 +1877,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                                 onClick={(e) => handleDeleteServer(server.id, server.hostname, e)}
                                 title="Excluir servidor"
                               >
-                                🖱️
+                                🗑️
                               </button>
                               <div className={`server-status ${server.is_active ? 'active' : 'inactive'}`}>
                               {server.is_active ? '●' : '○'}
@@ -1915,7 +1932,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       onClick={(e) => handleDeleteServer(server.id, server.hostname, e)}
                       title="Excluir servidor"
                     >
-                      🖱️
+                      🗑️
                     </button>
                     <div className={`server-status ${server.is_active ? 'active' : 'inactive'}`}>
                       {server.is_active ? '●' : '○'}
