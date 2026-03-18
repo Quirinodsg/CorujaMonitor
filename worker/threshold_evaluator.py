@@ -24,6 +24,19 @@ def evaluate_thresholds(sensor, value: float) -> Tuple[bool, str]:
         if sensor.threshold_warning is not None and value >= sensor.threshold_warning:
             return True, "warning"
         return False, "ok"
+
+    # Special handling for uptime/system sensors
+    # Uptime value is in DAYS. A reboot is detected when uptime drops below threshold.
+    # Default: warning if uptime < 0.5 days (12h), critical if uptime < 0.083 days (2h)
+    # This catches reboots — server comes back with uptime near 0.
+    if sensor.sensor_type == 'system':
+        warn_threshold = sensor.threshold_warning if sensor.threshold_warning is not None else 0.5
+        crit_threshold = sensor.threshold_critical if sensor.threshold_critical is not None else 0.083
+        if value <= crit_threshold:
+            return True, "critical"
+        if value <= warn_threshold:
+            return True, "warning"
+        return False, "ok"
     
     # Special handling for network sensors
     # Network sensors: value is in bytes/s, thresholds are in MB/s

@@ -136,6 +136,13 @@ def get_incident_description(sensor, metric):
             return f"Servidor OFFLINE - Ping sem resposta"
         else:
             return f"Latência alta: {value:.0f}ms (Crítico: {sensor.threshold_critical}ms, Aviso: {sensor.threshold_warning}ms)"
+    elif sensor.sensor_type == 'system':
+        hours = value * 24
+        if hours < 1:
+            minutes = int(hours * 60)
+            return f"Servidor reiniciado recentemente - Uptime: {minutes} minutos (threshold crítico: {sensor.threshold_critical:.3f} dias / {sensor.threshold_critical*24:.1f}h)"
+        else:
+            return f"Uptime baixo: {hours:.1f}h (threshold aviso: {sensor.threshold_warning:.2f} dias / {sensor.threshold_warning*24:.1f}h)"
     elif sensor.sensor_type == 'network':
         mbps = value / 1024 / 1024
         return f"Tráfego de rede: {mbps:.2f} MB/s (Crítico: {sensor.threshold_critical} MB/s, Aviso: {sensor.threshold_warning} MB/s)"
@@ -1124,7 +1131,46 @@ def ping_all_servers():
                 )
                 db.add(metric)
                 db.commit()
-                
+
+                # Detectar reboot: servidor respondeu mas uptime é muito baixo (< 10 min)
+                # Isso captura o caso onde o servidor caiu e voltou entre ciclos de ping
+                if latency_ms > 0:
+                    _check_reboot_via_uptime(db, server, ping_sensor)
+
+                # Avaliar threshold e criar/resolver incidente
+                threshold_breached, severity = evaluate_thresholds(ping_sensor, latency_ms)
+                if threshold_breached:
+                    existing = db.query(Incident).filter(
+                        Incident.sensor_id == ping_sensor.id,
+                        Incident.status == 'open'
+                    ).first()
+                    if not existing:
+                        description = get_incident_description(ping_sensor, metric)
+                        incident = Incident(
+                            sensor_id=ping_sensor.id,
+                            severity=severity,
+                            status='open',
+                            title=f"{server.hostname} - PING {severity.upper()}",
+                            description=description
+                        )
+                        db.add(incident)
+                        db.commit()
+                        db.refresh(incident)
+                        logger.warning(f"🚨 Incidente PING criado: {incident.title}")
+                        execute_aiops_analysis.delay(incident.id)
+                else:
+                    # Auto-resolver incidentes de ping abertos
+                    open_incidents = db.query(Incident).filter(
+                        Incident.sensor_id == ping_sensor.id,
+                        Incident.status.in_(['open', 'acknowledged'])
+                    ).all()
+                    for inc in open_incidents:
+                        inc.status = 'resolved'
+                        inc.resolved_at = datetime.now(timezone.utc)
+                        inc.resolution_notes = f"Auto-resolvido: PING voltou ao normal ({latency_ms}ms)"
+                        db.commit()
+                        logger.info(f"✅ Incidente PING {inc.id} auto-resolvido")
+
                 logger.debug(f"✅ Métrica PING salva: {server.hostname} = {latency_ms}ms ({status})")
                 
             except Exception as e:
@@ -1137,6 +1183,60 @@ def ping_all_servers():
         logger.error(f"❌ Erro ao fazer PING de servidores: {e}")
     finally:
         db.close()
+
+
+def _check_reboot_via_uptime(db, server, ping_sensor):
+    """
+    Detecta reboot verificando se o uptime do servidor é muito baixo (< 10 minutos).
+    Cria incidente de reboot mesmo que o ping já tenha voltado ao normal.
+    Evita duplicar incidente se já existe um aberto para o mesmo servidor.
+    """
+    try:
+        from models import Sensor as SensorModel
+        uptime_sensor = db.query(SensorModel).filter(
+            SensorModel.server_id == server.id,
+            SensorModel.sensor_type == 'system',
+            SensorModel.is_active == True
+        ).first()
+
+        if not uptime_sensor:
+            return
+
+        latest_uptime = db.query(Metric).filter(
+            Metric.sensor_id == uptime_sensor.id
+        ).order_by(Metric.timestamp.desc()).first()
+
+        if not latest_uptime:
+            return
+
+        # Uptime em dias — 10 minutos = 0.00694 dias
+        REBOOT_THRESHOLD_DAYS = 10 / (60 * 24)  # 10 minutos
+
+        if latest_uptime.value <= REBOOT_THRESHOLD_DAYS:
+            # Verificar se já existe incidente de reboot aberto recente (última hora)
+            recent_reboot = db.query(Incident).filter(
+                Incident.sensor_id == ping_sensor.id,
+                Incident.status.in_(['open', 'acknowledged']),
+                Incident.title.like('%reiniciado%')
+            ).first()
+
+            if not recent_reboot:
+                minutes = round(latest_uptime.value * 24 * 60, 1)
+                incident = Incident(
+                    sensor_id=ping_sensor.id,
+                    severity='warning',
+                    status='open',
+                    title=f"{server.hostname} - Servidor reiniciado",
+                    description=f"Reboot detectado: uptime atual é {minutes} minutos. "
+                                f"O servidor foi reiniciado recentemente."
+                )
+                db.add(incident)
+                db.commit()
+                db.refresh(incident)
+                logger.warning(f"🔄 Reboot detectado em {server.hostname} (uptime: {minutes}min) — incidente {incident.id} criado")
+                execute_aiops_analysis.delay(incident.id)
+    except Exception as e:
+        logger.debug(f"_check_reboot_via_uptime erro para {server.hostname}: {e}")
 
 
 def execute_ping(ip_address: str) -> float:
