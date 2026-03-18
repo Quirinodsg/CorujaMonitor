@@ -22,6 +22,12 @@ MAX_CONNECTIONS_PER_HOST = 3
 CONNECTION_TIMEOUT_SEC = 30
 IDLE_TIMEOUT_SEC = 300  # Fecha conexão ociosa após 5 minutos
 
+# Backoff para evitar lockout de conta AD
+# Após falha de autenticação, aguarda antes de tentar novamente
+AUTH_FAILURE_BACKOFF_SEC = 600   # 10 minutos após falha de auth (Access Denied)
+MAX_AUTH_FAILURES = 3            # Após 3 falhas, backoff aumenta para 30 min
+AUTH_FAILURE_EXTENDED_SEC = 1800 # 30 minutos após muitas falhas
+
 
 def _init_thread_com():
     """
@@ -95,16 +101,51 @@ class WMIConnectionPool:
         self.max_per_host = max_per_host
         self._pools: Dict[str, List[PooledConnection]] = {}
         self._lock = threading.Lock()
+        # Rastreia falhas de autenticação por host para evitar lockout AD
+        # {host: {'count': int, 'last_failure': float}}
+        self._auth_failures: Dict[str, Dict] = {}
         self._cleanup_thread = threading.Thread(target=self._cleanup_loop, daemon=True)
         self._cleanup_thread.start()
 
+    def _is_in_backoff(self, host: str) -> bool:
+        """Verifica se o host está em período de backoff por falha de autenticação."""
+        failure_info = self._auth_failures.get(host)
+        if not failure_info:
+            return False
+        count = failure_info.get('count', 0)
+        last_failure = failure_info.get('last_failure', 0)
+        backoff = AUTH_FAILURE_EXTENDED_SEC if count >= MAX_AUTH_FAILURES else AUTH_FAILURE_BACKOFF_SEC
+        elapsed = time.monotonic() - last_failure
+        if elapsed < backoff:
+            remaining = int(backoff - elapsed)
+            logger.warning(
+                f"⏳ WMI Pool: {host} em backoff por falha de auth "
+                f"({count} falhas, aguardando {remaining}s para evitar lockout AD)"
+            )
+            return True
+        return False
+
+    def _record_auth_failure(self, host: str):
+        """Registra falha de autenticação para controle de backoff."""
+        if host not in self._auth_failures:
+            self._auth_failures[host] = {'count': 0, 'last_failure': 0}
+        self._auth_failures[host]['count'] += 1
+        self._auth_failures[host]['last_failure'] = time.monotonic()
+        count = self._auth_failures[host]['count']
+        logger.error(
+            f"🔒 WMI Pool: falha de auth registrada para {host} "
+            f"(total: {count}) — backoff ativado para evitar lockout AD"
+        )
+
+    def _clear_auth_failure(self, host: str):
+        """Limpa registro de falha após conexão bem-sucedida."""
+        if host in self._auth_failures:
+            del self._auth_failures[host]
+
     def _create_connection(self, host: str, username: str, password: str, domain: str) -> Optional[object]:
         """
-        Cria nova conexão WMI.
-
-        Estratégia:
-        1. Tenta sem credenciais (usa identidade do serviço via Kerberos - mais confiável)
-        2. Fallback com credenciais explícitas (para workgroup ou quando necessário)
+        Cria nova conexão WMI com credenciais explícitas.
+        Não tenta sem credenciais para evitar tentativas duplas que causam lockout AD.
         """
         try:
             import wmi
@@ -115,39 +156,34 @@ class WMIConnectionPool:
             full_user = f"{domain}\\{username}" if domain and "\\" not in username else username
             logger.info(f"🔌 WMI Pool: criando conexão para {host} ({full_user})")
 
-            # Tentativa 1: sem credenciais explícitas
-            # Quando o serviço roda como coruja.monitor no domínio, o Kerberos
-            # usa automaticamente a identidade do serviço - igual ao PRTG
-            try:
-                conn = wmi.WMI(
-                    computer=host,
-                    namespace="root/cimv2",
-                )
-                logger.info(f"✅ WMI Pool: conexão criada para {host} (identidade do serviço)")
-                return conn
-            except Exception as e1:
-                logger.debug(f"WMI sem credenciais falhou para {host}: {e1} — tentando com credenciais explícitas")
-
-            # Tentativa 2: com credenciais explícitas (fallback)
             conn = wmi.WMI(
                 computer=host,
                 user=full_user,
                 password=password,
                 namespace="root/cimv2",
             )
-            logger.info(f"✅ WMI Pool: conexão criada para {host} (credenciais explícitas)")
+            logger.info(f"✅ WMI Pool: conexão criada para {host}")
             return conn
 
         except Exception as e:
-            logger.error(f"❌ WMI Pool: falha ao criar conexão para {host}: {e}")
+            err_str = str(e)
+            # Detectar erros de autenticação (Access Denied) vs erros de rede
+            if "-2147024891" in err_str or "Access is denied" in err_str or "Access denied" in err_str:
+                self._record_auth_failure(host)
+            else:
+                logger.error(f"❌ WMI Pool: falha ao criar conexão para {host}: {e}")
             return None
 
     def acquire(self, host: str, username: str, password: str, domain: str = "") -> Optional[object]:
         """
         Adquire conexão do pool. Reutiliza existente ou cria nova.
-        Retorna None se limite atingido ou falha na conexão.
+        Retorna None se em backoff, limite atingido ou falha na conexão.
         """
         with self._lock:
+            # Verificar backoff antes de qualquer tentativa de auth
+            if self._is_in_backoff(host):
+                return None
+
             pool = self._pools.setdefault(host, [])
 
             # 1. Tentar reutilizar conexão ociosa
@@ -162,6 +198,7 @@ class WMIConnectionPool:
             if len(pool) < self.max_per_host:
                 conn = self._create_connection(host, username, password, domain)
                 if conn:
+                    self._clear_auth_failure(host)
                     pc = PooledConnection(host=host, connection=conn, in_use=True)
                     pool.append(pc)
                     logger.info(f"WMI Pool: {host} → {len(pool)}/{self.max_per_host} conexões")
