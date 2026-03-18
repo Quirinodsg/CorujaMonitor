@@ -1067,10 +1067,17 @@ def ping_all_servers():
         
         for server in servers:
             try:
-                # Skip servers without IP address
+                # Se não tem IP, tenta resolver via DNS/hostname
                 if not server.ip_address:
-                    logger.warning(f"⚠️ Servidor {server.hostname} sem IP configurado - pulando PING")
-                    continue
+                    try:
+                        import socket
+                        resolved_ip = socket.gethostbyname(server.hostname)
+                        logger.info(f"🔍 IP resolvido via DNS para {server.hostname}: {resolved_ip}")
+                        server.ip_address = resolved_ip
+                        db.commit()
+                    except Exception as dns_err:
+                        logger.warning(f"⚠️ Servidor {server.hostname} sem IP e DNS falhou ({dns_err}) - pulando PING")
+                        continue
 
                 # Execute ping
                 latency_ms = execute_ping(server.ip_address)

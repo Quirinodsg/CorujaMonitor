@@ -278,6 +278,7 @@ async def list_servers(
 class ServerUpdate(BaseModel):
     group_name: Optional[str] = None
     tags: Optional[List[str]] = None
+    ip_address: Optional[str] = None
     device_type: Optional[str] = None
     monitoring_protocol: Optional[str] = None
     snmp_version: Optional[str] = None
@@ -306,6 +307,8 @@ async def update_server(
         server.group_name = server_update.group_name
     if server_update.tags is not None:
         server.tags = server_update.tags
+    if server_update.ip_address is not None:
+        server.ip_address = server_update.ip_address
     if server_update.device_type is not None:
         server.device_type = server_update.device_type
     if server_update.monitoring_protocol is not None:
@@ -381,7 +384,43 @@ async def delete_server(
     return {"message": f"Server '{server.hostname}' and all associated data deleted successfully"}
 
 
-@router.post("/{server_id}/create-ping")
+@router.post("/resolve-ips")
+async def resolve_missing_ips(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Resolve IPs via DNS para servidores sem ip_address configurado.
+    Útil para servidores cadastrados apenas com hostname (ex: SRVHVSPRD011).
+    """
+    import socket
+
+    servers = db.query(Server).filter(
+        Server.tenant_id == current_user.tenant_id,
+        Server.is_active == True,
+        Server.ip_address == None
+    ).all()
+
+    resolved = []
+    failed = []
+
+    for server in servers:
+        try:
+            ip = socket.gethostbyname(server.hostname)
+            server.ip_address = ip
+            db.commit()
+            resolved.append({"hostname": server.hostname, "ip": ip})
+        except Exception as e:
+            failed.append({"hostname": server.hostname, "error": str(e)})
+
+    return {
+        "resolved": resolved,
+        "failed": failed,
+        "total_resolved": len(resolved)
+    }
+
+
+
 async def create_ping_sensor(
     server_id: int,
     db: Session = Depends(get_db),
