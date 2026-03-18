@@ -55,6 +55,7 @@ class ServerCreate(BaseModel):
     wmi_password: Optional[str] = None
     wmi_domain: Optional[str] = None
     wmi_enabled: Optional[bool] = True  # True por padrão para servidores WMI
+    group_name: Optional[str] = None
 
 class ServerResponse(BaseModel):
     id: int
@@ -77,6 +78,7 @@ class ServerResponse(BaseModel):
     wmi_domain: Optional[str] = None
     wmi_enabled: Optional[bool] = False
     is_active: bool
+    sort_order: Optional[int] = 0
     
     class Config:
         from_attributes = True
@@ -131,7 +133,8 @@ async def create_server(
         wmi_username=server.wmi_username,
         wmi_password_encrypted=wmi_password_encrypted,
         wmi_domain=server.wmi_domain,
-        wmi_enabled=server.wmi_enabled
+        wmi_enabled=server.wmi_enabled,
+        group_name=server.group_name
     )
     db.add(new_server)
     db.commit()
@@ -269,9 +272,9 @@ async def list_servers(
 ):
     # Admin vê todos os servidores, usuário normal vê apenas do seu tenant
     if current_user.role == 'admin':
-        servers = db.query(Server).all()
+        servers = db.query(Server).order_by(Server.sort_order, Server.id).all()
     else:
-        servers = db.query(Server).filter(Server.tenant_id == current_user.tenant_id).all()
+        servers = db.query(Server).filter(Server.tenant_id == current_user.tenant_id).order_by(Server.sort_order, Server.id).all()
     return servers
 
 
@@ -601,3 +604,27 @@ async def auto_register_server(
         "ip_address": new_server.ip_address,
         "message": "Server registered successfully"
     }
+
+
+class ServerReorder(BaseModel):
+    sort_order: int
+
+@router.put("/{server_id}/reorder")
+async def reorder_server(
+    server_id: int,
+    data: ServerReorder,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Atualiza a ordem de exibição de um servidor na árvore"""
+    server = db.query(Server).filter(
+        Server.id == server_id,
+        Server.tenant_id == current_user.tenant_id
+    ).first()
+
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    server.sort_order = data.sort_order
+    db.commit()
+    return {"message": "Ordem atualizada", "sort_order": data.sort_order}

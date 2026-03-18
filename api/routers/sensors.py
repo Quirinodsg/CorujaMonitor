@@ -659,3 +659,38 @@ async def test_sensor_connection(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+
+@router.delete("/orphans")
+async def delete_orphan_sensors(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Deleta sensores sem servidor associado (server_id nulo ou servidor deletado)"""
+    from models import Metric, Probe
+
+    # Sensores com server_id nulo que não são standalone (sem probe_id também)
+    orphans_no_server = db.query(Sensor).filter(
+        Sensor.server_id == None,
+        Sensor.probe_id == None
+    ).all()
+
+    # Sensores com server_id apontando para servidor inexistente
+    from models import Server as ServerModel
+    all_sensors = db.query(Sensor).filter(Sensor.server_id != None).all()
+    server_ids = {s.id for s in db.query(ServerModel).all()}
+    orphans_dead_server = [s for s in all_sensors if s.server_id not in server_ids]
+
+    orphans = orphans_no_server + orphans_dead_server
+    orphan_ids = [s.id for s in orphans]
+
+    if orphan_ids:
+        db.query(Metric).filter(Metric.sensor_id.in_(orphan_ids)).delete(synchronize_session=False)
+        db.query(Sensor).filter(Sensor.id.in_(orphan_ids)).delete(synchronize_session=False)
+        db.commit()
+
+    return {
+        "deleted": len(orphan_ids),
+        "sensor_ids": orphan_ids,
+        "message": f"{len(orphan_ids)} sensor(es) órfão(s) deletado(s)"
+    }

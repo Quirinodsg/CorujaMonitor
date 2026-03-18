@@ -92,6 +92,7 @@ class Server(Base):
     wmi_enabled = Column(Boolean, default=False)  # Enable WMI remote monitoring
     
     is_active = Column(Boolean, default=True)
+    sort_order = Column(Integer, default=0)  # Para reordenação na árvore
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     tenant = relationship("Tenant", back_populates="servers")

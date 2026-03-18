@@ -770,7 +770,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
             }}
             title="Editar sensor"
           >
-            ✅
+            ✏️
           </button>
           <button 
             className="sensor-delete-btn"
@@ -817,6 +817,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
             <>⚠️ {sensor.threshold_warning || 100}ms | 🔥 {sensor.threshold_critical || 200}ms</>
           ) : sensor.sensor_type === 'network' ? (
             <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s</>
+          ) : (sensor.sensor_type === 'system' || sensor.sensor_type === 'uptime') ? (
+            <>⚠️ {sensor.threshold_warning ? `${Math.floor(sensor.threshold_warning * 24)}h` : '12h'} | 🔥 {sensor.threshold_critical ? `${Math.floor(sensor.threshold_critical * 60)}min` : '2h'} (uptime mín.)</>
           ) : (
             <>⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%</>
           )}
@@ -981,6 +983,26 @@ function Servers({ selectedServerId, selectedSensorId }) {
         
         alert('Erro ao remover sensor: ' + errorMessage);
       }
+    }
+  };
+
+  const handleReorderServer = async (server, groupServers, direction) => {
+    const currentIndex = groupServers.findIndex(s => s.id === server.id);
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= groupServers.length) return;
+
+    const target = groupServers[targetIndex];
+    const currentOrder = server.sort_order ?? currentIndex;
+    const targetOrder = target.sort_order ?? targetIndex;
+
+    try {
+      await Promise.all([
+        api.put(`/servers/${server.id}/reorder`, { sort_order: targetOrder }),
+        api.put(`/servers/${target.id}/reorder`, { sort_order: currentOrder })
+      ]);
+      loadServers();
+    } catch (error) {
+      console.error('Erro ao reordenar servidor:', error);
     }
   };
 
@@ -1470,6 +1492,23 @@ function Servers({ selectedServerId, selectedSensorId }) {
           >
             ⚙️ Monitorar Serviços
           </button>
+          <button 
+            className="btn-add"
+            style={{ background: '#f44336' }}
+            onClick={async () => {
+              if (!window.confirm('Deletar todos os sensores órfãos (sem servidor associado)?')) return;
+              try {
+                const res = await api.delete('/sensors/orphans');
+                alert(`✔ ${res.data.message}`);
+                loadServers();
+              } catch (err) {
+                alert('Erro: ' + (err.response?.data?.detail || err.message));
+              }
+            }}
+            title="Deletar sensores sem servidor associado"
+          >
+            🗑️ Limpar Órfãos
+          </button>
         </div>
       </div>
 
@@ -1795,10 +1834,26 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             <div className="server-actions">
                               <button 
                                 className="btn-edit-small"
+                                onClick={(e) => { e.stopPropagation(); handleReorderServer(server, groupServers, -1); }}
+                                title="Mover para cima"
+                                style={{ fontSize: '10px', padding: '2px 5px' }}
+                              >
+                                ▲
+                              </button>
+                              <button 
+                                className="btn-edit-small"
+                                onClick={(e) => { e.stopPropagation(); handleReorderServer(server, groupServers, 1); }}
+                                title="Mover para baixo"
+                                style={{ fontSize: '10px', padding: '2px 5px' }}
+                              >
+                                ▼
+                              </button>
+                              <button 
+                                className="btn-edit-small"
                                 onClick={(e) => handleEditServer(server, e)}
                                 title="Editar servidor"
                               >
-                                ✅
+                                ✏️
                               </button>
                               <button 
                                 className="btn-delete-small"
@@ -1853,7 +1908,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                       onClick={(e) => handleEditServer(server, e)}
                       title="Editar servidor"
                     >
-                      ✅
+                      ✏️
                     </button>
                     <button 
                       className="btn-delete-small"
