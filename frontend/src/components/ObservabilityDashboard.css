@@ -46,3 +46,5 @@
   .obs-top-row { grid-template-columns: 1fr; }
   .obs-stats-grid { grid-template-columns: repeat(2, 1fr); }
 }
+
+.obs-error { color: #f59e0b; padding: 16px; text-align: center; font-size: 0.85rem; cursor: help; }

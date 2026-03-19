@@ -5,7 +5,7 @@ from fastapi.exceptions import RequestValidationError
 from contextlib import asynccontextmanager
 
 from database import engine, Base
-from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery, observability
+from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery, observability, topology, aiops_v3
 
 # Importar WAF Middleware
 try:
@@ -103,6 +103,8 @@ app.include_router(metrics_batch.router)  # Ingestão em lote de métricas
 app.include_router(ws_dashboard.router)   # WebSocket Dashboard tempo real
 app.include_router(discovery.router)      # Discovery de rede/SNMP/WMI
 app.include_router(observability.router)  # Observability v3 (health-score, impact-map, intelligent alerts, WS)
+app.include_router(topology.router)       # Topology v3 (graph, impact, nodes)
+app.include_router(aiops_v3.router)       # AIOps v3 pipeline activities + feedback metrics
 
 @app.get("/")
 async def root():

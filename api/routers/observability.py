@@ -290,11 +290,19 @@ async def ws_observability(websocket: WebSocket, db: Session = Depends(get_db)):
             # Build snapshot
             try:
                 sensor_stats = db.execute(text("""
+                    WITH latest AS (
+                        SELECT DISTINCT ON (sensor_id)
+                            sensor_id, status
+                        FROM metrics
+                        ORDER BY sensor_id, timestamp DESC
+                    )
                     SELECT
-                        COUNT(*) FILTER (WHERE status = 'ok') as ok_count,
-                        COUNT(*) FILTER (WHERE status = 'critical') as critical_count,
-                        COUNT(*) as total
-                    FROM sensors
+                        COUNT(s.id) FILTER (WHERE l.status = 'ok') as ok_count,
+                        COUNT(s.id) FILTER (WHERE l.status = 'critical') as critical_count,
+                        COUNT(s.id) as total
+                    FROM sensors s
+                    LEFT JOIN latest l ON l.sensor_id = s.id
+                    WHERE s.is_active = true
                 """)).fetchone()
 
                 total = sensor_stats.total or 1

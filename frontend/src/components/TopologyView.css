@@ -17,3 +17,18 @@
 .topo-empty-icon { font-size: 3rem; margin-bottom: 16px; }
 .topo-hint { font-size: 0.8rem; color: #475569; margin-top: 8px; }
 @media (max-width: 768px) { .topo-main { grid-template-columns: 1fr; } }
+
+.topo-sync-btn {
+  margin-top: 20px;
+  padding: 10px 24px;
+  background: #3b82f6;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+.topo-sync-btn:hover:not(:disabled) { background: #2563eb; }
+.topo-sync-btn:disabled { opacity: 0.6; cursor: not-allowed; }

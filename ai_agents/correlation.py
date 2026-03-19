@@ -102,11 +102,62 @@ class CorrelationAgent(BaseAgent):
         return groups
 
     def _merge_topology_groups(self, groups: list[list[Event]], topology) -> list[list[Event]]:
-        """Mescla grupos de hosts que compartilham ancestral comum na topologia."""
-        # Simplificado: verificar se hosts de grupos diferentes compartilham ancestral
-        merged = list(groups)
-        # TODO: implementação completa com topologia
-        return merged
+        """
+        Mescla grupos de hosts que compartilham ancestral comum na topologia.
+        Se dois grupos têm hosts com ancestral comum, são fundidos em um único grupo.
+        """
+        if not groups or len(groups) < 2:
+            return groups
+
+        # Mapear host_id → set de ancestrais
+        host_ancestors: dict[str, set] = {}
+        for group in groups:
+            for event in group:
+                host_id = str(event.host_id)
+                if host_id not in host_ancestors:
+                    ancestors = set(topology.get_ancestors(host_id))
+                    ancestors.add(host_id)  # incluir o próprio nó
+                    host_ancestors[host_id] = ancestors
+
+        # Union-Find para mesclar grupos com ancestral comum
+        parent = list(range(len(groups)))
+
+        def find(x):
+            while parent[x] != x:
+                parent[x] = parent[parent[x]]
+                x = parent[x]
+            return x
+
+        def union(x, y):
+            px, py = find(x), find(y)
+            if px != py:
+                parent[px] = py
+
+        for i in range(len(groups)):
+            hosts_i = {str(e.host_id) for e in groups[i]}
+            ancestors_i = set()
+            for h in hosts_i:
+                ancestors_i |= host_ancestors.get(h, {h})
+
+            for j in range(i + 1, len(groups)):
+                hosts_j = {str(e.host_id) for e in groups[j]}
+                ancestors_j = set()
+                for h in hosts_j:
+                    ancestors_j |= host_ancestors.get(h, {h})
+
+                # Mesclar se compartilham ancestral comum (excluindo raiz genérica)
+                if ancestors_i & ancestors_j:
+                    union(i, j)
+
+        # Reagrupar
+        merged: dict[int, list] = {}
+        for i, group in enumerate(groups):
+            root = find(i)
+            if root not in merged:
+                merged[root] = []
+            merged[root].extend(group)
+
+        return list(merged.values())
 
     def _time_span(self, events: list[Event]) -> float:
         """Retorna span de tempo em segundos entre primeiro e último evento."""

@@ -40,6 +40,7 @@ export default function ObservabilityDashboard() {
   const [impactMap, setImpactMap] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [wsStatus, setWsStatus] = useState('connecting');
+  const [fetchError, setFetchError] = useState(null);
   const wsRef = useRef(null);
 
   const fetchData = async () => {
@@ -49,11 +50,16 @@ export default function ObservabilityDashboard() {
         fetch(`${API}/api/v1/observability/impact-map`),
         fetch(`${API}/api/v1/alerts/intelligent?status=open&limit=10`),
       ]);
-      if (hRes.ok) setHealth(await hRes.json());
+      if (hRes.ok) {
+        const d = await hRes.json();
+        if (d.error) setFetchError(d.error);
+        else { setHealth(d); setFetchError(null); }
+      }
       if (iRes.ok) setImpactMap((await iRes.json()).nodes || []);
       if (aRes.ok) setAlerts((await aRes.json()).alerts || []);
     } catch (e) {
       console.error('ObservabilityDashboard fetch error:', e);
+      setFetchError(e.message);
     }
   };
 
@@ -121,6 +127,8 @@ export default function ObservabilityDashboard() {
                 {health.status === 'healthy' ? '✅ Saudável' : health.status === 'degraded' ? '⚠️ Degradado' : '🔴 Crítico'}
               </div>
             </>
+          ) : fetchError ? (
+            <div className="obs-error" title={fetchError}>⚠️ Erro ao carregar</div>
           ) : <div className="obs-loading">Carregando...</div>}
         </div>
 

@@ -32,7 +32,25 @@ export default function TopologyView() {
   const [impact, setImpact] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [syncing, setSyncing] = useState(false);
   const svgRef = useRef(null);
+
+  const syncFromServers = async () => {
+    setSyncing(true);
+    try {
+      await fetch(`${API}/api/v1/topology/sync-from-servers`, { method: 'POST' });
+      const gr = await fetch(`${API}/api/v1/topology/graph`);
+      if (gr.ok) {
+        const gd = await gr.json();
+        setGraphData({ nodes: gd.nodes || [], edges: gd.edges || [] });
+        setError(null);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const positions = useForceLayout(graphData.nodes, graphData.edges);
 
@@ -69,6 +87,13 @@ export default function TopologyView() {
           <div className="topo-empty-icon">🕸️</div>
           <p>{error || 'Nenhum nó de topologia cadastrado.'}</p>
           <p className="topo-hint">A topologia é populada automaticamente via descoberta SNMP/WMI ou pode ser configurada manualmente.</p>
+          <button
+            className="topo-sync-btn"
+            onClick={syncFromServers}
+            disabled={syncing}
+          >
+            {syncing ? '⏳ Sincronizando...' : '🔄 Importar servidores monitorados'}
+          </button>
         </div>
       </div>
     );

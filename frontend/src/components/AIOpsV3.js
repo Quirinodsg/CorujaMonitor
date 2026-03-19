@@ -13,8 +13,8 @@ export default function AIOpsV3() {
     const fetchAll = async () => {
       try {
         const [actRes, fbRes] = await Promise.all([
-          fetch(`${API}/api/v1/ai-activities?limit=20`),
-          fetch(`${API}/api/v1/aiops/feedback-metrics`).catch(() => null),
+          fetch(`${API}/api/v1/aiops-v3/activities?limit=20`),
+          fetch(`${API}/api/v1/aiops-v3/feedback-metrics`).catch(() => null),
         ]);
         if (actRes.ok) {
           const d = await actRes.json();
