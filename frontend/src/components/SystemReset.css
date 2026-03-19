@@ -1,3 +1,4 @@
+﻿/* SystemReset — Dark Theme */
 .system-reset {
   max-width: 900px;
   margin: 0 auto;
@@ -12,24 +13,25 @@
 .system-reset-header h2 {
   font-size: 28px;
   margin-bottom: 10px;
-  color: #333;
+  color: #E5E7EB;
 }
 
 .system-reset-header p {
-  color: #666;
+  color: #9CA3AF;
   font-size: 16px;
 }
 
 .system-stats {
-  background: #f8f9fa;
+  background: #1F2937;
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 30px;
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .system-stats h3 {
   margin-bottom: 15px;
-  color: #333;
+  color: #E5E7EB;
 }
 
 .stats-grid {
@@ -39,35 +41,36 @@
 }
 
 .stat-card {
-  background: white;
+  background: #111827;
   border-radius: 8px;
   padding: 15px;
   text-align: center;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 
 .stat-value {
   font-size: 32px;
   font-weight: bold;
-  color: #007bff;
+  color: #60A5FA;
   margin-bottom: 5px;
 }
 
 .stat-label {
   font-size: 14px;
-  color: #666;
+  color: #6B7280;
 }
 
 .reset-warning {
-  background: #fff3cd;
-  border: 2px solid #ffc107;
+  background: rgba(245,158,11,0.08);
+  border: 2px solid rgba(245,158,11,0.3);
   border-radius: 8px;
   padding: 20px;
   margin-bottom: 30px;
 }
 
 .reset-warning h3 {
-  color: #856404;
+  color: #F59E0B;
   margin-bottom: 15px;
 }
 
@@ -80,11 +83,13 @@
 .reset-warning li {
   padding: 8px 0;
   font-size: 15px;
+  color: #9CA3AF;
 }
 
 .warning-text {
-  background: #dc3545;
-  color: white;
+  background: rgba(239,68,68,0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239,68,68,0.3);
   padding: 15px;
   border-radius: 6px;
   text-align: center;
@@ -100,15 +105,15 @@
 }
 
 .message.success {
-  background: #d4edda;
-  border: 1px solid #c3e6cb;
-  color: #155724;
+  background: rgba(16,185,129,0.1);
+  border: 1px solid rgba(16,185,129,0.3);
+  color: #10B981;
 }
 
 .message.error {
-  background: #f8d7da;
-  border: 1px solid #f5c6cb;
-  color: #721c24;
+  background: rgba(239,68,68,0.1);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: #EF4444;
 }
 
 .btn-reset-danger {
@@ -116,16 +121,17 @@
   padding: 15px;
   font-size: 18px;
   font-weight: bold;
-  background: #dc3545;
-  color: white;
-  border: none;
+  background: rgba(239,68,68,0.15);
+  color: #EF4444;
+  border: 2px solid rgba(239,68,68,0.4);
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.3s;
+  transition: all 0.3s;
 }
 
 .btn-reset-danger:hover:not(:disabled) {
-  background: #c82333;
+  background: #EF4444;
+  color: white;
 }
 
 .btn-reset-danger:disabled {
@@ -134,14 +140,14 @@
 }
 
 .confirm-box {
-  background: #f8f9fa;
-  border: 2px solid #dc3545;
+  background: #1F2937;
+  border: 2px solid rgba(239,68,68,0.4);
   border-radius: 8px;
   padding: 25px;
 }
 
 .confirm-box h3 {
-  color: #dc3545;
+  color: #EF4444;
   margin-bottom: 15px;
 }
 
@@ -149,16 +155,19 @@
   width: 100%;
   padding: 12px;
   font-size: 16px;
-  border: 2px solid #ddd;
+  border: 2px solid rgba(255,255,255,0.1);
   border-radius: 6px;
   margin: 15px 0;
   text-align: center;
   font-weight: bold;
+  background: #0B0F14;
+  color: #E5E7EB;
 }
 
 .confirm-input:focus {
   outline: none;
-  border-color: #dc3545;
+  border-color: #EF4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.15);
 }
 
 .confirm-buttons {
@@ -180,12 +189,14 @@
 }
 
 .btn-confirm-reset {
-  background: #dc3545;
-  color: white;
+  background: rgba(239,68,68,0.15);
+  color: #EF4444;
+  border: 1px solid rgba(239,68,68,0.4);
 }
 
 .btn-confirm-reset:hover:not(:disabled) {
-  background: #c82333;
+  background: #EF4444;
+  color: white;
 }
 
 .btn-confirm-reset:disabled {
@@ -194,10 +205,12 @@
 }
 
 .btn-cancel {
-  background: #6c757d;
-  color: white;
+  background: #1F2937;
+  color: #9CA3AF;
+  border: 1px solid rgba(255,255,255,0.1);
 }
 
 .btn-cancel:hover:not(:disabled) {
-  background: #5a6268;
+  background: rgba(255,255,255,0.06);
+  color: #E5E7EB;
 }

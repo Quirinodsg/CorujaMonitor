@@ -1055,3 +1055,73 @@ body.dark-mode .sh-nodes-table th { background: #1a2235 !important; color: #6B72
 body.dark-mode .sh-nodes-table td { color: #E5E7EB !important; border-bottom-color: rgba(255,255,255,0.04) !important; }
 body.dark-mode .sh-no-probes { background: #1F2937 !important; border-color: rgba(255,255,255,0.1) !important; }
 body.dark-mode .sh-btn-refresh { background: #1F2937 !important; border-color: rgba(255,255,255,0.08) !important; color: #9CA3AF !important; }
+
+/* ── 41. AIOPS ── */
+body.dark-mode .aiops-container { background: #0B0F14 !important; }
+body.dark-mode .aiops-tabs { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .aiops-tabs .tab { background: #111827 !important; color: #9CA3AF !important; }
+body.dark-mode .aiops-tabs .tab:hover { background: rgba(99,102,241,0.08) !important; color: #E5E7EB !important; }
+body.dark-mode .aiops-tabs .tab.active { background: linear-gradient(135deg, #6366F1 0%, #4f52d9 100%) !important; color: white !important; }
+body.dark-mode .aiops-content { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .aiops-overview .stat-card { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; color: #E5E7EB !important; }
+body.dark-mode .aiops-overview .stat-card.anomalies { border-color: rgba(239,68,68,0.4) !important; background: rgba(239,68,68,0.06) !important; }
+body.dark-mode .aiops-overview .stat-card.correlations { border-color: rgba(245,158,11,0.4) !important; background: rgba(245,158,11,0.06) !important; }
+body.dark-mode .aiops-overview .stat-card.action-plans { border-color: rgba(59,130,246,0.4) !important; background: rgba(59,130,246,0.06) !important; }
+body.dark-mode .aiops-overview .stat-card.automated { border-color: rgba(16,185,129,0.4) !important; background: rgba(16,185,129,0.06) !important; }
+body.dark-mode .stat-number { color: #E5E7EB !important; }
+body.dark-mode .activity-item { background: #111827 !important; }
+body.dark-mode .activity-item.clickable:hover { background: rgba(59,130,246,0.08) !important; }
+body.dark-mode .activity-title strong { color: #E5E7EB !important; }
+body.dark-mode .activity-content p { color: #9CA3AF !important; }
+body.dark-mode .activity-recommendation { background: rgba(245,158,11,0.08) !important; color: #9CA3AF !important; }
+body.dark-mode .activity-automation { background: rgba(16,185,129,0.08) !important; color: #10B981 !important; }
+body.dark-mode .no-activity { background: #111827 !important; border-color: rgba(255,255,255,0.08) !important; color: #6B7280 !important; }
+body.dark-mode .quick-start-tips { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .quick-start-tips h4 { color: #E5E7EB !important; }
+body.dark-mode .quick-start-tips ol { color: #9CA3AF !important; }
+body.dark-mode .result-card { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; color: #E5E7EB !important; }
+body.dark-mode .result-card.anomaly-found { border-color: rgba(239,68,68,0.4) !important; background: rgba(239,68,68,0.06) !important; }
+body.dark-mode .result-card.no-anomaly { border-color: rgba(16,185,129,0.4) !important; background: rgba(16,185,129,0.06) !important; }
+body.dark-mode .result-card.correlation { border-color: rgba(245,158,11,0.4) !important; background: rgba(245,158,11,0.06) !important; }
+body.dark-mode .result-header h4 { color: #E5E7EB !important; }
+body.dark-mode .rca-section { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .rca-section h4 { color: #E5E7EB !important; }
+body.dark-mode .rca-header h3 { color: #E5E7EB !important; }
+body.dark-mode .rca-header { border-bottom-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .action-plan-card { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; color: #E5E7EB !important; }
+body.dark-mode .plan-header h3 { color: #E5E7EB !important; }
+body.dark-mode .plan-header p { color: #9CA3AF !important; }
+body.dark-mode .plan-header { border-bottom-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .plan-section { background: #1F2937 !important; }
+body.dark-mode .plan-section h4 { color: #E5E7EB !important; }
+body.dark-mode .action-item { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .action-header strong { color: #E5E7EB !important; }
+body.dark-mode .group-card { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .group-details p { color: #9CA3AF !important; }
+body.dark-mode .overview-description { color: #9CA3AF !important; }
+body.dark-mode .quick-actions h3 { color: #E5E7EB !important; }
+body.dark-mode .anomalies-results h3,
+body.dark-mode .correlations-results h3 { color: #E5E7EB !important; }
+body.dark-mode .activity-header h3 { color: #E5E7EB !important; }
+
+/* ── 42. MFA SETUP ── */
+body.dark-mode .mfa-status { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .mfa-setup-view,
+body.dark-mode .mfa-disable-view { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .mfa-header h2 { color: #E5E7EB !important; }
+body.dark-mode .mfa-header p { color: #9CA3AF !important; }
+body.dark-mode .mfa-setup-view h3,
+body.dark-mode .mfa-disable-view h3 { color: #E5E7EB !important; }
+body.dark-mode .status-card { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .status-info h3 { color: #E5E7EB !important; }
+body.dark-mode .status-info p { color: #9CA3AF !important; }
+body.dark-mode .step-content h4 { color: #E5E7EB !important; }
+body.dark-mode .step-content p,
+body.dark-mode .step-content li { color: #9CA3AF !important; }
+body.dark-mode .qr-code-container { background: #111827 !important; border-color: rgba(255,255,255,0.08) !important; }
+body.dark-mode .secret-code { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .secret-code code { color: #A5B4FC !important; }
+body.dark-mode .backup-code { background: #111827 !important; border-color: rgba(255,255,255,0.08) !important; color: #A5B4FC !important; }
+body.dark-mode .mfa-info { background: rgba(96,165,250,0.06) !important; border-left-color: #60A5FA !important; }
+body.dark-mode .mfa-info h4 { color: #E5E7EB !important; }
+body.dark-mode .mfa-info li { color: #9CA3AF !important; }
