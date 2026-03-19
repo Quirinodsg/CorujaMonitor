@@ -25,7 +25,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Coruja Monitor API",
     description="Enterprise monitoring platform with AIOps capabilities",
-    version="2.1.0",
+    version="3.0.0",
     lifespan=lifespan
 )
 
