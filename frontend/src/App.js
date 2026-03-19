@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 import './styles/design-system.css';
+import './styles/global-dark-override.css';
 import MainLayout from './components/MainLayout';
 import Login from './components/Login';
 import api from './services/api';

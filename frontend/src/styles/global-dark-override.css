@@ -1,0 +1,965 @@
+/* ============================================================
+   CORUJA MONITOR — Global Dark Override
+   Força dark mode em TODOS os componentes via cascade.
+   Importado em App.js como último CSS — máxima especificidade.
+   ============================================================ */
+
+/* ── 1. RESET GLOBAL — elimina qualquer fundo claro ── */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body.dark-mode,
+body.dark-mode * {
+  scrollbar-color: rgba(255,255,255,0.12) transparent;
+}
+
+/* ── 2. BACKGROUNDS — todos os fundos claros → dark ── */
+body.dark-mode .management-container,
+body.dark-mode .management-page,
+body.dark-mode .settings-page,
+body.dark-mode .settings-content,
+body.dark-mode .servers-list,
+body.dark-mode .server-details,
+body.dark-mode .templates-sidebar,
+body.dark-mode .report-viewer,
+body.dark-mode .modal-content,
+body.dark-mode .modal,
+body.dark-mode .page-content {
+  background: #111827 !important;
+  color: #E5E7EB !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* ── 3. CARDS ── */
+body.dark-mode .card,
+body.dark-mode .admin-tool-card,
+body.dark-mode .integration-card,
+body.dark-mode .setting-group,
+body.dark-mode .summary-card,
+body.dark-mode .sensor-card,
+body.dark-mode .server-card,
+body.dark-mode .tree-server,
+body.dark-mode .probe-item,
+body.dark-mode .remediation-log,
+body.dark-mode .detail-section,
+body.dark-mode .ai-section {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .sensor-card {
+  background: linear-gradient(135deg, #1F2937 0%, #1a2235 100%) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+body.dark-mode .sensor-header {
+  background: linear-gradient(135deg, #1a2235 0%, #1F2937 100%) !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .sensor-value {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .sensor-timestamp,
+body.dark-mode .sensor-thresholds {
+  background: rgba(0,0,0,0.2) !important;
+  color: #6B7280 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .sensor-action-btn {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .sensor-last-note {
+  background: rgba(245,158,11,0.08) !important;
+  border-top-color: rgba(245,158,11,0.15) !important;
+  color: #F59E0B !important;
+}
+
+/* ── 4. TABLES ── */
+body.dark-mode table,
+body.dark-mode .incidents-table,
+body.dark-mode .report-table {
+  background: transparent !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode th,
+body.dark-mode .incidents-table th,
+body.dark-mode .report-table th {
+  background: #1a2235 !important;
+  color: #9CA3AF !important;
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+body.dark-mode td,
+body.dark-mode .incidents-table td,
+body.dark-mode .report-table td {
+  border-bottom-color: rgba(255,255,255,0.05) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode tbody tr:hover td,
+body.dark-mode .incidents-table tbody tr:hover td {
+  background: rgba(99,102,241,0.06) !important;
+}
+
+body.dark-mode .incidents-table-container {
+  background: #111827 !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  overflow: hidden !important;
+}
+
+/* ── 5. FORMS ── */
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea,
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+  background: #0B0F14 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #E5E7EB !important;
+  border-radius: 8px !important;
+}
+
+body.dark-mode input:focus,
+body.dark-mode select:focus,
+body.dark-mode textarea:focus {
+  border-color: #6366F1 !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+  outline: none !important;
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: #4B5563 !important;
+}
+
+body.dark-mode label,
+body.dark-mode .form-group label {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode small,
+body.dark-mode .form-group small {
+  color: #6B7280 !important;
+}
+
+/* ── 6. TABS ── */
+body.dark-mode .settings-tabs,
+body.dark-mode .tab-bar {
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+  background: transparent !important;
+}
+
+body.dark-mode .settings-tabs .tab,
+body.dark-mode .tab-btn {
+  color: #6B7280 !important;
+  background: transparent !important;
+  border-bottom-color: transparent !important;
+}
+
+body.dark-mode .settings-tabs .tab:hover,
+body.dark-mode .tab-btn:hover {
+  color: #E5E7EB !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+
+body.dark-mode .settings-tabs .tab.active,
+body.dark-mode .tab-btn.active {
+  color: #818CF8 !important;
+  border-bottom-color: #6366F1 !important;
+  background: transparent !important;
+}
+
+/* ── 7. HEADERS / TITLES ── */
+body.dark-mode h1,
+body.dark-mode h2,
+body.dark-mode h3,
+body.dark-mode h4,
+body.dark-mode h5,
+body.dark-mode .settings-header h1,
+body.dark-mode .settings-section h2,
+body.dark-mode .integration-title h3,
+body.dark-mode .admin-tool-card h3,
+body.dark-mode .setting-group h3,
+body.dark-mode .modal-content h2,
+body.dark-mode .modal-header h2 {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode p,
+body.dark-mode .settings-header p,
+body.dark-mode .section-description,
+body.dark-mode .admin-tool-card p {
+  color: #9CA3AF !important;
+}
+
+/* ── 8. BUTTONS ── */
+body.dark-mode .btn-save {
+  background: linear-gradient(135deg, #6366F1 0%, #4f52d9 100%) !important;
+  box-shadow: 0 4px 12px rgba(99,102,241,0.3) !important;
+}
+
+body.dark-mode .btn-test {
+  background: #1F2937 !important;
+  color: #818CF8 !important;
+  border: 1px solid rgba(99,102,241,0.3) !important;
+}
+
+body.dark-mode .btn-test:hover {
+  background: rgba(99,102,241,0.15) !important;
+}
+
+body.dark-mode .btn-add {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+  box-shadow: 0 2px 8px rgba(16,185,129,0.3) !important;
+}
+
+body.dark-mode .btn-cancel {
+  background: #1F2937 !important;
+  color: #9CA3AF !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .btn-primary {
+  background: #6366F1 !important;
+  color: white !important;
+}
+
+body.dark-mode .btn-secondary {
+  background: #1F2937 !important;
+  color: #9CA3AF !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .btn-warning {
+  background: rgba(245,158,11,0.15) !important;
+  color: #F59E0B !important;
+  border: 1px solid rgba(245,158,11,0.25) !important;
+}
+
+body.dark-mode .btn-danger {
+  background: rgba(239,68,68,0.12) !important;
+  color: #EF4444 !important;
+  border: 1px solid rgba(239,68,68,0.2) !important;
+}
+
+body.dark-mode .btn-success {
+  background: rgba(16,185,129,0.12) !important;
+  color: #10B981 !important;
+  border: 1px solid rgba(16,185,129,0.2) !important;
+}
+
+/* ── 9. MODALS ── */
+body.dark-mode .modal-overlay {
+  background: rgba(0,0,0,0.75) !important;
+}
+
+body.dark-mode .modal-content,
+body.dark-mode .modal {
+  background: #1F2937 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7) !important;
+}
+
+body.dark-mode .modal-header {
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+  background: transparent !important;
+}
+
+body.dark-mode .modal-footer {
+  border-top-color: rgba(255,255,255,0.08) !important;
+  background: transparent !important;
+}
+
+body.dark-mode .modal-header-admin {
+  background: linear-gradient(135deg, #4f52d9 0%, #6366F1 100%) !important;
+}
+
+body.dark-mode .modal-footer-admin {
+  background: #1a2235 !important;
+  border-top-color: rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .btn-close {
+  color: #6B7280 !important;
+}
+
+body.dark-mode .btn-close:hover {
+  color: #EF4444 !important;
+}
+
+/* ── 10. SERVERS SIDEBAR ── */
+body.dark-mode .servers-list {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .servers-list-header {
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .servers-list-header h2 {
+  color: #4B5563 !important;
+}
+
+body.dark-mode .server-card,
+body.dark-mode .tree-server {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .server-card:hover,
+body.dark-mode .tree-server:hover {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+body.dark-mode .server-card.selected,
+body.dark-mode .tree-server.selected {
+  background: rgba(99,102,241,0.1) !important;
+  border-color: #6366F1 !important;
+}
+
+body.dark-mode .server-info h3,
+body.dark-mode .tree-server .server-info h3 {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .server-info p,
+body.dark-mode .tree-server .server-info p {
+  color: #6B7280 !important;
+}
+
+body.dark-mode .server-details {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .server-details-header h2 {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .sidebar-toggle-btn {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #9CA3AF !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+body.dark-mode .view-toggle {
+  background: #0B0F14 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .view-toggle button {
+  color: #6B7280 !important;
+  background: transparent !important;
+}
+
+body.dark-mode .view-toggle button.active {
+  background: #1F2937 !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .tree-group-header {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .tree-group-header:hover {
+  background: rgba(99,102,241,0.08) !important;
+}
+
+body.dark-mode .tree-label {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .tree-count {
+  background: #0B0F14 !important;
+  color: #6B7280 !important;
+}
+
+body.dark-mode .tree-group-content {
+  border-left-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .tag {
+  background: rgba(99,102,241,0.12) !important;
+  color: #818CF8 !important;
+}
+
+/* ── 11. INCIDENTS ── */
+body.dark-mode .incidents-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+body.dark-mode .incidents-summary .summary-card {
+  background: #1F2937 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 12px !important;
+  padding: 16px !important;
+  cursor: pointer;
+  transition: all 0.15s ease !important;
+}
+
+body.dark-mode .incidents-summary .summary-card:hover,
+body.dark-mode .incidents-summary .summary-card.active {
+  background: rgba(99,102,241,0.1) !important;
+  border-color: rgba(99,102,241,0.3) !important;
+}
+
+body.dark-mode .summary-card h3 {
+  color: #E5E7EB !important;
+  font-size: 28px !important;
+  font-weight: 700 !important;
+}
+
+body.dark-mode .summary-card p {
+  color: #6B7280 !important;
+  font-size: 12px !important;
+}
+
+body.dark-mode .incidents-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+body.dark-mode .filter-btn {
+  padding: 6px 14px !important;
+  background: #1F2937 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  border-radius: 20px !important;
+  color: #6B7280 !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+}
+
+body.dark-mode .filter-btn:hover {
+  color: #E5E7EB !important;
+  border-color: rgba(255,255,255,0.15) !important;
+}
+
+body.dark-mode .filter-btn.active {
+  background: rgba(99,102,241,0.15) !important;
+  border-color: rgba(99,102,241,0.4) !important;
+  color: #818CF8 !important;
+}
+
+body.dark-mode .incident-row {
+  transition: background 0.1s !important;
+}
+
+body.dark-mode .incident-row.severity-critical td:first-child {
+  border-left: 3px solid #EF4444 !important;
+}
+
+body.dark-mode .incident-row.severity-warning td:first-child {
+  border-left: 3px solid #F59E0B !important;
+}
+
+body.dark-mode .incident-description strong {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .incident-description p {
+  color: #6B7280 !important;
+}
+
+body.dark-mode .duration-badge {
+  color: #9CA3AF !important;
+  font-size: 12px !important;
+}
+
+body.dark-mode .btn-action {
+  background: #1a2235 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #9CA3AF !important;
+  border-radius: 6px !important;
+  padding: 5px 10px !important;
+  cursor: pointer !important;
+  transition: all 0.15s !important;
+}
+
+body.dark-mode .btn-action:hover {
+  background: rgba(99,102,241,0.12) !important;
+  color: #818CF8 !important;
+}
+
+/* ── 12. MANAGEMENT HEADER ── */
+body.dark-mode .management-header,
+body.dark-mode .page-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 24px !important;
+}
+
+body.dark-mode .management-header h1,
+body.dark-mode .page-header h1 {
+  color: #E5E7EB !important;
+  font-size: 22px !important;
+  font-weight: 700 !important;
+}
+
+/* ── 13. INTEGRATION CARDS ── */
+body.dark-mode .integration-card {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .integration-card:hover {
+  border-color: rgba(99,102,241,0.3) !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3) !important;
+}
+
+body.dark-mode .integration-header {
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .integration-config {
+  border-top-color: rgba(255,255,255,0.06) !important;
+}
+
+/* ── 14. REPORTS ── */
+body.dark-mode .templates-sidebar {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .template-group h3 {
+  color: #4B5563 !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .template-btn {
+  background: #1F2937 !important;
+  border-color: transparent !important;
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .template-btn:hover {
+  background: rgba(99,102,241,0.08) !important;
+  border-color: rgba(99,102,241,0.3) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .template-btn.active {
+  background: rgba(99,102,241,0.12) !important;
+  border-color: rgba(99,102,241,0.4) !important;
+  color: #818CF8 !important;
+}
+
+body.dark-mode .template-name {
+  color: inherit !important;
+}
+
+body.dark-mode .template-desc {
+  color: #6B7280 !important;
+}
+
+body.dark-mode .report-viewer {
+  background: #111827 !important;
+}
+
+body.dark-mode .report-content h3,
+body.dark-mode .report-content h4 {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .ai-insights {
+  background: rgba(16,185,129,0.06) !important;
+  border-left-color: #10B981 !important;
+}
+
+body.dark-mode .ai-insights h4 {
+  color: #10B981 !important;
+}
+
+body.dark-mode .ai-insights li {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .info-banner {
+  background: rgba(96,165,250,0.06) !important;
+  border-left-color: #60A5FA !important;
+}
+
+body.dark-mode .info-banner p {
+  color: #60A5FA !important;
+}
+
+/* ── 15. EMPTY STATES ── */
+body.dark-mode .empty-state,
+body.dark-mode .no-data,
+body.dark-mode .no-selection {
+  background: transparent !important;
+  color: #4B5563 !important;
+  padding: 48px 24px !important;
+  text-align: center !important;
+  border-radius: 12px !important;
+}
+
+body.dark-mode .empty-state-icon {
+  font-size: 48px !important;
+  margin-bottom: 16px !important;
+  opacity: 0.5 !important;
+}
+
+body.dark-mode .empty-state h3 {
+  color: #6B7280 !important;
+  font-size: 16px !important;
+  margin-bottom: 8px !important;
+}
+
+body.dark-mode .empty-state p,
+body.dark-mode .empty-subtitle {
+  color: #4B5563 !important;
+  font-size: 13px !important;
+}
+
+/* ── 16. LOADING STATES ── */
+body.dark-mode .loading,
+body.dark-mode .loading-state {
+  color: #6B7280 !important;
+  background: transparent !important;
+}
+
+/* ── 17. BADGES / STATUS ── */
+body.dark-mode .badge-success { background: rgba(16,185,129,0.12) !important; color: #10B981 !important; }
+body.dark-mode .badge-danger  { background: rgba(239,68,68,0.12) !important;  color: #EF4444 !important; }
+body.dark-mode .badge-warning { background: rgba(245,158,11,0.12) !important; color: #F59E0B !important; }
+
+body.dark-mode .severity-badge {
+  border-radius: 20px !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  padding: 3px 10px !important;
+}
+
+/* ── 18. ALERTS / INFO BOXES ── */
+body.dark-mode .alert-warning {
+  background: rgba(245,158,11,0.08) !important;
+  border-color: rgba(245,158,11,0.25) !important;
+  color: #F59E0B !important;
+}
+
+body.dark-mode .info-box {
+  background: rgba(245,158,11,0.06) !important;
+  border-color: rgba(245,158,11,0.2) !important;
+}
+
+body.dark-mode .info-box p,
+body.dark-mode .info-box ul,
+body.dark-mode .info-box li {
+  color: #9CA3AF !important;
+}
+
+/* ── 19. SCROLLBAR GLOBAL ── */
+body.dark-mode ::-webkit-scrollbar { width: 6px; height: 6px; }
+body.dark-mode ::-webkit-scrollbar-track { background: transparent; }
+body.dark-mode ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+body.dark-mode ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ── 20. MANAGEMENT CONTAINER ── */
+body.dark-mode .management-container {
+  padding: 24px !important;
+  background: transparent !important;
+  color: #E5E7EB !important;
+}
+
+/* ── 21. SENSOR GROUPS ── */
+body.dark-mode .sensor-group {
+  background: transparent !important;
+}
+
+body.dark-mode .sensor-group-header {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  color: #9CA3AF !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  cursor: pointer !important;
+}
+
+body.dark-mode .sensor-group-header:hover {
+  background: rgba(99,102,241,0.08) !important;
+}
+
+/* ── 22. PROBE ITEMS ── */
+body.dark-mode .probe-item {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .probes-section {
+  background: rgba(0,0,0,0.2) !important;
+  border-radius: 8px !important;
+}
+
+/* ── 23. DETAIL SECTIONS (Incidents modal) ── */
+body.dark-mode .detail-section {
+  background: #1a2235 !important;
+  border-radius: 10px !important;
+  padding: 16px !important;
+  margin-bottom: 16px !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .detail-section h3 {
+  color: #9CA3AF !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  margin-bottom: 12px !important;
+}
+
+body.dark-mode .detail-item {
+  color: #E5E7EB !important;
+  margin-bottom: 8px !important;
+  font-size: 14px !important;
+}
+
+body.dark-mode .detail-item strong {
+  color: #9CA3AF !important;
+  font-weight: 500 !important;
+}
+
+body.dark-mode .ai-root-cause {
+  background: rgba(99,102,241,0.06) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+  border-left: 3px solid #6366F1 !important;
+}
+
+body.dark-mode .ai-root-cause strong {
+  color: #818CF8 !important;
+}
+
+body.dark-mode .ai-root-cause p {
+  color: #9CA3AF !important;
+}
+
+/* ── 24. SENSOR EDIT BUTTONS ── */
+body.dark-mode .btn-edit-small {
+  background: rgba(99,102,241,0.12) !important;
+  color: #818CF8 !important;
+  border: none !important;
+}
+
+body.dark-mode .btn-delete-small {
+  background: rgba(239,68,68,0.12) !important;
+  color: #EF4444 !important;
+  border: none !important;
+}
+
+/* ── 25. MANAGEMENT OVERRIDE ── */
+body.dark-mode .management-override,
+body.dark-mode [class*="management"] {
+  color: #E5E7EB;
+}
+
+/* ── 26. PROBE NODES ── */
+body.dark-mode .pn-stat,
+body.dark-mode .pn-card,
+body.dark-mode .pn-modal {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .pn-empty {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #6B7280 !important;
+}
+
+body.dark-mode .pn-modal h2 { color: #E5E7EB !important; }
+
+body.dark-mode .pn-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important;
+}
+
+/* ── 27. SYSTEM HEALTH ── */
+body.dark-mode .sh-kpi,
+body.dark-mode .sh-gauge,
+body.dark-mode .sh-nodes-table,
+body.dark-mode .sh-no-probes {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .sh-kpi-value { color: #E5E7EB !important; }
+body.dark-mode .sh-gauge-label { color: #6B7280 !important; }
+body.dark-mode .sh-nodes-section h2 { color: #E5E7EB !important; }
+
+body.dark-mode .sh-nodes-table th {
+  background: #1a2235 !important;
+  color: #6B7280 !important;
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .sh-nodes-table td {
+  border-bottom-color: rgba(255,255,255,0.05) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .sh-heartbeat { color: #6B7280 !important; }
+
+/* ── 28. SECURITY MONITOR ── */
+body.dark-mode .security-card,
+body.dark-mode .waf-stats,
+body.dark-mode .integrity-status,
+body.dark-mode .vulnerabilities-status,
+body.dark-mode .recommendations {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+}
+
+body.dark-mode .recommendation-item {
+  background: #1a2235 !important;
+  border-left-color: #60A5FA !important;
+}
+
+/* ── 29. THRESHOLD CONFIG ── */
+body.dark-mode .threshold-section {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .threshold-toggle {
+  background: #1a2235 !important;
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .threshold-toggle:hover {
+  background: rgba(99,102,241,0.08) !important;
+}
+
+/* ── 30. SYSTEM RESET ── */
+body.dark-mode .system-stats,
+body.dark-mode .confirm-box {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .stat-card {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .reset-warning {
+  background: rgba(245,158,11,0.08) !important;
+  border-color: rgba(245,158,11,0.25) !important;
+  color: #F59E0B !important;
+}
+
+/* ── 31. SENSOR GROUPS ── */
+body.dark-mode .sensor-group-card,
+body.dark-mode .sensor-group-content {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .sensor-group-content {
+  background: #1a2235 !important;
+}
+
+/* ── 32. REPORTS CSS ── */
+body.dark-mode .templates-sidebar {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .template-btn {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .template-btn:hover {
+  background: rgba(99,102,241,0.08) !important;
+  border-color: rgba(99,102,241,0.25) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .template-btn.active {
+  background: rgba(99,102,241,0.12) !important;
+  border-color: rgba(99,102,241,0.35) !important;
+  color: #818CF8 !important;
+}
+
+body.dark-mode .report-viewer,
+body.dark-mode .executive-report {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .chart-section,
+body.dark-mode .chart-container,
+body.dark-mode .analysis-card {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .recommendation-item.medium {
+  background: rgba(245,158,11,0.06) !important;
+  border-left-color: #F59E0B !important;
+}
+
+/* ── 33. GLOBAL TEXT FIXES ── */
+body.dark-mode small { color: #6B7280 !important; }
+body.dark-mode code {
+  background: rgba(99,102,241,0.1) !important;
+  color: #818CF8 !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+}
+
+body.dark-mode pre {
+  background: #0B0F14 !important;
+  color: #9CA3AF !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 8px !important;
+  padding: 12px !important;
+}
+
+/* ── 34. SELECT OPTIONS ── */
+body.dark-mode select option {
+  background: #1F2937 !important;
+  color: #E5E7EB !important;
+}
+
+/* ── 35. HOVER TRANSITIONS GLOBAL ── */
+body.dark-mode button {
+  transition: all 0.15s ease !important;
+}
+
+/* ── 36. FOCUS RING ── */
+body.dark-mode *:focus-visible {
+  outline: 2px solid rgba(99,102,241,0.5) !important;
+  outline-offset: 2px !important;
+}

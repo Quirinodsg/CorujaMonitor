@@ -3263,3 +3263,375 @@
     max-width: 100%;
   }
 }
+
+/* ============================================================
+   MANAGEMENT — Dark Mode Overrides
+   Corrige todas as cores claras hardcoded
+   ============================================================ */
+
+/* Servers list sidebar */
+.servers-list {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.servers-list-header {
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+
+.servers-list-header h2 {
+  color: #4B5563 !important;
+}
+
+/* Server cards */
+.server-card {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.server-card:hover {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+}
+
+.server-card.selected {
+  background: rgba(99,102,241,0.1) !important;
+  border-color: #6366F1 !important;
+  box-shadow: 0 0 0 1px #6366F1 !important;
+}
+
+.server-info h3 { color: #E5E7EB !important; }
+.server-info p  { color: #6B7280 !important; }
+.server-os      { color: #4B5563 !important; }
+
+/* Server details panel */
+.server-details {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.server-details-header h2 { color: #E5E7EB !important; }
+
+/* Sensor cards — dark */
+.sensor-card {
+  background: linear-gradient(135deg, #1F2937 0%, #1a2235 100%) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+}
+
+.sensor-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4) !important;
+  border-color: rgba(99,102,241,0.25) !important;
+}
+
+.sensor-header {
+  background: linear-gradient(135deg, #1a2235 0%, #1F2937 100%) !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+.sensor-header h3 { color: #9CA3AF !important; }
+
+.sensor-value { color: #E5E7EB !important; }
+
+.sensor-timestamp,
+.sensor-thresholds {
+  background: rgba(0,0,0,0.2) !important;
+  color: #6B7280 !important;
+  border-color: rgba(255,255,255,0.05) !important;
+}
+
+.sensor-no-data { color: #4B5563 !important; }
+
+.sensor-action-btn {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #9CA3AF !important;
+}
+
+.sensor-delete-btn {
+  background: rgba(239,68,68,0.12) !important;
+  border-color: rgba(239,68,68,0.2) !important;
+  color: #EF4444 !important;
+}
+
+.sensor-last-note {
+  background: rgba(245,158,11,0.06) !important;
+  border-top-color: rgba(245,158,11,0.12) !important;
+  color: #F59E0B !important;
+}
+
+/* Tree view */
+.tree-group-header {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.tree-group-header:hover {
+  background: rgba(99,102,241,0.08) !important;
+}
+
+.tree-label { color: #9CA3AF !important; }
+.tree-count { background: #0B0F14 !important; color: #6B7280 !important; }
+.tree-group-content { border-left-color: rgba(255,255,255,0.06) !important; }
+
+.tree-server {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.tree-server:hover {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+.tree-server.selected {
+  background: rgba(99,102,241,0.1) !important;
+  border-color: #6366F1 !important;
+}
+
+.tree-server .server-info h3 { color: #E5E7EB !important; }
+.tree-server .server-info p  { color: #6B7280 !important; }
+.public-ip { color: #60A5FA !important; }
+.tag { background: rgba(99,102,241,0.12) !important; color: #818CF8 !important; }
+
+/* View toggle */
+.view-toggle {
+  background: #0B0F14 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+.view-toggle button { color: #6B7280 !important; background: transparent !important; }
+.view-toggle button:hover { background: rgba(255,255,255,0.04) !important; color: #E5E7EB !important; }
+.view-toggle button.active { background: #1F2937 !important; color: #E5E7EB !important; box-shadow: none !important; }
+
+/* Sidebar toggle */
+.sidebar-toggle-btn {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+  color: #9CA3AF !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+/* Reports */
+.templates-sidebar {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.templates-sidebar h2 { color: #E5E7EB !important; }
+.template-group h3 { color: #4B5563 !important; border-bottom-color: rgba(255,255,255,0.06) !important; }
+
+.template-btn {
+  background: #1F2937 !important;
+  border-color: transparent !important;
+  color: #9CA3AF !important;
+}
+
+.template-btn:hover {
+  background: rgba(99,102,241,0.08) !important;
+  border-color: rgba(99,102,241,0.25) !important;
+  color: #E5E7EB !important;
+}
+
+.template-btn.active {
+  background: rgba(99,102,241,0.12) !important;
+  border-color: rgba(99,102,241,0.35) !important;
+  color: #818CF8 !important;
+}
+
+.template-name { color: inherit !important; }
+.template-desc { color: #6B7280 !important; }
+
+.report-viewer {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.report-content h3, .report-content h4 { color: #E5E7EB !important; }
+
+.report-table th {
+  background: #1a2235 !important;
+  color: #6B7280 !important;
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+
+.report-table td { border-bottom-color: rgba(255,255,255,0.05) !important; color: #E5E7EB !important; }
+.report-table tbody tr:hover { background: rgba(99,102,241,0.05) !important; }
+
+.summary-card {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+.summary-card h4 { color: #6B7280 !important; }
+.summary-card p  { color: #E5E7EB !important; }
+.big-number { color: #E5E7EB !important; }
+.big-number.success { color: #10B981 !important; }
+.big-number.warning { color: #F59E0B !important; }
+.big-number.critical { color: #EF4444 !important; }
+
+.ai-insights {
+  background: rgba(16,185,129,0.06) !important;
+  border-left-color: #10B981 !important;
+}
+
+.ai-insights h4 { color: #10B981 !important; }
+.ai-insights li { color: #9CA3AF !important; }
+
+/* Modal */
+.modal-content {
+  background: #1F2937 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.7) !important;
+}
+
+.modal-content h2 { color: #E5E7EB !important; }
+
+.modal-header {
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+  background: transparent !important;
+}
+
+.modal-header h2 { color: #E5E7EB !important; }
+
+.modal-footer {
+  border-top-color: rgba(255,255,255,0.08) !important;
+  background: transparent !important;
+}
+
+/* Form elements */
+.form-group label { color: #9CA3AF !important; }
+.form-group input,
+.form-group select,
+.form-group textarea {
+  background: #0B0F14 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #E5E7EB !important;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  border-color: #6366F1 !important;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+}
+
+.form-group small { color: #4B5563 !important; }
+
+/* Buttons */
+.btn-add {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+  color: white !important;
+  border: none !important;
+}
+
+.btn-primary { background: #6366F1 !important; color: white !important; }
+.btn-primary:hover { background: #4f52d9 !important; }
+
+.btn-secondary {
+  background: #1F2937 !important;
+  color: #9CA3AF !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+.btn-cancel {
+  background: #1F2937 !important;
+  color: #9CA3AF !important;
+}
+
+.btn-save {
+  background: linear-gradient(135deg, #6366F1 0%, #4f52d9 100%) !important;
+  color: white !important;
+}
+
+.btn-edit-small {
+  background: rgba(99,102,241,0.12) !important;
+  color: #818CF8 !important;
+}
+
+.btn-delete-small {
+  background: rgba(239,68,68,0.12) !important;
+  color: #EF4444 !important;
+}
+
+/* Info boxes */
+.info-box {
+  background: rgba(245,158,11,0.06) !important;
+  border-color: rgba(245,158,11,0.2) !important;
+}
+
+.info-box p, .info-box ul, .info-box li { color: #9CA3AF !important; }
+.info-box code { background: rgba(245,158,11,0.1) !important; color: #F59E0B !important; }
+
+.info-banner {
+  background: rgba(96,165,250,0.06) !important;
+  border-left-color: #60A5FA !important;
+}
+
+.info-banner p { color: #60A5FA !important; }
+
+/* Alert */
+.alert-warning {
+  background: rgba(245,158,11,0.08) !important;
+  border-color: rgba(245,158,11,0.2) !important;
+  color: #F59E0B !important;
+}
+
+/* Empty / No data */
+.empty-state { color: #4B5563 !important; }
+.empty-state h3 { color: #6B7280 !important; }
+.no-data { color: #4B5563 !important; }
+.no-selection { color: #4B5563 !important; }
+.loading { color: #6B7280 !important; }
+
+/* Docker summary */
+.docker-summary { background: rgba(0,0,0,0.2) !important; }
+
+.docker-summary .summary-card {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  box-shadow: none !important;
+}
+
+.docker-summary .summary-value { color: #E5E7EB !important; }
+.docker-summary .summary-label { color: #6B7280 !important; }
+
+/* Incidents */
+.incidents-table-container {
+  background: #111827 !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  overflow: hidden !important;
+}
+
+.incidents-table th {
+  background: #1a2235 !important;
+  color: #6B7280 !important;
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+}
+
+.incidents-table td {
+  border-bottom-color: rgba(255,255,255,0.05) !important;
+  color: #E5E7EB !important;
+}
+
+.incidents-table tbody tr:hover td {
+  background: rgba(99,102,241,0.05) !important;
+}
+
+/* Probes section */
+.probes-section {
+  background: rgba(0,0,0,0.15) !important;
+  border-radius: 8px !important;
+}
+
+.probes-header h4 { color: #9CA3AF !important; }
+
+.probe-item {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
