@@ -202,7 +202,7 @@
 
 .modal-footer {
   padding: 20px;
-  border-top: 1px solid #eee;
+  border-top: 1px solid rgba(255,255,255,0.06);
   display: flex;
   justify-content: flex-end;
   gap: 10px;
@@ -216,7 +216,7 @@
   display: block;
   margin-bottom: 8px;
   font-weight: 600;
-  color: #333;
+  color: #9CA3AF;
   font-size: 14px;
 }
 
@@ -225,22 +225,24 @@
 .form-group textarea {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 5px;
   font-size: 14px;
+  background: #1a2235;
+  color: #E5E7EB;
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #0e639c;
+  border-color: #6366F1;
 }
 
 .form-group small {
   display: block;
   margin-top: 5px;
-  color: #666;
+  color: #6B7280;
   font-size: 12px;
 }
 
@@ -251,14 +253,14 @@
 }
 
 .alert-warning {
-  background: #fef3c7;
-  border: 1px solid #f59e0b;
-  color: #92400e;
+  background: rgba(245,158,11,0.1);
+  border: 1px solid rgba(245,158,11,0.3);
+  color: #F59E0B;
 }
 
 .info-box {
-  background: #f0f9ff;
-  border: 1px solid #0ea5e9;
+  background: rgba(96,165,250,0.08);
+  border: 1px solid rgba(96,165,250,0.2);
   border-radius: 5px;
   padding: 15px;
   margin-top: 15px;
@@ -266,16 +268,18 @@
 
 .info-box h4 {
   margin-top: 0;
-  color: #0c4a6e;
+  color: #60A5FA;
 }
 
 .info-box ol {
   margin: 10px 0;
   padding-left: 20px;
+  color: #9CA3AF;
 }
 
 .info-box code {
-  background: #e0f2fe;
+  background: rgba(96,165,250,0.1);
+  color: #60A5FA;
   padding: 2px 6px;
   border-radius: 3px;
   font-family: monospace;
@@ -376,13 +380,13 @@
 }
 
 .servers-list {
-  background: white;
+  background: #111827;
   border-radius: 8px;
   padding: 12px;
   overflow-y: auto;
   overflow-x: hidden;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
   transition: all 0.3s ease;
 }
 
@@ -404,21 +408,21 @@
   left: 20px;
   top: 120px;
   z-index: 100;
-  background: white;
-  border: 1px solid #e5e7eb;
+  background: #1a2235;
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: 8px;
   padding: 8px 12px;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
   font-size: 18px;
   transition: all 0.2s ease;
-  color: #374151;
+  color: #9CA3AF;
 }
 
 .sidebar-toggle-btn:hover {
-  background: #f9fafb;
+  background: #1e2a3a;
   transform: scale(1.05);
-  border-color: #d1d5db;
+  border-color: rgba(255,255,255,0.15);
 }
 
 @media (max-width: 768px) {
@@ -436,14 +440,14 @@
   align-items: center;
   margin-bottom: 12px;
   padding: 8px 4px;
-  border-bottom: 2px solid #e5e7eb;
+  border-bottom: 2px solid rgba(255,255,255,0.06);
 }
 
 .servers-list-header h2 {
   margin: 0;
   font-size: 11px;
   font-weight: 700;
-  color: #6b7280;
+  color: #6B7280;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
@@ -457,10 +461,10 @@
 .view-toggle {
   display: flex;
   gap: 2px;
-  background: #f3f4f6;
+  background: rgba(255,255,255,0.05);
   padding: 2px;
   border-radius: 6px;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 .view-toggle button {
@@ -471,46 +475,46 @@
   cursor: pointer;
   font-size: 13px;
   transition: all 0.15s ease;
-  color: #6b7280;
+  color: #6B7280;
 }
 
 .view-toggle button:hover {
-  background: rgba(0,0,0,0.05);
-  color: #374151;
+  background: rgba(255,255,255,0.05);
+  color: #9CA3AF;
 }
 
 .view-toggle button.active {
-  background: white;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-  color: #111827;
+  background: #1a2235;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+  color: #E5E7EB;
 }
 
-/* Server Card - CheckMK inspired clean design */
+/* Server Card - dark theme */
 .server-card {
   display: flex;
   align-items: flex-start;
   gap: 8px;
   padding: 10px 12px;
   margin-bottom: 2px;
-  background: white;
+  background: #111827;
   border-radius: 6px;
   cursor: pointer;
   transition: all 0.15s ease;
-  border: 1px solid #e5e7eb;
+  border: 1px solid rgba(255,255,255,0.06);
   position: relative;
   min-height: 50px;
 }
 
 .server-card:hover {
-  background: #f9fafb;
-  border-color: #d1d5db;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  background: #1a2235;
+  border-color: rgba(255,255,255,0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
 .server-card.selected {
-  background: #eff6ff;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px #3b82f6;
+  background: rgba(99,102,241,0.1);
+  border-color: #6366F1;
+  box-shadow: 0 0 0 1px #6366F1;
 }
 
 .server-card .server-status {
@@ -543,7 +547,7 @@
   margin: 0;
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #E5E7EB;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   line-height: 1.3;
   word-wrap: break-word;
@@ -559,7 +563,7 @@
 .server-info p {
   margin: 0;
   font-size: 11px;
-  color: #6b7280;
+  color: #6B7280;
   font-family: 'SF Mono', 'Monaco', 'Consolas', monospace;
   line-height: 1.3;
   word-wrap: break-word;
@@ -3635,3 +3639,225 @@
   background: #1F2937 !important;
   border-color: rgba(255,255,255,0.06) !important;
 }
+
+
+/* ============================================================
+   DARK MODE OVERRIDES — Management.css
+   Corrige todos os backgrounds brancos e textos claros em fundo claro
+   ============================================================ */
+
+.server-details,
+.modal-content,
+.templates-sidebar,
+.report-viewer,
+.users-table,
+.maintenance-table-container {
+  background: #111827 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #E5E7EB !important;
+}
+
+.root-cause, .evidence, .suggested-actions,
+.remediation-info, .add-note-form, .note-card,
+.detail-item, .ai-root-cause, .ai-details,
+.remediation-log, .category-card {
+  background: #1a2235 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #E5E7EB !important;
+}
+
+.probe-item {
+  background: #1a2235 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+}
+
+.summary-card {
+  background: #1a2235 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.summary-card h4 { color: #9CA3AF !important; }
+.summary-card p  { color: #E5E7EB !important; }
+
+.tree-group-header {
+  background: rgba(255,255,255,0.04) !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  color: #9CA3AF !important;
+}
+
+.tree-group-header:hover {
+  background: rgba(255,255,255,0.07) !important;
+}
+
+.tree-label { color: #E5E7EB !important; }
+.tree-count {
+  background: rgba(255,255,255,0.06) !important;
+  color: #9CA3AF !important;
+}
+
+.tree-group-content {
+  border-left: 2px solid rgba(255,255,255,0.06) !important;
+}
+
+.tree-server {
+  background: #111827 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.tree-server:hover {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+.tree-server.selected {
+  background: rgba(99,102,241,0.1) !important;
+  border-color: #6366F1 !important;
+}
+
+.tree-server .server-info h3 { color: #E5E7EB !important; }
+.tree-server .server-info p  { color: #6B7280 !important; }
+
+.sensor-card {
+  background: #111827 !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.sensor-card:hover {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+.sensor-header {
+  background: rgba(255,255,255,0.03) !important;
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+.sensor-header h3 { color: #9CA3AF !important; }
+.sensor-value     { color: #E5E7EB !important; }
+.sensor-timestamp { color: #6B7280 !important; background: transparent !important; }
+.sensor-thresholds { color: #6B7280 !important; border-top: 1px solid rgba(255,255,255,0.06) !important; }
+.sensor-no-data   { color: #6B7280 !important; }
+
+.sensor-action-btn {
+  background: #1a2235 !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  color: #9CA3AF !important;
+}
+
+.sensor-action-btn:hover {
+  background: #1e2a3a !important;
+}
+
+.sensor-last-note {
+  background: rgba(245,158,11,0.08) !important;
+  border-top: 1px solid rgba(245,158,11,0.15) !important;
+  color: #F59E0B !important;
+}
+
+.template-btn {
+  background: rgba(255,255,255,0.04) !important;
+  border: 2px solid transparent !important;
+  color: #9CA3AF !important;
+}
+
+.template-btn:hover {
+  background: rgba(99,102,241,0.08) !important;
+  border-color: #6366F1 !important;
+  color: #E5E7EB !important;
+}
+
+.template-btn.active {
+  background: rgba(99,102,241,0.12) !important;
+  border-color: #6366F1 !important;
+  color: #818CF8 !important;
+}
+
+.template-name { color: #E5E7EB !important; }
+.template-desc { color: #6B7280 !important; }
+
+.report-content h3, .report-content h4 { color: #E5E7EB !important; }
+
+.report-table th {
+  background: rgba(255,255,255,0.04) !important;
+  color: #9CA3AF !important;
+  border-bottom: 2px solid rgba(255,255,255,0.08) !important;
+}
+
+.report-table td {
+  color: #E5E7EB !important;
+  border-bottom: 1px solid rgba(255,255,255,0.04) !important;
+}
+
+.report-table tbody tr:hover {
+  background: rgba(255,255,255,0.03) !important;
+}
+
+.ai-insights {
+  background: rgba(34,197,94,0.06) !important;
+  border-left: 4px solid #22C55E !important;
+}
+
+.ai-insights h4 { color: #22C55E !important; }
+.ai-insights li { color: #9CA3AF !important; }
+
+.info-banner {
+  background: rgba(96,165,250,0.08) !important;
+  border-left: 4px solid #60A5FA !important;
+}
+
+.info-banner p { color: #60A5FA !important; }
+
+.probes-section {
+  background: rgba(255,255,255,0.02) !important;
+  border-top: 2px solid rgba(255,255,255,0.06) !important;
+}
+
+.probes-header h4 { color: #9CA3AF !important; }
+.no-probes { color: #6B7280 !important; border: 2px dashed rgba(255,255,255,0.08) !important; background: transparent !important; }
+
+.token-full { color: #9CA3AF !important; font-family: monospace; font-size: 12px; }
+
+.loading { color: #9CA3AF !important; }
+.empty-state { color: #6B7280 !important; }
+.empty-state h3 { color: #9CA3AF !important; }
+
+.no-selection, .no-data { color: #6B7280 !important; }
+
+/* Category card dark */
+.category-card {
+  border-left: 4px solid #6366F1 !important;
+}
+
+.category-card:hover {
+  background: #1e2a3a !important;
+}
+
+/* Sensor acknowledged badge */
+.sensor-acknowledged-badge {
+  background: linear-gradient(135deg, #6366F1 0%, #4f52d9 100%) !important;
+}
+
+/* btn-edit-small / btn-delete-small dark */
+.btn-edit-small {
+  background: rgba(99,102,241,0.15) !important;
+  color: #818CF8 !important;
+}
+
+.btn-edit-small:hover { background: rgba(99,102,241,0.25) !important; }
+
+.btn-delete-small {
+  background: rgba(239,68,68,0.15) !important;
+  color: #EF4444 !important;
+}
+
+.btn-delete-small:hover { background: rgba(239,68,68,0.25) !important; }
+
+/* tag dark */
+.tag {
+  background: rgba(99,102,241,0.15) !important;
+  color: #818CF8 !important;
+}
+
+/* public-ip / server-group */
+.public-ip  { color: #60A5FA !important; }
+.server-group { color: #6B7280 !important; }

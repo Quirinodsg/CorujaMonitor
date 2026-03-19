@@ -183,3 +183,138 @@
   color: #E5E7EB;
   font-weight: 500;
 }
+
+/* ── Search dropdown ── */
+.topbar-search {
+  position: relative;
+}
+
+.topbar-search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #1a2235;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  z-index: 9999;
+  overflow: hidden;
+  animation: dropdown-in 0.15s ease;
+}
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.topbar-search-empty {
+  padding: 16px;
+  text-align: center;
+  color: #6B7280;
+  font-size: 13px;
+}
+
+.topbar-search-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+}
+
+.topbar-search-result:last-child { border-bottom: none; }
+
+.topbar-search-result:hover,
+.topbar-search-result.active {
+  background: rgba(99,102,241,0.1);
+}
+
+.topbar-result-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  width: 24px;
+  text-align: center;
+}
+
+.topbar-result-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.topbar-result-label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #E5E7EB;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.topbar-result-sub {
+  font-size: 11px;
+  color: #6B7280;
+}
+
+.topbar-result-type {
+  font-size: 10px;
+  font-weight: 600;
+  color: #4B5563;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+}
+
+/* ── Highlight ── */
+.search-highlight {
+  background: rgba(99,102,241,0.3);
+  color: #818CF8;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+/* ── Spinner ── */
+.topbar-search-spinner {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255,255,255,0.1);
+  border-top-color: #6366F1;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+/* ── Alert badge (number) ── */
+.topbar-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  min-width: 16px;
+  height: 16px;
+  background: #EF4444;
+  border-radius: 8px;
+  border: 2px solid #0d1117;
+  font-size: 9px;
+  font-weight: 700;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+}
