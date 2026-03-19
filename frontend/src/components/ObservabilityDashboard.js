@@ -77,40 +77,53 @@ export default function ObservabilityDashboard() {
     const interval = setInterval(fetchData, 30000);
 
     // WebSocket for real-time updates
+    let cancelled = false;
+    let ws = null;
+
     const connect = () => {
+      if (cancelled) return;
       try {
-        const ws = new WebSocket(`${WS_URL}/api/v1/ws/observability`);
+        ws = new WebSocket(`${WS_URL}/api/v1/ws/observability`);
         wsRef.current = ws;
-        ws.onopen = () => setWsStatus('connected');
+        ws.onopen = () => { if (!cancelled) setWsStatus('connected'); };
         ws.onclose = () => {
-          setWsStatus('disconnected');
-          setTimeout(connect, 5000);
-        };
-        ws.onerror = () => setWsStatus('error');
-        ws.onmessage = (e) => {
-          const data = JSON.parse(e.data);
-          if (data.type === 'observability_update') {
-            setHealth(prev => prev ? {
-              ...prev,
-              score: data.health_score,
-              breakdown: {
-                ...prev.breakdown,
-                sensors_ok: data.sensors_ok,
-                sensors_critical: data.sensors_critical,
-                sensors_total: data.sensors_total,
-              }
-            } : null);
+          if (!cancelled) {
+            setWsStatus('disconnected');
+            setTimeout(connect, 5000);
           }
         };
+        ws.onerror = () => { if (!cancelled) setWsStatus('error'); };
+        ws.onmessage = (e) => {
+          if (cancelled) return;
+          try {
+            const data = JSON.parse(e.data);
+            if (data.type === 'observability_update') {
+              setHealth(prev => prev ? {
+                ...prev,
+                score: data.health_score,
+                breakdown: {
+                  ...prev.breakdown,
+                  sensors_ok: data.sensors_ok,
+                  sensors_critical: data.sensors_critical,
+                  sensors_total: data.sensors_total,
+                }
+              } : null);
+            }
+          } catch (_) {}
+        };
       } catch (e) {
-        setWsStatus('error');
+        if (!cancelled) setWsStatus('error');
       }
     };
-    connect();
+
+    // Pequeno delay para evitar "closed before connection established" em StrictMode
+    const wsTimer = setTimeout(connect, 100);
 
     return () => {
+      cancelled = true;
       clearInterval(interval);
-      if (wsRef.current) wsRef.current.close();
+      clearTimeout(wsTimer);
+      if (ws && ws.readyState !== WebSocket.CLOSED) ws.close();
     };
   }, []);
 

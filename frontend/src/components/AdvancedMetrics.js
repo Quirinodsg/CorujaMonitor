@@ -35,8 +35,12 @@ export default function AdvancedMetrics() {
   useEffect(() => {
     fetch(`${API}/api/v1/servers`)
       .then(r => r.json())
-      .then(d => setServers(d.servers || d || []))
-      .catch(() => {});
+      .then(d => {
+        // API pode retornar array direto, {servers: []}, ou objeto paginado
+        const list = Array.isArray(d) ? d : (Array.isArray(d.servers) ? d.servers : []);
+        setServers(list);
+      })
+      .catch(() => setServers([]));
   }, []);
 
   useEffect(() => {

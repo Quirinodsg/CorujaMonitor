@@ -20,16 +20,21 @@ export default function EventsTimeline() {
       if (filter.severity) params.set('severity', filter.severity);
       if (filter.type) params.set('type', filter.type);
 
-      // Try events endpoint, fallback to incidents
-      let data = [];
-      const r = await fetch(`${API}/api/v1/incidents?${params}`);
+      const token = localStorage.getItem('token') || localStorage.getItem('access_token') || '';
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const r = await fetch(`${API}/api/v1/incidents?${params}`, { headers });
       if (r.ok) {
         const d = await r.json();
-        data = d.incidents || d || [];
+        const list = Array.isArray(d) ? d : (Array.isArray(d.incidents) ? d.incidents : []);
+        setEvents(list);
+      } else if (r.status === 403 || r.status === 401) {
+        // Sem autenticação — mostrar lista vazia sem crash
+        setEvents([]);
       }
-      setEvents(data);
     } catch (e) {
       console.error(e);
+      setEvents([]);
     } finally {
       setLoading(false);
     }
