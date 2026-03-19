@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\dependency_engine.py
+# hypothesis_version: 6.151.9
+
+['is_dag', 'suspended_by_host', 'total_edges', 'total_nodes', 'value']

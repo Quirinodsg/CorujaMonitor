@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\connection_pool\..\event_engine\event_queue.py
+# hypothesis_version: 6.151.9
+
+[5.0, 10000, 'EventQueue', 'EventQueue: iniciada', 'dedup_cache_size', 'queue_size', 'total_deduplicated', 'total_flushed', 'total_pushed', 'total_rate_limited']

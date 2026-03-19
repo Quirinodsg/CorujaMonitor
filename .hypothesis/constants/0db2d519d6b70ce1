@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\connection_pool\..\security\credential_manager.py
+# hypothesis_version: 6.151.9
+
+[0.0, 'CredentialRotation', 'PROBE_ENCRYPTION_KEY', '[REDACTED]', 'password', 'secret', 'token']

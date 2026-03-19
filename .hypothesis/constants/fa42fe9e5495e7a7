@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\metric_cache.py
+# hypothesis_version: 6.151.9
+
+[6379, 'backend', 'cpu', 'hit_ratio', 'hits', 'local', 'local_entries', 'localhost', 'memory', 'misses', 'redis']

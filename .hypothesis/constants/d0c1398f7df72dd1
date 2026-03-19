@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\thread_pool.py
+# hypothesis_version: 6.151.9
+
+[1000, 'SensorWorker', 'WorkerPool parado', 'active_workers', 'completed', 'failed', 'max_workers', 'queue_depth', 'submitted']

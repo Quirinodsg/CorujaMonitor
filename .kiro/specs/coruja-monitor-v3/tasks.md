@@ -1,0 +1,405 @@
+# Plano de Implementação — Coruja Monitor v3.0
+
+## Visão Geral
+
+Implementação incremental em 13 fases, mantendo compatibilidade total com os módulos v2.0 existentes (`wmi_pool.py`, `smart_collector.py`, `global_rate_limiter.py`, `event_queue.py`, `metrics_pipeline/`, `protocol_engines/`, `ai-agent/`). Cada fase constrói sobre a anterior; a Fase 1 (Spec Central) é pré-requisito de todas as demais.
+
+Stack: Python 3 / FastAPI / React / Celery / PostgreSQL + TimescaleDB / Redis / Docker Compose (Linux). Sonda Windows: probe/ via NSSM no SRVSONDA001.
+
+## Tarefas
+
+- [ ] 1. Fase 1 — Spec Central (`core/spec/`)
+  - [ ] 1.1 Criar estrutura de diretórios `core/spec/` com `__init__.py`, `enums.py`, `models.py`
+    - Criar `core/__init__.py` e `core/spec/__init__.py` exportando todos os modelos e enums
+    - _Requirements: 1.1, 1.3_
+  - [ ] 1.2 Implementar `core/spec/enums.py` com todos os enums do sistema
+    - `HostType` (server/switch/appliance/container), `Protocol` (wmi/snmp/icmp/tcp/http), `SensorStatus` (ok/warning/critical/unknown), `EventSeverity` (info/warning/critical), `AlertStatus` (open/acknowledged/resolved), `NodeType` (switch/server/service/application), `ProbeStatus` (online/degraded/offline)
+    - _Requirements: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_
+  - [ ] 1.3 Implementar `core/spec/models.py` com os 7 modelos Pydantic
+    - `Host`, `Sensor`, `Metric`, `Event`, `Alert`, `TopologyNode`, `ProbeNode` com todos os campos especificados
+    - _Requirements: 1.4, 1.5, 1.6, 1.7, 1.8, 1.9, 1.10_
+  - [ ]* 1.4 Escrever property test para round-trip de serialização Pydantic
+    - **Property 1: Round-trip de serialização dos modelos Pydantic**
+    - **Validates: Requirements 1.11**
+  - [ ]* 1.5 Escrever property test para validação de campos obrigatórios
+    - **Property 2: Validação de campos obrigatórios rejeita entradas inválidas**
+    - **Validates: Requirements 1.2**
+
+- [ ] 2. Fase 2 — Dependency Engine (`engine/dependency_engine.py`)
+  - [ ] 2.1 Criar `engine/__init__.py` e implementar `engine/dependency_engine.py` com classe `DependencyEngine`
+    - Usar `networkx.DiGraph` para o DAG; implementar `add_dependency()` com detecção de ciclo via `nx.is_directed_acyclic_graph()`
+    - Implementar `should_execute(sensor_id, host_id)`, `update_state()`, `get_suspended_sensors()`, `get_graph_status()`
+    - Cache de estado por host com TTL de 30 segundos (dict com timestamp de expiração, sem Redis)
+    - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7, 2.8_
+  - [ ]* 2.2 Escrever property test para DAG sem ciclos
+    - **Property 3: DAG nunca contém ciclos após operações de adição**
+    - **Validates: Requirements 2.1, 2.6**
+  - [ ]* 2.3 Escrever property test para suspensão e reativação de sensores filhos
+    - **Property 4: Suspensão e reativação de sensores filhos (round-trip)**
+    - **Validates: Requirements 2.2, 2.3**
+  - [ ]* 2.4 Escrever testes unitários para DependencyEngine
+    - Testar expiração de TTL do cache (30s), dependências em cascata (Ping → TCP → WMI), endpoint de status do grafo
+    - _Requirements: 2.4, 2.5, 2.7_
+
+- [ ] 3. Checkpoint — Spec Central e Dependency Engine
+  - Garantir que todos os testes passem. Verificar que `core/spec/` é importável de qualquer módulo. Perguntar ao usuário se há dúvidas antes de continuar.
+
+- [ ] 4. Fase 3 — Topology Engine (`topology_engine/`)
+  - [ ] 4.1 Criar `topology_engine/__init__.py` e implementar `topology_engine/graph.py` com classe `TopologyGraph`
+    - Usar `networkx.DiGraph`; implementar `add_node()`, `add_edge()`, `get_ancestors()`, `get_descendants()`, `to_dict()` (formato `{nodes: [...], edges: [...]}`)
+    - _Requirements: 3.1, 3.8_
+  - [ ] 4.2 Implementar `topology_engine/impact.py` com `ImpactCalculator` e dataclass `BlastRadius`
+    - `blast_radius(node_id)` retorna `BlastRadius` com `affected_hosts`, `affected_services`, `affected_applications`, `total_impact`
+    - Propagação de status `impacted` para descendentes quando nó pai fica offline
+    - _Requirements: 3.4, 3.5_
+  - [ ] 4.3 Implementar `topology_engine/discovery.py` com `SNMPTopologyDiscovery` e `WMITopologyDiscovery`
+    - `SNMPTopologyDiscovery.discover()`: ARP table e LLDP/CDP para switches/roteadores
+    - `WMITopologyDiscovery.discover()`: serviços e processos via WMI para servidores Windows
+    - Preservar customizações manuais ao atualizar topologia por descoberta automática
+    - _Requirements: 3.2, 3.3, 3.7_
+  - [ ] 4.4 Criar `api/routers/topology.py` com endpoints REST da topologia
+    - `GET /api/v1/topology/nodes`, `GET /api/v1/topology/graph`, `GET /api/v1/topology/impact/{node_id}`
+    - Persistência do grafo no banco (tabela `topology_nodes`) e recarga na inicialização
+    - _Requirements: 3.6, 3.8_
+  - [ ]* 4.5 Escrever property test para blast radius
+    - **Property 5: Blast radius inclui todos os descendentes**
+    - **Validates: Requirements 3.4, 3.5**
+  - [ ]* 4.6 Escrever property test para round-trip de persistência do grafo
+    - **Property 6: Round-trip de persistência do grafo de topologia**
+    - **Validates: Requirements 3.6**
+  - [ ]* 4.7 Escrever testes unitários para TopologyEngine
+    - Testar hierarquia switch→servidor→serviço, preservação de customizações manuais
+    - _Requirements: 3.1, 3.7_
+
+- [ ] 5. Fase 4 — Event Processor (`event_processor/`)
+  - [ ] 5.1 Criar `event_processor/__init__.py` e implementar `event_processor/threshold_evaluator.py` com `ThresholdEvaluator`
+    - `evaluate(metric, thresholds)` retorna `SensorStatus` baseado nos thresholds do sensor
+    - Suportar thresholds dinâmicos por host sobrescrevendo padrão do sensor
+    - _Requirements: 4.1, 4.2, 4.8_
+  - [ ] 5.2 Implementar `event_processor/processor.py` com classe `EventProcessor`
+    - Cache `_last_status: dict[str, SensorStatus]` por sensor_id; gerar `Event` apenas em transição de estado
+    - Publicar evento em Redis Stream `events_stream` via `XADD` (maxlen=50_000) em ≤ 1 segundo
+    - Persistir `Metric` em TimescaleDB (tabela `metrics_ts`)
+    - Reconstruir `_last_status` da última métrica no banco ao reinicializar
+    - Suportar tipos de evento: `high_cpu`, `low_memory`, `disk_full`, `host_unreachable`, `service_down`
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6, 4.7_
+  - [ ]* 5.3 Escrever property test para idempotência do EventProcessor
+    - **Property 7: EventProcessor gera Event apenas em transição de estado (idempotência)**
+    - **Validates: Requirements 4.2, 4.3**
+  - [ ]* 5.4 Escrever testes unitários para EventProcessor
+    - Testar thresholds dinâmicos, persistência no TimescaleDB, publicação no stream
+    - _Requirements: 4.5, 4.6, 4.7, 4.8_
+
+- [ ] 6. Migração de Banco de Dados — DDL v3
+  - [ ] 6.1 Criar script de migração `api/migrate_v3.py` com DDL completo
+    - Criar hypertable `metrics_ts` com `create_hypertable('metrics_ts', 'time')`, retention policy 90 dias, compressão após 7 dias por `sensor_id`
+    - Criar tabela `ai_feedback_actions` com campos: `action_id` (UUID PK), `agent_name`, `action_type`, `target_host`, `timestamp`, `result`, `resolution_time_seconds`, `outcome`, `metadata` (JSONB); índices em `agent_name` e `timestamp`
+    - Criar tabela `topology_nodes` com campos: `id` (UUID PK), `type`, `parent_id` (FK self-referencial), `metadata` (JSONB), `created_at`, `updated_at`
+    - Criar tabela `intelligent_alerts` com campos: `id` (UUID PK), `event_ids` (UUID[]), `title`, `severity`, `status`, `root_cause`, `affected_hosts` (UUID[]), `root_cause_node` (FK topology_nodes), `confidence`, `created_at`, `resolved_at`; índices em `status`, `severity`, `created_at`
+    - _Requirements: 4.5, 6.2, 3.6, 8.1_
+  - [ ] 6.2 Registrar migração em `api/main.py` para execução automática na inicialização
+    - _Requirements: 4.5_
+
+- [ ] 7. Checkpoint — Event Processor e Banco de Dados
+  - Garantir que todos os testes passem e que a migração DDL executa sem erros no container `coruja-postgres`. Perguntar ao usuário se há dúvidas.
+
+- [ ] 8. Fase 5 — AI Agents Pipeline (`ai_agents/`)
+  - [ ] 8.1 Criar `ai_agents/__init__.py` e implementar `ai_agents/base_agent.py` com `BaseAgent` (ABC), `AgentContext` e `AgentResult`
+    - `AgentContext`: `events`, `metrics`, `topology`, `feedback_history`
+    - `AgentResult`: `agent_name`, `success`, `output`, `error`
+    - _Requirements: 5.9_
+  - [ ] 8.2 Implementar `ai_agents/smart_scheduler.py` com `SmartSchedulerAgent`
+    - Reduzir intervalo para 30s quando anomalia detectada; restaurar após 5 ciclos normais
+    - _Requirements: 5.1_
+  - [ ] 8.3 Implementar `ai_agents/anomaly_detection.py` com `AnomalyDetectionAgent`
+    - Encapsular `ai-agent/anomaly_detector.py` existente (sem modificar o original)
+    - Baseline Z-score com janela deslizante de 7 dias; desvio > 3σ gera `Event(type="anomaly")` com `confidence_score`
+    - _Requirements: 5.2, 5.3_
+  - [ ] 8.4 Implementar `ai_agents/correlation.py` com `CorrelationAgent`
+    - Encapsular `ai-agent/event_correlator.py` existente; janela de correlação de 5 minutos
+    - Agrupar eventos do mesmo host ou hosts do mesmo grupo topológico
+    - _Requirements: 5.4_
+  - [ ] 8.5 Implementar `ai_agents/root_cause.py` com `RootCauseAgent`
+    - Encapsular `ai-agent/root_cause_engine.py` existente; usar `TopologyGraph` para identificar nó raiz
+    - _Requirements: 5.5_
+  - [ ] 8.6 Implementar `ai_agents/decision.py` com `DecisionAgent`
+    - Avaliar severidade, hosts afetados, janela de manutenção e histórico de falsos positivos
+    - _Requirements: 5.6_
+  - [ ] 8.7 Implementar `ai_agents/auto_remediation.py` com `AutoRemediationAgent`
+    - Executar remediação apenas quando `confidence >= 0.85` e `DecisionAgent` aprovou
+    - Registrar: ação, host alvo, timestamp, resultado (sucesso/falha), duração
+    - _Requirements: 5.7, 5.8_
+  - [ ] 8.8 Implementar `ai_agents/pipeline.py` com `AgentPipeline`
+    - Orquestrar sequencialmente: `AnomalyDetection → Correlation → RootCause → Decision → AutoRemediation`
+    - Circuit breaker: agente com > 50% falhas nas últimas 10 execuções entra em "circuit open" por 5 minutos
+    - Se agente falhar, continuar pipeline com `AgentResult(success=False)` e registrar erro
+    - _Requirements: 5.9, 5.10_
+  - [ ]* 8.9 Escrever property test para anomalia > 3σ
+    - **Property 8: Anomalia detectada quando valor desvia > 3σ do baseline**
+    - **Validates: Requirements 5.3**
+  - [ ]* 8.10 Escrever property test para pipeline resiliente
+    - **Property 9: Pipeline de agentes continua após falha de agente individual**
+    - **Validates: Requirements 5.10**
+  - [ ]* 8.11 Escrever property test para threshold de confiança de remediação
+    - **Property 10: AutoRemediationAgent só executa com confiança ≥ 85%**
+    - **Validates: Requirements 5.7**
+  - [ ]* 8.12 Escrever testes unitários para agentes de IA
+    - Testar `SmartSchedulerAgent` (ajuste de intervalo), `CorrelationAgent` (janela 5min), `DecisionAgent` (janela de manutenção)
+    - _Requirements: 5.1, 5.4, 5.6_
+
+- [ ] 9. Fase 6 — AI Feedback Loop (`ai_agents/feedback_loop.py`)
+  - [ ] 9.1 Implementar `ai_agents/feedback_loop.py` com classe `FeedbackLoop` e dataclasses `RemediationAction`, `ActionResult`, `FeedbackMetrics`
+    - `record_action()`: persiste na tabela `ai_feedback_actions`, retorna `action_id`
+    - `record_result()`: atualiza resultado e ajusta peso da ação no modelo de decisão
+    - `get_metrics()`: retorna `FeedbackMetrics` com `actions_total`, `actions_successful`, `mean_resolution_time_seconds`, `false_positive_rate`
+    - Retreinamento dos modelos via APScheduler a cada 24 horas
+    - Manter histórico mínimo de 90 dias
+    - _Requirements: 6.1, 6.2, 6.5, 6.6, 6.7_
+  - [ ]* 9.2 Escrever property test para classificação de outcome por tempo de resolução
+    - **Property 11: Feedback Loop classifica outcome por tempo de resolução**
+    - **Validates: Requirements 6.3, 6.4**
+  - [ ]* 9.3 Escrever testes unitários para FeedbackLoop
+    - Testar cálculo de métricas de eficácia, persistência de 90 dias
+    - _Requirements: 6.5, 6.7_
+
+- [ ] 10. Fase 7 — Root Cause Engine v3 (`ai_agents/root_cause_engine.py`)
+  - [ ] 10.1 Implementar `ai_agents/root_cause_engine.py` (novo arquivo, não substitui `ai-agent/root_cause_engine.py`)
+    - Dataclass `RootCauseResult`: `root_node_id`, `confidence`, `affected_nodes`, `affected_nodes_count`, `estimated_impact`, `reasoning`
+    - Algoritmo: agrupar eventos por nó pai via `topology.get_ancestors()`, ordenar por timestamp (mais antigo primeiro), nó pai com mais descendentes afetados = causa raiz candidata, `confidence = affected_descendants / total_descendants`
+    - Gerar único `Alert` consolidado com `affected_hosts` listando todos os hosts do grupo
+    - Marcar `Alert` como `resolved` automaticamente quando nó raiz voltar ao status `ok`
+    - Suportar cenários: falha de switch, falha de servidor pai, falha de serviço compartilhado, saturação em cascata
+    - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7_
+  - [ ]* 10.2 Escrever property test para confiança de causa raiz com múltiplos filhos
+    - **Property 12: RootCause identifica nó pai com confiança ≥ 0.8 quando múltiplos filhos falham**
+    - **Validates: Requirements 7.2, 7.3**
+  - [ ]* 10.3 Escrever testes unitários para RootCauseEngine v3
+    - Testar cenários: switch down, servidor pai down, serviço compartilhado down
+    - _Requirements: 7.7_
+
+- [ ] 11. Checkpoint — AI Agents completos
+  - Garantir que todos os testes dos agentes passem. Verificar integração entre `AgentPipeline`, `FeedbackLoop` e `RootCauseEngine`. Perguntar ao usuário se há dúvidas.
+
+- [ ] 12. Fase 8 — Alert Engine (`alert_engine/`)
+  - [ ] 12.1 Criar `alert_engine/__init__.py` e implementar `alert_engine/suppressor.py` com `DuplicateSuppressor`
+    - Cache Redis com TTL 5 minutos; chave: `hash(host_id + type + severity)`
+    - `is_duplicate(event)` e `mark_seen(event)`
+    - _Requirements: 8.1_
+  - [ ] 12.2 Implementar `alert_engine/grouper.py` com `EventGrouper`
+    - Agrupar eventos do mesmo host em janela de 5 minutos
+    - _Requirements: 8.2_
+  - [ ] 12.3 Implementar `alert_engine/prioritizer.py` com `AlertPrioritizer`
+    - Score ponderado: `severidade × 0.40 + hosts_afetados_normalizado × 0.30 + impacto_critico × 0.20 + horario_negocio × 0.10`
+    - Todos os fatores no intervalo [0, 1]
+    - _Requirements: 8.3_
+  - [ ] 12.4 Implementar `alert_engine/notifier.py` com `AlertNotifier`
+    - Suportar canais: email, webhook, Teams/Slack; SLA de notificação ≤ 30 segundos
+    - Retry 3x com backoff exponencial; log se todas as tentativas falharem
+    - Escalação automática: alerta crítico não reconhecido em 15 minutos → próximo nível
+    - _Requirements: 8.4, 8.6_
+  - [ ] 12.5 Implementar `alert_engine/engine.py` com `AlertEngine`
+    - Orquestrar: `DuplicateSuppressor → EventGrouper → AlertPrioritizer → AlertNotifier`
+    - Flood protection: > 100 eventos/minuto do mesmo host → 1 alerta de alta prioridade
+    - Janelas de manutenção: suprimir todos os alertas para host em manutenção
+    - Expor métricas: `alerts_total`, `alerts_suppressed`, `alerts_grouped`, `mean_time_to_acknowledge`, `mean_time_to_resolve`
+    - _Requirements: 8.1, 8.2, 8.5, 8.7, 8.8_
+  - [ ]* 12.6 Escrever property test para alerta consolidado único
+    - **Property 13: RootCause gera exatamente um Alert consolidado por grupo correlacionado**
+    - **Validates: Requirements 7.4, 8.2**
+  - [ ]* 12.7 Escrever property test para supressão de duplicados
+    - **Property 14: DuplicateSuppressor impede criação de alertas duplicados (idempotência)**
+    - **Validates: Requirements 8.1**
+  - [ ]* 12.8 Escrever property test para score de prioridade
+    - **Property 15: Score de prioridade de alerta respeita fórmula ponderada**
+    - **Validates: Requirements 8.3**
+  - [ ]* 12.9 Escrever property test para flood protection
+    - **Property 16: Flood protection agrupa eventos excessivos em único alerta**
+    - **Validates: Requirements 8.8**
+  - [ ]* 12.10 Escrever property test para supressão em manutenção
+    - **Property 17: Alertas suprimidos durante janela de manutenção**
+    - **Validates: Requirements 8.5**
+  - [ ]* 12.11 Escrever testes unitários para AlertEngine
+    - Testar escalação após 15 minutos, métricas de qualidade
+    - _Requirements: 8.6, 8.7_
+
+- [ ] 13. Fase 9 — Frontend v3 (React)
+  - [ ] 13.1 Criar `frontend/src/components/ObservabilityDashboard.js` e `ObservabilityDashboard.css`
+    - Health score geral da infraestrutura, mapa de impacto, alertas críticos ativos, tendências das últimas 24h
+    - Rota `/observability`; atualização em tempo real via WebSocket (`/api/v1/ws/observability`) em ≤ 5 segundos
+    - _Requirements: 9.1, 9.7_
+  - [ ] 13.2 Criar `frontend/src/components/TopologyView.js` e `TopologyView.css`
+    - Grafo interativo com `react-force-graph`; nós coloridos por status, arestas = dependências, drill-down por nó
+    - Rota `/topology`; consumir `GET /api/v1/topology/graph`
+    - _Requirements: 9.2_
+  - [ ] 13.3 Criar `frontend/src/components/IntelligentAlerts.js` e `IntelligentAlerts.css`
+    - Causa raiz identificada, lista de hosts afetados, timeline de eventos, ações de remediação sugeridas
+    - Rota `/alerts/intelligent`; consumir `GET /api/v1/alerts/intelligent` e `GET /api/v1/alerts/intelligent/{alert_id}/root-cause`
+    - _Requirements: 9.3_
+  - [ ] 13.4 Criar `frontend/src/components/AIOpsV3.js` e `AIOpsV3.css`
+    - Anomalias detectadas, previsões de falha (próximas 24h), ações automáticas executadas, métricas de eficácia dos agentes
+    - Rota `/aiops/v3`
+    - _Requirements: 9.4_
+  - [ ] 13.5 Criar `frontend/src/components/AdvancedMetrics.js` e `AdvancedMetrics.css`
+    - Zoom temporal, comparação entre hosts, correlação visual entre métricas, exportação de dados
+    - Rota `/metrics/advanced`
+    - _Requirements: 9.5_
+  - [ ] 13.6 Criar `frontend/src/components/EventsTimeline.js` e `EventsTimeline.css`
+    - Timeline interativa com filtros por host/tipo/severidade/período, agrupamento por causa raiz
+    - Rota `/events/timeline`
+    - _Requirements: 9.6_
+  - [ ] 13.7 Criar `api/routers/observability.py` com endpoints da Fase 9
+    - `GET /api/v1/observability/health-score`, `GET /api/v1/observability/impact-map`
+    - `GET /api/v1/alerts/intelligent`, `GET /api/v1/alerts/intelligent/{alert_id}/root-cause`
+    - `WS /api/v1/ws/observability` — WebSocket para atualizações em tempo real
+    - Registrar router em `api/main.py`
+    - _Requirements: 9.1, 9.3, 9.7_
+  - [ ] 13.8 Atualizar `frontend/src/components/Sidebar.js` para incluir rotas dos novos componentes
+    - Adicionar links para `/observability`, `/topology`, `/alerts/intelligent`, `/aiops/v3`, `/metrics/advanced`, `/events/timeline`
+    - Manter compatibilidade com componentes existentes (Dashboard.js, AIOps.js, NOCMode.js, EventTimeline.js)
+    - _Requirements: 9.9_
+
+- [ ] 14. Checkpoint — Frontend v3
+  - Garantir que todos os novos componentes renderizam sem erros e que os componentes existentes continuam funcionando. Perguntar ao usuário se há dúvidas.
+
+- [ ] 15. Fase 10 — Sensor DSL (`sensor_dsl/`)
+  - [ ] 15.1 Criar `sensor_dsl/__init__.py` e implementar `sensor_dsl/ast_nodes.py` com dataclasses `FieldNode` e `SensorNode`
+    - _Requirements: 10.1_
+  - [ ] 15.2 Implementar `sensor_dsl/lexer.py` com classe `Lexer`
+    - Tokens: `SENSOR`, `STRING`, `LBRACE`, `RBRACE`, `EQUALS`, `NUMBER`, `IDENTIFIER`, `EXTENDS`
+    - Suportar comentários de linha (`#`) e bloco (`/* */`)
+    - _Requirements: 10.8_
+  - [ ] 15.3 Implementar `sensor_dsl/parser.py` com classe `Parser` (recursivo descendente)
+    - Gramática BNF: `program ::= sensor_def*`, `sensor_def ::= 'sensor' STRING ('extends' STRING)? '{' field* '}'`, `field ::= IDENTIFIER '=' (STRING | NUMBER)`
+    - Suportar herança de templates: `sensor "disk_c" extends "disk_template" { path = "C:" }`
+    - _Requirements: 10.1, 10.10_
+  - [ ] 15.4 Implementar `sensor_dsl/compiler.py` com classe `DSLCompiler`
+    - `compile(source)`: Lexer → Parser → `SensorNode` → `Sensor` (Pydantic)
+    - Validar campos obrigatórios (`protocol`, `interval`) e opcionais (`query`, `warning`, `critical`, `timeout`, `retries`, `tags`, `description`)
+    - Validar `protocol` contra enum `Protocol`; lançar `DSLSyntaxError` com `line`, `column`, `field`, `message` em caso de erro
+    - _Requirements: 10.2, 10.3, 10.4, 10.5, 10.9_
+  - [ ] 15.5 Implementar `sensor_dsl/printer.py` com classe `DSLPrinter`
+    - `print(sensor)`: `Sensor` → string DSL formatada
+    - _Requirements: 10.6_
+  - [ ]* 15.6 Escrever property test para DSL round-trip
+    - **Property 18: DSL round-trip (parse → print → parse)**
+    - **Validates: Requirements 10.7**
+  - [ ]* 15.7 Escrever property test para rejeição de protocolos inválidos
+    - **Property 19: DSL rejeita protocolos inválidos com erro descritivo**
+    - **Validates: Requirements 10.5, 10.9**
+  - [ ]* 15.8 Escrever testes unitários para Sensor DSL
+    - Testar parsing de DSL válida, comentários ignorados, herança de templates
+    - _Requirements: 10.1, 10.8, 10.10_
+
+- [ ] 16. Fase 11 — Distributed Probes (`api/routers/probe_manager.py`)
+  - [ ] 16.1 Implementar `api/routers/probe_manager.py` com classe `ProbeManager`
+    - `assign_host(host)`: weighted round-robin por capacidade + afinidade de subnet; nunca atribuir a probe com `load >= 0.80` se houver alternativa
+    - `handle_probe_offline(probe_id)`: redistribuir hosts para probes disponíveis do mesmo tipo em ≤ 120 segundos
+    - `restore_probe(probe_id)`: restaurar hosts originais gradualmente em ≤ 300 segundos
+    - Heartbeat monitor: `online` (< 90s), `degraded` (90-120s), `offline` (> 120s)
+    - Garantir que cada host seja monitorado por exatamente uma `ProbeNode` ativa
+    - _Requirements: 11.1, 11.2, 11.3, 11.4, 11.5, 11.6_
+  - [ ] 16.2 Adicionar endpoints de status de probes ao router existente `api/routers/probe_nodes.py`
+    - Dashboard de status: nome, tipo, status, hosts monitorados, sensores ativos, última comunicação
+    - _Requirements: 11.7_
+  - [ ]* 16.3 Escrever property test para invariante de atribuição de hosts
+    - **Property 20: Cada host é monitorado por exatamente uma ProbeNode ativa**
+    - **Validates: Requirements 11.6**
+  - [ ]* 16.4 Escrever property test para balanceamento de carga ≤ 80%
+    - **Property 21: Balanceamento de carga respeita capacidade máxima de 80%**
+    - **Validates: Requirements 11.2, 11.8**
+  - [ ]* 16.5 Escrever testes unitários para ProbeManager
+    - Testar failover automático, restauração gradual, heartbeat monitor
+    - _Requirements: 11.3, 11.4, 11.5_
+
+- [ ] 17. Fase 12 — Streaming Architecture
+  - [ ] 17.1 Estender `probe/metrics_pipeline/stream_producer.py`
+    - Adicionar batch publish com `XADD metrics_stream`
+    - Buffer local em memória (`deque maxlen=10_000`) quando Redis indisponível; drenar buffer na reconexão
+    - _Requirements: 12.1, 12.5_
+  - [ ] 17.2 Estender `probe/metrics_pipeline/stream_consumer.py`
+    - Adicionar consumer groups via `XREADGROUP`; suportar múltiplos consumidores paralelos
+    - Reprocessar mensagens pendentes (não-ACKed) na reinicialização via `XREADGROUP id="0"`
+    - _Requirements: 12.1, 12.4, 12.7_
+  - [ ] 17.3 Estender `probe/metrics_pipeline/metrics_processor.py`
+    - Batch insert no TimescaleDB com máximo de 500 métricas por operação
+    - Expor métricas de throughput: `messages_per_second`, `processing_latency_ms`, `buffer_size`, `consumer_lag`
+    - Registrar WARNING e aumentar consumidores quando latência > 5 segundos
+    - _Requirements: 12.2, 12.3, 12.6, 12.8_
+  - [ ] 17.4 Atualizar `.env.example` com variáveis de streaming
+    - `REDIS_URL`, `METRICS_STREAM_KEY=metrics_stream`, `EVENTS_STREAM_KEY=events_stream`, `STREAM_CONSUMER_GROUP=coruja-consumers`, `STREAM_BATCH_SIZE=500`
+    - _Requirements: 12.1_
+  - [ ]* 17.5 Escrever property test para batch ≤ 500 métricas
+    - **Property 22: Stream consumer processa em batches de no máximo 500 métricas**
+    - **Validates: Requirements 12.3**
+  - [ ]* 17.6 Escrever property test para at-least-once delivery
+    - **Property 23: At-least-once delivery — métricas não-ACKed são reprocessadas**
+    - **Validates: Requirements 12.4**
+  - [ ]* 17.7 Escrever testes unitários para Streaming Architecture
+    - Testar buffer local, consumer groups, métricas de throughput
+    - _Requirements: 12.5, 12.6, 12.7_
+
+- [ ] 18. Integração Docker Compose
+  - [ ] 18.1 Revisar `docker-compose.yml` para garantir que todos os novos módulos são servidos pelos containers existentes
+    - Verificar que `api/`, `worker/`, `ai-agent/` têm acesso aos novos diretórios `core/`, `engine/`, `topology_engine/`, `event_processor/`, `ai_agents/`, `alert_engine/`, `sensor_dsl/` via volumes
+    - Adicionar variáveis de ambiente necessárias (`METRICS_STREAM_KEY`, `EVENTS_STREAM_KEY`, `STREAM_CONSUMER_GROUP`, `STREAM_BATCH_SIZE`) ao serviço `api` e `worker`
+    - _Requirements: 12.1_
+  - [ ]* 18.2 Adicionar serviço dedicado para `AgentPipeline` no `docker-compose.yml` se necessário
+    - Avaliar se o pipeline de agentes deve rodar como worker Celery separado ou integrado ao worker existente
+    - _Requirements: 5.9_
+
+- [ ] 19. Checkpoint — Streaming e Docker
+  - Garantir que o pipeline completo funciona: probe → Redis Stream → EventProcessor → AgentPipeline → AlertEngine. Perguntar ao usuário se há dúvidas.
+
+- [ ] 20. Fase 13 — Suite de Testes Completa (`tests/`)
+  - [ ] 20.1 Criar `tests/test_dependency_engine.py`
+    - Testes unitários: `test_dag_rejects_cycle` (Property 3), `test_suspension_roundtrip` (Property 4), `test_cache_ttl_expiry`, `test_cascade_dependencies` (Ping → TCP → WMI), `test_graph_status_endpoint`
+    - _Requirements: 13.1, 13.10_
+  - [ ] 20.2 Criar `tests/test_topology_engine.py`
+    - Testes unitários: `test_blast_radius_equals_descendants` (Property 5), `test_graph_persistence_roundtrip` (Property 6), `test_hierarchy_switch_server_service`, `test_manual_customization_preserved`
+    - _Requirements: 13.1_
+  - [ ] 20.3 Criar `tests/test_event_processor.py`
+    - Testes unitários: `test_idempotency_same_status` (Property 7), `test_threshold_generates_event`, `test_dynamic_thresholds`, `test_timescaledb_persistence`
+    - _Requirements: 13.1, 13.10_
+  - [ ] 20.4 Criar `tests/test_alert_engine.py`
+    - Testes unitários: `test_duplicate_suppression` (Property 14), `test_event_grouping_5min_window` (Property 13), `test_priority_score_formula` (Property 15), `test_flood_protection` (Property 16), `test_maintenance_window_suppression` (Property 17), `test_consolidated_alert_single`, `test_escalation_after_15min`
+    - _Requirements: 13.1_
+  - [ ] 20.5 Criar `tests/test_ai_agents.py`
+    - Testes unitários: `test_anomaly_3sigma` (Property 8), `test_pipeline_continues_after_failure` (Property 9), `test_remediation_confidence_threshold` (Property 10), `test_feedback_outcome_classification` (Property 11), `test_root_cause_confidence_multiple_hosts` (Property 12), `test_smart_scheduler_interval_adjustment`
+    - _Requirements: 13.2_
+  - [ ] 20.6 Criar `tests/test_sensor_dsl.py`
+    - Testes unitários: `test_dsl_roundtrip` (Property 18), `test_invalid_protocol_rejected` (Property 19), `test_valid_dsl_parses_to_sensor`, `test_comments_ignored`, `test_template_inheritance`
+    - _Requirements: 13.3_
+  - [ ] 20.7 Criar `tests/test_pbt_properties.py` com configuração `hypothesis`
+    - `settings.register_profile("ci", max_examples=100)` e `settings.register_profile("thorough", max_examples=500)`
+    - `test_pydantic_roundtrip_all_models` (Property 1), `test_pydantic_validation_rejects_invalid` (Property 2), `test_stream_batch_size_limit` (Property 22), `test_atleast_once_delivery` (Property 23)
+    - _Requirements: 13.10_
+  - [ ] 20.8 Criar `tests/test_load_simulation.py` com simulação de 1.000 hosts × 50 sensores
+    - `test_1000_hosts_50_sensors_throughput`: latência média < 2 segundos, sem perda de dados (usar `pytest-benchmark`)
+    - `test_probe_assignment_invariant` (Property 20), `test_probe_load_balance_80pct` (Property 21)
+    - _Requirements: 13.4, 13.5_
+  - [ ] 20.9 Criar `tests/test_regression_v2.py` — testes de regressão dos módulos v2.0
+    - `test_wmi_pool_acquire_release`: verificar que `probe/engine/wmi_pool.py` continua funcionando
+    - `test_smart_collector_collect_all`: verificar que `probe/engine/smart_collector.py` continua funcionando
+    - `test_global_rate_limiter_slots`: verificar que `probe/engine/global_rate_limiter.py` continua funcionando
+    - `test_event_queue_enqueue_dequeue`: verificar que `probe/event_engine/event_queue.py` continua funcionando
+    - `test_stream_producer_publish_fallback`: verificar que `probe/metrics_pipeline/stream_producer.py` continua funcionando
+    - _Requirements: 13.7, 13.8_
+  - [ ] 20.10 Configurar cobertura mínima de 80% nos módulos críticos
+    - Adicionar `pytest.ini` ou `pyproject.toml` com configuração de cobertura para `core/`, `engine/`, `topology_engine/`, `event_processor/`, `ai_agents/`, `alert_engine/`
+    - Comando: `pytest tests/ --cov=core --cov=engine --cov=topology_engine --cov=event_processor --cov=ai_agents --cov=alert_engine --cov-report=term-missing --cov-fail-under=80`
+    - _Requirements: 13.9_
+  - [ ] 20.11 Adicionar `hypothesis` e `pytest-benchmark` ao `api/requirements.txt`
+    - _Requirements: 13.10_
+
+- [ ] 21. Checkpoint Final — Suite de Testes Completa
+  - Executar `pytest tests/ --cov-fail-under=80` e garantir que todos os testes passam, incluindo regressão v2.0. Perguntar ao usuário se há dúvidas antes de considerar a implementação concluída.
+
+## Notas
+
+- Tarefas marcadas com `*` são opcionais e podem ser puladas para MVP mais rápido
+- Cada tarefa referencia requisitos específicos para rastreabilidade
+- A Fase 1 (Spec Central) é pré-requisito de todas as demais fases
+- Módulos v2.0 (`wmi_pool.py`, `smart_collector.py`, `global_rate_limiter.py`, `event_queue.py`, `stream_producer.py`) nunca são modificados diretamente — apenas encapsulados ou estendidos
+- Atualizações para o servidor Linux: `git push` no Kiro + `git pull` no Linux; usar `python3` no Linux
+- Banco de dados: `coruja_monitor`, usuário `coruja`, container `coruja-postgres`
+- Property tests usam `hypothesis` com perfil `ci` (100 exemplos) por padrão

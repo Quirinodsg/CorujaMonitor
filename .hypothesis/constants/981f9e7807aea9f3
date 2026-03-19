@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\sensor_dsl\lexer.py
+# hypothesis_version: 6.151.9
+
+['"', '#[^\\n]*', '/\\*.*?\\*/', '=', 'String não fechada', '\\d+(\\.\\d+)?', 'extends', 'sensor', '{', '}']

@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\connection_pool\tcp_pool.py
+# hypothesis_version: 6.151.9
+
+[5.0, 300, 'idle', 'in_use', 'total']

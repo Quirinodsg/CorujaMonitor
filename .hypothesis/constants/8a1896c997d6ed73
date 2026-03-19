@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\ai_agents\pipeline.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.5, 300, 'CorrelationAgent', 'DecisionAgent', 'RootCauseAgent', '_groups_raw', 'circuit_breaker_open', 'confidence', 'correlation_groups', 'decision_confidence', 'root_cause_results', 'should_alert']

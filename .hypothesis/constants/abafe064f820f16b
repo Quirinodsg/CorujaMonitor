@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\core\spec\enums.py
+# hypothesis_version: 6.151.9
+
+['acknowledged', 'appliance', 'application', 'container', 'critical', 'degraded', 'http', 'icmp', 'info', 'offline', 'ok', 'online', 'open', 'resolved', 'server', 'service', 'snmp', 'switch', 'tcp', 'unknown', 'warning', 'wmi']

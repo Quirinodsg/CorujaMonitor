@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\prometheus_exporter.py
+# hypothesis_version: 6.151.9
+
+[9090, 'PrometheusUpdater', 'Total de cache hits', 'Total de erros', 'active_workers', 'cache_hits_total', 'cache_misses_total', 'coruja_probe', 'errors_total', 'execution_seconds', 'probe_name', 'sensor_type', 'sensors_total', 'status', 'target_host', 'total_sensors', 'wmi_queries_total', 'worker_queue_size']

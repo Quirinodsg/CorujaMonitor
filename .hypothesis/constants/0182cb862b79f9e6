@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\protocol_engines\kubernetes_engine.py
+# hypothesis_version: 6.151.9
+
+['/', 'Ready', 'Running', 'True', 'Unknown', 'all', 'available', 'critical', 'deployments', 'desired', 'healthy', 'host', 'kubeconfig', 'name', 'namespace', 'node', 'nodes', 'nodes_ready', 'ok', 'phase', 'pods', 'ready', 'resource', 'roles', 'unknown', 'version', 'warning', 'worker']

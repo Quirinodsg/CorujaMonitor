@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\connection_pool\..\security\vault_client.py
+# hypothesis_version: 6.151.9
+
+['AZURE_KEYVAULT_URL', 'VAULT_ADDR', 'VAULT_TOKEN', 'azure', 'data', 'hashicorp', 'password', 'value']

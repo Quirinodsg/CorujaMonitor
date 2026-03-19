@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\internal_metrics.py
+# hypothesis_version: 6.151.9
+
+[0.8, 10.0, 512, 1000, 1024, 'InternalMetrics', 'active_workers', 'cache_hit_ratio', 'completed', 'completed_tasks', 'failed', 'failed_tasks', 'hit_ratio', 'hostname', 'max_workers', 'metadata', 'metrics', 'ok', 'probe_cpu_percent', 'probe_internal', 'probe_memory_mb', 'probe_token', 'resize', 'sensor_name', 'sensor_type', 'status', 'timestamp', 'unit', 'value', 'worker_queue_size']

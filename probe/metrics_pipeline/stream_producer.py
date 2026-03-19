@@ -96,12 +96,42 @@ class StreamProducer:
             return False
 
     def publish_batch(self, events: list) -> int:
-        """Publica lote de eventos. Retorna quantidade publicada."""
-        count = 0
-        for event in events:
-            if self.publish(event):
-                count += 1
-        return count
+        """
+        Publica lote de eventos via pipeline Redis (XADD em batch).
+        Retorna quantidade publicada com sucesso.
+        """
+        if not events:
+            return 0
+
+        if self._redis:
+            try:
+                pipe = self._redis.pipeline(transaction=False)
+                for event in events:
+                    pipe.xadd(
+                        STREAM_KEY,
+                        event.to_dict(),
+                        maxlen=MAX_STREAM_LEN,
+                        approximate=True,
+                    )
+                pipe.execute()
+                with self._lock:
+                    self._published += len(events)
+                return len(events)
+            except Exception as e:
+                logger.error(f"StreamProducer: erro no batch publish: {e}")
+                # fallback para fila em memória
+                with self._lock:
+                    for event in events:
+                        self._fallback_queue.append(event)
+                    self._errors += len(events)
+                return 0
+        else:
+            # Sem Redis: buffer em memória
+            with self._lock:
+                for event in events:
+                    self._fallback_queue.append(event)
+                self._published += len(events)
+            return len(events)
 
     def drain_fallback(self, max_items: int = 1000) -> list:
         """Drena fila em memória (para o consumer processar)."""

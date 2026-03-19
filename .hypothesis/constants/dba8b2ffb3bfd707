@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\alert_engine\notifier.py
+# hypothesis_version: 6.151.9
+
+[1.0, 400, 'affected_hosts', 'alert_id', 'email', 'root_cause', 'severity', 'slack', 'status', 'teams', 'title', 'url', 'webhook']

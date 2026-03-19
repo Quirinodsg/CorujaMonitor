@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\adaptive_monitor.py
+# hypothesis_version: 6.151.9
+
+[300, 'critical', 'interval', 'ok', 'ok_streak', 'warning']

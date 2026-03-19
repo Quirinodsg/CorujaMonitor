@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\pre_check.py
+# hypothesis_version: 6.151.9
+
+[0.0, 135, 161, 1000, '-W', '-c', '-n', '-w', '1', 'host_unreachable', 'ping', 'port_unreachable', 'windows']

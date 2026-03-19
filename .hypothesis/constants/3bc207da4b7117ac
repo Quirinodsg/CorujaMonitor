@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\connection_pool\..\event_engine\kubernetes_event_listener.py
+# hypothesis_version: 6.151.9
+
+[1.0, 'BackOff', 'Evicted', 'Failed', 'K8sEventListener', 'OOMKilling', 'critical', 'event', 'event_type', 'host', 'kubernetes_event', 'message', 'metadata', 'name', 'namespace', 'object', 'reason', 'sensor_type', 'status', 'timestamp', 'unit', 'unknown', 'value']

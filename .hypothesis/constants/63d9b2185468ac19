@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\core\spec\__init__.py
+# hypothesis_version: 6.151.9
+
+['Alert', 'AlertStatus', 'Event', 'EventSeverity', 'Host', 'HostType', 'Metric', 'NodeType', 'ProbeNode', 'ProbeStatus', 'Protocol', 'Sensor', 'SensorStatus', 'TopologyNode']

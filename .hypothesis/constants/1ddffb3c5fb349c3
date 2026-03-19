@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\ai_agents\feedback_loop.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.1, 0.9, 1.0, 1.1, 2.0, 300.0, 'action', 'action_id', 'action_type', 'agent_name', 'failure', 'negative', 'outcome', 'pending', 'positive', 'resolution_time', 'result', 'success', 'target_host', 'timestamp']

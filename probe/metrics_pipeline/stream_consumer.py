@@ -82,6 +82,17 @@ class StreamConsumer:
             except Exception:
                 pass  # já existe
 
+            # Reprocessar mensagens pendentes (não-ACKed) na reinicialização
+            pending = self._producer._redis.xreadgroup(
+                CONSUMER_GROUP,
+                CONSUMER_NAME,
+                {STREAM_KEY: "0"},  # id="0" = mensagens pendentes
+                count=self._batch_size,
+            )
+            if pending:
+                self._process_redis_messages(pending, is_pending=True)
+
+            # Novas mensagens
             messages = self._producer._redis.xreadgroup(
                 CONSUMER_GROUP,
                 CONSUMER_NAME,
@@ -90,36 +101,39 @@ class StreamConsumer:
                 block=int(self._poll_interval * 1000),
             )
 
-            if not messages:
-                return
-
-            events = []
-            ids = []
-            for stream_name, entries in messages:
-                for msg_id, data in entries:
-                    try:
-                        event = MetricEvent(
-                            sensor_id=int(data.get("sensor_id", 0)),
-                            server_id=int(data.get("server_id", 0)),
-                            sensor_type=data.get("sensor_type", ""),
-                            value=float(data.get("value", 0)),
-                            unit=data.get("unit", ""),
-                            status=data.get("status", "ok"),
-                            timestamp=float(data.get("timestamp", 0)),
-                        )
-                        events.append(event)
-                        ids.append(msg_id)
-                    except Exception as e:
-                        logger.warning(f"StreamConsumer: erro ao parsear mensagem: {e}")
-
-            if events:
-                self._on_batch(events)
-                self._processed += len(events)
-                # ACK
-                self._producer._redis.xack(STREAM_KEY, CONSUMER_GROUP, *ids)
+            if messages:
+                self._process_redis_messages(messages, is_pending=False)
 
         except Exception as e:
             logger.error(f"StreamConsumer Redis: {e}")
+
+    def _process_redis_messages(self, messages, is_pending: bool = False):
+        events = []
+        ids = []
+        for stream_name, entries in messages:
+            for msg_id, data in entries:
+                try:
+                    event = MetricEvent(
+                        sensor_id=int(data.get("sensor_id", 0)),
+                        server_id=int(data.get("server_id", 0)),
+                        sensor_type=data.get("sensor_type", ""),
+                        value=float(data.get("value", 0)),
+                        unit=data.get("unit", ""),
+                        status=data.get("status", "ok"),
+                        timestamp=float(data.get("timestamp", 0)),
+                    )
+                    events.append(event)
+                    ids.append(msg_id)
+                except Exception as e:
+                    logger.warning(f"StreamConsumer: erro ao parsear mensagem: {e}")
+
+        if events:
+            self._on_batch(events)
+            self._processed += len(events)
+            # ACK após processamento bem-sucedido (at-least-once delivery)
+            self._producer._redis.xack(STREAM_KEY, CONSUMER_GROUP, *ids)
+            if is_pending:
+                logger.info(f"StreamConsumer: {len(events)} mensagens pendentes reprocessadas")
 
     def _consume_fallback(self):
         events = self._producer.drain_fallback(self._batch_size)

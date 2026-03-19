@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\protocol_engines\icmp_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.5, 100.0, 1000, '-W', '-c', '-n', '-w', '1', '\\((\\d+)%\\s*loss\\)', 'attempts', 'critical', 'host_unreachable', 'latency_ms', 'ms', 'ok', 'packet_loss_percent', 'ping', 'retries', 'time=([\\d.]+)\\s*ms', 'time[=<](\\d+)ms', 'timeout', 'windows']

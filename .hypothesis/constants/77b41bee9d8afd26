@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\sensor_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1.0, 1000, 'critical', 'domain', 'icmp_ping', 'latency_ms', 'metadata', 'ms', 'no_data', 'ok', 'password', 'paused', 'registry_perf', 'state', 'status', 'tcp_port', 'unit', 'unknown', 'username', 'value', 'warning', 'wmi_cpu', 'wmi_disk', 'wmi_memory', 'wmi_process', 'wmi_service']

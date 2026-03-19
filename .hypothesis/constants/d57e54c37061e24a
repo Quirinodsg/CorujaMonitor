@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\protocol_engines\snmp_engine.py
+# hypothesis_version: 6.151.9
+
+[100.0, 100, 161, 1000, '1', '1.3.6.1.2.1.1.1.0', '1.3.6.1.2.1.1.3.0', '1.3.6.1.2.1.2.2', '2c', '3', 'AES', 'SHA', 'auth_key', 'auth_protocol', 'available_kb', 'community', 'data', 'host', 'latency_ms', 'ms', 'no_response', 'oid', 'oids', 'oids_collected', 'ok', 'port', 'priv_key', 'priv_protocol', 'public', 'retries', 'timeout', 'total_kb', 'unknown', 'used_pct', 'username', 'value', 'version']

@@ -5,9 +5,12 @@ Responsabilidades:
   - deduplicação por (sensor_id, timestamp)
   - normalização de valores
   - persistência via HTTP na API (ou diretamente no banco)
+  - batch insert máximo 500 métricas por operação
+  - métricas de throughput: messages_per_second, processing_latency_ms, buffer_size, consumer_lag
 """
 import logging
 import time
+from collections import deque
 from typing import List, Optional
 
 import requests
@@ -17,11 +20,14 @@ from .stream_producer import MetricEvent
 logger = logging.getLogger(__name__)
 
 DEDUP_WINDOW_SEC = 5  # ignora duplicatas dentro de 5s
+MAX_BATCH_SIZE = 500   # máximo de métricas por operação (Requirement 12.3)
+LATENCY_WARNING_THRESHOLD_SEC = 5.0  # WARNING se latência > 5s
 
 
 class MetricsProcessor:
     """
     Processa lotes de MetricEvent e persiste via API.
+    Batch insert máximo MAX_BATCH_SIZE (500) métricas por operação.
 
     Uso:
         processor = MetricsProcessor(api_url="http://api:8000")
@@ -35,21 +41,39 @@ class MetricsProcessor:
         self._persisted = 0
         self._deduplicated = 0
         self._errors = 0
+        # Throughput tracking
+        self._latency_window: deque = deque(maxlen=100)  # últimas 100 latências (ms)
+        self._messages_per_second_window: deque = deque(maxlen=60)  # últimos 60 segundos
+        self._last_second_ts: float = time.time()
+        self._messages_this_second: int = 0
 
     def process_batch(self, events: List[MetricEvent]):
-        """Processa e persiste lote de eventos."""
+        """Processa e persiste lote de eventos em sub-batches de MAX_BATCH_SIZE."""
         unique = self._deduplicate(events)
         if not unique:
             return
 
-        try:
-            self._persist(unique)
-            self._persisted += len(unique)
-        except Exception as e:
-            logger.error(f"MetricsProcessor: erro ao persistir {len(unique)} eventos: {e}")
-            self._errors += 1
+        # Dividir em sub-batches de no máximo MAX_BATCH_SIZE
+        for i in range(0, len(unique), MAX_BATCH_SIZE):
+            sub_batch = unique[i:i + MAX_BATCH_SIZE]
+            start_ts = time.monotonic()
+            try:
+                self._persist(sub_batch)
+                self._persisted += len(sub_batch)
+                latency_ms = (time.monotonic() - start_ts) * 1000
+                self._latency_window.append(latency_ms)
+                self._track_throughput(len(sub_batch))
 
-        # Limpar cache de dedup periodicamente
+                if latency_ms / 1000 > LATENCY_WARNING_THRESHOLD_SEC:
+                    logger.warning(
+                        f"MetricsProcessor: latência alta {latency_ms:.0f}ms "
+                        f"(threshold={LATENCY_WARNING_THRESHOLD_SEC}s). "
+                        f"Considere aumentar consumidores."
+                    )
+            except Exception as e:
+                logger.error(f"MetricsProcessor: erro ao persistir {len(sub_batch)} eventos: {e}")
+                self._errors += 1
+
         self._cleanup_dedup_cache()
 
     def _deduplicate(self, events: List[MetricEvent]) -> List[MetricEvent]:
@@ -98,10 +122,31 @@ class MetricsProcessor:
         resp.raise_for_status()
         logger.debug(f"MetricsProcessor: {len(events)} eventos persistidos")
 
+    def _track_throughput(self, count: int):
+        now = time.time()
+        if now - self._last_second_ts >= 1.0:
+            self._messages_per_second_window.append(self._messages_this_second)
+            self._messages_this_second = count
+            self._last_second_ts = now
+        else:
+            self._messages_this_second += count
+
     def stats(self) -> dict:
+        avg_latency = (
+            sum(self._latency_window) / len(self._latency_window)
+            if self._latency_window else 0.0
+        )
+        avg_mps = (
+            sum(self._messages_per_second_window) / len(self._messages_per_second_window)
+            if self._messages_per_second_window else 0.0
+        )
         return {
             "persisted": self._persisted,
             "deduplicated": self._deduplicated,
             "errors": self._errors,
             "dedup_cache_size": len(self._seen),
+            "messages_per_second": round(avg_mps, 2),
+            "processing_latency_ms": round(avg_latency, 2),
+            "buffer_size": len(self._latency_window),
+            "consumer_lag": 0,  # preenchido pelo consumer quando disponível
         }

@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\protocol_engines\docker_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 100.0, 1024, 'base_url', 'collect_stats', 'container_name', 'containers', 'cpu_percent', 'cpu_stats', 'cpu_usage', 'detail', 'docker_unavailable', 'host', 'id', 'image', 'limit', 'memory_limit_mb', 'memory_mb', 'memory_stats', 'name', 'ok', 'online_cpus', 'percpu_usage', 'precpu_stats', 'running', 'running_containers', 'status', 'system_cpu_usage', 'total_containers', 'total_usage', 'unknown', 'usage', 'warning']

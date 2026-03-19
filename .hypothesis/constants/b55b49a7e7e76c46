@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\scheduler.py
+# hypothesis_version: 6.151.9
+
+[0.0, 3.0, 300, 'Scheduler parado', 'SchedulerLoop', 'active_per_host', 'consecutive_errors', 'id', 'interval', 'last_status', 'never_run', 'next_run_in', 'running', 'sensors', 'target', 'total_sensors', 'type', 'wmi_', 'wmi_queries_per_host']

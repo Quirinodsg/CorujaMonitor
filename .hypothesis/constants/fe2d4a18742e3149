@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\connection_pool\snmp_pool.py
+# hypothesis_version: 6.151.9
+
+[161, 300, '2c', 'AES', 'SHA', 'idle', 'in_use', 'public', 'total']

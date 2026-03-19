@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\connection_pool\..\event_engine\docker_event_listener.py
+# hypothesis_version: 6.151.9
+
+[1.0, 'Action', 'Actor', 'Attributes', 'DockerEventListener', 'container', 'critical', 'die', 'docker_event', 'event', 'event_type', 'health_status', 'host', 'metadata', 'name', 'oom', 'sensor_type', 'status', 'timestamp', 'type', 'unit', 'unknown', 'value', 'warning']

@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\protocol_engines\registry_engine.py
+# hypothesis_version: 6.151.9
+
+[1.0, '/', '127.0.0.1', 'HKCR', 'HKCU', 'HKLM', 'HKU', '\\', 'access_denied', 'critical', 'data', 'host', 'key_not_found', 'key_path', 'key_path_required', 'localhost', 'ok', 'reg_type', 'registry', 'remote_host', 'unknown', 'value_name']

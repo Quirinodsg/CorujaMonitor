@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\metrics_pipeline\stream_producer.py
+# hypothesis_version: 6.151.9
+
+[1000, 50000, 100000, 'backend', 'errors', 'fallback_queue_size', 'memory', 'metrics:raw', 'ok', 'published', 'redis']

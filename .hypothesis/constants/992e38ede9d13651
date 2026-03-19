@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\protocol_engines\base_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 'available', 'engine_unavailable', 'error', 'metadata', 'ok', 'status', 'unit', 'unknown', 'value']

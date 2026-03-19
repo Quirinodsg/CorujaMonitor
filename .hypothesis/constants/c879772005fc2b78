@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\probe_manager.py
+# hypothesis_version: 6.151.9
+
+[0.8, 1.0, 30.0, 100, 120, 300, '.', 'ProbeMonitor', 'capacity', 'hosts_monitored', 'load', 'name', 'probe_id', 'probes', 'status', 'total_hosts_assigned', 'total_probes', 'type']

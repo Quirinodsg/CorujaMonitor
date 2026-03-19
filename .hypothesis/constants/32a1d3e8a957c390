@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\ai_agents\anomaly_detection.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.001, 1.0, 3.0, 10.0, 10080, 'anomalies_detected', 'anomaly', 'anomaly_events', 'confidence', 'event', 'sensor_id', 'value']

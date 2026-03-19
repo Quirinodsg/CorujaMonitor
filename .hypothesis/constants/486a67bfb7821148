@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\engine\..\probe\protocol_engines\tcp_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 0.5, 3.0, 1000, 'attempts', 'connection_refused', 'critical', 'host', 'last_error', 'latency_ms', 'ms', 'ok', 'port', 'port_required', 'port_unreachable', 'retries', 'timeout', 'unknown']

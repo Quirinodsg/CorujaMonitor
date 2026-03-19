@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\metrics_pipeline\metrics_processor.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1.0, 5.0, 100, 500, 1000, '/', 'Authorization', 'buffer_size', 'consumer_lag', 'dedup_cache_size', 'deduplicated', 'errors', 'messages_per_second', 'persisted', 'sensor_id', 'sensor_type', 'server_id', 'status', 'timestamp', 'unit', 'value']

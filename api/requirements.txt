@@ -31,3 +31,9 @@ semver==3.0.2
 # Kubernetes
 kubernetes==29.0.0
 pyyaml==6.0.1
+# Graph / topology
+networkx>=3.0
+# Testing
+hypothesis>=6.0.0
+pytest-benchmark>=4.0.0
+pytest-cov>=4.0.0

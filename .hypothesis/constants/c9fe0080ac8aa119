@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\global_rate_limiter.py
+# hypothesis_version: 6.151.9
+
+[100, 200, 1000, 'global_queue_depth', 'max_running', 'queue_limit', 'total_executed', 'total_rejected', 'utilization_pct']
