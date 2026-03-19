@@ -33,7 +33,10 @@ export default function AdvancedMetrics() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    fetch(`${API}/api/v1/servers`)
+    const token = localStorage.getItem('token');
+    fetch(`${API}/api/v1/servers`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then(r => r.json())
       .then(d => {
         // API pode retornar array direto, {servers: []}, ou objeto paginado
@@ -45,8 +48,11 @@ export default function AdvancedMetrics() {
 
   useEffect(() => {
     if (!selectedServer) return;
+    const token = localStorage.getItem('token');
     setLoading(true);
-    fetch(`${API}/api/v1/metrics?server_id=${selectedServer}&hours=${period}&limit=500`)
+    fetch(`${API}/api/v1/metrics?server_id=${selectedServer}&hours=${period}&limit=500`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
       .then(r => r.json())
       .then(d => setMetrics(d.metrics || d || []))
       .catch(() => setMetrics([]))
