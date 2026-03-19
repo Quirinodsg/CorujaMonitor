@@ -1,36 +1,36 @@
-.sh-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+﻿.sh-container { padding: 24px; max-width: 1400px; margin: 0 auto; }
 .sh-loading { padding: 40px; text-align: center; color: #6b7280; }
 .sh-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
-.sh-header h1 { font-size: 24px; font-weight: 700; color: #111827; margin: 0 0 4px; }
+.sh-header h1 { font-size: 24px; font-weight: 700; color: #E5E7EB; margin: 0 0 4px; }
 .sh-subtitle { color: #6b7280; font-size: 13px; margin: 0; }
-.sh-btn-refresh { padding: 8px 16px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; }
+.sh-btn-refresh { padding: 8px 16px; background: #1a2235; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; cursor: pointer; }
 
 .sh-overview { display: flex; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
-.sh-kpi { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; min-width: 120px; flex: 1; }
+.sh-kpi { background: #1F2937; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 20px; display: flex; flex-direction: column; align-items: center; min-width: 120px; flex: 1; }
 .sh-kpi-icon { font-size: 24px; margin-bottom: 8px; }
-.sh-kpi-value { font-size: 28px; font-weight: 700; color: #111827; }
+.sh-kpi-value { font-size: 28px; font-weight: 700; color: #E5E7EB; }
 .sh-kpi-label { font-size: 12px; color: #6b7280; text-align: center; margin-top: 4px; }
 
 .sh-gauges { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; margin-bottom: 24px; }
-.sh-gauge { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px 20px; }
+.sh-gauge { background: #1F2937; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; padding: 16px 20px; }
 .sh-gauge-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .sh-gauge-label { font-size: 13px; color: #6b7280; }
 .sh-gauge-value { font-size: 18px; font-weight: 700; }
-.sh-gauge-bar { height: 8px; background: #f3f4f6; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
+.sh-gauge-bar { height: 8px; background: #1a2235; border-radius: 4px; overflow: hidden; margin-bottom: 4px; }
 .sh-gauge-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
 .sh-gauge-pct { font-size: 11px; color: #9ca3af; text-align: right; }
 
-.sh-nodes-section h2 { font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 12px; }
-.sh-nodes-table { background: white; border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; }
+.sh-nodes-section h2 { font-size: 18px; font-weight: 600; color: #E5E7EB; margin-bottom: 12px; }
+.sh-nodes-table { background: #1F2937; border: 1px solid rgba(255,255,255,0.06); border-radius: 12px; overflow: hidden; }
 .sh-nodes-table table { width: 100%; border-collapse: collapse; }
-.sh-nodes-table th { padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; background: #f9fafb; border-bottom: 1px solid #e5e7eb; }
-.sh-nodes-table td { padding: 12px 16px; font-size: 13px; color: #374151; border-bottom: 1px solid #f3f4f6; }
+.sh-nodes-table th { padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #6b7280; text-transform: uppercase; background: #1a2235; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.sh-nodes-table td { padding: 12px 16px; font-size: 13px; color: #E5E7EB; border-bottom: 1px solid rgba(255,255,255,0.04); }
 .sh-nodes-table tr:last-child td { border-bottom: none; }
 .sh-row-offline td { opacity: 0.6; }
 .sh-status-badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 500; }
-.sh-status-badge.online { background: #d1fae5; color: #065f46; }
-.sh-status-badge.offline { background: #fee2e2; color: #991b1b; }
+.sh-status-badge.online { background: rgba(34,197,94,0.12); color: #22C55E; }
+.sh-status-badge.offline { background: rgba(239,68,68,0.12); color: #EF4444; }
 .sh-heartbeat { font-size: 12px; color: #6b7280; }
 
-.sh-no-probes { text-align: center; padding: 40px; background: white; border-radius: 12px; border: 1px dashed #d1d5db; }
-.sh-no-probes button { margin-top: 12px; padding: 8px 20px; background: #3b82f6; color: white; border: none; border-radius: 6px; cursor: pointer; }
+.sh-no-probes { text-align: center; padding: 40px; background: #1F2937; border-radius: 12px; border: 1px dashed rgba(255,255,255,0.12); }
+.sh-no-probes button { margin-top: 12px; padding: 8px 20px; background: #6366F1; color: white; border: none; border-radius: 6px; cursor: pointer; }

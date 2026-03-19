@@ -963,3 +963,95 @@ body.dark-mode *:focus-visible {
   outline: 2px solid rgba(99,102,241,0.5) !important;
   outline-offset: 2px !important;
 }
+
+/* ── 37. KNOWLEDGE BASE ── */
+body.dark-mode .kb-container { color: #E5E7EB !important; }
+body.dark-mode .kb-stat-card,
+body.dark-mode .kb-entries,
+body.dark-mode .kb-entry-card,
+body.dark-mode .kb-detail { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .kb-entries { background: #111827 !important; }
+body.dark-mode .kb-detail { background: #111827 !important; }
+body.dark-mode .kb-header h2,
+body.dark-mode .kb-entries h3,
+body.dark-mode .kb-detail-header h3,
+body.dark-mode .kb-entry-title h4 { color: #E5E7EB !important; }
+body.dark-mode .kb-stat-number,
+body.dark-mode .kb-stat-value { color: #E5E7EB !important; }
+body.dark-mode .kb-stat-text,
+body.dark-mode .kb-entry-stats,
+body.dark-mode .kb-entry-last,
+body.dark-mode .kb-empty,
+body.dark-mode .kb-history-date { color: #6B7280 !important; }
+body.dark-mode .kb-detail-section p,
+body.dark-mode .kb-detail-section li { color: #9CA3AF !important; }
+body.dark-mode .kb-detail-section h4 { color: #6B7280 !important; }
+body.dark-mode .kb-search-input,
+body.dark-mode .kb-filter-select { background: #0B0F14 !important; border-color: rgba(255,255,255,0.1) !important; color: #E5E7EB !important; }
+body.dark-mode .kb-commands { background: #0B0F14 !important; color: #A5B4FC !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .kb-stat-item,
+body.dark-mode .kb-history-item { background: #1a2235 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .kb-stat-label { color: #6B7280 !important; }
+body.dark-mode .kb-detail-header,
+body.dark-mode .kb-detail-actions { border-color: rgba(255,255,255,0.08) !important; }
+
+/* ── 38. AI ACTIVITIES ── */
+body.dark-mode .ai-activities-container { color: #E5E7EB !important; }
+body.dark-mode .ai-activities-header h2 { color: #E5E7EB !important; }
+body.dark-mode .ollama-status { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .ollama-status-title { color: #E5E7EB !important; }
+body.dark-mode .ollama-status-details { color: #9CA3AF !important; }
+body.dark-mode .ai-stat-card { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .ai-stat-number { color: #E5E7EB !important; }
+body.dark-mode .ai-stat-text { color: #6B7280 !important; }
+body.dark-mode .ai-tab { background: #1F2937 !important; border-color: rgba(255,255,255,0.08) !important; color: #6B7280 !important; }
+body.dark-mode .ai-tab.active { background: rgba(99,102,241,0.15) !important; border-color: rgba(99,102,241,0.4) !important; color: #818CF8 !important; }
+body.dark-mode .ai-content { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .ai-activity-card { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .ai-activity-title h4 { color: #E5E7EB !important; }
+body.dark-mode .ai-activity-description { color: #9CA3AF !important; }
+body.dark-mode .ai-activity-meta { color: #6B7280 !important; }
+body.dark-mode .ai-pending-card { background: #1F2937 !important; }
+body.dark-mode .ai-pending-header h4 { color: #E5E7EB !important; }
+body.dark-mode .ai-pending-value { color: #E5E7EB !important; }
+body.dark-mode .ai-pending-label { color: #6B7280 !important; }
+body.dark-mode .ai-pending-solution { background: #1a2235 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .ai-pending-solution p { color: #9CA3AF !important; }
+body.dark-mode .ai-pending-commands { background: #0B0F14 !important; color: #A5B4FC !important; }
+body.dark-mode .ai-pending-metric { background: #1a2235 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .ai-pending-metric-value { color: #E5E7EB !important; }
+body.dark-mode .remediation-section { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .remediation-header { background: #1a2235 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .remediation-title h4 { color: #E5E7EB !important; }
+body.dark-mode .remediation-description li { color: #9CA3AF !important; }
+body.dark-mode .remediation-config-box { background: #1a2235 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .config-label { color: #9CA3AF !important; }
+body.dark-mode .config-value { color: #E5E7EB !important; }
+
+/* ── 39. THRESHOLD CONFIG ── */
+body.dark-mode .threshold-section { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .threshold-header h2 { color: #E5E7EB !important; }
+body.dark-mode .threshold-subtitle,
+body.dark-mode .section-help { color: #6B7280 !important; }
+body.dark-mode .preset-card { background: #1F2937 !important; border-color: rgba(255,255,255,0.08) !important; }
+body.dark-mode .preset-header h4 { color: #E5E7EB !important; }
+body.dark-mode .preset-description { color: #9CA3AF !important; }
+body.dark-mode .preset-detail span { color: #6B7280 !important; }
+body.dark-mode .preset-detail strong { color: #E5E7EB !important; }
+body.dark-mode .threshold-item label { color: #E5E7EB !important; }
+body.dark-mode .threshold-unit { color: #6B7280 !important; }
+body.dark-mode .threshold-info-box { background: rgba(96,165,250,0.06) !important; border-left-color: #60A5FA !important; }
+body.dark-mode .threshold-info-box h4 { color: #E5E7EB !important; }
+body.dark-mode .threshold-info-box p { color: #9CA3AF !important; }
+body.dark-mode .applied-preset-info { background: rgba(34,197,94,0.08) !important; border-left-color: #22C55E !important; color: #E5E7EB !important; }
+
+/* ── 40. SYSTEM HEALTH ── */
+body.dark-mode .sh-header h1 { color: #E5E7EB !important; }
+body.dark-mode .sh-kpi { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .sh-kpi-value { color: #E5E7EB !important; }
+body.dark-mode .sh-gauge { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .sh-nodes-table { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .sh-nodes-table th { background: #1a2235 !important; color: #6B7280 !important; border-bottom-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .sh-nodes-table td { color: #E5E7EB !important; border-bottom-color: rgba(255,255,255,0.04) !important; }
+body.dark-mode .sh-no-probes { background: #1F2937 !important; border-color: rgba(255,255,255,0.1) !important; }
+body.dark-mode .sh-btn-refresh { background: #1F2937 !important; border-color: rgba(255,255,255,0.08) !important; color: #9CA3AF !important; }

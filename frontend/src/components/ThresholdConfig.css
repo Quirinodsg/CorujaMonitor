@@ -1,4 +1,4 @@
-.threshold-config-container {
+﻿.threshold-config-container {
   padding: 20px;
   max-width: 1400px;
   margin: 0 auto;
@@ -10,31 +10,31 @@
 
 .threshold-header h2 {
   font-size: 28px;
-  color: #2c3e50;
+  color: #E5E7EB;
   margin-bottom: 8px;
 }
 
 .threshold-subtitle {
-  color: #7f8c8d;
+  color: #6B7280;
   font-size: 14px;
 }
 
 .threshold-section {
-  background: white;
+  background: #1F2937;
   border-radius: 8px;
   padding: 24px;
   margin-bottom: 24px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 
 .threshold-section h3 {
   font-size: 20px;
-  color: #2c3e50;
+  color: #E5E7EB;
   margin-bottom: 8px;
 }
 
 .section-help {
-  color: #7f8c8d;
+  color: #6B7280;
   font-size: 13px;
   margin-bottom: 20px;
 }
@@ -48,7 +48,7 @@
 }
 
 .preset-card {
-  border: 2px solid #ecf0f1;
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 8px;
   padding: 16px;
   transition: all 0.2s;
@@ -56,18 +56,18 @@
 }
 
 .preset-card:hover {
-  border-color: #3498db;
+  border-color: #6366F1;
   box-shadow: 0 4px 8px rgba(52, 152, 219, 0.1);
 }
 
 .preset-card-active {
-  border-color: #27ae60;
+  border-color: #22C55E;
   background: linear-gradient(135deg, #f0fff4 0%, #ffffff 100%);
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.2);
 }
 
 .preset-card-active:hover {
-  border-color: #27ae60;
+  border-color: #22C55E;
   box-shadow: 0 4px 12px rgba(39, 174, 96, 0.3);
 }
 
@@ -80,7 +80,7 @@
 
 .preset-header h4 {
   font-size: 16px;
-  color: #2c3e50;
+  color: #E5E7EB;
   margin: 0;
   display: flex;
   align-items: center;
@@ -89,7 +89,7 @@
 
 .preset-badge {
   font-size: 11px;
-  background: #27ae60;
+  background: #22C55E;
   color: white;
   padding: 2px 8px;
   border-radius: 12px;
@@ -98,7 +98,7 @@
 }
 
 .preset-apply-btn {
-  background: #3498db;
+  background: #6366F1;
   color: white;
   border: none;
   padding: 6px 16px;
@@ -109,16 +109,16 @@
 }
 
 .preset-apply-btn:hover {
-  background: #2980b9;
+  background: #4f52d9;
 }
 
 .preset-apply-btn:disabled {
-  background: #95a5a6;
+  background: #374151;
   cursor: not-allowed;
 }
 
 .preset-description {
-  color: #7f8c8d;
+  color: #6B7280;
   font-size: 13px;
   margin-bottom: 12px;
 }
@@ -137,25 +137,25 @@
 }
 
 .preset-detail span {
-  color: #7f8c8d;
+  color: #6B7280;
 }
 
 .preset-detail strong {
-  color: #2c3e50;
+  color: #E5E7EB;
 }
 
 .applied-preset-info {
   margin-top: 16px;
   padding: 12px 16px;
-  background: #e8f5e9;
-  border-left: 4px solid #27ae60;
+  background: rgba(34,197,94,0.08);
+  border-left: 4px solid #22C55E;
   border-radius: 4px;
   font-size: 14px;
-  color: #2c3e50;
+  color: #E5E7EB;
 }
 
 .applied-preset-info strong {
-  color: #27ae60;
+  color: #22C55E;
 }
 
 /* Threshold Grid */
@@ -174,7 +174,7 @@
 
 .threshold-item label {
   font-weight: 600;
-  color: #2c3e50;
+  color: #E5E7EB;
   font-size: 14px;
   display: flex;
   align-items: center;
@@ -194,7 +194,7 @@
 .threshold-input-group input[type="number"] {
   flex: 0 0 120px;
   padding: 8px 12px;
-  border: 2px solid #ecf0f1;
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 4px;
   font-size: 14px;
   transition: border-color 0.2s;
@@ -202,21 +202,21 @@
 
 .threshold-input-group input[type="number"]:focus {
   outline: none;
-  border-color: #3498db;
+  border-color: #6366F1;
 }
 
 .threshold-input-group select {
   flex: 1;
   padding: 8px 12px;
-  border: 2px solid #ecf0f1;
+  border: 1px solid rgba(255,255,255,0.08);
   border-radius: 4px;
   font-size: 14px;
-  background: white;
+  background: #1F2937;
   cursor: pointer;
 }
 
 .threshold-unit {
-  color: #7f8c8d;
+  color: #6B7280;
   font-size: 13px;
 }
 
@@ -239,7 +239,7 @@
 }
 
 .threshold-toggle:hover {
-  background: #f8f9fa;
+  background: #1a2235;
 }
 
 .threshold-toggle input[type="checkbox"] {
@@ -250,7 +250,7 @@
 
 .threshold-toggle span {
   font-size: 14px;
-  color: #2c3e50;
+  color: #E5E7EB;
 }
 
 /* Actions */
@@ -261,7 +261,7 @@
 }
 
 .threshold-save-btn {
-  background: #27ae60;
+  background: #22C55E;
   color: white;
   border: none;
   padding: 14px 32px;
@@ -274,34 +274,34 @@
 }
 
 .threshold-save-btn:hover {
-  background: #229954;
+  background: #16a34a;
   transform: translateY(-2px);
   box-shadow: 0 6px 12px rgba(39, 174, 96, 0.3);
 }
 
 .threshold-save-btn:disabled {
-  background: #95a5a6;
+  background: #374151;
   cursor: not-allowed;
   transform: none;
 }
 
 /* Info Box */
 .threshold-info-box {
-  background: #e8f4f8;
-  border-left: 4px solid #3498db;
+  background: rgba(96,165,250,0.08);
+  border-left: 4px solid #6366F1;
   padding: 20px;
   border-radius: 6px;
   margin-top: 24px;
 }
 
 .threshold-info-box h4 {
-  color: #2c3e50;
+  color: #E5E7EB;
   font-size: 16px;
   margin-bottom: 12px;
 }
 
 .threshold-info-box p {
-  color: #34495e;
+  color: #9CA3AF;
   font-size: 14px;
   line-height: 1.6;
   margin-bottom: 12px;
@@ -319,7 +319,7 @@
   align-items: center;
   min-height: 400px;
   font-size: 18px;
-  color: #7f8c8d;
+  color: #6B7280;
 }
 
 .threshold-error {
