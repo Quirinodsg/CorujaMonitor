@@ -36,17 +36,25 @@ logger = logging.getLogger(__name__)
 def _safe_json(obj):
     """Serializa objeto para dict JSON-safe."""
     try:
+        if obj is None:
+            return None
+        if isinstance(obj, (bool, int, float, str)):
+            return obj
+        if hasattr(obj, "model_dump"):  # Pydantic v2
+            return _safe_json(obj.model_dump())
+        if hasattr(obj, "dict"):  # Pydantic v1
+            return _safe_json(obj.dict())
         if hasattr(obj, "__dict__"):
             return {k: _safe_json(v) for k, v in obj.__dict__.items() if not k.startswith("_")}
         if isinstance(obj, (list, tuple)):
             return [_safe_json(i) for i in obj]
         if isinstance(obj, dict):
-            return {k: _safe_json(v) for k, v in obj.items()}
+            return {str(k): _safe_json(v) for k, v in obj.items()}
         if hasattr(obj, "isoformat"):
             return obj.isoformat()
         if hasattr(obj, "value"):  # Enum
             return obj.value
-        return obj
+        return str(obj)
     except Exception:
         return str(obj)
 
@@ -200,6 +208,11 @@ class PipelineOrchestrator:
         if self._db is None:
             return
         try:
+            # Sanitizar output — remover objetos não-serializáveis (ex: Event Pydantic)
+            output = _safe_json(result.output) if result.output else {}
+            # Garantir que é serializável
+            output_str = json.dumps(output)
+
             self._db.execute(
                 text("""
                 INSERT INTO ai_agent_logs
@@ -210,8 +223,8 @@ class PipelineOrchestrator:
                 {
                     "run_id": run_id,
                     "agent_name": result.agent_name,
-                    "input": json.dumps({}),
-                    "output": json.dumps(_safe_json(result.output)),
+                    "input": "{}",
+                    "output": output_str,
                     "status": "success" if result.success else "error",
                     "error": result.error,
                 },
