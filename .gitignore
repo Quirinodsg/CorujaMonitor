@@ -50,3 +50,13 @@ Thumbs.db
 .coverage
 htmlcov/
 .pytest_cache/
+
+# Archive — arquivos temporários de sessões anteriores
+_archive/
+
+# Instaladores ZIP
+*.zip
+
+# Logs soltos na raiz
+probe.log
+*.log
