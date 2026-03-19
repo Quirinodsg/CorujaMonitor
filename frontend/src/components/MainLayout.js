@@ -28,6 +28,12 @@ import ProbeNodes from './ProbeNodes';
 import EventTimeline from './EventTimeline';
 import SystemHealth from './SystemHealth';
 import Discovery from './Discovery';
+import ObservabilityDashboard from './ObservabilityDashboard';
+import TopologyView from './TopologyView';
+import IntelligentAlerts from './IntelligentAlerts';
+import AIOpsV3 from './AIOpsV3';
+import AdvancedMetrics from './AdvancedMetrics';
+import EventsTimeline from './EventsTimeline';
 import './MainLayout.css';
 
 function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
@@ -106,6 +112,19 @@ function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
         return <SystemHealth onNavigate={handleNavigate} />;
       case 'discovery':
         return <Discovery />;
+      // ── v3 Observability ──────────────────────────────────────────────
+      case 'observability':
+        return <ObservabilityDashboard />;
+      case 'topology':
+        return <TopologyView />;
+      case 'intelligent-alerts':
+        return <IntelligentAlerts />;
+      case 'aiops-v3':
+        return <AIOpsV3 />;
+      case 'advanced-metrics':
+        return <AdvancedMetrics />;
+      case 'events-timeline':
+        return <EventsTimeline />;
       case 'users':
         return <Users />;
       case 'settings':

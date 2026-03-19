@@ -1,0 +1,32 @@
+.ia-container { padding: 24px; max-width: 1400px; }
+.ia-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.ia-header h2 { margin: 0; font-size: 1.5rem; }
+.ia-filters { display: flex; gap: 10px; }
+.ia-filters select { background: #1e293b; border: 1px solid #334155; color: #e2e8f0; padding: 6px 12px; border-radius: 8px; font-size: 0.875rem; }
+.ia-main { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
+.ia-list { display: flex; flex-direction: column; gap: 8px; max-height: 75vh; overflow-y: auto; }
+.ia-alert-item { background: #1e293b; border-radius: 10px; padding: 14px 16px; cursor: pointer; transition: background 0.15s; }
+.ia-alert-item:hover { background: #263548; }
+.ia-alert-item--selected { background: #1e3a5f; }
+.ia-alert-title { font-weight: 600; margin-bottom: 6px; }
+.ia-alert-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+.ia-badge { padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; }
+.ia-status { font-size: 0.8rem; color: #94a3b8; }
+.ia-confidence { font-size: 0.8rem; color: #60a5fa; }
+.ia-alert-time { font-size: 0.75rem; color: #475569; }
+.ia-detail { background: #1e293b; border-radius: 12px; padding: 20px; max-height: 75vh; overflow-y: auto; }
+.ia-detail h3 { margin: 0 0 16px; font-size: 1.1rem; }
+.ia-detail h4 { margin: 16px 0 8px; font-size: 0.875rem; color: #64748b; }
+.ia-detail-section { border-bottom: 1px solid #334155; padding-bottom: 16px; margin-bottom: 16px; }
+.ia-detail-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.875rem; }
+.ia-detail-row span { color: #64748b; }
+.ia-root-cause { color: #e2e8f0; font-size: 0.875rem; line-height: 1.5; background: #0f172a; padding: 10px; border-radius: 8px; }
+.ia-hosts-list { margin: 0; padding-left: 20px; font-size: 0.875rem; color: #94a3b8; }
+.ia-timeline { display: flex; flex-direction: column; gap: 10px; }
+.ia-timeline-item { display: flex; align-items: center; gap: 10px; font-size: 0.875rem; color: #94a3b8; }
+.ia-timeline-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.ia-dot-open { background: #ef4444; }
+.ia-dot-resolved { background: #22c55e; }
+.ia-detail-hint { color: #475569; text-align: center; padding: 60px 0; font-size: 0.875rem; }
+.ia-loading, .ia-empty { text-align: center; padding: 40px; color: #64748b; }
+@media (max-width: 768px) { .ia-main { grid-template-columns: 1fr; } }

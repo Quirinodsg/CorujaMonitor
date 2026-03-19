@@ -12,6 +12,14 @@ function Sidebar({ currentPage, onNavigate, darkMode, onToggleDark, collapsed, o
     { id: 'reports', icon: '📈', label: 'Relatórios' },
     { id: 'metrics-viewer', icon: '📉', label: 'Métricas' },
     { id: 'aiops', icon: '🔮', label: 'AIOps' },
+    // ── v3 Observability ──────────────────────────────────────
+    { id: 'observability', icon: '🔭', label: 'Observabilidade', divider: true },
+    { id: 'topology', icon: '🕸️', label: 'Topologia' },
+    { id: 'intelligent-alerts', icon: '🧠', label: 'Alertas Inteligentes' },
+    { id: 'aiops-v3', icon: '🤖', label: 'AIOps v3' },
+    { id: 'advanced-metrics', icon: '📊', label: 'Métricas Avançadas' },
+    { id: 'events-timeline', icon: '🕐', label: 'Timeline v3' },
+    // ─────────────────────────────────────────────────────────
     { id: 'discovery', icon: '🔍', label: 'Discovery' },
     { id: 'knowledge-base', icon: '🧠', label: 'Base de Conhecimento' },
     { id: 'ai-activities', icon: '🤖', label: 'Atividades da IA' },
@@ -29,15 +37,17 @@ function Sidebar({ currentPage, onNavigate, darkMode, onToggleDark, collapsed, o
       </div>
       <nav className="sidebar-nav">
         {menuItems.map(item => (
-          <button
-            key={item.id}
-            className={`sidebar-item ${currentPage === item.id ? 'active' : ''}`}
-            onClick={() => onNavigate(item.id)}
-            title={collapsed ? item.label : undefined}
-          >
-            <span className="sidebar-icon">{item.icon}</span>
-            {!collapsed && <span className="sidebar-label">{item.label}</span>}
-          </button>
+          <React.Fragment key={item.id}>
+            {item.divider && !collapsed && <div className="sidebar-divider">v3</div>}
+            <button
+              className={`sidebar-item ${currentPage === item.id ? 'active' : ''}`}
+              onClick={() => onNavigate(item.id)}
+              title={collapsed ? item.label : undefined}
+            >
+              <span className="sidebar-icon">{item.icon}</span>
+              {!collapsed && <span className="sidebar-label">{item.label}</span>}
+            </button>
+          </React.Fragment>
         ))}
       </nav>
       <div className="sidebar-footer">

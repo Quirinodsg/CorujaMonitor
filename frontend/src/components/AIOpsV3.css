@@ -1,0 +1,31 @@
+.aiops3-container { padding: 24px; max-width: 1400px; }
+.aiops3-header { margin-bottom: 20px; }
+.aiops3-header h2 { margin: 0; font-size: 1.5rem; }
+
+.aiops3-pipeline { display: flex; align-items: center; background: #0f172a; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; overflow-x: auto; gap: 8px; }
+.aiops3-stage { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 100px; }
+.aiops3-stage-icon { font-size: 1.8rem; }
+.aiops3-stage-name { font-size: 0.75rem; color: #94a3b8; text-align: center; }
+.aiops3-arrow { color: #334155; font-size: 1.4rem; flex-shrink: 0; }
+
+.aiops3-metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.aiops3-metric-card { background: #1e293b; border-radius: 10px; padding: 16px; text-align: center; }
+.aiops3-metric-value { font-size: 1.8rem; font-weight: 700; }
+.aiops3-metric-label { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+
+.aiops3-card { background: #1e293b; border-radius: 12px; padding: 20px; }
+.aiops3-card h3 { margin: 0 0 16px; font-size: 1rem; color: #94a3b8; }
+
+.aiops3-activity-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; }
+.aiops3-activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: #0f172a; border-radius: 8px; }
+.aiops3-activity-icon { font-size: 1.4rem; flex-shrink: 0; }
+.aiops3-activity-body { flex: 1; min-width: 0; }
+.aiops3-activity-title { font-weight: 600; font-size: 0.875rem; }
+.aiops3-action-type { color: #64748b; font-weight: 400; }
+.aiops3-activity-desc { font-size: 0.8rem; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.aiops3-activity-right { text-align: right; flex-shrink: 0; }
+.aiops3-outcome { font-size: 0.75rem; font-weight: 600; display: block; }
+.aiops3-activity-time { font-size: 0.75rem; color: #475569; margin-top: 2px; }
+
+.aiops3-loading, .aiops3-empty { text-align: center; padding: 40px; color: #64748b; }
+@media (max-width: 768px) { .aiops3-metrics-row { grid-template-columns: repeat(2, 1fr); } }

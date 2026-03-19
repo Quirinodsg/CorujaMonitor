@@ -1,0 +1,19 @@
+.topo-container { padding: 24px; max-width: 1400px; }
+.topo-header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+.topo-header h2 { margin: 0; font-size: 1.5rem; }
+.topo-count { color: #64748b; font-size: 0.875rem; }
+.topo-main { display: grid; grid-template-columns: 1fr 260px; gap: 16px; }
+.topo-graph-wrap { background: #0f172a; border-radius: 12px; overflow: hidden; }
+.topo-svg { width: 100%; height: 500px; display: block; }
+.topo-detail { background: #1e293b; border-radius: 12px; padding: 20px; }
+.topo-detail h3 { margin: 0 0 16px; font-size: 1rem; color: #94a3b8; }
+.topo-detail h4 { margin: 16px 0 8px; font-size: 0.875rem; color: #64748b; }
+.topo-detail-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #334155; font-size: 0.875rem; }
+.topo-detail-row span { color: #64748b; }
+.topo-detail-hint { color: #475569; font-size: 0.875rem; text-align: center; padding: 40px 0; }
+.topo-status-dot { font-weight: 600; }
+.topo-loading { padding: 60px; text-align: center; color: #64748b; }
+.topo-empty { text-align: center; padding: 60px 20px; color: #64748b; }
+.topo-empty-icon { font-size: 3rem; margin-bottom: 16px; }
+.topo-hint { font-size: 0.8rem; color: #475569; margin-top: 8px; }
+@media (max-width: 768px) { .topo-main { grid-template-columns: 1fr; } }

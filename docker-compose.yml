@@ -49,6 +49,11 @@ services:
       - OLLAMA_BASE_URL=http://ollama:11434
       - AI_MODEL=llama2
       - TZ=America/Sao_Paulo
+      # v3 Streaming
+      - METRICS_STREAM_KEY=metrics_stream
+      - EVENTS_STREAM_KEY=events_stream
+      - STREAM_CONSUMER_GROUP=coruja-consumers
+      - STREAM_BATCH_SIZE=500
     ports:
       - "8000:8000"
     depends_on:
@@ -58,6 +63,13 @@ services:
         condition: service_healthy
     volumes:
       - ./api:/app
+      - ./core:/app/core
+      - ./engine:/app/engine
+      - ./topology_engine:/app/topology_engine
+      - ./event_processor:/app/event_processor
+      - ./ai_agents:/app/ai_agents
+      - ./alert_engine:/app/alert_engine
+      - ./sensor_dsl:/app/sensor_dsl
       - api_logs:/app/logs
       - backups_data:/app/backups
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
@@ -71,6 +83,11 @@ services:
     env_file: .env
     environment:
       - TZ=America/Sao_Paulo
+      # v3 Streaming
+      - METRICS_STREAM_KEY=metrics_stream
+      - EVENTS_STREAM_KEY=events_stream
+      - STREAM_CONSUMER_GROUP=coruja-consumers
+      - STREAM_BATCH_SIZE=500
     depends_on:
       postgres:
         condition: service_healthy
@@ -78,6 +95,13 @@ services:
         condition: service_healthy
     volumes:
       - ./worker:/app
+      - ./core:/app/core
+      - ./engine:/app/engine
+      - ./topology_engine:/app/topology_engine
+      - ./event_processor:/app/event_processor
+      - ./ai_agents:/app/ai_agents
+      - ./alert_engine:/app/alert_engine
+      - ./sensor_dsl:/app/sensor_dsl
       - worker_logs:/app/logs
       - backups_data:/app/backups
     command: celery -A tasks worker --beat --loglevel=info --concurrency=4
