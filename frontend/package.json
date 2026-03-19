@@ -14,7 +14,12 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "test:e2e": "playwright test --config=tests/playwright.config.js",
+    "test:e2e:report": "playwright show-report tests/playwright-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0"
   },
   "eslintConfig": {
     "extends": [

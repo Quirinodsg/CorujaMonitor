@@ -1,71 +1,354 @@
-.aiops3-container { padding: 24px; max-width: 1400px; }
-.aiops3-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
-.aiops3-header h2 { margin: 0; font-size: 1.5rem; }
-.aiops3-header-actions { display: flex; gap: 8px; }
+/* ============================================================
+   AIOPS V3 — Enterprise Premium
+   ============================================================ */
 
-.aiops3-btn { padding: 8px 16px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.875rem; font-weight: 600; transition: opacity 0.15s; }
-.aiops3-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.aiops3-btn--primary { background: #6366f1; color: #fff; }
-.aiops3-btn--primary:hover:not(:disabled) { background: #4f46e5; }
-.aiops3-btn--secondary { background: #1e293b; color: #94a3b8; border: 1px solid #334155; }
-.aiops3-btn--secondary:hover:not(:disabled) { background: #334155; color: #e2e8f0; }
+.aiops3-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
-.aiops3-pipeline { display: flex; align-items: center; background: #0f172a; border-radius: 12px; padding: 20px 24px; margin-bottom: 20px; overflow-x: auto; gap: 8px; }
-.aiops3-stage { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 100px; }
-.aiops3-stage-icon { font-size: 1.8rem; }
-.aiops3-stage-name { font-size: 0.75rem; color: #94a3b8; text-align: center; }
-.aiops3-arrow { color: #334155; font-size: 1.4rem; flex-shrink: 0; }
+/* ── Toolbar ── */
+.aiops3-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
-.aiops3-metrics-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-.aiops3-metric-card { background: #1e293b; border-radius: 10px; padding: 16px; text-align: center; }
-.aiops3-metric-value { font-size: 1.8rem; font-weight: 700; }
-.aiops3-metric-label { font-size: 0.75rem; color: #64748b; margin-top: 4px; }
+/* ── Pipeline visual ── */
+.aiops3-pipeline-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  padding: 24px;
+}
 
-.aiops3-card { background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 16px; }
-.aiops3-card h3 { margin: 0 0 16px; font-size: 1rem; color: #94a3b8; }
+.aiops3-pipeline-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: #4B5563;
+  margin-bottom: 20px;
+}
 
-/* Simulation result */
-.aiops3-sim-result { border: 1px solid #334155; }
-.aiops3-sim-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
-.aiops3-sim-grid > div { background: #0f172a; border-radius: 8px; padding: 10px 14px; display: flex; flex-direction: column; gap: 4px; }
-.aiops3-sim-grid span { font-size: 0.75rem; color: #64748b; }
-.aiops3-sim-grid strong { font-size: 0.9rem; }
-.aiops3-sim-agents { display: flex; flex-direction: column; gap: 6px; }
-.aiops3-sim-agent { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #0f172a; border-radius: 6px; font-size: 0.85rem; }
-.aiops3-sim-agent-name { flex: 1; color: #cbd5e1; }
-.aiops3-sim-error { font-size: 0.75rem; color: #ef4444; }
+.aiops3-pipeline {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
 
-/* Tabs */
-.aiops3-tabs { display: flex; gap: 4px; margin-bottom: 16px; border-bottom: 1px solid #334155; padding-bottom: 0; }
-.aiops3-tab { padding: 8px 16px; background: none; border: none; border-bottom: 2px solid transparent; color: #64748b; cursor: pointer; font-size: 0.875rem; font-weight: 500; transition: all 0.15s; margin-bottom: -1px; }
-.aiops3-tab:hover { color: #94a3b8; }
-.aiops3-tab.active { color: #6366f1; border-bottom-color: #6366f1; }
+.aiops3-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 100px;
+  position: relative;
+}
 
-/* Runs list */
-.aiops3-runs-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; }
-.aiops3-run-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: #0f172a; border-radius: 8px; flex-wrap: wrap; }
-.aiops3-run-id { font-family: monospace; font-size: 0.8rem; color: #94a3b8; display: flex; align-items: center; gap: 6px; min-width: 160px; }
-.aiops3-run-badge { background: #1e293b; border: 1px solid #334155; border-radius: 4px; padding: 1px 6px; font-size: 0.7rem; color: #64748b; }
-.aiops3-run-agents { display: flex; flex-wrap: wrap; gap: 4px; flex: 1; }
-.aiops3-run-agent-chip { background: #1e293b; border-radius: 20px; padding: 2px 10px; font-size: 0.75rem; color: #94a3b8; border: 1px solid #334155; }
-.aiops3-run-stats { font-size: 0.85rem; font-weight: 600; min-width: 60px; text-align: right; }
-.aiops3-run-time { font-size: 0.75rem; color: #475569; min-width: 140px; text-align: right; }
+.aiops3-stage-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: rgba(99,102,241,0.12);
+  border: 1px solid rgba(99,102,241,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  position: relative;
+  z-index: 1;
+}
 
-/* Activity list */
-.aiops3-activity-list { display: flex; flex-direction: column; gap: 8px; max-height: 500px; overflow-y: auto; }
-.aiops3-activity-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px; background: #0f172a; border-radius: 8px; }
-.aiops3-activity-icon { font-size: 1.4rem; flex-shrink: 0; }
+.aiops3-stage-name {
+  font-size: 11px;
+  font-weight: 600;
+  color: #9CA3AF;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.aiops3-stage-connector {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(99,102,241,0.4), rgba(99,102,241,0.1));
+  margin-top: -24px;
+  min-width: 20px;
+}
+
+/* ── Metrics row ── */
+.aiops3-metrics-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+@media (max-width: 900px) { .aiops3-metrics-row { grid-template-columns: repeat(2, 1fr); } }
+
+.aiops3-metric-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+
+.aiops3-metric-value {
+  font-size: 28px;
+  font-weight: 800;
+  color: #E5E7EB;
+  line-height: 1;
+  letter-spacing: -1px;
+  margin-bottom: 4px;
+}
+
+.aiops3-metric-label {
+  font-size: 11px;
+  color: #6B7280;
+  font-weight: 500;
+}
+
+/* ── Sim result ── */
+.aiops3-sim-card {
+  background: #111827;
+  border: 1px solid rgba(99,102,241,0.2);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.aiops3-sim-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #E5E7EB;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.aiops3-sim-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+@media (max-width: 700px) { .aiops3-sim-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.aiops3-sim-stat {
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  padding: 10px;
+}
+
+.aiops3-sim-stat span {
+  display: block;
+  font-size: 10px;
+  color: #6B7280;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.aiops3-sim-stat strong {
+  font-size: 15px;
+  font-weight: 700;
+  color: #E5E7EB;
+}
+
+.aiops3-sim-agents {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.aiops3-sim-agent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+.aiops3-sim-agent-name {
+  flex: 1;
+  color: #9CA3AF;
+}
+
+.aiops3-sim-error {
+  font-size: 11px;
+  color: #EF4444;
+}
+
+/* ── Tabs card ── */
+.aiops3-tabs-card {
+  background: #111827;
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+.aiops3-tabs {
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding: 0 4px;
+}
+
+.aiops3-tab {
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  color: #6B7280;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: var(--font-sans, 'Inter', sans-serif);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  margin-bottom: -1px;
+}
+
+.aiops3-tab:hover { color: #E5E7EB; }
+.aiops3-tab.active { color: #818CF8; border-bottom-color: #6366F1; }
+
+/* ── Runs list ── */
+.aiops3-runs-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.aiops3-run-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  font-size: 12px;
+  transition: background 0.12s;
+}
+
+.aiops3-run-item:last-child { border-bottom: none; }
+.aiops3-run-item:hover { background: rgba(255,255,255,0.02); }
+
+.aiops3-run-id {
+  font-family: var(--font-mono, monospace);
+  color: #6B7280;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.aiops3-run-badge {
+  background: rgba(99,102,241,0.15);
+  color: #818CF8;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.aiops3-run-agents {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+
+.aiops3-run-agent-chip {
+  background: rgba(255,255,255,0.05);
+  color: #9CA3AF;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 10px;
+}
+
+.aiops3-run-stats {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 60px;
+  text-align: right;
+}
+
+.aiops3-run-time {
+  font-size: 11px;
+  color: #6B7280;
+  min-width: 130px;
+  text-align: right;
+}
+
+/* ── Activity list ── */
+.aiops3-activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.aiops3-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  transition: background 0.12s;
+}
+
+.aiops3-activity-item:last-child { border-bottom: none; }
+.aiops3-activity-item:hover { background: rgba(255,255,255,0.02); }
+
+.aiops3-activity-icon {
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
 .aiops3-activity-body { flex: 1; min-width: 0; }
-.aiops3-activity-title { font-weight: 600; font-size: 0.875rem; }
-.aiops3-action-type { color: #64748b; font-weight: 400; }
-.aiops3-activity-desc { font-size: 0.8rem; color: #64748b; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.aiops3-activity-right { text-align: right; flex-shrink: 0; }
-.aiops3-outcome { font-size: 0.75rem; font-weight: 600; display: block; }
-.aiops3-activity-time { font-size: 0.75rem; color: #475569; margin-top: 2px; }
 
-.aiops3-loading, .aiops3-empty { text-align: center; padding: 40px; color: #64748b; }
-@media (max-width: 768px) {
-  .aiops3-metrics-row { grid-template-columns: repeat(2, 1fr); }
-  .aiops3-sim-grid { grid-template-columns: repeat(2, 1fr); }
-  .aiops3-header { flex-direction: column; align-items: flex-start; }
+.aiops3-activity-title {
+  font-size: 13px;
+  font-weight: 500;
+  color: #E5E7EB;
+  margin-bottom: 2px;
+}
+
+.aiops3-action-type {
+  color: #6B7280;
+  font-weight: 400;
+  font-size: 11px;
+}
+
+.aiops3-activity-desc {
+  font-size: 11px;
+  color: #6B7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.aiops3-activity-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.aiops3-activity-time {
+  font-size: 10px;
+  color: #4B5563;
+}
+
+/* ── Empty / Loading ── */
+.aiops3-empty, .aiops3-loading {
+  padding: 40px;
+  text-align: center;
+  color: #4B5563;
+  font-size: 13px;
 }

@@ -5,24 +5,21 @@ const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
 const STATUS_COLOR = {
   ok: '#22c55e', warning: '#f59e0b', critical: '#ef4444',
-  unknown: '#94a3b8', impacted: '#f97316',
+  unknown: '#6b7280', impacted: '#f97316',
 };
 
-// Simple force-directed layout (no external lib dependency)
-function useForceLayout(nodes, edges) {
+function useForceLayout(nodes) {
   const [positions, setPositions] = useState({});
-
   useEffect(() => {
     if (!nodes.length) return;
     const pos = {};
-    const cx = 500, cy = 300, r = 220;
+    const cx = 480, cy = 250, r = 200;
     nodes.forEach((n, i) => {
-      const angle = (2 * Math.PI * i) / nodes.length;
+      const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2;
       pos[n.id] = { x: cx + r * Math.cos(angle), y: cy + r * Math.sin(angle) };
     });
     setPositions(pos);
   }, [nodes.length]);
-
   return positions;
 }
 
@@ -33,7 +30,21 @@ export default function TopologyView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [syncing, setSyncing] = useState(false);
-  const svgRef = useRef(null);
+
+  const positions = useForceLayout(graphData.nodes);
+
+  useEffect(() => {
+    fetch(`${API}/api/v1/topology/graph`)
+      .then(r => r.json())
+      .then(d => {
+        setGraphData({ nodes: d.nodes || [], edges: d.edges || [] });
+        setLoading(false);
+      })
+      .catch(() => {
+        setError('Topologia não disponível. Execute a migração v3 primeiro.');
+        setLoading(false);
+      });
+  }, []);
 
   const syncFromServers = async () => {
     setSyncing(true);
@@ -45,76 +56,65 @@ export default function TopologyView() {
         setGraphData({ nodes: gd.nodes || [], edges: gd.edges || [] });
         setError(null);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setSyncing(false);
-    }
+    } catch (_) {}
+    finally { setSyncing(false); }
   };
-
-  const positions = useForceLayout(graphData.nodes, graphData.edges);
-
-  useEffect(() => {
-    fetch(`${API}/api/v1/topology/graph`)
-      .then(r => r.json())
-      .then(d => {
-        setGraphData({ nodes: d.nodes || [], edges: d.edges || [] });
-        setLoading(false);
-      })
-      .catch(e => {
-        setError('Topologia não disponível. Execute a migração v3 primeiro.');
-        setLoading(false);
-      });
-  }, []);
 
   const handleNodeClick = async (node) => {
     setSelected(node);
+    setImpact(null);
     try {
       const r = await fetch(`${API}/api/v1/topology/impact/${node.id}`);
       if (r.ok) setImpact(await r.json());
-    } catch (e) {
-      setImpact(null);
-    }
+    } catch (_) {}
   };
 
   if (loading) return <div className="topo-loading">Carregando topologia...</div>;
 
   if (error || graphData.nodes.length === 0) {
     return (
-      <div className="topo-container">
-        <div className="topo-header"><h2>🕸️ Topologia de Rede</h2></div>
-        <div className="topo-empty">
+      <div className="topo-wrap">
+        <div className="topo-empty-card">
           <div className="topo-empty-icon">🕸️</div>
-          <p>{error || 'Nenhum nó de topologia cadastrado.'}</p>
-          <p className="topo-hint">A topologia é populada automaticamente via descoberta SNMP/WMI ou pode ser configurada manualmente.</p>
-          <button
-            className="topo-sync-btn"
-            onClick={syncFromServers}
-            disabled={syncing}
-          >
-            {syncing ? '⏳ Sincronizando...' : '🔄 Importar servidores monitorados'}
+          <div className="topo-empty-title">Topologia não configurada</div>
+          <p className="topo-empty-desc">
+            {error || 'Nenhum nó cadastrado. A topologia é populada automaticamente via descoberta SNMP/WMI ou pode ser importada dos servidores monitorados.'}
+          </p>
+          <button className="ds-btn ds-btn--primary" onClick={syncFromServers} disabled={syncing}>
+            {syncing ? 'Sincronizando...' : 'Importar servidores monitorados'}
           </button>
         </div>
       </div>
     );
   }
 
-  const W = 1000, H = 600;
+  const W = 960, H = 500;
 
   return (
-    <div className="topo-container">
-      <div className="topo-header">
-        <h2>🕸️ Topologia de Rede</h2>
-        <span className="topo-count">{graphData.nodes.length} nós · {graphData.edges.length} conexões</span>
+    <div className="topo-wrap">
+      <div className="topo-toolbar">
+        <button className="ds-btn ds-btn--ghost" onClick={syncFromServers} disabled={syncing} style={{ fontSize: 12 }}>
+          {syncing ? 'Sincronizando...' : 'Sincronizar'}
+        </button>
+        <span className="topo-stats">{graphData.nodes.length} nós · {graphData.edges.length} conexões</span>
       </div>
 
       <div className="topo-main">
-        <div className="topo-graph-wrap">
-          <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className="topo-svg">
+        <div className="topo-graph-card">
+          <svg viewBox={`0 0 ${W} ${H}`} className="topo-svg" aria-label="Grafo de topologia de rede">
             <defs>
-              <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
-                <path d="M0,0 L0,6 L8,3 z" fill="#475569" />
+              <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L6,3 z" fill="#334155" />
               </marker>
+              {graphData.nodes.map(node => {
+                const color = STATUS_COLOR[node.status] || STATUS_COLOR.unknown;
+                return (
+                  <radialGradient key={`g-${node.id}`} id={`grad-${node.id}`} cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor={color} stopOpacity="0.3" />
+                    <stop offset="100%" stopColor={color} stopOpacity="0.05" />
+                  </radialGradient>
+                );
+              })}
             </defs>
 
             {/* Edges */}
@@ -125,7 +125,7 @@ export default function TopologyView() {
               return (
                 <line key={i}
                   x1={src.x} y1={src.y} x2={tgt.x} y2={tgt.y}
-                  stroke="#334155" strokeWidth="1.5"
+                  stroke="#1e293b" strokeWidth="1.5"
                   markerEnd="url(#arrow)"
                 />
               );
@@ -137,42 +137,79 @@ export default function TopologyView() {
               if (!pos) return null;
               const color = STATUS_COLOR[node.status] || STATUS_COLOR.unknown;
               const isSelected = selected?.id === node.id;
+              const r = isSelected ? 24 : 20;
               return (
-                <g key={node.id} onClick={() => handleNodeClick(node)} style={{ cursor: 'pointer' }}>
-                  <circle cx={pos.x} cy={pos.y} r={isSelected ? 22 : 18}
-                    fill={color} fillOpacity={0.2}
-                    stroke={color} strokeWidth={isSelected ? 3 : 1.5}
+                <g key={node.id} className="topo-node" onClick={() => handleNodeClick(node)}
+                  role="button" aria-label={`Nó: ${node.name || node.id}`}>
+                  {/* Glow ring for selected */}
+                  {isSelected && (
+                    <circle cx={pos.x} cy={pos.y} r={r + 8}
+                      fill="none" stroke={color} strokeWidth="1" strokeOpacity="0.3" />
+                  )}
+                  {/* Background fill */}
+                  <circle cx={pos.x} cy={pos.y} r={r}
+                    fill={`url(#grad-${node.id})`}
+                    stroke={color} strokeWidth={isSelected ? 2 : 1.5}
                   />
-                  <text x={pos.x} y={pos.y + 4} textAnchor="middle" fontSize="11" fill={color} fontWeight="600">
-                    {(node.name || node.id || '').substring(0, 10)}
+                  {/* Status dot */}
+                  <circle cx={pos.x + r - 5} cy={pos.y - r + 5} r="4"
+                    fill={color} stroke="#0d1117" strokeWidth="1.5" />
+                  {/* Label */}
+                  <text x={pos.x} y={pos.y + 4} textAnchor="middle"
+                    fontSize="10" fill={color} fontWeight="600" fontFamily="Inter, sans-serif">
+                    {(node.name || node.id || '').substring(0, 12)}
                   </text>
-                  <text x={pos.x} y={pos.y + 32} textAnchor="middle" fontSize="9" fill="#64748b">
+                  <text x={pos.x} y={pos.y + 36} textAnchor="middle"
+                    fontSize="9" fill="#475569" fontFamily="Inter, sans-serif">
                     {node.type}
                   </text>
                 </g>
               );
             })}
           </svg>
+
+          {/* Legend */}
+          <div className="topo-legend">
+            {Object.entries(STATUS_COLOR).map(([status, color]) => (
+              <div key={status} className="topo-legend-item">
+                <span className="topo-legend-dot" style={{ background: color }} />
+                {status}
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Detail panel */}
+        {/* Detail */}
         <div className="topo-detail">
           {selected ? (
             <>
-              <h3>Nó Selecionado</h3>
-              <div className="topo-detail-row"><span>Nome</span><strong>{selected.name || selected.id}</strong></div>
-              <div className="topo-detail-row"><span>Tipo</span><strong>{selected.type}</strong></div>
-              <div className="topo-detail-row"><span>Status</span>
-                <span className="topo-status-dot" style={{ color: STATUS_COLOR[selected.status] || '#94a3b8' }}>
-                  ● {selected.status || 'unknown'}
-                </span>
+              <div className="topo-detail-title">{selected.name || selected.id}</div>
+              <div className="topo-detail-row"><span>Tipo</span><strong>{selected.type || '—'}</strong></div>
+              <div className="topo-detail-row">
+                <span>Status</span>
+                <strong style={{ color: STATUS_COLOR[selected.status] || '#9CA3AF' }}>
+                  {selected.status || 'unknown'}
+                </strong>
               </div>
+              {selected.ip && <div className="topo-detail-row"><span>IP</span><strong>{selected.ip}</strong></div>}
+
               {impact && (
                 <>
-                  <h4>Blast Radius</h4>
-                  <div className="topo-detail-row"><span>Impacto Total</span><strong>{impact.total_impact}</strong></div>
-                  <div className="topo-detail-row"><span>Hosts</span><strong>{impact.affected_hosts?.length || 0}</strong></div>
-                  <div className="topo-detail-row"><span>Serviços</span><strong>{impact.affected_services?.length || 0}</strong></div>
+                  <div className="topo-detail-section-title">Blast Radius</div>
+                  <div className="topo-blast-grid">
+                    <div className="topo-blast-item">
+                      <div className="topo-blast-value">{impact.total_impact || 0}</div>
+                      <div className="topo-blast-label">Impacto Total</div>
+                    </div>
+                    <div className="topo-blast-item">
+                      <div className="topo-blast-value">{impact.affected_hosts?.length || 0}</div>
+                      <div className="topo-blast-label">Hosts</div>
+                    </div>
+                    <div className="topo-blast-item">
+                      <div className="topo-blast-value">{impact.affected_services?.length || 0}</div>
+                      <div className="topo-blast-label">Serviços</div>
+                    </div>
+                  </div>
                 </>
               )}
             </>

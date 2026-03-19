@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
-import './styles/cards-theme.css';
+import './styles/design-system.css';
 import MainLayout from './components/MainLayout';
 import Login from './components/Login';
 import api from './services/api';
@@ -9,16 +9,13 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('darkMode') === 'true');
 
   useEffect(() => {
-    if (darkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
-    localStorage.setItem('darkMode', darkMode);
-  }, [darkMode]);
+    // Force dark mode always
+    document.body.classList.add('dark-mode');
+    document.documentElement.style.background = '#0B0F14';
+    document.documentElement.style.colorScheme = 'dark';
+  }, []);
 
   useEffect(() => {
     console.log('App mounted, checking authentication...');
@@ -108,7 +105,7 @@ function App() {
   return (
     <div className="App">
       {isAuthenticated && user ? (
-        <MainLayout user={user} onLogout={handleLogout} darkMode={darkMode} onToggleDark={() => setDarkMode(d => !d)} />
+        <MainLayout user={user} onLogout={handleLogout} />
       ) : (
         <Login onLogin={handleLogin} />
       )}

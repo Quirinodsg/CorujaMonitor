@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from './Sidebar';
+import Topbar from './Topbar';
 import Dashboard from './Dashboard';
 import Companies from './Companies';
 import Servers from './Servers';
@@ -21,7 +22,6 @@ import ThresholdConfig from './ThresholdConfig';
 import Probes from './Probes';
 import NOCRealTime from './NOCRealTime';
 import AdvancedDashboard from './AdvancedDashboard';
-// import ServersGrouped from './ServersGrouped'; // Temporariamente desabilitado - arquivo incompleto
 import AutoRemediation from './AutoRemediation';
 import MetricsViewer from './MetricsViewer';
 import ProbeNodes from './ProbeNodes';
@@ -34,23 +34,44 @@ import IntelligentAlerts from './IntelligentAlerts';
 import AIOpsV3 from './AIOpsV3';
 import AdvancedMetrics from './AdvancedMetrics';
 import EventsTimeline from './EventsTimeline';
+import '../styles/design-system.css';
 import './MainLayout.css';
 
-function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
+function MainLayout({ user, onLogout }) {
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [selectedServerId, setSelectedServerId] = useState(null);
   const [selectedSensorId, setSelectedSensorId] = useState(null);
   const [sensorFilter, setSensorFilter] = useState('all');
   const [nocMode, setNocMode] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [systemStatus, setSystemStatus] = useState('ok');
+  const [alertCount, setAlertCount] = useState(0);
+
+  // Poll system status for topbar indicator
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        const r = await fetch('/api/v1/dashboard/health-summary', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (r.ok) {
+          const d = await r.json();
+          const critical = d.critical || 0;
+          const warning = d.warning || 0;
+          setSystemStatus(critical > 0 ? 'critical' : warning > 0 ? 'warning' : 'ok');
+          setAlertCount(critical + warning);
+        }
+      } catch (_) {}
+    };
+    fetchStatus();
+    const t = setInterval(fetchStatus, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   const handleNavigate = (page, filter = null) => {
     setCurrentPage(page);
-    if (filter) {
-      setSensorFilter(filter);
-    } else {
-      setSensorFilter('all');
-    }
+    setSensorFilter(filter || 'all');
   };
 
   const handleNavigateToServer = (serverId, sensorId = null) => {
@@ -98,8 +119,7 @@ function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
       case 'advanced-dashboard':
         return <AdvancedDashboard user={user} onNavigate={handleNavigate} />;
       case 'servers-grouped':
-        // Temporariamente desabilitado - arquivo ServersGrouped.js incompleto
-        return <Servers />; // Fallback para Servers normal
+        return <Servers />;
       case 'auto-remediation':
         return <AutoRemediation />;
       case 'metrics-viewer':
@@ -112,7 +132,6 @@ function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
         return <SystemHealth onNavigate={handleNavigate} />;
       case 'discovery':
         return <Discovery />;
-      // ── v3 Observability ──────────────────────────────────────────────
       case 'observability':
         return <ObservabilityDashboard />;
       case 'topology':
@@ -140,15 +159,22 @@ function MainLayout({ user, onLogout, darkMode, onToggleDark }) {
 
   return (
     <div className="main-layout">
-      <Sidebar currentPage={currentPage} onNavigate={(page) => handleNavigate(page)} darkMode={darkMode} onToggleDark={onToggleDark} collapsed={sidebarCollapsed} onToggleCollapse={() => setSidebarCollapsed(c => !c)} />
+      <Sidebar
+        currentPage={currentPage}
+        onNavigate={handleNavigate}
+        user={user}
+        onLogout={onLogout}
+        collapsed={sidebarCollapsed}
+        onToggleCollapse={() => setSidebarCollapsed(c => !c)}
+        alertCount={alertCount}
+      />
       <div className={`main-content${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
-        <div className="top-bar">
-          <div className="top-bar-left">
-            <img src="/coruja-logo.png" alt="Coruja Monitor" className="header-logo" />
-            <h2>{user.full_name}</h2>
-          </div>
-          <button onClick={onLogout} className="logout-btn">Sair</button>
-        </div>
+        <Topbar
+          currentPage={currentPage}
+          systemStatus={systemStatus}
+          alertCount={alertCount}
+          onNavigate={handleNavigate}
+        />
         <div className="page-content">
           {renderPage()}
         </div>

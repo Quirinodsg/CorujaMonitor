@@ -3,8 +3,22 @@ import './IntelligentAlerts.css';
 
 const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
-const SEV_COLOR = { critical: '#ef4444', warning: '#f59e0b', info: '#60a5fa' };
-const STATUS_LABEL = { open: '🔴 Aberto', acknowledged: '🟡 Reconhecido', resolved: '✅ Resolvido' };
+const SEV = {
+  critical: { color: '#EF4444', bg: 'rgba(239,68,68,0.12)', label: 'Crítico' },
+  warning:  { color: '#F59E0B', bg: 'rgba(245,158,11,0.12)', label: 'Aviso' },
+  info:     { color: '#60A5FA', bg: 'rgba(96,165,250,0.12)', label: 'Info' },
+};
+
+const STATUS_LABEL = {
+  open: 'Aberto', acknowledged: 'Reconhecido', resolved: 'Resolvido',
+};
+
+const IcoWarn = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+    <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+  </svg>
+);
 
 export default function IntelligentAlerts() {
   const [alerts, setAlerts] = useState([]);
@@ -19,7 +33,10 @@ export default function IntelligentAlerts() {
     if (filter.severity) params.set('severity', filter.severity);
     params.set('limit', '100');
     try {
-      const r = await fetch(`${API}/api/v1/alerts/intelligent?${params}`);
+      const token = localStorage.getItem('token');
+      const r = await fetch(`${API}/api/v1/alerts/intelligent?${params}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (r.ok) {
         const d = await r.json();
         setAlerts(d.alerts || []);
@@ -37,69 +54,93 @@ export default function IntelligentAlerts() {
     setSelected(alert);
     setRootCause(null);
     try {
-      const r = await fetch(`${API}/api/v1/alerts/intelligent/${alert.id}/root-cause`);
+      const token = localStorage.getItem('token');
+      const r = await fetch(`${API}/api/v1/alerts/intelligent/${alert.id}/root-cause`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (r.ok) setRootCause(await r.json());
-    } catch (e) {}
+    } catch (_) {}
   };
 
+  const sevInfo = (sev) => SEV[sev] || { color: '#9CA3AF', bg: 'rgba(107,114,128,0.12)', label: sev };
+
   return (
-    <div className="ia-container">
-      <div className="ia-header">
-        <h2>🧠 Alertas Inteligentes</h2>
-        <div className="ia-filters">
-          <select value={filter.status} onChange={e => setFilter(f => ({ ...f, status: e.target.value }))}>
-            <option value="">Todos os status</option>
-            <option value="open">Aberto</option>
-            <option value="acknowledged">Reconhecido</option>
-            <option value="resolved">Resolvido</option>
-          </select>
-          <select value={filter.severity} onChange={e => setFilter(f => ({ ...f, severity: e.target.value }))}>
-            <option value="">Todas as severidades</option>
-            <option value="critical">Crítico</option>
-            <option value="warning">Warning</option>
-            <option value="info">Info</option>
-          </select>
-        </div>
+    <div className="ia-wrap">
+      {/* Toolbar */}
+      <div className="ia-toolbar">
+        <select className="ia-filter-select" value={filter.status} onChange={e => setFilter(f => ({ ...f, status: e.target.value }))}>
+          <option value="">Todos os status</option>
+          <option value="open">Aberto</option>
+          <option value="acknowledged">Reconhecido</option>
+          <option value="resolved">Resolvido</option>
+        </select>
+        <select className="ia-filter-select" value={filter.severity} onChange={e => setFilter(f => ({ ...f, severity: e.target.value }))}>
+          <option value="">Todas as severidades</option>
+          <option value="critical">Crítico</option>
+          <option value="warning">Aviso</option>
+          <option value="info">Info</option>
+        </select>
+        <span className="ia-count">{alerts.length} alertas</span>
       </div>
 
       <div className="ia-main">
-        {/* Alert list */}
+        {/* List */}
         <div className="ia-list">
           {loading && <div className="ia-loading">Carregando alertas...</div>}
           {!loading && alerts.length === 0 && (
-            <div className="ia-empty">✅ Nenhum alerta inteligente encontrado</div>
+            <div className="ia-empty">Nenhum alerta encontrado com os filtros selecionados</div>
           )}
-          {alerts.map(a => (
-            <div
-              key={a.id}
-              className={`ia-alert-item ${selected?.id === a.id ? 'ia-alert-item--selected' : ''}`}
-              style={{ borderLeft: `4px solid ${SEV_COLOR[a.severity] || '#94a3b8'}` }}
-              onClick={() => handleSelect(a)}
-            >
-              <div className="ia-alert-title">{a.title}</div>
-              <div className="ia-alert-meta">
-                <span className="ia-badge" style={{ background: SEV_COLOR[a.severity] + '33', color: SEV_COLOR[a.severity] }}>
-                  {a.severity}
-                </span>
-                <span className="ia-status">{STATUS_LABEL[a.status] || a.status}</span>
-                {a.confidence && <span className="ia-confidence">{(a.confidence * 100).toFixed(0)}% confiança</span>}
+          {alerts.map(a => {
+            const s = sevInfo(a.severity);
+            return (
+              <div
+                key={a.id}
+                className={`ia-list-item${selected?.id === a.id ? ' selected' : ''}`}
+                style={{ '--sev-color': s.color, '--sev-bg': s.bg }}
+                onClick={() => handleSelect(a)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={e => e.key === 'Enter' && handleSelect(a)}
+                aria-label={`Alerta: ${a.title}`}
+              >
+                <div className="ia-item-icon"><IcoWarn /></div>
+                <div className="ia-item-body">
+                  <div className="ia-item-title">{a.title}</div>
+                  <div className="ia-item-meta">
+                    <span className="ia-badge" style={{ background: s.bg, color: s.color }}>{s.label}</span>
+                    <span className="ia-badge" style={{ background: 'rgba(107,114,128,0.12)', color: '#9CA3AF' }}>
+                      {STATUS_LABEL[a.status] || a.status}
+                    </span>
+                    <span className="ia-item-time">
+                      {a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : '—'}
+                    </span>
+                    {a.confidence && (
+                      <span className="ia-item-confidence">{(a.confidence * 100).toFixed(0)}% conf.</span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="ia-alert-time">
-                {a.created_at ? new Date(a.created_at).toLocaleString('pt-BR') : '—'}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        {/* Detail panel */}
+        {/* Detail */}
         <div className="ia-detail">
           {selected ? (
             <>
-              <h3>{selected.title}</h3>
+              <div className="ia-detail-title">{selected.title}</div>
+
               <div className="ia-detail-section">
-                <div className="ia-detail-row"><span>Status</span><strong>{STATUS_LABEL[selected.status]}</strong></div>
-                <div className="ia-detail-row"><span>Severidade</span>
-                  <strong style={{ color: SEV_COLOR[selected.severity] }}>{selected.severity}</strong>
+                <div className="ia-detail-section-title">Detalhes</div>
+                <div className="ia-detail-row">
+                  <span>Status</span>
+                  <strong>{STATUS_LABEL[selected.status] || selected.status}</strong>
+                </div>
+                <div className="ia-detail-row">
+                  <span>Severidade</span>
+                  <strong style={{ color: sevInfo(selected.severity).color }}>
+                    {sevInfo(selected.severity).label}
+                  </strong>
                 </div>
                 {selected.confidence && (
                   <div className="ia-detail-row">
@@ -107,15 +148,21 @@ export default function IntelligentAlerts() {
                     <strong>{(selected.confidence * 100).toFixed(0)}%</strong>
                   </div>
                 )}
+                <div className="ia-detail-row">
+                  <span>Criado em</span>
+                  <strong>{selected.created_at ? new Date(selected.created_at).toLocaleString('pt-BR') : '—'}</strong>
+                </div>
               </div>
 
               {rootCause && (
                 <div className="ia-detail-section">
-                  <h4>🔍 Causa Raiz</h4>
+                  <div className="ia-detail-section-title">Causa Raiz</div>
                   <p className="ia-root-cause">{rootCause.root_cause || 'Análise em andamento...'}</p>
                   {rootCause.affected_hosts?.length > 0 && (
                     <>
-                      <h4>Hosts Afetados ({rootCause.affected_hosts.length})</h4>
+                      <div className="ia-detail-section-title" style={{ marginTop: 12 }}>
+                        Hosts Afetados ({rootCause.affected_hosts.length})
+                      </div>
                       <ul className="ia-hosts-list">
                         {rootCause.affected_hosts.map((h, i) => <li key={i}>{h}</li>)}
                       </ul>
@@ -125,15 +172,15 @@ export default function IntelligentAlerts() {
               )}
 
               <div className="ia-detail-section">
-                <h4>📋 Timeline</h4>
+                <div className="ia-detail-section-title">Timeline</div>
                 <div className="ia-timeline">
                   <div className="ia-timeline-item">
-                    <span className="ia-timeline-dot ia-dot-open"></span>
-                    <span>Alerta criado: {selected.created_at ? new Date(selected.created_at).toLocaleString('pt-BR') : '—'}</span>
+                    <span className="ia-timeline-dot ia-dot-open" />
+                    <span>Criado: {selected.created_at ? new Date(selected.created_at).toLocaleString('pt-BR') : '—'}</span>
                   </div>
                   {selected.resolved_at && (
                     <div className="ia-timeline-item">
-                      <span className="ia-timeline-dot ia-dot-resolved"></span>
+                      <span className="ia-timeline-dot ia-dot-resolved" />
                       <span>Resolvido: {new Date(selected.resolved_at).toLocaleString('pt-BR')}</span>
                     </div>
                   )}
@@ -141,7 +188,7 @@ export default function IntelligentAlerts() {
               </div>
             </>
           ) : (
-            <div className="ia-detail-hint">Selecione um alerta para ver detalhes, causa raiz e timeline</div>
+            <div className="ia-detail-hint">Selecione um alerta para ver detalhes e causa raiz</div>
           )}
         </div>
       </div>

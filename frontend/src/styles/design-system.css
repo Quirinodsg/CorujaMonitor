@@ -1,0 +1,230 @@
+/* ============================================================
+   CORUJA MONITOR — Design System v3.0
+   Enterprise Premium UI — Dark Mode First
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  /* ── Palette ── */
+  --bg-base:        #0B0F14;
+  --bg-surface:     #111827;
+  --bg-elevated:    #1a2235;
+  --bg-overlay:     #1e2a3a;
+  --bg-hover:       rgba(99, 102, 241, 0.08);
+
+  --border-subtle:  rgba(255,255,255,0.06);
+  --border-default: rgba(255,255,255,0.10);
+  --border-strong:  rgba(255,255,255,0.18);
+
+  --primary:        #6366F1;
+  --primary-hover:  #4f52d9;
+  --primary-glow:   rgba(99,102,241,0.25);
+  --primary-subtle: rgba(99,102,241,0.12);
+
+  --success:        #22C55E;
+  --success-subtle: rgba(34,197,94,0.12);
+  --warning:        #F59E0B;
+  --warning-subtle: rgba(245,158,11,0.12);
+  --critical:       #EF4444;
+  --critical-subtle:rgba(239,68,68,0.12);
+  --info:           #60A5FA;
+  --info-subtle:    rgba(96,165,250,0.12);
+
+  --text-primary:   #E5E7EB;
+  --text-secondary: #9CA3AF;
+  --text-muted:     #6B7280;
+  --text-disabled:  #374151;
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  --text-xs:   11px;
+  --text-sm:   13px;
+  --text-base: 14px;
+  --text-md:   15px;
+  --text-lg:   18px;
+  --text-xl:   22px;
+  --text-2xl:  28px;
+  --text-3xl:  36px;
+
+  /* ── Spacing ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* ── Radius ── */
+  --radius-sm:  6px;
+  --radius-md:  10px;
+  --radius-lg:  14px;
+  --radius-xl:  18px;
+  --radius-full: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-sm:  0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:  0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg:  0 8px 32px rgba(0,0,0,0.6);
+  --shadow-glow: 0 0 20px var(--primary-glow);
+
+  /* ── Transitions ── */
+  --transition-fast:   all 0.12s ease;
+  --transition-base:   all 0.2s ease;
+  --transition-slow:   all 0.35s ease;
+
+  /* ── Sidebar ── */
+  --sidebar-width:     220px;
+  --sidebar-collapsed: 64px;
+  --topbar-height:     56px;
+}
+
+/* ── Global Reset ── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg-base);
+  color: var(--text-primary);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+/* ── Utility Classes ── */
+.ds-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+}
+
+.ds-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.ds-badge--critical { background: var(--critical-subtle); color: var(--critical); }
+.ds-badge--warning  { background: var(--warning-subtle);  color: var(--warning); }
+.ds-badge--success  { background: var(--success-subtle);  color: var(--success); }
+.ds-badge--info     { background: var(--info-subtle);     color: var(--info); }
+.ds-badge--muted    { background: rgba(107,114,128,0.15); color: var(--text-muted); }
+
+.ds-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-family: var(--font-sans);
+  cursor: pointer;
+  border: none;
+  transition: var(--transition-base);
+  white-space: nowrap;
+}
+
+.ds-btn--primary {
+  background: var(--primary);
+  color: white;
+}
+.ds-btn--primary:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+
+.ds-btn--ghost {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--border-default);
+}
+.ds-btn--ghost:hover { background: var(--bg-hover); color: var(--text-primary); border-color: var(--border-strong); }
+
+.ds-btn--danger {
+  background: var(--critical-subtle);
+  color: var(--critical);
+  border: 1px solid rgba(239,68,68,0.2);
+}
+.ds-btn--danger:hover { background: var(--critical); color: white; }
+
+.ds-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+
+/* ── Skeleton Loading ── */
+@keyframes skeleton-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.skeleton {
+  background: var(--bg-elevated);
+  border-radius: var(--radius-sm);
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ── Status Dot ── */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.status-dot--ok       { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.status-dot--warning  { background: var(--warning); }
+.status-dot--critical { background: var(--critical); box-shadow: 0 0 6px var(--critical); }
+.status-dot--unknown  { background: var(--text-muted); }
+
+/* ── Pulse animation for live indicator ── */
+@keyframes pulse-ring {
+  0%   { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.live-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--success);
+}
+.live-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: var(--success);
+  animation: pulse-ring 1.5s ease-out infinite;
+}
+
+/* ── Page fade-in ── */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-enter {
+  animation: page-in 0.25s ease forwards;
+}
