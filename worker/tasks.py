@@ -25,11 +25,15 @@ app.conf.result_backend = settings.CELERY_RESULT_BACKEND
 app.conf.beat_schedule = {
     'ping-all-servers-every-minute': {
         'task': 'tasks.ping_all_servers',
-        'schedule': 60.0,  # A cada 60 segundos
+        'schedule': 60.0,
     },
     'evaluate-thresholds-every-minute': {
         'task': 'tasks.evaluate_all_thresholds',
         'schedule': 60.0,
+    },
+    'run-aiops-pipeline-every-5-minutes': {
+        'task': 'tasks.run_aiops_pipeline_v3',
+        'schedule': 300.0,  # A cada 5 minutos
     },
     'calculate-monthly-sla': {
         'task': 'tasks.generate_monthly_reports',
@@ -37,7 +41,7 @@ app.conf.beat_schedule = {
     },
     'auto-backup-5-times-daily': {
         'task': 'tasks.create_automatic_backup',
-        'schedule': crontab(hour='*/5'),  # A cada 5 horas = 5x ao dia (0h, 5h, 10h, 15h, 20h)
+        'schedule': crontab(hour='*/5'),
     },
 }
 
@@ -261,6 +265,78 @@ def generate_monthly_reports():
         for tenant in tenants:
             calculate_monthly_sla(db, tenant.id, year, month)
     
+    finally:
+        db.close()
+
+
+@app.task
+def run_aiops_pipeline_v3():
+    """
+    Executa o pipeline de agentes v3 com incidentes abertos dos últimos 30 minutos.
+    Agendado a cada 5 minutos pelo Celery Beat.
+    """
+    logger.info("🤖 AIOps Pipeline v3: iniciando execução agendada")
+    db = SessionLocal()
+    try:
+        import sys, os
+        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        if project_root not in sys.path:
+            sys.path.insert(0, project_root)
+
+        from ai_agents.pipeline_orchestrator import PipelineOrchestrator
+        from core.spec.models import Event
+        from core.spec.enums import EventSeverity
+        from uuid import uuid4, UUID
+
+        since = datetime.now(timezone.utc) - timedelta(minutes=30)
+        incidents = db.query(Incident).filter(
+            Incident.status == "open",
+            Incident.created_at >= since,
+        ).order_by(Incident.created_at.desc()).limit(50).all()
+
+        if not incidents:
+            logger.info("AIOps Pipeline v3: nenhum incidente aberto nos últimos 30 min")
+            return
+
+        events = []
+        for inc in incidents:
+            sensor = db.query(Sensor).filter(Sensor.id == inc.sensor_id).first()
+            sensor_type = sensor.sensor_type if sensor else "unknown"
+            server_id = sensor.server_id if sensor else 0
+            try:
+                host_uuid = UUID(int=server_id)
+            except Exception:
+                host_uuid = uuid4()
+
+            sev = EventSeverity.CRITICAL if inc.severity == "critical" else EventSeverity.WARNING
+            ts = inc.created_at
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+
+            event = Event(
+                host_id=host_uuid,
+                type=f"high_{sensor_type}",
+                severity=sev,
+                timestamp=ts,
+                description=inc.title or f"Incidente #{inc.id}",
+            )
+            events.append(event)
+
+        logger.info("AIOps Pipeline v3: processando %d eventos", len(events))
+
+        orch = PipelineOrchestrator(db_conn=db)
+        result = orch.run_from_events(events)
+
+        logger.info(
+            "AIOps Pipeline v3: run_id=%s agents=%d/%d alert=%s",
+            result.get("run_id"),
+            result.get("agents_success", 0),
+            result.get("agents_run", 0),
+            result.get("should_alert"),
+        )
+
+    except Exception as e:
+        logger.error("AIOps Pipeline v3: erro — %s", e, exc_info=True)
     finally:
         db.close()
 
