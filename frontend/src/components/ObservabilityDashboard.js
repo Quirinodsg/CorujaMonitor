@@ -52,8 +52,17 @@ export default function ObservabilityDashboard() {
       ]);
       if (hRes.ok) {
         const d = await hRes.json();
-        if (d.error) setFetchError(d.error);
-        else { setHealth(d); setFetchError(null); }
+        if (d.error && !d.score) {
+          // Erro real sem dados úteis
+          console.error('health-score error:', d.error);
+          setFetchError(d.error);
+        } else {
+          setHealth(d);
+          setFetchError(null);
+          if (d.error) console.warn('health-score partial error:', d.error);
+        }
+      } else {
+        setFetchError(`HTTP ${hRes.status}`);
       }
       if (iRes.ok) setImpactMap((await iRes.json()).nodes || []);
       if (aRes.ok) setAlerts((await aRes.json()).alerts || []);
@@ -128,21 +137,25 @@ export default function ObservabilityDashboard() {
               </div>
             </>
           ) : fetchError ? (
-            <div className="obs-error" title={fetchError}>⚠️ Erro ao carregar</div>
+            <div className="obs-error" title={fetchError}>⚠️ Erro: {fetchError}</div>
           ) : <div className="obs-loading">Carregando...</div>}
         </div>
 
         <div className="obs-card obs-card--stats">
           <h3>Sensores</h3>
-          {health?.breakdown && (
+          {health?.breakdown && Object.keys(health.breakdown).length > 0 ? (
             <div className="obs-stats-grid">
-              <StatCard label="OK" value={health.breakdown.sensors_ok} color="#22c55e" />
-              <StatCard label="Warning" value={health.breakdown.sensors_warning} color="#f59e0b" />
-              <StatCard label="Crítico" value={health.breakdown.sensors_critical} color="#ef4444" />
-              <StatCard label="Unknown" value={health.breakdown.sensors_unknown} color="#94a3b8" />
-              <StatCard label="Incidentes" value={health.breakdown.open_incidents} color="#8b5cf6" />
-              <StatCard label="Total" value={health.breakdown.sensors_total} color="#60a5fa" />
+              <StatCard label="OK" value={health.breakdown.sensors_ok ?? 0} color="#22c55e" />
+              <StatCard label="Warning" value={health.breakdown.sensors_warning ?? 0} color="#f59e0b" />
+              <StatCard label="Crítico" value={health.breakdown.sensors_critical ?? 0} color="#ef4444" />
+              <StatCard label="Unknown" value={health.breakdown.sensors_unknown ?? 0} color="#94a3b8" />
+              <StatCard label="Incidentes" value={health.breakdown.open_incidents ?? 0} color="#8b5cf6" />
+              <StatCard label="Total" value={health.breakdown.sensors_total ?? 0} color="#60a5fa" />
             </div>
+          ) : health ? (
+            <div className="obs-empty">Nenhum sensor ativo encontrado</div>
+          ) : (
+            <div className="obs-loading">Carregando...</div>
           )}
         </div>
       </div>

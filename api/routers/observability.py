@@ -279,15 +279,17 @@ async def get_alert_root_cause(alert_id: str, db: Session = Depends(get_db)):
 # ─── WebSocket — real-time observability ─────────────────────────────────────
 
 @router.websocket("/ws/observability")
-async def ws_observability(websocket: WebSocket, db: Session = Depends(get_db)):
+async def ws_observability(websocket: WebSocket):
     """
     WebSocket para atualizações em tempo real do dashboard de observabilidade.
     Envia health-score + alertas críticos a cada 5 segundos.
+    Não usa Depends(get_db) — cria sessão própria para evitar expiração.
     """
+    from database import SessionLocal
     await manager.connect(websocket)
     try:
         while True:
-            # Build snapshot
+            db = SessionLocal()
             try:
                 sensor_stats = db.execute(text("""
                     WITH latest AS (
@@ -319,8 +321,14 @@ async def ws_observability(websocket: WebSocket, db: Session = Depends(get_db)):
                     "timestamp": datetime.utcnow().isoformat()
                 }
                 await websocket.send_json(payload)
-            except Exception:
-                pass
+            except Exception as e:
+                # Enviar erro para o cliente saber o que aconteceu
+                try:
+                    await websocket.send_json({"type": "error", "message": str(e)})
+                except Exception:
+                    pass
+            finally:
+                db.close()
 
             await asyncio.sleep(5)
     except WebSocketDisconnect:
