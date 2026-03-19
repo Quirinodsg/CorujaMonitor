@@ -1125,3 +1125,262 @@ body.dark-mode .backup-code { background: #111827 !important; border-color: rgba
 body.dark-mode .mfa-info { background: rgba(96,165,250,0.06) !important; border-left-color: #60A5FA !important; }
 body.dark-mode .mfa-info h4 { color: #E5E7EB !important; }
 body.dark-mode .mfa-info li { color: #9CA3AF !important; }
+
+/* ── 43. SERVERS / MANAGEMENT — server-details, sensor-cards, tree-view ── */
+
+/* Painel direito de detalhes do servidor */
+body.dark-mode .server-details {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .server-details-header h2 {
+  color: #E5E7EB !important;
+}
+
+/* Sensor cards dentro do painel de servidores */
+body.dark-mode .sensor-card {
+  background: linear-gradient(135deg, #1F2937 0%, #1a2235 100%) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+
+body.dark-mode .sensor-card:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5) !important;
+  border-color: rgba(99,102,241,0.3) !important;
+}
+
+body.dark-mode .sensor-header {
+  background: linear-gradient(135deg, #1a2235 0%, #1F2937 100%) !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .sensor-header h3 {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .sensor-value {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .sensor-timestamp {
+  background: rgba(0,0,0,0.2) !important;
+  color: #6B7280 !important;
+}
+
+body.dark-mode .sensor-thresholds {
+  background: rgba(0,0,0,0.2) !important;
+  color: #6B7280 !important;
+  border-top-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .sensor-no-data {
+  color: #6B7280 !important;
+}
+
+body.dark-mode .sensor-action-btn {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .sensor-action-btn:hover {
+  background: rgba(99,102,241,0.12) !important;
+}
+
+body.dark-mode .sensor-last-note {
+  background: rgba(245,158,11,0.08) !important;
+  border-top-color: rgba(245,158,11,0.15) !important;
+  color: #F59E0B !important;
+}
+
+/* Tree view (lista de servidores agrupada) */
+body.dark-mode .tree-group-header {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .tree-group-header:hover {
+  background: rgba(99,102,241,0.08) !important;
+}
+
+body.dark-mode .tree-label {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .tree-count {
+  background: #0B0F14 !important;
+  color: #6B7280 !important;
+}
+
+body.dark-mode .tree-group-content {
+  border-left-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .tree-server {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .tree-server:hover {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+}
+
+body.dark-mode .tree-server.selected {
+  background: rgba(99,102,241,0.1) !important;
+  border-color: #6366F1 !important;
+}
+
+body.dark-mode .tree-server .server-info h3 {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .tree-server .server-info p {
+  color: #6B7280 !important;
+}
+
+/* Botões de editar/deletar servidor */
+body.dark-mode .btn-edit-small {
+  background: rgba(99,102,241,0.12) !important;
+  color: #818CF8 !important;
+  border: none !important;
+}
+
+body.dark-mode .btn-edit-small:hover {
+  background: rgba(99,102,241,0.2) !important;
+}
+
+body.dark-mode .btn-delete-small {
+  background: rgba(239,68,68,0.12) !important;
+  color: #EF4444 !important;
+  border: none !important;
+}
+
+body.dark-mode .btn-delete-small:hover {
+  background: rgba(239,68,68,0.2) !important;
+}
+
+/* Modal de adicionar servidor */
+body.dark-mode .modal-content {
+  background: #1F2937 !important;
+  border: 1px solid rgba(255,255,255,0.08) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .modal-content h2 {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .modal-content .form-group label {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .modal-content .form-group input,
+body.dark-mode .modal-content .form-group select {
+  background: #0B0F14 !important;
+  border-color: rgba(255,255,255,0.1) !important;
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .modal-actions .btn-cancel {
+  background: #1F2937 !important;
+  color: #9CA3AF !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+body.dark-mode .modal-actions .btn-save {
+  background: #3B82F6 !important;
+  color: white !important;
+}
+
+/* Sensor item na lista (modal) */
+body.dark-mode .sensor-item {
+  background: #1a2235 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .sensor-name {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .sensor-type {
+  color: #6B7280 !important;
+}
+
+/* Tags */
+body.dark-mode .tag {
+  background: rgba(99,102,241,0.12) !important;
+  color: #818CF8 !important;
+}
+
+/* Reports layout dentro de Management */
+body.dark-mode .summary-card {
+  background: #1F2937 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .summary-card h4 {
+  color: #9CA3AF !important;
+}
+
+body.dark-mode .summary-card p {
+  color: #E5E7EB !important;
+}
+
+body.dark-mode .big-number {
+  color: #E5E7EB !important;
+}
+
+/* Probes section */
+body.dark-mode .probes-section {
+  background: rgba(0,0,0,0.2) !important;
+  border-top-color: rgba(255,255,255,0.06) !important;
+}
+
+body.dark-mode .probes-header h4 {
+  color: #9CA3AF !important;
+}
+
+/* No selection / no data */
+body.dark-mode .no-selection {
+  color: #4B5563 !important;
+}
+
+body.dark-mode .no-data {
+  color: #4B5563 !important;
+}
+
+body.dark-mode .no-data p {
+  color: #4B5563 !important;
+}
+
+/* Abas de servidores (tabs dentro do painel) */
+body.dark-mode .server-tabs,
+body.dark-mode .detail-tabs {
+  background: transparent !important;
+  border-bottom-color: rgba(255,255,255,0.08) !important;
+}
+
+body.dark-mode .server-tabs .tab,
+body.dark-mode .detail-tabs .tab,
+body.dark-mode .server-tab-btn {
+  background: transparent !important;
+  color: #6B7280 !important;
+  border-bottom-color: transparent !important;
+}
+
+body.dark-mode .server-tabs .tab:hover,
+body.dark-mode .detail-tabs .tab:hover,
+body.dark-mode .server-tab-btn:hover {
+  color: #E5E7EB !important;
+  background: rgba(255,255,255,0.04) !important;
+}
+
+body.dark-mode .server-tabs .tab.active,
+body.dark-mode .detail-tabs .tab.active,
+body.dark-mode .server-tab-btn.active {
+  color: #818CF8 !important;
+  border-bottom-color: #6366F1 !important;
+}
