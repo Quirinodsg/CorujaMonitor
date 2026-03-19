@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './AdvancedMetrics.css';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
 const PERIODS = [
   { label: '1h', hours: 1 }, { label: '6h', hours: 6 },

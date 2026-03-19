@@ -152,7 +152,7 @@ services:
     depends_on:
       - api
     environment:
-      - REACT_APP_API_URL=http://192.168.31.161:8000
+      - REACT_APP_API_URL=
       - CHOKIDAR_USEPOLLING=true
       - TZ=America/Sao_Paulo
     volumes:

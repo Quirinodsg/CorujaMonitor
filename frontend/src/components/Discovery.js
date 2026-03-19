@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Discovery.css';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
 function Discovery() {
   const [tab, setTab] = useState('network');

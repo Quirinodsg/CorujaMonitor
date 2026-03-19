@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './KubernetesDashboard.css';
 
+const API_BASE = `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+
 const KubernetesDashboard = () => {
   const [clusters, setClusters] = useState([]);
   const [selectedCluster, setSelectedCluster] = useState(null);
@@ -15,7 +17,7 @@ const KubernetesDashboard = () => {
   const fetchClusters = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:8000/api/v1/kubernetes/clusters', {
+      const response = await fetch(`${API_BASE}/kubernetes/clusters`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -41,7 +43,7 @@ const KubernetesDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/v1/kubernetes/clusters/${clusterId}/resources`,
+        `${API_BASE}/kubernetes/clusters/${clusterId}/resources`,
         {
           headers: {
             'Authorization': `Bearer ${token}`
@@ -63,7 +65,7 @@ const KubernetesDashboard = () => {
     try {
       const token = localStorage.getItem('token');
       const response = await fetch(
-        `http://localhost:8000/api/v1/kubernetes/clusters/${clusterId}/metrics`,
+        `${API_BASE}/kubernetes/clusters/${clusterId}/metrics`,
         {
           headers: {
             'Authorization': `Bearer ${token}`

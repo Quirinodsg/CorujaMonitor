@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ObservabilityDashboard.css';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 const WS_URL = API.replace(/^http/, 'ws');
 
 function HealthGauge({ score }) {

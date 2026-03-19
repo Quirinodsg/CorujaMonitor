@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './TopologyView.css';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
 const STATUS_COLOR = {
   ok: '#22c55e', warning: '#f59e0b', critical: '#ef4444',

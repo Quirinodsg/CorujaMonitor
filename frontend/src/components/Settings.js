@@ -466,12 +466,8 @@ function Settings({ onNavigate }) {
   const handleSaveAppearanceSettings = () => {
     localStorage.setItem('coruja_appearance_settings', JSON.stringify(appearanceSettings));
     
-    // Apply dark mode
-    if (appearanceSettings.darkMode) {
-      document.body.classList.add('dark-mode');
-    } else {
-      document.body.classList.remove('dark-mode');
-    }
+    // Dark mode is always on — never remove it
+    document.body.classList.add('dark-mode');
     
     alert('Configurações de aparência salvas com sucesso!');
   };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EventsTimeline.css';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
 const SEV_COLOR = { critical: '#ef4444', warning: '#f59e0b', info: '#60a5fa', ok: '#22c55e' };
 const SEV_ICON = { critical: '🔴', warning: '🟡', info: '🔵', ok: '🟢' };
@@ -92,7 +92,13 @@ export default function EventsTimeline() {
       {loading && <div className="etl-loading">Carregando eventos...</div>}
 
       {!loading && filtered.length === 0 && (
-        <div className="etl-empty">Nenhum evento encontrado com os filtros aplicados</div>
+        <div className="etl-empty">
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🕐</div>
+          <div>Nenhum evento encontrado com os filtros aplicados</div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+            Eventos são gerados quando sensores detectam mudanças de estado
+          </div>
+        </div>
       )}
 
       <div className="etl-timeline">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './IntelligentAlerts.css';
 
-const API = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
 
 const SEV = {
   critical: { color: '#EF4444', bg: 'rgba(239,68,68,0.12)', label: 'Crítico' },
@@ -88,7 +88,13 @@ export default function IntelligentAlerts() {
         <div className="ia-list">
           {loading && <div className="ia-loading">Carregando alertas...</div>}
           {!loading && alerts.length === 0 && (
-            <div className="ia-empty">Nenhum alerta encontrado com os filtros selecionados</div>
+            <div className="ia-empty">
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🧠</div>
+              <div>Nenhum alerta encontrado com os filtros selecionados</div>
+              <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                Alertas são gerados automaticamente pelo pipeline AIOps quando anomalias são detectadas
+              </div>
+            </div>
           )}
           {alerts.map(a => {
             const s = sevInfo(a.severity);
