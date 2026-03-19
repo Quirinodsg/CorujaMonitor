@@ -1,35 +1,37 @@
+/* Event Timeline — Dark Theme */
 .et-container { padding: 24px; max-width: 1200px; margin: 0 auto; }
-.et-loading, .et-empty { padding: 40px; text-align: center; color: #6b7280; }
+.et-loading, .et-empty { padding: 40px; text-align: center; color: #6B7280; }
 .et-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
-.et-header h1 { font-size: 24px; font-weight: 700; color: #111827; margin: 0 0 4px; }
-.et-subtitle { color: #6b7280; font-size: 14px; margin: 0; }
-.et-btn-refresh { padding: 8px 16px; background: #f3f4f6; border: 1px solid #d1d5db; border-radius: 6px; cursor: pointer; font-size: 14px; }
-.et-btn-refresh:hover { background: #e5e7eb; }
+.et-header h1 { font-size: 24px; font-weight: 700; color: #E5E7EB; margin: 0 0 4px; }
+.et-subtitle { color: #6B7280; font-size: 14px; margin: 0; }
+.et-btn-refresh { padding: 8px 16px; background: #1F2937; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; cursor: pointer; font-size: 14px; color: #9CA3AF; }
+.et-btn-refresh:hover { background: rgba(255,255,255,0.04); color: #E5E7EB; }
 
 .et-filters { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-.et-filters select { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; background: white; cursor: pointer; }
-.et-search { padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; font-size: 14px; min-width: 200px; }
-.et-search:focus { outline: none; border-color: #3b82f6; }
+.et-filters select { padding: 8px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 14px; background: #1F2937; color: #E5E7EB; cursor: pointer; }
+.et-search { padding: 8px 12px; border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; font-size: 14px; min-width: 200px; background: #1F2937; color: #E5E7EB; }
+.et-search:focus { outline: none; border-color: #6366F1; }
 
 .et-timeline { display: flex; flex-direction: column; gap: 0; }
-.et-event { display: flex; gap: 16px; padding: 16px 20px; border-left: 4px solid #e5e7eb; background: white; margin-bottom: 2px; transition: background 0.15s; }
-.et-event:hover { background: #f9fafb; }
+.et-event { display: flex; gap: 16px; padding: 16px 20px; border-left: 4px solid rgba(255,255,255,0.08); background: #1F2937; margin-bottom: 2px; transition: background 0.15s; }
+.et-event:hover { background: #1a2235; }
 .et-event:first-child { border-radius: 8px 8px 0 0; }
 .et-event:last-child { border-radius: 0 0 8px 8px; }
 
 .et-event-time { display: flex; flex-direction: column; align-items: center; min-width: 80px; gap: 4px; }
 .et-icon { font-size: 18px; }
-.et-ts { font-size: 11px; color: #6b7280; text-align: center; white-space: nowrap; }
+.et-ts { font-size: 11px; color: #6B7280; text-align: center; white-space: nowrap; }
 
 .et-event-body { flex: 1; }
 .et-event-header { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
 .et-badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
-.et-type-badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; background: #f3f4f6; color: #374151; }
-.et-title { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #111827; }
-.et-desc { margin: 0 0 6px; font-size: 13px; color: #6b7280; }
-.et-root-cause { font-size: 12px; color: #374151; background: #f9fafb; padding: 6px 10px; border-radius: 4px; }
+.et-type-badge { padding: 2px 10px; border-radius: 12px; font-size: 12px; background: rgba(255,255,255,0.06); color: #9CA3AF; }
+.et-title { margin: 0 0 4px; font-size: 14px; font-weight: 600; color: #E5E7EB; }
+.et-desc { margin: 0 0 6px; font-size: 13px; color: #9CA3AF; }
+.et-root-cause { font-size: 12px; color: #9CA3AF; background: rgba(0,0,0,0.2); padding: 6px 10px; border-radius: 4px; }
 
 .et-pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px; }
-.et-pagination button { padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 6px; background: white; cursor: pointer; }
+.et-pagination button { padding: 8px 16px; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; background: #1F2937; cursor: pointer; color: #9CA3AF; }
+.et-pagination button:hover { background: rgba(255,255,255,0.04); color: #E5E7EB; }
 .et-pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
-.et-pagination span { font-size: 14px; color: #374151; }
+.et-pagination span { font-size: 14px; color: #9CA3AF; }

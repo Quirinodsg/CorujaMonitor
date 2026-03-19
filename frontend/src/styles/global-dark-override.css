@@ -1384,3 +1384,108 @@ body.dark-mode .server-tab-btn.active {
   color: #818CF8 !important;
   border-bottom-color: #6366F1 !important;
 }
+
+/* ── 44. KUBERNETES DASHBOARD ── */
+body.dark-mode .k8s-dashboard { background: #0B0F14 !important; }
+body.dark-mode .k8s-header { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .k8s-header h1 { color: #818CF8 !important; }
+body.dark-mode .k8s-auto-refresh { color: #9CA3AF !important; }
+body.dark-mode .k8s-cluster-card { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .k8s-cluster-card.selected { background: rgba(99,102,241,0.08) !important; border-color: #6366F1 !important; }
+body.dark-mode .k8s-cluster-name { color: #E5E7EB !important; }
+body.dark-mode .k8s-stat-label { color: #6B7280 !important; }
+body.dark-mode .k8s-stat-value { color: #818CF8 !important; }
+body.dark-mode .k8s-clusters-section h2,
+body.dark-mode .k8s-metrics-section h2,
+body.dark-mode .k8s-resources-section h2 { color: #E5E7EB !important; }
+body.dark-mode .k8s-metric-card { background: #1F2937 !important; border-top-color: rgba(255,255,255,0.06) !important; border-right-color: rgba(255,255,255,0.06) !important; border-bottom-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .k8s-metric-title { color: #9CA3AF !important; }
+body.dark-mode .k8s-metric-value { color: #E5E7EB !important; }
+body.dark-mode .k8s-metric-unit { color: #6B7280 !important; }
+body.dark-mode .k8s-resource-section { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .k8s-resource-title { color: #E5E7EB !important; }
+body.dark-mode .k8s-resource-count { color: #6B7280 !important; }
+body.dark-mode .k8s-resource-table thead { background: #1a2235 !important; }
+body.dark-mode .k8s-resource-table th { color: #9CA3AF !important; border-bottom-color: rgba(255,255,255,0.08) !important; }
+body.dark-mode .k8s-resource-table td { color: #E5E7EB !important; border-bottom-color: rgba(255,255,255,0.05) !important; }
+body.dark-mode .k8s-resource-name { color: #818CF8 !important; }
+body.dark-mode .k8s-table-footer { background: #1a2235 !important; color: #6B7280 !important; border-top-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .k8s-empty { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .k8s-empty h2 { color: #9CA3AF !important; }
+body.dark-mode .k8s-empty p { color: #6B7280 !important; }
+body.dark-mode .k8s-no-resources { color: #6B7280 !important; }
+body.dark-mode .k8s-spinner { border-color: rgba(255,255,255,0.08) !important; border-top-color: #6366F1 !important; }
+body.dark-mode .k8s-spinner-small { border-color: rgba(255,255,255,0.08) !important; border-top-color: #6366F1 !important; }
+
+/* ── 45. EVENT TIMELINE ── */
+body.dark-mode .et-container { color: #E5E7EB !important; }
+body.dark-mode .et-header h1 { color: #E5E7EB !important; }
+body.dark-mode .et-subtitle { color: #6B7280 !important; }
+body.dark-mode .et-btn-refresh { background: #1F2937 !important; border-color: rgba(255,255,255,0.08) !important; color: #9CA3AF !important; }
+body.dark-mode .et-btn-refresh:hover { background: rgba(255,255,255,0.04) !important; color: #E5E7EB !important; }
+body.dark-mode .et-filters select { background: #1F2937 !important; border-color: rgba(255,255,255,0.1) !important; color: #E5E7EB !important; }
+body.dark-mode .et-search { background: #1F2937 !important; border-color: rgba(255,255,255,0.1) !important; color: #E5E7EB !important; }
+body.dark-mode .et-event { background: #1F2937 !important; border-left-color: rgba(255,255,255,0.08) !important; }
+body.dark-mode .et-event:hover { background: #1a2235 !important; }
+body.dark-mode .et-ts { color: #6B7280 !important; }
+body.dark-mode .et-type-badge { background: rgba(255,255,255,0.06) !important; color: #9CA3AF !important; }
+body.dark-mode .et-title { color: #E5E7EB !important; }
+body.dark-mode .et-desc { color: #9CA3AF !important; }
+body.dark-mode .et-root-cause { background: rgba(0,0,0,0.2) !important; color: #9CA3AF !important; }
+body.dark-mode .et-pagination button { background: #1F2937 !important; border-color: rgba(255,255,255,0.08) !important; color: #9CA3AF !important; }
+body.dark-mode .et-pagination button:hover { background: rgba(255,255,255,0.04) !important; color: #E5E7EB !important; }
+body.dark-mode .et-pagination span { color: #9CA3AF !important; }
+body.dark-mode .et-loading, body.dark-mode .et-empty { color: #6B7280 !important; }
+
+/* ── 46. CUSTOM REPORTS ── */
+body.dark-mode .custom-reports-container { background: #0B0F14 !important; }
+body.dark-mode .reports-sidebar { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .reports-sidebar h2 { color: #E5E7EB !important; }
+body.dark-mode .sidebar-tabs { border-bottom-color: rgba(255,255,255,0.08) !important; }
+body.dark-mode .sidebar-tab { color: #6B7280 !important; }
+body.dark-mode .sidebar-tab.active { color: #818CF8 !important; border-bottom-color: #6366F1 !important; }
+body.dark-mode .sidebar-tab:hover { color: #E5E7EB !important; }
+body.dark-mode .template-card { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .template-card.active { background: rgba(99,102,241,0.08) !important; border-color: rgba(99,102,241,0.4) !important; }
+body.dark-mode .template-title { color: #E5E7EB !important; }
+body.dark-mode .template-description { color: #6B7280 !important; }
+body.dark-mode .reports-toolbar { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .toolbar-left h1 { color: #E5E7EB !important; }
+body.dark-mode .toolbar-subtitle { color: #6B7280 !important; }
+body.dark-mode .btn-toolbar { background: #1F2937 !important; border-color: rgba(255,255,255,0.08) !important; color: #9CA3AF !important; }
+body.dark-mode .btn-toolbar.primary { background: #6366F1 !important; color: white !important; border-color: #6366F1 !important; }
+body.dark-mode .builder-section { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .builder-section h3 { color: #E5E7EB !important; }
+body.dark-mode .filter-field label { color: #9CA3AF !important; }
+body.dark-mode .filter-field select,
+body.dark-mode .filter-field input { background: #0B0F14 !important; border-color: rgba(255,255,255,0.1) !important; color: #E5E7EB !important; }
+body.dark-mode .column-chip { background: #111827 !important; border-color: rgba(255,255,255,0.08) !important; color: #9CA3AF !important; }
+body.dark-mode .column-chip.selected { background: rgba(99,102,241,0.12) !important; border-color: rgba(99,102,241,0.4) !important; color: #818CF8 !important; }
+body.dark-mode .report-preview { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+
+/* ── 47. REPORTS EXECUTIVE ── */
+body.dark-mode .executive-report { background: #111827 !important; color: #E5E7EB !important; }
+body.dark-mode .executive-header { border-bottom-color: #6366F1 !important; }
+body.dark-mode .company-logo { color: #818CF8 !important; }
+body.dark-mode .report-title h2 { color: #E5E7EB !important; }
+body.dark-mode .report-title h3 { color: #9CA3AF !important; }
+body.dark-mode .report-date { color: #6B7280 !important; }
+body.dark-mode .executive-summary h3 { color: #E5E7EB !important; }
+body.dark-mode .cloud-costs-section { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .cloud-costs-section h4 { color: #E5E7EB !important; }
+body.dark-mode .cloud-provider-card { background: #111827 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .provider-header { border-bottom-color: rgba(255,255,255,0.08) !important; }
+body.dark-mode .provider-header h5 { color: #E5E7EB !important; }
+body.dark-mode .detail-row span { color: #9CA3AF !important; }
+body.dark-mode .detail-row strong { color: #E5E7EB !important; }
+body.dark-mode .detail-row.highlight { background: rgba(99,102,241,0.08) !important; }
+body.dark-mode .detail-row.highlight strong { color: #818CF8 !important; }
+body.dark-mode .comparison-card { background: #1F2937 !important; border-color: rgba(255,255,255,0.06) !important; }
+body.dark-mode .server-info h4 { color: #E5E7EB !important; }
+body.dark-mode .server-ip { color: #6B7280 !important; }
+body.dark-mode .recommendation-text strong { color: #E5E7EB !important; }
+body.dark-mode .recommendation-text p { color: #9CA3AF !important; }
+body.dark-mode .rec-content h4 { color: #E5E7EB !important; }
+body.dark-mode .rec-content p { color: #9CA3AF !important; }
+body.dark-mode .rec-impact { color: #6B7280 !important; }
+body.dark-mode .rec-impact strong { color: #9CA3AF !important; }
