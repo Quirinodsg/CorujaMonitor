@@ -1,8 +1,59 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
+from starlette.types import ASGIApp, Receive, Scope, Send
 from contextlib import asynccontextmanager
+
+
+class ForceCORSMiddleware:
+    """
+    Middleware ASGI minimalista que injeta Access-Control-Allow-Origin em TODA resposta.
+    Garante CORS mesmo quando exception handlers ou outros middlewares omitem o header.
+    """
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        # Capturar origin do request
+        headers = dict(scope.get("headers", []))
+        origin = headers.get(b"origin", b"*").decode("utf-8")
+
+        # Responder preflight OPTIONS diretamente
+        if scope["method"] == "OPTIONS":
+            response = Response(
+                status_code=204,
+                headers={
+                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+                    "Access-Control-Allow-Headers": "Authorization, Content-Type, Accept",
+                    "Access-Control-Max-Age": "86400",
+                },
+            )
+            await response(scope, receive, send)
+            return
+
+        # Para outros métodos: interceptar send para injetar header
+        async def send_with_cors(message):
+            if message["type"] == "http.response.start":
+                headers_list = list(message.get("headers", []))
+                # Remover qualquer ACAO header existente para evitar duplicata
+                headers_list = [
+                    (k, v) for k, v in headers_list
+                    if k.lower() not in (
+                        b"access-control-allow-origin",
+                        b"access-control-allow-credentials",
+                    )
+                ]
+                headers_list.append((b"access-control-allow-origin", origin.encode()))
+                message = {**message, "headers": headers_list}
+            await send(message)
+
+        await self.app(scope, receive, send_with_cors)
 
 from database import engine, Base
 from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery, observability, topology, aiops_v3, aiops_pipeline, internal_health, sensor_controls
@@ -34,6 +85,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ForceCORSMiddleware — garante Access-Control-Allow-Origin em TODA resposta,
+# incluindo erros 401/403/500 onde o CORSMiddleware falha.
+# Registrado por último = executa primeiro (mais externo na cadeia ASGI).
+app.add_middleware(ForceCORSMiddleware)
+
 # Custom exception handler for validation errors
 @app.exception_handler(RequestValidationError)
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
@@ -52,19 +108,14 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
-# Handler global para HTTPException — garante CORS headers em erros 401/403/404/etc
+# Handler global para HTTPException — retorna JSON limpo (CORS é tratado pelo ForceCORSMiddleware)
 from fastapi import HTTPException as FastAPIHTTPException
 
 @app.exception_handler(FastAPIHTTPException)
 async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
-    origin = request.headers.get("origin", "*")
     return JSONResponse(
         status_code=exc.status_code,
         content={"detail": exc.detail},
-        headers={
-            "Access-Control-Allow-Origin": origin,
-            "Access-Control-Allow-Credentials": "true",
-        }
     )
 
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
