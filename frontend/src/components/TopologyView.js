@@ -78,7 +78,8 @@ export default function TopologyView() {
         } else {
           setGraphData({ nodes: gd.nodes || [], edges: gd.edges || [] });
           setError(null);
-          setSyncMsg(`✅ ${syncData.created || 0} nós criados, ${syncData.skipped || 0} já existentes`);
+          const total = (gd.nodes || []).length;
+        setSyncMsg(`✅ Topologia atualizada — ${total} nós no grafo (${syncData.created || 0} novos, ${syncData.skipped || 0} já existentes)`);
         }
       } else {
         setSyncMsg('⚠️ Sync executado mas falha ao recarregar grafo');
