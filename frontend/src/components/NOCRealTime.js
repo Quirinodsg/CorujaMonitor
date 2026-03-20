@@ -2,62 +2,73 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 import './NOCRealTime.css';
 
+const REQUEST_TIMEOUT_MS = 5000;
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 2000;
+
 function NOCRealTime({ onExit }) {
   const [data, setData] = useState(null);
-  const [currentView, setCurrentView] = useState('overview'); // overview, servers, incidents, metrics
+  const [loadError, setLoadError] = useState(null);
+  const [currentView, setCurrentView] = useState('overview');
   const [autoRotate, setAutoRotate] = useState(true);
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [connectionStatus, setConnectionStatus] = useState('connecting');
-  const wsRef = useRef(null);
-  const audioRef = useRef(null);
+  const retryCountRef = useRef(0);
 
   // Sons de alerta
   const playAlert = useCallback((severity) => {
     if (!soundEnabled) return;
-    
-    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-    
-    if (severity === 'critical') {
-      oscillator.frequency.value = 800;
-      gainNode.gain.value = 0.3;
-    } else {
-      oscillator.frequency.value = 600;
-      gainNode.gain.value = 0.2;
-    }
-    
-    oscillator.start();
-    setTimeout(() => oscillator.stop(), 200);
+    try {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = severity === 'critical' ? 800 : 600;
+      gainNode.gain.value = severity === 'critical' ? 0.3 : 0.2;
+      oscillator.start();
+      setTimeout(() => oscillator.stop(), 200);
+    } catch (_) {}
   }, [soundEnabled]);
 
-  // Carregar dados do dashboard
+  // Carregar dados com timeout e retry
   const loadDashboard = useCallback(async () => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
     try {
-      const response = await api.get('/noc-realtime/realtime/dashboard');
-      
-      // Detectar novos incidentes críticos
+      const response = await api.get('/noc-realtime/realtime/dashboard', {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       if (data && response.data.incidents) {
-        const newCriticalIncidents = response.data.incidents.filter(inc => 
-          inc.severity === 'critical' && 
+        const newCritical = response.data.incidents.filter(inc =>
+          inc.severity === 'critical' &&
           !data.incidents?.some(old => old.id === inc.id)
         );
-        
-        if (newCriticalIncidents.length > 0) {
-          playAlert('critical');
-        }
+        if (newCritical.length > 0) playAlert('critical');
       }
-      
+
       setData(response.data);
       setLastUpdate(new Date());
       setConnectionStatus('connected');
+      setLoadError(null);
+      retryCountRef.current = 0;
     } catch (error) {
-      console.error('Erro ao carregar dashboard:', error);
-      setConnectionStatus('error');
+      clearTimeout(timeoutId);
+      const isTimeout = error.name === 'AbortError' || error.code === 'ECONNABORTED';
+      console.error('Erro ao carregar dashboard NOC:', error);
+
+      if (retryCountRef.current < MAX_RETRIES) {
+        retryCountRef.current += 1;
+        setConnectionStatus('connecting');
+        setTimeout(loadDashboard, RETRY_DELAY_MS);
+      } else {
+        setConnectionStatus('error');
+        setLoadError(isTimeout ? 'Timeout de conexão' : 'Falha ao carregar dados');
+      }
     }
   }, [data, playAlert]);
 
@@ -85,8 +96,22 @@ function NOCRealTime({ onExit }) {
   if (!data) {
     return (
       <div className="noc-realtime loading">
-        <div className="loading-spinner"></div>
-        <div className="loading-text">Carregando NOC em Tempo Real...</div>
+        {loadError ? (
+          <>
+            <div className="loading-text" style={{ color: '#ff4444' }}>⚠️ {loadError}</div>
+            <button
+              style={{ marginTop: 16, padding: '8px 20px', cursor: 'pointer' }}
+              onClick={() => { retryCountRef.current = 0; setLoadError(null); setConnectionStatus('connecting'); loadDashboard(); }}
+            >
+              Tentar novamente
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="loading-spinner"></div>
+            <div className="loading-text">Carregando NOC em Tempo Real...</div>
+          </>
+        )}
       </div>
     );
   }

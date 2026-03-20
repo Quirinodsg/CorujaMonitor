@@ -925,3 +925,22 @@ class AutoHealingAction(Base):
         Index('idx_healing_executed', 'executed_at'),
         Index('idx_healing_success', 'success'),
     )
+
+
+class PredictionSample(Base):
+    """
+    Histórico de amostras para o FailurePredictor.
+    Persiste dados entre restarts do container.
+    """
+    __tablename__ = "prediction_samples"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sensor_id = Column(Integer, ForeignKey("sensors.id", ondelete="CASCADE"), nullable=False)
+    timestamp = Column(DateTime(timezone=True), nullable=False, index=True)
+    value = Column(Float, nullable=False)
+
+    sensor = relationship("Sensor")
+
+    __table_args__ = (
+        Index('idx_prediction_samples_sensor_ts', 'sensor_id', 'timestamp'),
+    )

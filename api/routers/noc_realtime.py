@@ -414,40 +414,49 @@ async def get_recent_events(
         
         events = []
         for incident in incidents:
-            # Evento de criação
-            events.append({
-                'id': f"incident_{incident.id}_created",
-                'type': 'incident_created',
-                'severity': incident.severity,
-                'server_name': incident.sensor.server.hostname,
-                'sensor_name': incident.sensor.name,
-                'description': incident.title,
-                'timestamp': incident.created_at.isoformat()
-            })
-            
-            # Evento de reconhecimento
-            if incident.acknowledged_at:
+            try:
+                sensor = incident.sensor
+                server = sensor.server if sensor else None
+                server_name = server.hostname if server else 'N/A'
+                sensor_name = sensor.name if sensor else 'N/A'
+
+                # Evento de criação
                 events.append({
-                    'id': f"incident_{incident.id}_acknowledged",
-                    'type': 'incident_acknowledged',
+                    'id': f"incident_{incident.id}_created",
+                    'type': 'incident_created',
                     'severity': incident.severity,
-                    'server_name': incident.sensor.server.hostname,
-                    'sensor_name': incident.sensor.name,
-                    'description': f"Incidente reconhecido",
-                    'timestamp': incident.acknowledged_at.isoformat()
+                    'server_name': server_name,
+                    'sensor_name': sensor_name,
+                    'description': incident.title,
+                    'timestamp': incident.created_at.isoformat()
                 })
-            
-            # Evento de resolução
-            if incident.resolved_at:
-                events.append({
-                    'id': f"incident_{incident.id}_resolved",
-                    'type': 'incident_resolved',
-                    'severity': incident.severity,
-                    'server_name': incident.sensor.server.hostname,
-                    'sensor_name': incident.sensor.name,
-                    'description': f"Incidente resolvido",
-                    'timestamp': incident.resolved_at.isoformat()
-                })
+
+                # Evento de reconhecimento
+                if incident.acknowledged_at:
+                    events.append({
+                        'id': f"incident_{incident.id}_acknowledged",
+                        'type': 'incident_acknowledged',
+                        'severity': incident.severity,
+                        'server_name': server_name,
+                        'sensor_name': sensor_name,
+                        'description': "Incidente reconhecido",
+                        'timestamp': incident.acknowledged_at.isoformat()
+                    })
+
+                # Evento de resolução
+                if incident.resolved_at:
+                    events.append({
+                        'id': f"incident_{incident.id}_resolved",
+                        'type': 'incident_resolved',
+                        'severity': incident.severity,
+                        'server_name': server_name,
+                        'sensor_name': sensor_name,
+                        'description': "Incidente resolvido",
+                        'timestamp': incident.resolved_at.isoformat()
+                    })
+            except Exception as ev_err:
+                logger.warning(f"Erro ao processar evento do incidente {incident.id}: {ev_err}")
+                continue
         
         # Ordenar por timestamp
         events.sort(key=lambda x: x['timestamp'], reverse=True)

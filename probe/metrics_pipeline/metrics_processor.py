@@ -95,7 +95,7 @@ class MetricsProcessor:
             del self._seen[k]
 
     def _persist(self, events: List[MetricEvent]):
-        """Envia lote para a API."""
+        """Envia lote para a API e alimenta o FailurePredictor."""
         headers = {}
         if self._api_token:
             headers["Authorization"] = f"Bearer {self._api_token}"
@@ -121,6 +121,43 @@ class MetricsProcessor:
         )
         resp.raise_for_status()
         logger.debug(f"MetricsProcessor: {len(events)} eventos persistidos")
+
+        # Alimentar FailurePredictor com as métricas persistidas
+        self._feed_predictor(events)
+
+    def _feed_predictor(self, events: List[MetricEvent]):
+        """Envia métricas ao FailurePredictor via API (fire-and-forget)."""
+        try:
+            import threading
+            samples = [
+                {
+                    "sensor_id": e.sensor_id,
+                    "sensor_type": e.sensor_type,
+                    "value": e.value,
+                    "timestamp": e.timestamp,
+                }
+                for e in events if e.value is not None
+            ]
+            if not samples:
+                return
+
+            def _post():
+                try:
+                    headers = {}
+                    if self._api_token:
+                        headers["Authorization"] = f"Bearer {self._api_token}"
+                    requests.post(
+                        f"{self._api_url}/api/v1/predictions/ingest",
+                        json=samples,
+                        headers=headers,
+                        timeout=3,
+                    )
+                except Exception:
+                    pass  # fire-and-forget — não bloqueia pipeline
+
+            threading.Thread(target=_post, daemon=True).start()
+        except Exception:
+            pass
 
     def _track_throughput(self, count: int):
         now = time.time()

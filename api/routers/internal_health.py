@@ -142,3 +142,64 @@ async def deep_health_public():
         "status": "ok" if redis_ok else "degraded",
         "version": "3.0.0",
     }
+
+
+@router.get("/api/v1/system/health")
+async def system_health_public(db: Session = Depends(get_db)):
+    """
+    Endpoint público de health check enterprise — sem autenticação.
+    Valida: PostgreSQL, Redis, TimescaleDB, AI Agents, Predictor.
+    """
+    start = time.monotonic()
+
+    # PostgreSQL
+    pg = _check_postgres(db)
+
+    # Redis
+    redis = _check_redis()
+
+    # TimescaleDB (hypertable check)
+    ts_status = "unknown"
+    try:
+        result = db.execute(text(
+            "SELECT count(*) FROM timescaledb_information.hypertables"
+        )).scalar()
+        ts_status = "ok" if result is not None else "warning"
+    except Exception:
+        ts_status = "unavailable"
+
+    # AI Agents (predictor importável)
+    ai_status = "unknown"
+    try:
+        import sys, os
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../../ai-agent"))
+        from failure_predictor import FailurePredictor  # noqa
+        ai_status = "ok"
+    except Exception as e:
+        ai_status = f"error: {type(e).__name__}"
+
+    # Pipeline stats
+    pipeline = _check_pipeline_stats(db)
+
+    components = {
+        "postgres": pg,
+        "redis": redis,
+        "timescaledb": {"status": ts_status},
+        "ai_agents": {"status": ai_status},
+        "pipeline": pipeline,
+    }
+
+    statuses = [c.get("status", "unknown") for c in components.values()]
+    if "critical" in statuses:
+        overall = "critical"
+    elif any(s not in ("ok", "unavailable") for s in statuses):
+        overall = "degraded"
+    else:
+        overall = "healthy"
+
+    return {
+        "status": overall,
+        "version": "3.5.0",
+        "total_check_ms": round((time.monotonic() - start) * 1000, 2),
+        "components": components,
+    }

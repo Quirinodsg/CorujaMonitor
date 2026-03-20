@@ -4,6 +4,30 @@ from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from starlette.types import ASGIApp, Receive, Scope, Send
 from contextlib import asynccontextmanager
+import logging
+import logging.config
+import json
+import time
+
+# ── JSON Logging Enterprise ──────────────────────────────────────────────────
+class _JsonFormatter(logging.Formatter):
+    def format(self, record):
+        log = {
+            "timestamp": self.formatTime(record, "%Y-%m-%dT%H:%M:%S"),
+            "level": record.levelname,
+            "service": "coruja-api",
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+        if record.exc_info:
+            log["exception"] = self.formatException(record.exc_info)
+        return json.dumps(log)
+
+_handler = logging.StreamHandler()
+_handler.setFormatter(_JsonFormatter())
+logging.root.setLevel(logging.INFO)
+logging.root.handlers = [_handler]
+# ─────────────────────────────────────────────────────────────────────────────
 
 
 class ForceCORSMiddleware:
@@ -56,6 +80,7 @@ class ForceCORSMiddleware:
         await self.app(scope, receive, send_with_cors)
 
 from database import engine, Base
+from middleware.error_handler import GlobalErrorHandlerMiddleware
 from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery, observability, topology, aiops_v3, aiops_pipeline, internal_health, sensor_controls, service_map, audit, predictions
 
 # WAF desabilitado temporariamente — conflito com CORSMiddleware no Starlette
@@ -65,6 +90,18 @@ WAF_AVAILABLE = False
 async def lifespan(app: FastAPI):
     # Startup
     Base.metadata.create_all(bind=engine)
+    # Backfill do FailurePredictor com histórico do banco
+    try:
+        from database import SessionLocal
+        from routers.predictions import backfill_predictor
+        db = SessionLocal()
+        try:
+            backfill_predictor(db)
+        finally:
+            db.close()
+    except Exception as e:
+        import logging
+        logging.getLogger("coruja.startup").warning("Backfill predictor ignorado: %s", e)
     yield
     # Shutdown
 
@@ -89,6 +126,10 @@ app.add_middleware(
 # incluindo erros 401/403/500 onde o CORSMiddleware falha.
 # Registrado por último = executa primeiro (mais externo na cadeia ASGI).
 app.add_middleware(ForceCORSMiddleware)
+
+# GlobalErrorHandlerMiddleware — captura exceções não tratadas, retorna JSON estruturado.
+# Registrado após ForceCORSMiddleware para que CORS seja aplicado mesmo em erros 500.
+app.add_middleware(GlobalErrorHandlerMiddleware)
 
 # Custom exception handler for validation errors
 @app.exception_handler(RequestValidationError)
