@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./Topbar.css";
 
 const PAGE_LABELS = {
@@ -12,17 +12,57 @@ const PAGE_LABELS = {
   "system-health": "Saude do Sistema", "noc-realtime": "NOC",
 };
 
-const RESULT_ICONS = { server: "🖥️", sensor: "📡", alert: "🚨", default: "🔍" };
+const RESULT_ICONS = { server: "🖥️", sensor: "📡", default: "🔍" };
 
-const IcoSearch = () => React.createElement("svg", { width: "14", height: "14", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
-  React.createElement("circle", { cx: "11", cy: "11", r: "8" }),
-  React.createElement("line", { x1: "21", y1: "21", x2: "16.65", y2: "16.65" })
-);
+let _cache = null;
+let _cacheTs = 0;
+const CACHE_TTL = 30000;
 
-const IcoBell = () => React.createElement("svg", { width: "16", height: "16", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round" },
-  React.createElement("path", { d: "M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" }),
-  React.createElement("path", { d: "M13.73 21a2 2 0 0 1-3.46 0" })
-);
+function IcoSearch() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="11" cy="11" r="8" />
+      <line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  );
+}
+
+function IcoBell() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  );
+}
+
+async function fetchAllData() {
+  const now = Date.now();
+  if (_cache && now - _cacheTs < CACHE_TTL) return _cache;
+  const token = localStorage.getItem("token");
+  const headers = { Authorization: "Bearer " + token };
+  const base = window.location.protocol + "//" + window.location.hostname + ":8000/api/v1";
+  const [r1, r2] = await Promise.allSettled([
+    fetch(base + "/servers?limit=200", { headers }),
+    fetch(base + "/sensors?limit=200", { headers }),
+  ]);
+  const items = [];
+  if (r1.status === "fulfilled" && r1.value.ok) {
+    const d = await r1.value.json();
+    (Array.isArray(d) ? d : (d.items || [])).forEach(s =>
+      items.push({ type: "server", id: s.id, label: s.hostname || s.name || "", sub: s.ip_address || "", page: "servers" })
+    );
+  }
+  if (r2.status === "fulfilled" && r2.value.ok) {
+    const d = await r2.value.json();
+    (Array.isArray(d) ? d : (d.items || [])).forEach(s =>
+      items.push({ type: "sensor", id: s.id, label: s.name || "", sub: s.sensor_type || "", page: "sensors" })
+    );
+  }
+  _cache = items;
+  _cacheTs = now;
+  return items;
+}
 
 function Topbar({ currentPage, systemStatus, alertCount = 0, onNavigate }) {
   const [search, setSearch] = useState("");
@@ -45,7 +85,8 @@ function Topbar({ currentPage, systemStatus, alertCount = 0, onNavigate }) {
 
   useEffect(() => {
     const handler = (e) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target) && inputRef.current && !inputRef.current.contains(e.target)) setOpen(false);
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target) &&
+          inputRef.current && !inputRef.current.contains(e.target)) setOpen(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -53,37 +94,38 @@ function Topbar({ currentPage, systemStatus, alertCount = 0, onNavigate }) {
 
   const doSearch = useCallback(async (q) => {
     if (!q || q.length < 2) { setResults([]); setOpen(false); return; }
-    setLoading(true); setOpen(true);
+    setLoading(true);
     try {
-      const token = localStorage.getItem("token");
-      const headers = { Authorization: "Bearer " + token };
-      const base = window.location.protocol + "//" + window.location.hostname + ":8000/api/v1";
-      const [r1, r2, r3] = await Promise.allSettled([
-        fetch(base + "/servers?search=" + encodeURIComponent(q) + "&limit=5", { headers }),
-        fetch(base + "/sensors?search=" + encodeURIComponent(q) + "&limit=5", { headers }),
-        fetch(base + "/alerts/intelligent?search=" + encodeURIComponent(q) + "&limit=5", { headers }),
-      ]);
-      const combined = [];
-      if (r1.status === "fulfilled" && r1.value.ok) { const d = await r1.value.json(); (Array.isArray(d) ? d : (d.items || [])).slice(0,5).forEach(s => combined.push({ type: "server", id: s.id, label: s.name || s.hostname, sub: s.ip_address || "", page: "servers" })); }
-      if (r2.status === "fulfilled" && r2.value.ok) { const d = await r2.value.json(); (Array.isArray(d) ? d : (d.items || [])).slice(0,5).forEach(s => combined.push({ type: "sensor", id: s.id, label: s.name, sub: s.sensor_type || "", page: "sensors" })); }
-      if (r3.status === "fulfilled" && r3.value.ok) { const d = await r3.value.json(); (Array.isArray(d) ? d : (d.alerts || d.items || [])).slice(0,5).forEach(a => combined.push({ type: "alert", id: a.id, label: a.title || a.message || "", sub: a.severity || "", page: "intelligent-alerts" })); }
-      setResults(combined); setOpen(combined.length > 0);
-    } catch (_) { setResults([]); } finally { setLoading(false); }
+      const ql = q.toLowerCase();
+      const all = await fetchAllData();
+      const filtered = all.filter(item =>
+        (item.label || "").toLowerCase().includes(ql) ||
+        (item.sub || "").toLowerCase().includes(ql)
+      ).slice(0, 10);
+      setResults(filtered);
+      setOpen(true);
+    } catch (_) {
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const handleChange = (e) => {
-    const q = e.target.value; setSearch(q); setActiveIdx(-1);
+    const q = e.target.value;
+    setSearch(q);
+    setActiveIdx(-1);
     clearTimeout(debounceRef.current);
     if (!q) { setResults([]); setOpen(false); return; }
-    debounceRef.current = setTimeout(() => doSearch(q), 300);
+    debounceRef.current = setTimeout(() => doSearch(q), 200);
   };
 
   const handleSelect = (r) => { onNavigate && onNavigate(r.page); setSearch(""); setResults([]); setOpen(false); };
 
   const handleKeyDown = (e) => {
     if (!open || !results.length) return;
-    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i+1, results.length-1)); }
-    if (e.key === "ArrowUp")   { e.preventDefault(); setActiveIdx(i => Math.max(i-1, 0)); }
+    if (e.key === "ArrowDown") { e.preventDefault(); setActiveIdx(i => Math.min(i + 1, results.length - 1)); }
+    if (e.key === "ArrowUp") { e.preventDefault(); setActiveIdx(i => Math.max(i - 1, 0)); }
     if (e.key === "Enter" && activeIdx >= 0) handleSelect(results[activeIdx]);
   };
 
@@ -91,35 +133,66 @@ function Topbar({ currentPage, systemStatus, alertCount = 0, onNavigate }) {
   const statusLabel = systemStatus === "ok" ? "Sistema OK" : systemStatus === "warning" ? "Atencao" : "Critico";
   const pageLabel = PAGE_LABELS[currentPage] || currentPage;
 
-  return React.createElement("header", { className: "topbar", role: "banner" },
-    React.createElement("span", { className: "topbar-title" }, pageLabel),
-    React.createElement("div", { className: "topbar-search", role: "search" },
-      React.createElement("span", { className: "topbar-search-icon" }, React.createElement(IcoSearch)),
-      React.createElement("input", { ref: inputRef, className: "topbar-search-input", type: "text", placeholder: "Buscar servidores, alertas, sensores...", value: search, onChange: handleChange, onKeyDown: handleKeyDown, onFocus: () => search.length >= 2 && results.length > 0 && setOpen(true), "aria-label": "Busca global", autoComplete: "off" }),
-      !search && React.createElement("span", { className: "topbar-search-kbd" }, "Ctrl+K"),
-      loading && React.createElement("span", { className: "topbar-search-spinner", "aria-hidden": "true" }),
-      open && React.createElement("div", { className: "topbar-search-dropdown", ref: dropdownRef, role: "listbox" },
-        results.length === 0 && !loading && React.createElement("div", { className: "topbar-search-empty" }, "Nenhum resultado para \"" + search + "\""),
-        results.map((r, idx) => React.createElement("button", { key: r.type + "-" + r.id, className: "topbar-search-result" + (idx === activeIdx ? " active" : ""), onClick: () => handleSelect(r), role: "option", "aria-selected": idx === activeIdx },
-          React.createElement("span", { className: "topbar-result-icon" }, RESULT_ICONS[r.type] || RESULT_ICONS.default),
-          React.createElement("span", { className: "topbar-result-body" },
-            React.createElement("span", { className: "topbar-result-label" }, r.label),
-            r.sub && React.createElement("span", { className: "topbar-result-sub" }, r.sub)
-          ),
-          React.createElement("span", { className: "topbar-result-type" }, r.type)
-        ))
-      )
-    ),
-    React.createElement("div", { className: "topbar-right" },
-      React.createElement("div", { className: "topbar-status " + statusClass, onClick: () => onNavigate && onNavigate("observability"), role: "button", tabIndex: 0, "aria-label": "Status: " + statusLabel, onKeyDown: e => e.key === "Enter" && onNavigate && onNavigate("observability") },
-        React.createElement("span", { className: "topbar-status-dot" }),
-        statusLabel
-      ),
-      React.createElement("button", { className: "topbar-icon-btn", onClick: () => onNavigate && onNavigate("intelligent-alerts"), "aria-label": "Alertas", title: "Alertas" },
-        React.createElement(IcoBell),
-        alertCount > 0 && React.createElement("span", { className: "topbar-badge", "aria-hidden": "true" }, alertCount > 9 ? "9+" : alertCount)
-      )
-    )
+  return (
+    <header className="topbar" role="banner">
+      <span className="topbar-title">{pageLabel}</span>
+      <div className="topbar-search" role="search">
+        <span className="topbar-search-icon"><IcoSearch /></span>
+        <input
+          ref={inputRef}
+          className="topbar-search-input"
+          type="text"
+          placeholder="Buscar servidores, sensores..."
+          value={search}
+          onChange={handleChange}
+          onKeyDown={handleKeyDown}
+          onFocus={() => search.length >= 2 && results.length > 0 && setOpen(true)}
+          aria-label="Busca global"
+          autoComplete="off"
+        />
+        {!search && <span className="topbar-search-kbd">Ctrl+K</span>}
+        {loading && <span className="topbar-search-spinner" aria-hidden="true" />}
+        {open && (
+          <div className="topbar-search-dropdown" ref={dropdownRef} role="listbox">
+            {results.length === 0 && !loading && (
+              <div className="topbar-search-empty">Nenhum resultado para "{search}"</div>
+            )}
+            {results.map((r, idx) => (
+              <button
+                key={r.type + "-" + r.id}
+                className={"topbar-search-result" + (idx === activeIdx ? " active" : "")}
+                onClick={() => handleSelect(r)}
+                role="option"
+                aria-selected={idx === activeIdx}
+              >
+                <span className="topbar-result-icon">{RESULT_ICONS[r.type] || RESULT_ICONS.default}</span>
+                <span className="topbar-result-body">
+                  <span className="topbar-result-label">{r.label}</span>
+                  {r.sub && <span className="topbar-result-sub">{r.sub}</span>}
+                </span>
+                <span className="topbar-result-type">{r.type}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="topbar-right">
+        <div
+          className={"topbar-status " + statusClass}
+          onClick={() => onNavigate && onNavigate("observability")}
+          role="button" tabIndex={0}
+          aria-label={"Status: " + statusLabel}
+          onKeyDown={e => e.key === "Enter" && onNavigate && onNavigate("observability")}
+        >
+          <span className="topbar-status-dot" />
+          {statusLabel}
+        </div>
+        <button className="topbar-icon-btn" onClick={() => onNavigate && onNavigate("intelligent-alerts")} aria-label="Alertas" title="Alertas">
+          <IcoBell />
+          {alertCount > 0 && <span className="topbar-badge" aria-hidden="true">{alertCount > 9 ? "9+" : alertCount}</span>}
+        </button>
+      </div>
+    </header>
   );
 }
 

@@ -63,12 +63,23 @@ export default function TopologyView() {
       });
       const syncData = await syncResp.json();
 
+      if (syncData.error) {
+        setSyncMsg(`❌ Erro no sync: ${syncData.error}. Execute: docker-compose exec api python3 migrate_v3.py`);
+        setSyncing(false);
+        return;
+      }
+
+      // Recarrega o grafo após sync
       const gr = await fetch(`${API}/api/v1/topology/graph`, { headers });
       if (gr.ok) {
         const gd = await gr.json();
-        setGraphData({ nodes: gd.nodes || [], edges: gd.edges || [] });
-        setError(null);
-        setSyncMsg(`✅ ${syncData.created || 0} nós criados, ${syncData.skipped || 0} já existentes`);
+        if (gd.error) {
+          setSyncMsg(`⚠️ Sync ok mas erro ao carregar grafo: ${gd.error}`);
+        } else {
+          setGraphData({ nodes: gd.nodes || [], edges: gd.edges || [] });
+          setError(null);
+          setSyncMsg(`✅ ${syncData.created || 0} nós criados, ${syncData.skipped || 0} já existentes`);
+        }
       } else {
         setSyncMsg('⚠️ Sync executado mas falha ao recarregar grafo');
       }
@@ -76,7 +87,7 @@ export default function TopologyView() {
       setSyncMsg(`❌ Erro: ${e.message}`);
     } finally {
       setSyncing(false);
-      setTimeout(() => setSyncMsg(null), 4000);
+      setTimeout(() => setSyncMsg(null), 6000);
     }
   };
 

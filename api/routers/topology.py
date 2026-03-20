@@ -72,7 +72,7 @@ async def get_topology_graph(db: Session = Depends(get_db)):
 
         # Fallback: construir topologia a partir dos servidores monitorados
         servers = db.execute(text(
-            "SELECT id, name, ip_address FROM servers WHERE is_active = true LIMIT 100"
+            "SELECT id, hostname, ip_address FROM servers WHERE is_active = true LIMIT 100"
         )).fetchall()
 
         if not servers:
@@ -83,7 +83,7 @@ async def get_topology_graph(db: Session = Depends(get_db)):
             nodes.append({
                 "id": str(s.id),
                 "type": "server",
-                "name": s.name or s.ip_address or str(s.id),
+                "name": s.hostname or s.ip_address or str(s.id),
                 "status": "unknown",
                 "metadata": {"ip": s.ip_address},
                 "parent_id": None,
