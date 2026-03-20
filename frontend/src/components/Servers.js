@@ -734,7 +734,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const handlePauseSensor = async (sensorId, minutes) => {
     try {
-      await api.patch(`/sensors/${sensorId}/pause`, { duration_minutes: minutes });
+      if (minutes === null) {
+        // Permanente = disable
+        await api.patch(`/sensors/${sensorId}/disable`);
+      } else {
+        await api.patch(`/sensors/${sensorId}/pause`, { duration_minutes: minutes });
+      }
       loadSensors(selectedServer.id);
     } catch (error) {
       console.error('Erro ao pausar sensor:', error);
@@ -813,11 +818,15 @@ function Servers({ selectedServerId, selectedSensorId }) {
               title="Retomar sensor"
             >▶</button>
           ) : (
-            <button
-              className="sensor-action-btn sensor-action-pause"
-              onClick={(e) => { e.stopPropagation(); handlePauseSensor(sensor.id, 60); }}
-              title="Pausar sensor por 1h"
-            >⏸</button>
+            <div className="sensor-pause-menu" onClick={(e) => e.stopPropagation()}>
+              <button className="sensor-action-btn sensor-action-pause" title="Pausar sensor">⏸</button>
+              <div className="sensor-pause-dropdown">
+                <button onClick={() => handlePauseSensor(sensor.id, 30)}>⏸ 30 minutos</button>
+                <button onClick={() => handlePauseSensor(sensor.id, 60)}>⏸ 1 hora</button>
+                <button onClick={() => handlePauseSensor(sensor.id, 1440)}>⏸ 1 dia</button>
+                <button onClick={() => handlePauseSensor(sensor.id, null)} className="pause-permanent">⛔ Permanente</button>
+              </div>
+            </div>
           )}
           <button 
             className="sensor-delete-btn"

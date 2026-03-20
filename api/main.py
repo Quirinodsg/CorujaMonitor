@@ -29,8 +29,8 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS deve ser adicionado ANTES do WAF para que preflights OPTIONS
-# recebam o header Access-Control-Allow-Origin mesmo em respostas de erro
+# CORS — registrado primeiro, executa por último (mais externo)
+# Garante Access-Control-Allow-Origin em TODAS as respostas incluindo erros
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -39,7 +39,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# WAF Middleware (adicionado após CORS — middlewares executam em ordem reversa)
+# WAF Middleware
 if WAF_AVAILABLE:
     app.add_middleware(WAFMiddleware)
     print("✅ WAF Middleware enabled")

@@ -3946,3 +3946,61 @@
   font-weight: 700;
   letter-spacing: 0.3px;
 }
+
+/* ── Sensor Pause Dropdown ── */
+.sensor-pause-menu {
+  position: relative;
+  display: inline-block;
+}
+
+.sensor-pause-menu:hover .sensor-pause-dropdown {
+  display: flex;
+  flex-direction: column;
+}
+
+.sensor-pause-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: #1F2937;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  z-index: 100;
+  min-width: 140px;
+  padding: 4px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.sensor-pause-dropdown button {
+  background: none;
+  border: none;
+  color: #E5E7EB;
+  padding: 6px 12px;
+  text-align: left;
+  cursor: pointer;
+  font-size: 12px;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.sensor-pause-dropdown button:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sensor-pause-dropdown .pause-permanent {
+  color: #EF4444;
+}
+
+.sensor-action-pause {
+  color: #F59E0B;
+}
+
+.sensor-action-resume {
+  color: #10B981;
+}
+
+.sensor-is-paused {
+  opacity: 0.6;
+  border-left: 3px solid #F59E0B !important;
+}
