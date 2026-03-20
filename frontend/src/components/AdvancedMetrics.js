@@ -50,17 +50,44 @@ export default function AdvancedMetrics() {
     if (!selectedServer) return;
     const token = localStorage.getItem('token');
     setLoading(true);
-    fetch(`${API}/api/v1/metrics?server_id=${selectedServer}&hours=${period}&limit=500`, {
+
+    // 1. Buscar sensores do servidor
+    fetch(`${API}/api/v1/sensors?server_id=${selectedServer}`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then(r => r.json())
-      .then(d => setMetrics(d.metrics || d || []))
+      .then(async (sensorData) => {
+        const sensorList = Array.isArray(sensorData) ? sensorData : (sensorData.items || sensorData.sensors || []);
+        if (!sensorList.length) { setMetrics([]); return; }
+
+        const since = new Date(Date.now() - period * 3600 * 1000).toISOString();
+
+        // 2. Buscar métricas de cada sensor em paralelo
+        const results = await Promise.allSettled(
+          sensorList.map(sensor =>
+            fetch(`${API}/api/v1/metrics/?sensor_id=${sensor.id}&start_time=${since}&limit=200`, {
+              headers: { Authorization: `Bearer ${token}` },
+            })
+              .then(r => r.ok ? r.json() : [])
+              .then(data => {
+                const arr = Array.isArray(data) ? data : [];
+                // Injetar sensor_type em cada métrica para o agrupamento
+                return arr.map(m => ({ ...m, sensor_type: sensor.sensor_type, sensor_name: sensor.name }));
+              })
+              .catch(() => [])
+          )
+        );
+
+        const all = results.flatMap(r => r.status === 'fulfilled' ? r.value : []);
+        setMetrics(all);
+      })
       .catch(() => setMetrics([]))
       .finally(() => setLoading(false));
   }, [selectedServer, period]);
 
   // Group metrics by sensor type
-  const grouped = metrics.reduce((acc, m) => {
+  const safeMetrics = Array.isArray(metrics) ? metrics : [];
+  const grouped = safeMetrics.reduce((acc, m) => {
     const key = m.sensor_type || m.type || 'other';
     if (!acc[key]) acc[key] = [];
     acc[key].push(m);
@@ -68,9 +95,9 @@ export default function AdvancedMetrics() {
   }, {});
 
   const exportCSV = () => {
-    if (!metrics.length) return;
+    if (!safeMetrics.length) return;
     const header = 'timestamp,sensor_type,value,unit,status\n';
-    const rows = metrics.map(m =>
+    const rows = safeMetrics.map(m =>
       `${m.timestamp},${m.sensor_type || ''},${m.value},${m.unit || ''},${m.status || ''}`
     ).join('\n');
     const blob = new Blob([header + rows], { type: 'text/csv' });
