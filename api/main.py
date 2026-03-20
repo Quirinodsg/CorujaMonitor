@@ -62,6 +62,21 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
         }
     )
 
+# Handler global para HTTPException — garante CORS headers em erros 401/403/404/etc
+from fastapi import HTTPException as FastAPIHTTPException
+
+@app.exception_handler(FastAPIHTTPException)
+async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
+    origin = request.headers.get("origin", "*")
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={
+            "Access-Control-Allow-Origin": origin,
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
+
 app.include_router(auth.router, prefix="/api/v1/auth", tags=["Authentication"])
 app.include_router(mfa.router, prefix="/api/v1", tags=["MFA"])
 app.include_router(auth_config.router, prefix="/api/v1", tags=["Authentication Config"])
