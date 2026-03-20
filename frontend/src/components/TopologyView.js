@@ -30,11 +30,15 @@ export default function TopologyView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [syncing, setSyncing] = useState(false);
+  const [syncMsg, setSyncMsg] = useState(null);
 
   const positions = useForceLayout(graphData.nodes);
 
   useEffect(() => {
-    fetch(`${API}/api/v1/topology/graph`)
+    const token = localStorage.getItem('token');
+    fetch(`${API}/api/v1/topology/graph`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
       .then(r => r.json())
       .then(d => {
         setGraphData({ nodes: d.nodes || [], edges: d.edges || [] });
@@ -48,16 +52,32 @@ export default function TopologyView() {
 
   const syncFromServers = async () => {
     setSyncing(true);
+    setSyncMsg(null);
     try {
-      await fetch(`${API}/api/v1/topology/sync-from-servers`, { method: 'POST' });
-      const gr = await fetch(`${API}/api/v1/topology/graph`);
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const syncResp = await fetch(`${API}/api/v1/topology/sync-from-servers`, {
+        method: 'POST',
+        headers,
+      });
+      const syncData = await syncResp.json();
+
+      const gr = await fetch(`${API}/api/v1/topology/graph`, { headers });
       if (gr.ok) {
         const gd = await gr.json();
         setGraphData({ nodes: gd.nodes || [], edges: gd.edges || [] });
         setError(null);
+        setSyncMsg(`✅ ${syncData.created || 0} nós criados, ${syncData.skipped || 0} já existentes`);
+      } else {
+        setSyncMsg('⚠️ Sync executado mas falha ao recarregar grafo');
       }
-    } catch (_) {}
-    finally { setSyncing(false); }
+    } catch (e) {
+      setSyncMsg(`❌ Erro: ${e.message}`);
+    } finally {
+      setSyncing(false);
+      setTimeout(() => setSyncMsg(null), 4000);
+    }
   };
 
   const handleNodeClick = async (node) => {
@@ -83,6 +103,7 @@ export default function TopologyView() {
           <button className="ds-btn ds-btn--primary" onClick={syncFromServers} disabled={syncing}>
             {syncing ? 'Sincronizando...' : 'Importar servidores monitorados'}
           </button>
+          {syncMsg && <p style={{ marginTop: 12, fontSize: '0.85rem', color: '#94a3b8' }}>{syncMsg}</p>}
         </div>
       </div>
     );
@@ -96,6 +117,7 @@ export default function TopologyView() {
         <button className="ds-btn ds-btn--ghost" onClick={syncFromServers} disabled={syncing} style={{ fontSize: 12 }}>
           {syncing ? 'Sincronizando...' : 'Sincronizar'}
         </button>
+        {syncMsg && <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: 8 }}>{syncMsg}</span>}
         <span className="topo-stats">{graphData.nodes.length} nós · {graphData.edges.length} conexões</span>
       </div>
 
