@@ -7,13 +7,8 @@ from contextlib import asynccontextmanager
 from database import engine, Base
 from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery, observability, topology, aiops_v3, aiops_pipeline, internal_health, sensor_controls
 
-# Importar WAF Middleware
-try:
-    from middleware.waf import WAFMiddleware
-    WAF_AVAILABLE = True
-except ImportError:
-    WAF_AVAILABLE = False
-    print("⚠️  WAF Middleware not available")
+# WAF desabilitado temporariamente — conflito com CORSMiddleware no Starlette
+WAF_AVAILABLE = False
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -29,20 +24,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS — registrado primeiro, executa por último (mais externo)
-# Garante Access-Control-Allow-Origin em TODAS as respostas incluindo erros
+# CORS — allow_credentials=False é obrigatório quando allow_origins=["*"]
+# (browser rejeita credentials=True + wildcard origin)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=False,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
-
-# WAF Middleware
-if WAF_AVAILABLE:
-    app.add_middleware(WAFMiddleware)
-    print("✅ WAF Middleware enabled")
 
 # Custom exception handler for validation errors
 @app.exception_handler(RequestValidationError)
