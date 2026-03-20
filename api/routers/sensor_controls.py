@@ -10,7 +10,7 @@ Implementa controle estilo PRTG:
   - DELETE /sensors/dependencies/{parent_id}/{child_id} → remove
 """
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional, List
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -74,10 +74,11 @@ def _get_sensor_for_user(sensor_id: int, db: Session, current_user: User) -> Sen
 
 
 def _sensor_to_response(sensor: Sensor) -> dict:
-    now = datetime.utcnow()
-    is_paused = bool(
-        sensor.paused_until and sensor.paused_until > now
-    )
+    now = datetime.now(timezone.utc)
+    pu = sensor.paused_until
+    if pu is not None and pu.tzinfo is None:
+        pu = pu.replace(tzinfo=timezone.utc)
+    is_paused = bool(pu and pu > now)
     priority = sensor.priority if sensor.priority is not None else 3
     return {
         "id": sensor.id,
@@ -104,7 +105,7 @@ async def pause_sensor(
     Durante a pausa o scheduler não executa o sensor.
     """
     sensor = _get_sensor_for_user(sensor_id, db, current_user)
-    sensor.paused_until = datetime.utcnow() + timedelta(minutes=body.duration_minutes)
+    sensor.paused_until = datetime.now(timezone.utc) + timedelta(minutes=body.duration_minutes)
     db.commit()
     db.refresh(sensor)
     logger.info("Sensor %s pausado por %d min por user %s", sensor_id, body.duration_minutes, current_user.email)
