@@ -79,7 +79,11 @@ class SensorResponse(BaseModel):
     last_note: Optional[str] = None
     last_note_by: Optional[int] = None
     last_note_at: Optional[datetime] = None
-    
+    # Controle PRTG-style
+    enabled: Optional[bool] = True
+    paused_until: Optional[datetime] = None
+    priority: Optional[int] = 3
+
     class Config:
         from_attributes = True
 
