@@ -118,6 +118,20 @@ class WAFMiddleware(BaseHTTPMiddleware):
         
         client_ip = request.client.host
         path = request.url.path
+        origin = request.headers.get("origin", "*")
+        
+        def cors_error(status_code: int, detail: str):
+            """Retorna erro com headers CORS para não bloquear o browser"""
+            return JSONResponse(
+                status_code=status_code,
+                content={"detail": detail},
+                headers={
+                    "Access-Control-Allow-Origin": origin,
+                    "Access-Control-Allow-Credentials": "true",
+                    "Access-Control-Allow-Methods": "*",
+                    "Access-Control-Allow-Headers": "*",
+                }
+            )
         
         # Debug: log do IP
         logger.info(f"WAF: Request from IP {client_ip} to {path}")
@@ -150,45 +164,30 @@ class WAFMiddleware(BaseHTTPMiddleware):
             self._cleanup_blacklist()  # limpar expirados
             if client_ip in self.blacklist:  # verificar novamente após cleanup
                 logger.warning(f"Blocked request from blacklisted IP: {client_ip}")
-                return JSONResponse(
-                    status_code=403,
-                    content={"detail": "Access denied"}
-                )
+                return cors_error(403, "Access denied")
         
         # 2. Rate Limiting (otimizado)
         if not self.check_rate_limit(client_ip):
             logger.warning(f"Rate limit exceeded for IP: {client_ip}")
-            return JSONResponse(
-                status_code=429,
-                content={"detail": "Too many requests. Please try again later."}
-            )
+            return cors_error(429, "Too many requests. Please try again later.")
         
         # 3. Detectar SQL Injection (apenas em query params para performance)
         if await self.detect_sql_injection_fast(request):
             logger.error(f"SQL Injection attempt detected from IP: {client_ip}")
             self.add_to_blacklist(client_ip)
-            return JSONResponse(
-                status_code=400,
-                content={"detail": "Invalid request"}
-            )
+            return cors_error(400, "Invalid request")
         
         # 4. Detectar XSS (apenas em headers críticos)
         if await self.detect_xss_fast(request):
             logger.error(f"XSS attempt detected from IP: {client_ip}")
-            return JSONResponse(
-                status_code=400,
-                content={"detail": "Invalid request"}
-            )
+            return cors_error(400, "Invalid request")
         
         # 5. Validar Content-Type (apenas POST/PUT/PATCH)
         if request.method in ["POST", "PUT", "PATCH"]:
             content_type = request.headers.get("content-type", "")
             if not self.validate_content_type(content_type):
                 logger.warning(f"Invalid content-type from IP: {client_ip}")
-                return JSONResponse(
-                    status_code=415,
-                    content={"detail": "Unsupported media type"}
-                )
+                return cors_error(415, "Unsupported media type")
         
         # Processar requisição
         response = await call_next(request)
