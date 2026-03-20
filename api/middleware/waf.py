@@ -134,6 +134,11 @@ class WAFMiddleware(BaseHTTPMiddleware):
             response = await call_next(request)
             return response
         
+        # Skip para preflight CORS (OPTIONS) — deve passar sem bloqueio
+        if request.method == "OPTIONS":
+            response = await call_next(request)
+            return response
+        
         # Skip verificação completa para paths whitelisted (performance)
         if path in self.whitelist_paths:
             response = await call_next(request)
