@@ -159,11 +159,27 @@ async def delete_node(node_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+def _get_server_status(server_id: int, db: Session) -> str:
+    """Deriva status do servidor a partir dos alertas abertos mais recentes."""
+    try:
+        row = db.execute(text("""
+            SELECT severity FROM alerts
+            WHERE sensor_id IN (SELECT id FROM sensors WHERE server_id = :sid)
+              AND status = 'open'
+            ORDER BY created_at DESC
+            LIMIT 1
+        """), {"sid": server_id}).fetchone()
+        if row:
+            return "critical" if row.severity == "critical" else "warning"
+        return "ok"
+    except Exception:
+        return "unknown"
+
+
 @router.post("/sync-from-servers")
 async def sync_from_servers(db: Session = Depends(get_db)):
     """
-    Popula topology_nodes a partir dos servidores monitorados.
-    Útil para inicializar a topologia sem descoberta SNMP.
+    Popula/atualiza topology_nodes a partir dos servidores monitorados.
     Sempre retorna 200 — nunca quebra.
     """
     try:
@@ -179,24 +195,29 @@ async def sync_from_servers(db: Session = Depends(get_db)):
         skipped = 0
         for s in servers:
             try:
+                status = _get_server_status(s.id, db)
+                meta = json.dumps({
+                    "server_id": str(s.id),
+                    "name": s.hostname or s.ip_address or str(s.id),
+                    "hostname": s.hostname,
+                    "ip": s.ip_address,
+                    "os_type": s.os_type,
+                    "status": status,
+                })
                 existing = db.execute(text(
                     "SELECT id FROM topology_nodes WHERE metadata->>'server_id' = :sid"
                 ), {"sid": str(s.id)}).fetchone()
 
                 if not existing:
-                    db.execute(text("""
-                        INSERT INTO topology_nodes (type, metadata)
-                        VALUES ('server', :meta::jsonb)
-                    """), {"meta": json.dumps({
-                        "server_id": str(s.id),
-                        "name": s.hostname or s.ip_address or str(s.id),
-                        "hostname": s.hostname,
-                        "ip": s.ip_address,
-                        "os_type": s.os_type,
-                        "status": "unknown",
-                    })})
+                    db.execute(text(
+                        "INSERT INTO topology_nodes (type, metadata) VALUES ('server', :meta::jsonb)"
+                    ), {"meta": meta})
                     created += 1
                 else:
+                    # Atualiza status mesmo se já existia
+                    db.execute(text(
+                        "UPDATE topology_nodes SET metadata = :meta::jsonb WHERE metadata->>'server_id' = :sid"
+                    ), {"meta": meta, "sid": str(s.id)})
                     skipped += 1
             except Exception as row_err:
                 logger.warning(f"Erro ao sincronizar servidor {s.id}: {row_err}")
@@ -208,7 +229,7 @@ async def sync_from_servers(db: Session = Depends(get_db)):
             "created": created,
             "skipped": skipped,
             "total_servers": len(servers),
-            "message": f"Sync concluído: {created} nós criados, {skipped} já existentes"
+            "message": f"Sync concluído: {created} nós criados, {skipped} atualizados"
         }
     except Exception as e:
         logger.error(f"Erro no sync-from-servers: {e}", exc_info=True)
