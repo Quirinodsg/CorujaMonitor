@@ -902,3 +902,26 @@ class AuthenticationConfig(Base):
     __table_args__ = (
         Index('idx_auth_config_tenant', 'tenant_id'),
     )
+
+
+class AutoHealingAction(Base):
+    """Registro de ações de auto-healing executadas pelo AutoHealingEngine."""
+    __tablename__ = "auto_healing_actions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    sensor_id = Column(Integer, ForeignKey("sensors.id"), nullable=True)
+    server_id = Column(Integer, ForeignKey("servers.id"), nullable=True)
+    rule_id = Column(String(100), nullable=False)
+    action = Column(String(100), nullable=False)
+    description = Column(Text)
+    success = Column(Boolean, nullable=False)
+    error_message = Column(Text)
+    duration_ms = Column(Integer, default=0)
+    metric_snapshot = Column(JSON)
+    executed_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    __table_args__ = (
+        Index('idx_healing_sensor', 'sensor_id'),
+        Index('idx_healing_executed', 'executed_at'),
+        Index('idx_healing_success', 'success'),
+    )

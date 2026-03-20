@@ -34,6 +34,9 @@ import IntelligentAlerts from './IntelligentAlerts';
 import AIOpsV3 from './AIOpsV3';
 import AdvancedMetrics from './AdvancedMetrics';
 import EventsTimeline from './EventsTimeline';
+import ServiceMap from './ServiceMap';
+import Predictions from './Predictions';
+import AuditLogView from './AuditLogView';
 import '../styles/design-system.css';
 import './MainLayout.css';
 
@@ -144,6 +147,12 @@ function MainLayout({ user, onLogout }) {
         return <AdvancedMetrics />;
       case 'events-timeline':
         return <EventsTimeline />;
+      case 'service-map':
+        return <ServiceMap />;
+      case 'predictions':
+        return <Predictions />;
+      case 'audit-log':
+        return <AuditLogView />;
       case 'users':
         return <Users />;
       case 'settings':

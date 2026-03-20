@@ -1,0 +1,118 @@
+.predictions {
+  padding: 24px;
+  background: var(--bg-primary, #0f1117);
+  min-height: 100vh;
+  color: #e2e8f0;
+}
+
+.pred-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.pred-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin: 0;
+  color: #e2e8f0;
+}
+
+.pred-filters {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.pred-filter {
+  padding: 4px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 0.8rem;
+  transition: all 0.2s;
+}
+
+.pred-filter.active, .pred-filter:hover {
+  background: rgba(99,102,241,0.2);
+  border-color: #6366f1;
+  color: #e2e8f0;
+}
+
+.pred-refresh {
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid rgba(99,102,241,0.4);
+  background: rgba(99,102,241,0.1);
+  color: #818cf8;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.pred-refresh:hover { background: rgba(99,102,241,0.2); }
+
+.pred-list { display: flex; flex-direction: column; gap: 12px; }
+
+.pred-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 16px;
+  transition: all 0.2s;
+}
+
+.pred-card:hover { background: rgba(255,255,255,0.05); }
+.pred-card--critical { border-left: 3px solid #ef4444; }
+.pred-card--warning { border-left: 3px solid #f59e0b; }
+.pred-card--info { border-left: 3px solid #3b82f6; }
+
+.pred-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pred-sev-icon { font-size: 1.1rem; }
+.pred-message { flex: 1; font-size: 0.9rem; color: #e2e8f0; font-weight: 500; }
+.pred-time { font-size: 0.85rem; font-weight: 700; }
+
+.pred-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.pred-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pred-metric span { font-size: 0.72rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+.pred-metric strong { font-size: 0.9rem; color: #cbd5e1; }
+
+.pred-loading, .pred-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: #64748b;
+  gap: 12px;
+}
+
+.pred-empty span { font-size: 2.5rem; }
+.pred-empty p { font-size: 1rem; margin: 0; }
+
+.pred-footer {
+  margin-top: 20px;
+  font-size: 0.78rem;
+  color: #475569;
+  text-align: right;
+}

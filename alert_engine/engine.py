@@ -1,6 +1,7 @@
 """
-Alert Engine — Coruja Monitor v3.0
-Orquestra: DuplicateSuppressor → EventGrouper → AlertPrioritizer → AlertNotifier
+Alert Engine — Coruja Monitor v3.5 Enterprise
+Smart Alerting: cooldown por alerta, agrupamento inteligente, supressão topológica.
+Orquestra: DuplicateSuppressor → CooldownFilter → TopologySupressor → EventGrouper → AlertPrioritizer → AlertNotifier
 """
 import logging
 import time
@@ -21,15 +22,20 @@ logger = logging.getLogger(__name__)
 FLOOD_THRESHOLD = 100
 FLOOD_WINDOW_SECONDS = 60
 
+# Smart Alerting: cooldown padrão por tipo de alerta (segundos)
+DEFAULT_COOLDOWN_SECONDS = 300  # 5 minutos
+
 # Janelas de manutenção: {host_id: (start, end)}
 MaintenanceWindows = dict[str, tuple[datetime, datetime]]
 
 
 class AlertEngine:
     """
-    Motor de alertas inteligentes.
+    Motor de alertas inteligentes v3.5 Enterprise.
     - Suprime duplicados (TTL 5min)
-    - Agrupa eventos (janela 5min)
+    - Cooldown por tipo de alerta (5min padrão, configurável)
+    - Agrupamento inteligente por host/tipo
+    - Supressão topológica (switch caiu → não alertar filhos)
     - Prioriza automaticamente
     - Notifica canais configurados
     - Flood protection (> 100 eventos/min → 1 alerta)
@@ -43,12 +49,14 @@ class AlertEngine:
         prioritizer: Optional[AlertPrioritizer] = None,
         notifier: Optional[AlertNotifier] = None,
         notification_channels: Optional[list[str]] = None,
+        cooldown_seconds: int = DEFAULT_COOLDOWN_SECONDS,
     ):
         self._suppressor = suppressor or DuplicateSuppressor()
         self._grouper = grouper or EventGrouper()
         self._prioritizer = prioritizer or AlertPrioritizer()
         self._notifier = notifier or AlertNotifier()
         self._channels = notification_channels or []
+        self._cooldown_seconds = cooldown_seconds
 
         # Janelas de manutenção: {host_id: (start_dt, end_dt)}
         self._maintenance_windows: MaintenanceWindows = {}
@@ -59,10 +67,21 @@ class AlertEngine:
             "alerts_suppressed": 0,
             "alerts_grouped": 0,
             "alerts_flood_protected": 0,
+            "alerts_cooldown_suppressed": 0,
+            "alerts_topology_suppressed": 0,
         }
 
         # Flood tracking: {host_id: [timestamps]}
         self._flood_tracker: dict[str, list[float]] = defaultdict(list)
+
+        # Cooldown tracking: {alert_key: last_fired_timestamp}
+        # alert_key = f"{host_id}:{event_type}"
+        self._cooldown_tracker: dict[str, float] = {}
+
+        # Topologia: {host_id: parent_host_id} — carregado externamente
+        # Se parent está em falha, filhos são suprimidos
+        self._topology_parents: dict[str, str] = {}
+        self._failed_hosts: set[str] = set()
 
     # ------------------------------------------------------------------
     # Processamento principal
@@ -71,6 +90,7 @@ class AlertEngine:
     def process_events(self, events: list[Event]) -> list[Alert]:
         """
         Processa lista de eventos e retorna alertas gerados.
+        Pipeline: manutenção → flood → cooldown → topologia → duplicados → agrupamento → alertas
         """
         if not events:
             return []
@@ -90,9 +110,18 @@ class AlertEngine:
             self._metrics["alerts_flood_protected"] += len(flood_alerts)
             return flood_alerts
 
-        # 3. Suprimir duplicados
+        # 3. Cooldown por tipo de alerta (anti-spam)
+        post_cooldown = self._apply_cooldown(active_events)
+
+        # 4. Supressão topológica (switch caiu → suprimir filhos)
+        post_topology = self._apply_topology_suppression(post_cooldown)
+
+        if not post_topology:
+            return []
+
+        # 5. Suprimir duplicados
         non_duplicate_events = []
-        for event in active_events:
+        for event in post_topology:
             if self._suppressor.is_duplicate(event):
                 self._metrics["alerts_suppressed"] += 1
                 logger.debug("AlertEngine: evento duplicado suprimido: %s", event.type)
@@ -103,25 +132,77 @@ class AlertEngine:
         if not non_duplicate_events:
             return []
 
-        # 4. Agrupar eventos
+        # 6. Agrupar eventos
         groups = self._grouper.group(non_duplicate_events)
         if len(groups) < len(non_duplicate_events):
             self._metrics["alerts_grouped"] += len(non_duplicate_events) - len(groups)
 
-        # 5. Criar alertas por grupo
+        # 7. Criar alertas por grupo
         alerts = []
         for group in groups:
             alert = self._create_alert(group)
             if alert:
                 alerts.append(alert)
                 self._metrics["alerts_total"] += 1
+                # Registrar no cooldown tracker
+                for ev in group:
+                    key = f"{ev.host_id}:{ev.type}"
+                    self._cooldown_tracker[key] = time.monotonic()
+                # Marcar host como falho para supressão topológica
+                for ev in group:
+                    sev = ev.severity if isinstance(ev.severity, str) else ev.severity.value
+                    if sev == EventSeverity.CRITICAL.value:
+                        self._failed_hosts.add(str(ev.host_id))
 
-        # 6. Notificar
+        # 8. Notificar
         if self._channels:
             for alert in alerts:
                 self._notifier.notify(alert, self._channels)
 
         return alerts
+
+    def _apply_cooldown(self, events: list[Event]) -> list[Event]:
+        """
+        Filtra eventos que ainda estão em cooldown.
+        Cooldown por chave host_id:event_type — evita spam do mesmo alerta.
+        """
+        now = time.monotonic()
+        passed = []
+        for event in events:
+            key = f"{event.host_id}:{event.type}"
+            last_fired = self._cooldown_tracker.get(key)
+            if last_fired and (now - last_fired) < self._cooldown_seconds:
+                self._metrics["alerts_cooldown_suppressed"] += 1
+                logger.debug(
+                    "AlertEngine: cooldown ativo para %s (%.0fs restantes)",
+                    key, self._cooldown_seconds - (now - last_fired),
+                )
+            else:
+                passed.append(event)
+        return passed
+
+    def _apply_topology_suppression(self, events: list[Event]) -> list[Event]:
+        """
+        Supressão topológica: se o pai (switch/router) está em falha,
+        suprimir alertas dos filhos (servidores conectados a ele).
+        Evita cascata de alertas quando infraestrutura de rede cai.
+        """
+        if not self._topology_parents or not self._failed_hosts:
+            return events
+
+        passed = []
+        for event in events:
+            host_id = str(event.host_id)
+            parent_id = self._topology_parents.get(host_id)
+            if parent_id and parent_id in self._failed_hosts:
+                self._metrics["alerts_topology_suppressed"] += 1
+                logger.info(
+                    "AlertEngine: supressão topológica — host %s suprimido (pai %s em falha)",
+                    host_id, parent_id,
+                )
+            else:
+                passed.append(event)
+        return passed
 
     def _filter_maintenance(self, events: list[Event]) -> list[Event]:
         """Remove eventos de hosts em janela de manutenção ativa."""
@@ -229,6 +310,31 @@ class AlertEngine:
     def clear_maintenance_window(self, host_id: str) -> None:
         """Remove janela de manutenção."""
         self._maintenance_windows.pop(host_id, None)
+
+    # ------------------------------------------------------------------
+    # Topologia (Smart Alerting)
+    # ------------------------------------------------------------------
+
+    def set_topology(self, parent_map: dict[str, str]) -> None:
+        """
+        Define mapa de topologia para supressão.
+        parent_map: {child_host_id: parent_host_id}
+        Ex: {"server-01": "switch-core", "server-02": "switch-core"}
+        """
+        self._topology_parents = parent_map
+        logger.info("AlertEngine: topologia atualizada (%d relações)", len(parent_map))
+
+    def mark_host_failed(self, host_id: str) -> None:
+        """Marca host como em falha (ativa supressão dos filhos)."""
+        self._failed_hosts.add(host_id)
+
+    def mark_host_recovered(self, host_id: str) -> None:
+        """Remove host da lista de falhas."""
+        self._failed_hosts.discard(host_id)
+
+    def set_cooldown(self, seconds: int) -> None:
+        """Configura cooldown global em segundos."""
+        self._cooldown_seconds = seconds
 
     # ------------------------------------------------------------------
     # Métricas
