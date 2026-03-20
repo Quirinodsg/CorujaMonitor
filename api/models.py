@@ -126,6 +126,12 @@ class Sensor(Base):
     last_note_at = Column(DateTime(timezone=True))  # Quando foi feita a última nota
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
+    # ── Controle de execução estilo PRTG ─────────────────────────────────
+    enabled = Column(Boolean, default=True)          # False = nunca executa
+    paused_until = Column(DateTime(timezone=True), nullable=True)  # Pausa temporária
+    priority = Column(Integer, default=3)            # 1 (baixa) a 5 (crítica/estrelas PRTG)
+    # ─────────────────────────────────────────────────────────────────────
+    
     server = relationship("Server", back_populates="sensors")
     probe = relationship("Probe", foreign_keys=[probe_id])
     metrics = relationship("Metric", back_populates="sensor")

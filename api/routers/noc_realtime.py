@@ -184,26 +184,31 @@ async def get_realtime_dashboard(
         
         incidents_data = []
         for incident in incidents:
-            duration = datetime.utcnow() - incident.created_at
-            hours = int(duration.total_seconds() // 3600)
-            minutes = int((duration.total_seconds() % 3600) // 60)
-            
-            incidents_data.append({
-                'id': incident.id,
-                'severity': incident.severity,
-                'status': incident.status,
-                'server_id': incident.sensor.server.id,
-                'server_name': incident.sensor.server.hostname,
-                'sensor_id': incident.sensor.id,
-                'sensor_name': incident.sensor.name,
-                'sensor_type': incident.sensor.sensor_type,
-                'title': incident.title,
-                'description': incident.description,
-                'created_at': incident.created_at.isoformat(),
-                'acknowledged_at': incident.acknowledged_at.isoformat() if incident.acknowledged_at else None,
-                'duration_seconds': int(duration.total_seconds()),
-                'duration_text': f"{hours}h {minutes}m"
-            })
+            try:
+                duration = datetime.utcnow() - incident.created_at
+                hours = int(duration.total_seconds() // 3600)
+                minutes = int((duration.total_seconds() % 3600) // 60)
+                
+                server = incident.sensor.server if incident.sensor else None
+                incidents_data.append({
+                    'id': incident.id,
+                    'severity': incident.severity,
+                    'status': incident.status,
+                    'server_id': server.id if server else None,
+                    'server_name': server.hostname if server else 'N/A',
+                    'sensor_id': incident.sensor.id if incident.sensor else None,
+                    'sensor_name': incident.sensor.name if incident.sensor else 'N/A',
+                    'sensor_type': incident.sensor.sensor_type if incident.sensor else 'unknown',
+                    'title': incident.title,
+                    'description': incident.description,
+                    'created_at': incident.created_at.isoformat(),
+                    'acknowledged_at': incident.acknowledged_at.isoformat() if incident.acknowledged_at else None,
+                    'duration_seconds': int(duration.total_seconds()),
+                    'duration_text': f"{hours}h {minutes}m"
+                })
+            except Exception as inc_err:
+                logger.warning(f"Erro ao processar incidente {incident.id}: {inc_err}")
+                continue
         
         # 3. MÉTRICAS CRÍTICAS (sensores em estado crítico/warning)
         critical_sensors = []
@@ -371,7 +376,21 @@ async def get_realtime_dashboard(
         
     except Exception as e:
         logger.error(f"Erro ao buscar dashboard em tempo real: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=str(e))
+        return {
+            "timestamp": datetime.utcnow().isoformat(),
+            "status": "degraded",
+            "message": f"NOC data temporarily unavailable: {str(e)}",
+            "summary": {
+                "servers_ok": 0, "servers_warning": 0, "servers_critical": 0,
+                "servers_offline": 0, "total_servers": 0,
+                "total_incidents": 0, "critical_incidents": 0, "warning_incidents": 0
+            },
+            "servers": [],
+            "incidents": [],
+            "critical_sensors": [],
+            "kpis": {"mttr": 0, "sla": 100.0, "incidents_24h": 0, "incidents_7d": 0, "resolved_30d": 0},
+            "companies": []
+        }
 
 
 @router.get("/realtime/events")
@@ -437,7 +456,7 @@ async def get_recent_events(
         
     except Exception as e:
         logger.error(f"Erro ao buscar eventos: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        return []
 
 
 async def broadcast_noc_update(event_type: str, data: dict):

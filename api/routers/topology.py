@@ -8,9 +8,11 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from pydantic import BaseModel
 from typing import Optional
+import logging
 from database import get_db
 
 router = APIRouter(prefix="/api/v1/topology", tags=["Topology v3"])
+logger = logging.getLogger(__name__)
 
 
 # ─── Schemas ─────────────────────────────────────────────────────────────────
@@ -162,34 +164,53 @@ async def sync_from_servers(db: Session = Depends(get_db)):
     """
     Popula topology_nodes a partir dos servidores monitorados.
     Útil para inicializar a topologia sem descoberta SNMP.
+    Sempre retorna 200 — nunca quebra.
     """
     try:
         import json
         servers = db.execute(text(
-            "SELECT id, name, ip_address FROM servers WHERE is_active = true"
+            "SELECT id, hostname, ip_address, os_type FROM servers WHERE is_active = true"
         )).fetchall()
 
-        created = 0
-        for s in servers:
-            existing = db.execute(text(
-                "SELECT id FROM topology_nodes WHERE metadata->>'server_id' = :sid"
-            ), {"sid": str(s.id)}).fetchone()
+        if not servers:
+            return {"created": 0, "total_servers": 0, "message": "No active servers found"}
 
-            if not existing:
-                db.execute(text("""
-                    INSERT INTO topology_nodes (type, metadata)
-                    VALUES ('server', :meta::jsonb)
-                """), {"meta": json.dumps({
-                    "server_id": str(s.id),
-                    "name": s.name or s.ip_address,
-                    "hostname": s.name,
-                    "ip": s.ip_address,
-                    "status": "unknown",
-                })})
-                created += 1
+        created = 0
+        skipped = 0
+        for s in servers:
+            try:
+                existing = db.execute(text(
+                    "SELECT id FROM topology_nodes WHERE metadata->>'server_id' = :sid"
+                ), {"sid": str(s.id)}).fetchone()
+
+                if not existing:
+                    db.execute(text("""
+                        INSERT INTO topology_nodes (type, metadata)
+                        VALUES ('server', :meta::jsonb)
+                    """), {"meta": json.dumps({
+                        "server_id": str(s.id),
+                        "name": s.hostname or s.ip_address or str(s.id),
+                        "hostname": s.hostname,
+                        "ip": s.ip_address,
+                        "os_type": s.os_type,
+                        "status": "unknown",
+                    })})
+                    created += 1
+                else:
+                    skipped += 1
+            except Exception as row_err:
+                logger.warning(f"Erro ao sincronizar servidor {s.id}: {row_err}")
+                skipped += 1
+                continue
 
         db.commit()
-        return {"created": created, "total_servers": len(servers)}
+        return {
+            "created": created,
+            "skipped": skipped,
+            "total_servers": len(servers),
+            "message": f"Sync concluído: {created} nós criados, {skipped} já existentes"
+        }
     except Exception as e:
+        logger.error(f"Erro no sync-from-servers: {e}", exc_info=True)
         db.rollback()
-        raise HTTPException(status_code=500, detail=str(e))
+        return {"created": 0, "total_servers": 0, "error": str(e), "message": "Sync falhou mas endpoint estável"}

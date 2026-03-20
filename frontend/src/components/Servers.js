@@ -732,17 +732,50 @@ function Servers({ selectedServerId, selectedSensorId }) {
     );
   };
 
+  const handlePauseSensor = async (sensorId, minutes) => {
+    try {
+      await api.patch(`/sensors/${sensorId}/pause`, { duration_minutes: minutes });
+      loadSensors(selectedServer.id);
+    } catch (error) {
+      console.error('Erro ao pausar sensor:', error);
+      alert('Erro ao pausar sensor: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleResumeSensor = async (sensorId) => {
+    try {
+      await api.patch(`/sensors/${sensorId}/resume`);
+      loadSensors(selectedServer.id);
+    } catch (error) {
+      console.error('Erro ao retomar sensor:', error);
+      alert('Erro ao retomar sensor: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleSetPriority = async (sensorId, priority) => {
+    try {
+      await api.patch(`/sensors/${sensorId}/priority`, { priority });
+      loadSensors(selectedServer.id);
+    } catch (error) {
+      console.error('Erro ao definir prioridade:', error);
+      alert('Erro ao definir prioridade: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const renderSensorCard = (sensor) => {
     const metric = metrics[sensor.id];
     const hasNote = sensor.last_note && sensor.last_note_by;
     const isAcknowledged = sensor.is_acknowledged;
+    const now = new Date();
+    const isPaused = sensor.paused_until && new Date(sensor.paused_until) > now;
+    const sensorPriority = sensor.priority || 3;
     const sensorNameLength = sensor.name ? sensor.name.length : 0;
     
     return (
       <div 
         key={sensor.id}
         id={`sensor-${sensor.id}`}
-        className={`sensor-card ${highlightedSensorId === sensor.id ? 'highlighted' : ''}`}
+        className={`sensor-card ${highlightedSensorId === sensor.id ? 'highlighted' : ''} ${isPaused ? 'sensor-is-paused' : ''}`}
         data-sensor-type={sensor.sensor_type}
         data-sensor-name-length={sensorNameLength}
         data-status={sensor.status}
@@ -773,6 +806,19 @@ function Servers({ selectedServerId, selectedSensorId }) {
           >
             ✏️
           </button>
+          {isPaused ? (
+            <button
+              className="sensor-action-btn sensor-action-resume"
+              onClick={(e) => { e.stopPropagation(); handleResumeSensor(sensor.id); }}
+              title="Retomar sensor"
+            >▶</button>
+          ) : (
+            <button
+              className="sensor-action-btn sensor-action-pause"
+              onClick={(e) => { e.stopPropagation(); handlePauseSensor(sensor.id, 60); }}
+              title="Pausar sensor por 1h"
+            >⏸</button>
+          )}
           <button 
             className="sensor-delete-btn"
             onClick={(e) => {
@@ -829,6 +875,26 @@ function Servers({ selectedServerId, selectedSensorId }) {
           <div className="sensor-last-note">
             <span className="note-icon">📥</span>
             <span className="note-preview">{sensor.last_note.substring(0, 50)}{sensor.last_note.length > 50 ? '...' : ''}</span>
+          </div>
+        )}
+
+        <div
+          className="sensor-priority"
+          title="Somente sensores 5 estrelas geram alertas externos (Telegram/Teams)"
+        >
+          {[1,2,3,4,5].map(star => (
+            <span
+              key={star}
+              className={`priority-star ${star <= sensorPriority ? 'active' : ''}`}
+              onClick={(e) => { e.stopPropagation(); handleSetPriority(sensor.id, star); }}
+            >★</span>
+          ))}
+          {sensorPriority === 5 && <span className="priority-badge-critical">ALERTA EXT.</span>}
+        </div>
+
+        {isPaused && (
+          <div className="sensor-paused-badge">
+            ⏸ PAUSADO até {new Date(sensor.paused_until).toLocaleTimeString('pt-BR')}
           </div>
         )}
       </div>

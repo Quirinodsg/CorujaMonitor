@@ -3882,3 +3882,67 @@
 /* public-ip / server-group */
 .public-ip  { color: #60A5FA !important; }
 .server-group { color: #6B7280 !important; }
+
+/* ── Sensor Controls: Pause / Priority (PRTG style) ─────────────────────── */
+
+.sensor-action-pause {
+  color: #FBBF24 !important;
+}
+
+.sensor-action-resume {
+  color: #34D399 !important;
+}
+
+.sensor-is-paused {
+  opacity: 0.65;
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+
+.sensor-paused-badge {
+  background: rgba(245, 158, 11, 0.12);
+  color: #FBBF24;
+  font-size: 11px;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: 4px;
+  margin-top: 6px;
+  font-weight: 600;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.sensor-priority {
+  font-size: 13px;
+  text-align: center;
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.priority-star {
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.2);
+  transition: color 0.15s, transform 0.1s;
+  user-select: none;
+}
+
+.priority-star:hover,
+.priority-star.active {
+  color: #FBBF24;
+}
+
+.priority-star:hover {
+  transform: scale(1.2);
+}
+
+.priority-badge-critical {
+  background: #EF4444;
+  color: #fff;
+  font-size: 9px;
+  padding: 1px 5px;
+  border-radius: 8px;
+  margin-left: 5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}

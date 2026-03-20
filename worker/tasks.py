@@ -96,6 +96,21 @@ def evaluate_all_thresholds():
                     
                     # Attempt self-healing
                     attempt_self_healing.delay(incident.id)
+
+                    # ── PRIORIDADE: só envia notificação externa se priority == 5 ──
+                    sensor_priority = getattr(sensor, 'priority', 3) or 3
+                    if sensor_priority >= 5:
+                        logger.info(
+                            "Sensor %s priority=%d → disparando notificação externa (Telegram/Teams)",
+                            sensor.name, sensor_priority
+                        )
+                        send_external_notification.delay(incident.id)
+                    else:
+                        logger.debug(
+                            "Sensor %s priority=%d < 5 → notificação externa suprimida",
+                            sensor.name, sensor_priority
+                        )
+                    # ─────────────────────────────────────────────────────────────
                 else:
                     # Update existing incident severity if it changed
                     if existing_incident.severity != severity:
@@ -1361,3 +1376,88 @@ def execute_ping(ip_address: str) -> float:
             continue
 
     return 0  # Offline
+
+
+@app.task
+def send_external_notification(incident_id: int):
+    """
+    Envia notificação externa (Telegram/Teams) para incidentes de sensores priority=5.
+    Sensores com priority < 5 NÃO chegam aqui — filtro feito antes de chamar esta task.
+    """
+    logger.info("📣 send_external_notification: incidente %d", incident_id)
+    db = SessionLocal()
+    try:
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+        if not incident:
+            logger.warning("send_external_notification: incidente %d não encontrado", incident_id)
+            return
+
+        sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
+        if not sensor:
+            return
+
+        server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor.server_id else None
+
+        # Buscar configuração de notificação do tenant
+        from models import Tenant
+        tenant = db.query(Tenant).filter(Tenant.id == (server.tenant_id if server else None)).first()
+        if not tenant or not tenant.notification_config:
+            logger.debug("send_external_notification: tenant sem notification_config")
+            return
+
+        notif_cfg = tenant.notification_config
+        priority = getattr(sensor, 'priority', 3) or 3
+        stars = "⭐" * priority
+
+        message_data = {
+            "title": f"🚨 [{incident.severity.upper()}] {incident.title}",
+            "text": (
+                f"Sensor: {sensor.name} {stars}\n"
+                f"Servidor: {server.hostname if server else 'N/A'}\n"
+                f"Severidade: {incident.severity}\n"
+                f"Prioridade: {priority}/5\n"
+                f"Horário: {incident.created_at.strftime('%d/%m/%Y %H:%M:%S')}\n"
+                f"Descrição: {incident.description or 'N/A'}"
+            ),
+            "severity": incident.severity,
+        }
+
+        # Telegram
+        tg_cfg = notif_cfg.get("telegram", {})
+        if tg_cfg.get("enabled") and tg_cfg.get("bot_token"):
+            try:
+                import httpx as _httpx
+                bot_token = tg_cfg["bot_token"]
+                chat_ids = tg_cfg.get("chat_ids", [])
+                text_msg = f"{message_data['title']}\n\n{message_data['text']}"
+                for chat_id in chat_ids:
+                    _httpx.post(
+                        f"https://api.telegram.org/bot{bot_token}/sendMessage",
+                        json={"chat_id": chat_id, "text": text_msg, "parse_mode": "HTML"},
+                        timeout=10,
+                    )
+                logger.info("send_external_notification: Telegram enviado para %d chats", len(chat_ids))
+            except Exception as tg_err:
+                logger.error("send_external_notification: Telegram error: %s", tg_err)
+
+        # Teams
+        teams_cfg = notif_cfg.get("teams", {})
+        if teams_cfg.get("enabled") and teams_cfg.get("webhook_url"):
+            try:
+                import httpx as _httpx
+                card = {
+                    "@type": "MessageCard",
+                    "@context": "http://schema.org/extensions",
+                    "themeColor": "FF0000" if incident.severity == "critical" else "FFA500",
+                    "summary": message_data["title"],
+                    "sections": [{"activityTitle": message_data["title"], "activityText": message_data["text"]}],
+                }
+                _httpx.post(teams_cfg["webhook_url"], json=card, timeout=10)
+                logger.info("send_external_notification: Teams enviado")
+            except Exception as teams_err:
+                logger.error("send_external_notification: Teams error: %s", teams_err)
+
+    except Exception as e:
+        logger.error("send_external_notification: erro geral: %s", e, exc_info=True)
+    finally:
+        db.close()

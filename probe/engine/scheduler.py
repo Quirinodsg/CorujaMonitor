@@ -7,6 +7,7 @@ Controla:
   - Max sensores concorrentes
   - Retry com backoff
   - Proteção contra overload (limite por host)
+  - DependencyEngine: bloqueia filhos quando pai está CRITICAL
 """
 import logging
 import time
@@ -49,7 +50,8 @@ class Scheduler:
         scheduler.start()
     """
 
-    def __init__(self, sensor_engine, thread_pool, result_callback: Optional[Callable] = None):
+    def __init__(self, sensor_engine, thread_pool, result_callback: Optional[Callable] = None,
+                 dependency_engine=None):
         self.engine = sensor_engine
         self.pool = thread_pool
         self.result_callback = result_callback
@@ -59,6 +61,16 @@ class Scheduler:
         self._thread: Optional[threading.Thread] = None
         self._host_active_count: Dict[str, int] = defaultdict(int)
         self._host_wmi_count: Dict[str, int] = defaultdict(int)
+
+        # DependencyEngine — opcional, injetado externamente
+        self._dep_engine = dependency_engine
+        if dependency_engine:
+            logger.info("Scheduler: DependencyEngine integrado — dependências ativas")
+
+    def set_dependency_engine(self, dep_engine) -> None:
+        """Injeta DependencyEngine após construção."""
+        self._dep_engine = dep_engine
+        logger.info("Scheduler: DependencyEngine configurado")
 
     def add(self, sensor: SensorDefinition, delay: float = 0.0):
         """Adiciona sensor ao scheduler"""
@@ -139,6 +151,42 @@ class Scheduler:
         sensor = ss.sensor
         host = sensor.target
 
+        # ── DEPENDENCY ENGINE: verificar se sensor pode executar ──────────
+        if self._dep_engine is not None:
+            try:
+                if not self._dep_engine.should_execute(sensor.id, host):
+                    logger.debug(
+                        "Scheduler: sensor %s (%s) SUSPENSO por dependência em host %s",
+                        sensor.id, sensor.type, host,
+                    )
+                    # Reagendar normalmente — não consome slot
+                    with self._lock:
+                        ss.next_run = time.monotonic() + sensor.interval
+                    return
+            except Exception as dep_err:
+                logger.warning("Scheduler: erro no DependencyEngine para %s: %s", sensor.id, dep_err)
+        # ─────────────────────────────────────────────────────────────────
+
+        # ── PAUSE / ENABLED: verificar campos do sensor ──────────────────
+        sensor_enabled = getattr(sensor, 'enabled', True)
+        sensor_paused_until = getattr(sensor, 'paused_until', None)
+        if not sensor_enabled:
+            logger.debug("Scheduler: sensor %s desabilitado (enabled=False)", sensor.id)
+            with self._lock:
+                ss.next_run = time.monotonic() + sensor.interval
+            return
+        if sensor_paused_until is not None:
+            import datetime as _dt
+            now_dt = _dt.datetime.utcnow()
+            if isinstance(sensor_paused_until, _dt.datetime) and sensor_paused_until > now_dt:
+                logger.debug(
+                    "Scheduler: sensor %s pausado até %s", sensor.id, sensor_paused_until
+                )
+                with self._lock:
+                    ss.next_run = time.monotonic() + sensor.interval
+                return
+        # ─────────────────────────────────────────────────────────────────
+
         # Proteção: limite de queries WMI por host
         is_wmi = sensor.type.startswith("wmi_")
         if is_wmi and self._host_wmi_count[host] >= MAX_WMI_QUERIES_PER_HOST:
@@ -172,6 +220,24 @@ class Scheduler:
         """Processa resultado do sensor"""
         ss.last_result = result
 
+        # ── Alimentar DependencyEngine com o novo status ──────────────────
+        if self._dep_engine is not None:
+            try:
+                # Mapear SensorStatus → SensorStatus do DependencyEngine
+                # Ambos usam os mesmos valores de string: 'ok', 'warning', 'critical'
+                from engine.dependency_engine import DependencyEngine as _DE
+                # Importar enum do core
+                try:
+                    from core.spec.enums import SensorStatus as CoreStatus
+                    status_val = result.status if isinstance(result.status, str) else result.status.value
+                    core_status = CoreStatus(status_val)
+                    self._dep_engine.update_state(ss.sensor.id, ss.sensor.target, core_status)
+                except Exception:
+                    pass  # Se enum não mapear, não bloquear execução
+            except Exception as dep_err:
+                logger.debug("Scheduler: erro ao atualizar DependencyEngine: %s", dep_err)
+        # ─────────────────────────────────────────────────────────────────
+
         if result.status in (SensorStatus.UNKNOWN, SensorStatus.CRITICAL):
             ss.consecutive_errors += 1
             # Backoff exponencial: 30s, 60s, 120s, max 300s
@@ -194,11 +260,19 @@ class Scheduler:
     def status(self) -> Dict:
         """Retorna status do scheduler"""
         with self._lock:
+            dep_status = None
+            if self._dep_engine is not None:
+                try:
+                    dep_status = self._dep_engine.get_graph_status()
+                except Exception:
+                    dep_status = {"error": "unavailable"}
+
             return {
                 "total_sensors": len(self._scheduled),
                 "running": self._running,
                 "active_per_host": dict(self._host_active_count),
                 "wmi_queries_per_host": dict(self._host_wmi_count),
+                "dependency_engine": dep_status,
                 "sensors": [
                     {
                         "id": ss.sensor.id,
@@ -208,6 +282,9 @@ class Scheduler:
                         "last_status": ss.last_result.status if ss.last_result else "never_run",
                         "consecutive_errors": ss.consecutive_errors,
                         "next_run_in": max(0, ss.next_run - time.monotonic()),
+                        "enabled": getattr(ss.sensor, 'enabled', True),
+                        "paused_until": str(getattr(ss.sensor, 'paused_until', None)),
+                        "priority": getattr(ss.sensor, 'priority', 3),
                     }
                     for ss in self._scheduled.values()
                 ],
