@@ -18,6 +18,7 @@ var CATS = [
     { id: "aiops",         icon: "🔮", label: "AIOps" },
     { id: "aiops-v3",      icon: "🤖", label: "AIOps v3" },
     { id: "ai-activities", icon: "✨", label: "Atividades da IA" },
+    { id: "predictions",   icon: "📉", label: "Predições de Falha" },
   ]},
   { id: "observability", label: "Observabilidade", icon: "📡", items: [
     { id: "observability",    icon: "🔭", label: "Observabilidade" },
@@ -79,7 +80,7 @@ function Sidebar(props) {
     React.createElement("div", { className: "sidebar" + (collapsed ? " sidebar--collapsed" : "") },
 
       React.createElement("div", { className: "sidebar-logo", onClick: function() { onNavigate("dashboard"); } },
-        React.createElement("div", { className: "sidebar-logo-icon" }, "🦉"),
+        React.createElement("div", { className: "sidebar-logo-icon" }, "\uD83E\uDD89"),
         !collapsed && React.createElement("div", { className: "sidebar-logo-text" },
           React.createElement("span", { className: "sidebar-logo-name" }, "Coruja"),
           React.createElement("span", { className: "sidebar-logo-version" }, "Monitor v3")
