@@ -160,26 +160,25 @@ async def delete_node(node_id: str, db: Session = Depends(get_db)):
 
 
 def _get_server_status(server_id: int, db: Session) -> str:
-    """Deriva status do servidor a partir das métricas recentes."""
+    """Deriva status: critical/warning se tem incidente aberto, ok se tem sensores, unknown se não tem sensores."""
     try:
-        # Pega o pior status das métricas das últimas 2h
-        rows = db.execute(text("""
-            SELECT DISTINCT m.status
-            FROM metrics m
-            JOIN sensors s ON s.id = m.sensor_id
-            WHERE s.server_id = :sid
-              AND m.timestamp > NOW() - INTERVAL '2 hours'
-              AND m.status IS NOT NULL
-            LIMIT 50
-        """), {"sid": server_id}).fetchall()
-        statuses = {r.status for r in rows}
-        if "critical" in statuses:
+        # Incidente crítico aberto?
+        crit = db.execute(text(
+            "SELECT 1 FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE server_id = :sid) AND status = 'open' AND severity = 'critical' LIMIT 1"
+        ), {"sid": server_id}).fetchone()
+        if crit:
             return "critical"
-        if "warning" in statuses:
+        # Incidente warning aberto?
+        warn = db.execute(text(
+            "SELECT 1 FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE server_id = :sid) AND status = 'open' LIMIT 1"
+        ), {"sid": server_id}).fetchone()
+        if warn:
             return "warning"
-        if "ok" in statuses:
-            return "ok"
-        return "unknown"
+        # Tem sensores? → ok
+        has_sensors = db.execute(text(
+            "SELECT 1 FROM sensors WHERE server_id = :sid AND is_active = true LIMIT 1"
+        ), {"sid": server_id}).fetchone()
+        return "ok" if has_sensors else "unknown"
     except Exception:
         return "unknown"
 
