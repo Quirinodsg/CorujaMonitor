@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './ServiceMonitor.css';
 
-const API = '/api/v1';
+const API = `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
 
 function ServiceMonitor() {
   const [servers, setServers] = useState([]);
