@@ -9,21 +9,31 @@ import traceback
 from fastapi import Request
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp, Receive, Scope, Send
 
 logger = logging.getLogger("coruja.error_handler")
 
 
-class GlobalErrorHandlerMiddleware(BaseHTTPMiddleware):
+class GlobalErrorHandlerMiddleware:
     """
     Captura qualquer exceção não tratada e retorna JSON estruturado.
-    Nunca deixa um 500 sem corpo ou sem CORS.
+    Implementado como ASGI puro para não quebrar WebSockets
+    (BaseHTTPMiddleware intercepta o upgrade e mata a conexão WS).
     """
 
-    async def dispatch(self, request: Request, call_next):
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        # WebSocket e lifespan passam direto — sem interceptação
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+
+        request = Request(scope, receive)
         start = time.monotonic()
         try:
-            response = await call_next(request)
-            return response
+            await self.app(scope, receive, send)
         except Exception as exc:
             duration_ms = round((time.monotonic() - start) * 1000, 2)
             tb = traceback.format_exc()
@@ -35,7 +45,7 @@ class GlobalErrorHandlerMiddleware(BaseHTTPMiddleware):
                 str(exc),
                 tb,
             )
-            return JSONResponse(
+            response = JSONResponse(
                 status_code=500,
                 content={
                     "detail": "Internal server error",
@@ -45,3 +55,4 @@ class GlobalErrorHandlerMiddleware(BaseHTTPMiddleware):
                 },
                 headers={"Access-Control-Allow-Origin": "*"},
             )
+            await response(scope, receive, send)
