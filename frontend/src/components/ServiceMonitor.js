@@ -21,10 +21,10 @@ function ServiceMonitor() {
     fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => {
-        const wmiServers = (data || []).filter(s => s.monitoring_protocol === 'wmi' && s.is_active);
-        setServers(wmiServers);
-        if (wmiServers.length > 0 && !selectedServer) {
-          setSelectedServer(wmiServers[0].id);
+        const activeServers = (data || []).filter(s => s.is_active !== false);
+        setServers(activeServers);
+        if (activeServers.length > 0 && !selectedServer) {
+          setSelectedServer(activeServers[0].id);
         }
       })
       .catch(() => {});
