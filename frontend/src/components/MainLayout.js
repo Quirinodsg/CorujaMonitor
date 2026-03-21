@@ -37,6 +37,7 @@ import EventsTimeline from './EventsTimeline';
 import ServiceMap from './ServiceMap';
 import Predictions from './Predictions';
 import AuditLogView from './AuditLogView';
+import ServiceMonitor from './ServiceMonitor';
 import '../styles/design-system.css';
 import './MainLayout.css';
 
@@ -153,6 +154,8 @@ function MainLayout({ user, onLogout }) {
         return <Predictions />;
       case 'audit-log':
         return <AuditLogView />;
+      case 'service-monitor':
+        return <ServiceMonitor />;
       case 'users':
         return <Users />;
       case 'settings':

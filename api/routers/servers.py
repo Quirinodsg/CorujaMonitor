@@ -609,6 +609,78 @@ async def auto_register_server(
 class ServerReorder(BaseModel):
     sort_order: int
 
+
+@router.get("/{server_id}/discover/services")
+async def discover_services(
+    server_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """
+    Descobre serviços Windows via WMI (Win32_Service WHERE StartMode='Auto').
+    Retorna lista de serviços com nome, estado e modo de inicialização.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+
+    server = db.query(Server).filter(
+        Server.id == server_id,
+        Server.tenant_id == current_user.tenant_id
+    ).first()
+    if not server:
+        raise HTTPException(status_code=404, detail="Server not found")
+
+    if server.monitoring_protocol != 'wmi':
+        raise HTTPException(status_code=400, detail="Server does not use WMI protocol")
+
+    # Buscar credencial WMI
+    from models import Credential
+    credential = db.query(Credential).filter(
+        Credential.server_id == server_id,
+        Credential.credential_type == 'wmi',
+        Credential.is_active == True
+    ).first()
+
+    if not credential:
+        # Tentar credencial de grupo/tenant
+        credential = db.query(Credential).filter(
+            Credential.tenant_id == current_user.tenant_id,
+            Credential.credential_type == 'wmi',
+            Credential.is_active == True,
+            Credential.server_id == None
+        ).first()
+
+    if not credential:
+        raise HTTPException(status_code=400, detail="No WMI credential configured for this server")
+
+    hostname = server.ip_address or server.hostname
+    username = credential.wmi_username
+    password = decrypt_password(credential.wmi_password_encrypted) if credential.wmi_password_encrypted else None
+    domain = credential.wmi_domain or ""
+
+    if not username or not password:
+        raise HTTPException(status_code=400, detail="WMI credential is incomplete")
+
+    try:
+        import wmi
+        conn_str = f"{domain}\\{username}" if domain else username
+        conn = wmi.WMI(computer=hostname, user=conn_str, password=password)
+        rows = conn.query("SELECT Name,State,StartMode,DisplayName FROM Win32_Service WHERE StartMode='Auto'")
+        services = [
+            {
+                "name": r.Name,
+                "display_name": r.DisplayName,
+                "state": r.State,
+                "start_mode": r.StartMode,
+                "is_running": r.State == "Running"
+            }
+            for r in rows
+        ]
+        return {"server_id": server_id, "hostname": server.hostname, "services": services, "total": len(services)}
+    except Exception as e:
+        logger.error(f"WMI service discovery failed for {hostname}: {e}")
+        raise HTTPException(status_code=500, detail=f"WMI discovery failed: {str(e)}")
+
 @router.put("/{server_id}/reorder")
 async def reorder_server(
     server_id: int,

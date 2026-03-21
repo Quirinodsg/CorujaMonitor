@@ -307,6 +307,18 @@ class SmartCollector:
             logger.error(f"SmartCollector network error: {e}")
             return []
 
+    def collect_services(self) -> List[Dict[str, Any]]:
+        """Coleta serviços com StartMode=Auto via WMIEngine"""
+        if not self.conn:
+            return []
+        try:
+            from engine.wmi_engine import WMIEngine
+            engine = WMIEngine(self.conn)
+            return engine.collect_services(filter_auto_only=True)
+        except Exception as e:
+            logger.error(f"SmartCollector services error: {e}")
+            return []
+
     def collect_all(self) -> List[Dict[str, Any]]:
         """Coleta todas as métricas usando os métodos mais rápidos disponíveis"""
         metrics = []
@@ -315,6 +327,7 @@ class SmartCollector:
         metrics.extend(self.collect_disk())
         metrics.extend(self.collect_uptime())
         metrics.extend(self.collect_network())
+        metrics.extend(self.collect_services())
         return metrics
 
     def get_method_report(self) -> Dict[str, Any]:

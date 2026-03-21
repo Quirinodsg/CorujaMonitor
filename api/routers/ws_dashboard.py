@@ -110,3 +110,83 @@ async def ws_dashboard(websocket: WebSocket, token: str = Query(default="")):
         logger.info("WebSocket dashboard desconectado")
     except Exception as e:
         logger.debug(f"WebSocket dashboard erro: {e}")
+
+
+def _get_services_status(db: Session, server_id: int = None) -> list:
+    """Retorna status atual dos sensores de serviço (tipo 'service')"""
+    try:
+        from models import Sensor, Metric, Server
+        from sqlalchemy import func
+
+        query = db.query(Sensor).join(Server, Sensor.server_id == Server.id).filter(
+            Sensor.sensor_type == 'service',
+            Sensor.is_active == True
+        )
+        if server_id:
+            query = query.filter(Sensor.server_id == server_id)
+
+        sensors = query.all()
+        if not sensors:
+            return []
+
+        sensor_ids = [s.id for s in sensors]
+
+        # Latest metric per sensor
+        subq = (
+            db.query(Metric.sensor_id, func.max(Metric.id).label('max_id'))
+            .filter(Metric.sensor_id.in_(sensor_ids))
+            .group_by(Metric.sensor_id)
+            .subquery()
+        )
+        latest = db.query(Metric).join(subq, Metric.id == subq.c.max_id).all()
+        latest_map = {m.sensor_id: m for m in latest}
+
+        result = []
+        for sensor in sensors:
+            m = latest_map.get(sensor.id)
+            meta = (m.extra_metadata or {}) if m else {}
+            result.append({
+                "sensor_id": sensor.id,
+                "server_id": sensor.server_id,
+                "service_name": meta.get("service_name", sensor.name),
+                "display_name": meta.get("display_name", sensor.name),
+                "state": meta.get("state", "Unknown"),
+                "is_running": bool(m and m.value == 1) if m else None,
+                "status": m.status if m else "unknown",
+                "last_seen": m.timestamp.isoformat() if m else None,
+            })
+        return result
+    except Exception as e:
+        logger.debug(f"ws services status erro: {e}")
+        return []
+
+
+@router.websocket("/ws/services")
+async def ws_services(
+    websocket: WebSocket,
+    token: str = Query(default=""),
+    server_id: int = Query(default=None)
+):
+    await websocket.accept()
+    logger.info(f"WebSocket services conectado (server_id={server_id})")
+    try:
+        while True:
+            db = SessionLocal()
+            try:
+                services = _get_services_status(db, server_id=server_id)
+            finally:
+                db.close()
+
+            await websocket.send_text(json.dumps({
+                "type": "services",
+                "server_id": server_id,
+                "data": services,
+                "count": len(services),
+                "running": sum(1 for s in services if s["is_running"]),
+                "stopped": sum(1 for s in services if s["is_running"] is False),
+            }))
+            await asyncio.sleep(5)
+    except WebSocketDisconnect:
+        logger.info("WebSocket services desconectado")
+    except Exception as e:
+        logger.debug(f"WebSocket services erro: {e}")

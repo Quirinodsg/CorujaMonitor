@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./Sidebar.css";
 
 var CATS = [
@@ -6,7 +6,8 @@ var CATS = [
     { id: "dashboard",  icon: "📊", label: "Dashboard" },
     { id: "companies",  icon: "🏢", label: "Empresas" },
     { id: "servers",    icon: "🖥️", label: "Servidores" },
-    { id: "sensors",    icon: "📡", label: "Sensores" },
+    { id: "sensors",         icon: "📡", label: "Sensores" },
+    { id: "service-monitor", icon: "⚙️", label: "Serviços" },
   ]},
   { id: "operations", label: "Operação", icon: "🚨", items: [
     { id: "incidents",          icon: "⚠️",  label: "Incidentes" },

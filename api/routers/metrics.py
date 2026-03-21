@@ -258,6 +258,9 @@ async def create_probe_metrics_bulk(
             elif metric_data.sensor_type in ('uptime', 'system'):
                 threshold_warning = None
                 threshold_critical = None
+            elif metric_data.sensor_type == 'service':
+                threshold_warning = 0.5   # valor binário: 0=stopped, 1=running
+                threshold_critical = 0.5
             
             sensor = Sensor(
                 server_id=server.id,
