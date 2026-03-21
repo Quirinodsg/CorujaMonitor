@@ -25,17 +25,27 @@ class TopologyNodeCreate(BaseModel):
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
-def _build_graph(rows):
-    """Constrói nodes/edges a partir das linhas do banco."""
+def _build_graph(rows, db: Session = None):
+    """Constrói nodes/edges a partir das linhas do banco.
+    Se db fornecido, deriva status em tempo real via métricas."""
     nodes = []
     edges = []
     for r in rows:
         meta = r.metadata or {}
+        server_id = meta.get("server_id")
+        # Deriva status em tempo real se possível
+        if db and server_id:
+            try:
+                status = _get_server_status(int(server_id), db)
+            except Exception:
+                status = meta.get("status", "unknown")
+        else:
+            status = meta.get("status", "unknown")
         nodes.append({
             "id": str(r.id),
             "type": r.type,
             "name": meta.get("name", meta.get("hostname", str(r.id)[:8])),
-            "status": meta.get("status", "unknown"),
+            "status": status,
             "metadata": meta,
             "parent_id": str(r.parent_id) if r.parent_id else None,
         })
@@ -67,7 +77,7 @@ async def get_topology_graph(db: Session = Depends(get_db)):
         )).fetchall()
 
         if rows:
-            nodes, edges = _build_graph(rows)
+            nodes, edges = _build_graph(rows, db)
             return {"nodes": nodes, "edges": edges, "source": "topology_nodes"}
 
         # Fallback: construir topologia a partir dos servidores monitorados
@@ -160,25 +170,35 @@ async def delete_node(node_id: str, db: Session = Depends(get_db)):
 
 
 def _get_server_status(server_id: int, db: Session) -> str:
-    """Deriva status: critical/warning se tem incidente aberto, ok se tem sensores, unknown se não tem sensores."""
+    """
+    Deriva status a partir da última métrica de cada sensor do servidor.
+    Mesma lógica do observability health-score.
+    """
     try:
-        # Incidente crítico aberto?
-        crit = db.execute(text(
-            "SELECT 1 FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE server_id = :sid) AND status = 'open' AND severity = 'critical' LIMIT 1"
-        ), {"sid": server_id}).fetchone()
-        if crit:
+        row = db.execute(text("""
+            WITH latest AS (
+                SELECT DISTINCT ON (sen.id)
+                    sen.id,
+                    m.status
+                FROM sensors sen
+                LEFT JOIN metrics m ON m.sensor_id = sen.id
+                WHERE sen.server_id = :sid
+                ORDER BY sen.id, m.timestamp DESC
+            )
+            SELECT
+                COUNT(*) FILTER (WHERE status = 'critical') as critical_count,
+                COUNT(*) FILTER (WHERE status = 'warning') as warning_count,
+                COUNT(*) as total
+            FROM latest
+        """), {"sid": server_id}).fetchone()
+
+        if not row or row.total == 0:
+            return "unknown"
+        if row.critical_count > 0:
             return "critical"
-        # Incidente warning aberto?
-        warn = db.execute(text(
-            "SELECT 1 FROM incidents WHERE sensor_id IN (SELECT id FROM sensors WHERE server_id = :sid) AND status = 'open' LIMIT 1"
-        ), {"sid": server_id}).fetchone()
-        if warn:
+        if row.warning_count > 0:
             return "warning"
-        # Tem sensores? → ok
-        has_sensors = db.execute(text(
-            "SELECT 1 FROM sensors WHERE server_id = :sid AND is_active = true LIMIT 1"
-        ), {"sid": server_id}).fetchone()
-        return "ok" if has_sensors else "unknown"
+        return "ok"
     except Exception:
         return "unknown"
 
