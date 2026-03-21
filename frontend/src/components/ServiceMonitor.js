@@ -37,7 +37,7 @@ function ServiceMonitor() {
     }
 
     const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const host = window.location.host;
+    const host = `${window.location.hostname}:8000`;
     const url = `${proto}://${host}/api/v1/ws/services?token=${token}&server_id=${serverId}`;
 
     const ws = new WebSocket(url);
