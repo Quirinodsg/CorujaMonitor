@@ -312,7 +312,10 @@ class SmartCollector:
         if not self.conn:
             return []
         try:
-            from engine.wmi_engine import WMIEngine
+            try:
+                from engine.wmi_engine import WMIEngine
+            except ImportError:
+                from probe.engine.wmi_engine import WMIEngine
             engine = WMIEngine(self.conn)
             return engine.collect_services(filter_auto_only=True)
         except Exception as e:

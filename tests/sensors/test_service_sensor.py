@@ -3,9 +3,12 @@ Testes para o sensor de serviço Windows (WMI Win32_Service).
 Usa mocks para simular conexão WMI — não requer Windows.
 """
 import pytest
-from unittest.mock import MagicMock, patch
+import time
+from unittest.mock import MagicMock, patch, call
 from hypothesis import given, settings
 from hypothesis import strategies as st
+
+from tests.sensors.service_specs import ServiceEventSpec, ServiceStatusSpec, ServiceStreamingSpec
 
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
@@ -18,6 +21,18 @@ def make_wmi_service(name="Spooler", display_name="Print Spooler",
     svc.State = state
     svc.StartMode = start_mode
     return svc
+
+
+def make_wmi_event(service_name="Spooler", display_name="Print Spooler", state="Stopped"):
+    """Simula um evento WMI __InstanceModificationEvent para Win32_Service"""
+    target = MagicMock()
+    target.Name = service_name
+    target.DisplayName = display_name
+    target.State = state
+
+    event = MagicMock()
+    event.TargetInstance = target
+    return event
 
 
 # ── WMIEngine.collect_services ────────────────────────────────────────────────
@@ -73,7 +88,32 @@ class TestWMIEngineCollectServices:
         engine = WMIEngine(conn)
         engine.collect_services(filter_auto_only=False)
         call_args = conn.query.call_args[0][0]
-        assert "StartMode" not in call_args
+        # Sem filtro: WHERE StartMode='Auto' não deve aparecer
+        assert "WHERE StartMode='Auto'" not in call_args
+
+    def test_unit_is_state(self):
+        """ServiceStatusSpec: unit deve ser 'state'"""
+        from probe.engine.wmi_engine import WMIEngine
+        conn = MagicMock()
+        conn.query.return_value = [make_wmi_service()]
+        engine = WMIEngine(conn)
+        metrics = engine.collect_services()
+        assert metrics[0]["unit"] == ServiceStatusSpec.UNIT
+
+    def test_metadata_has_all_required_fields(self):
+        """ServiceStatusSpec: metadata deve ter service_name, display_name, state, start_mode"""
+        from probe.engine.wmi_engine import WMIEngine
+        conn = MagicMock()
+        conn.query.return_value = [make_wmi_service(
+            name="W32Time", display_name="Windows Time", state="Running", start_mode="Auto"
+        )]
+        engine = WMIEngine(conn)
+        metrics = engine.collect_services()
+        meta = metrics[0]["metadata"]
+        assert "service_name" in meta
+        assert "display_name" in meta
+        assert "state" in meta
+        assert "start_mode" in meta
 
 
 # ── SmartCollector.collect_services ──────────────────────────────────────────
@@ -102,6 +142,113 @@ class TestSmartCollectorServices:
         from probe.engine.smart_collector import SmartCollector
         sc = SmartCollector(wmi_connection=None)
         assert sc.collect_services() == []
+
+
+# ── WMIEventListener._dispatch ────────────────────────────────────────────────
+
+class TestWMIEventListenerDispatch:
+    """
+    Testa que _dispatch parseia TargetInstance corretamente
+    conforme ServiceEventSpec.
+    """
+
+    def _make_listener(self):
+        from probe.event_engine.wmi_event_listener import WMIEventListener
+        callback = MagicMock()
+        listener = WMIEventListener(callback=callback, host="testhost")
+        return listener, callback
+
+    def test_service_stopped_dispatches_service_down(self):
+        """Running → Stopped deve gerar event_type='service_down', status='critical'"""
+        listener, callback = self._make_listener()
+        event = make_wmi_event(service_name="Spooler", state="Stopped")
+        listener._dispatch("service_change", event)
+
+        callback.assert_called_once()
+        result = callback.call_args[0][0]
+        assert result["event_type"] == "service_down"
+        assert result["status"] == "critical"
+        assert result["value"] == 0.0
+        assert result["metadata"]["service_name"] == "Spooler"
+        assert result["metadata"]["state"] == "Stopped"
+
+    def test_service_running_dispatches_service_recovered(self):
+        """Stopped → Running deve gerar event_type='service_recovered', status='ok'"""
+        listener, callback = self._make_listener()
+        event = make_wmi_event(service_name="Spooler", state="Running")
+        listener._dispatch("service_change", event)
+
+        callback.assert_called_once()
+        result = callback.call_args[0][0]
+        assert result["event_type"] == "service_recovered"
+        assert result["status"] == "ok"
+        assert result["value"] == 1.0
+
+    def test_non_service_event_still_dispatches(self):
+        """Eventos não-service (disk_failure, security_event) devem ser despachados"""
+        listener, callback = self._make_listener()
+        event = MagicMock()
+        listener._dispatch("disk_failure", event)
+        callback.assert_called_once()
+        result = callback.call_args[0][0]
+        assert result["event_type"] == "disk_failure"
+
+    def test_dispatch_includes_host(self):
+        """Resultado deve incluir o host correto"""
+        listener, callback = self._make_listener()
+        event = make_wmi_event(state="Stopped")
+        listener._dispatch("service_change", event)
+        result = callback.call_args[0][0]
+        assert result["host"] == "testhost"
+
+    def test_dispatch_includes_timestamp(self):
+        """Resultado deve incluir timestamp numérico"""
+        listener, callback = self._make_listener()
+        event = make_wmi_event(state="Stopped")
+        before = time.time()
+        listener._dispatch("service_change", event)
+        after = time.time()
+        result = callback.call_args[0][0]
+        assert before <= result["timestamp"] <= after
+
+    def test_broken_target_instance_does_not_raise(self):
+        """Se TargetInstance lançar exceção, _dispatch não deve propagar"""
+        listener, callback = self._make_listener()
+        event = MagicMock()
+        # Fazer TargetInstance.Name lançar exceção
+        type(event.TargetInstance).Name = property(lambda self: (_ for _ in ()).throw(RuntimeError("WMI error")))
+        # Não deve lançar
+        listener._dispatch("service_change", event)
+        # callback ainda deve ser chamado (com fallback)
+        callback.assert_called_once()
+
+
+# ── ThresholdEvaluator.get_event_type ────────────────────────────────────────
+
+class TestThresholdEvaluatorServiceEvents:
+    """Valida que get_event_type mapeia corretamente para serviços"""
+
+    def test_service_critical_maps_to_service_down(self):
+        from event_processor.threshold_evaluator import ThresholdEvaluator
+        from core.spec.enums import SensorStatus
+        ev = ThresholdEvaluator()
+        assert ev.get_event_type("service", SensorStatus.CRITICAL) == "service_down"
+
+    def test_service_ok_maps_to_service_recovered(self):
+        """ServiceEventSpec: transição para OK deve gerar 'service_recovered'"""
+        from event_processor.threshold_evaluator import ThresholdEvaluator
+        from core.spec.enums import SensorStatus
+        ev = ThresholdEvaluator()
+        assert ev.get_event_type("service", SensorStatus.OK) == "service_recovered"
+
+    def test_service_event_spec_transitions_covered(self):
+        """Todos os event_types do ServiceEventSpec devem estar mapeados"""
+        from event_processor.threshold_evaluator import ThresholdEvaluator
+        from core.spec.enums import SensorStatus
+        ev = ThresholdEvaluator()
+        # Transições com evento definido no spec
+        assert ev.get_event_type("service", SensorStatus.CRITICAL) == "service_down"
+        assert ev.get_event_type("service", SensorStatus.OK) == "service_recovered"
 
 
 # ── Property-based tests ──────────────────────────────────────────────────────
@@ -145,3 +292,26 @@ def test_service_status_matches_value(states):
             assert m["status"] == "ok"
         else:
             assert m["status"] == "critical"
+
+
+@given(
+    state=st.sampled_from(["Running", "Stopped"]),
+)
+@settings(max_examples=30)
+def test_wmi_event_dispatch_value_matches_state(state):
+    """
+    PBT: para qualquer estado Running/Stopped,
+    _dispatch deve produzir value=1 ↔ Running, value=0 ↔ Stopped
+    """
+    from probe.event_engine.wmi_event_listener import WMIEventListener
+    callback = MagicMock()
+    listener = WMIEventListener(callback=callback, host="host")
+    event = make_wmi_event(state=state)
+    listener._dispatch("service_change", event)
+    result = callback.call_args[0][0]
+    if state == "Running":
+        assert result["value"] == 1.0
+        assert result["status"] == "ok"
+    else:
+        assert result["value"] == 0.0
+        assert result["status"] == "critical"

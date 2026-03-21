@@ -88,9 +88,36 @@ class WMIEventListener:
                 "status": "critical",
                 "value": 1.0,
                 "unit": "event",
-                "metadata": {"raw": str(event)},
+                "metadata": {},
                 "timestamp": time.time(),
             }
+
+            if event_type == "service_change":
+                try:
+                    target = event.TargetInstance
+                    svc_name = getattr(target, "Name", None)
+                    svc_state = getattr(target, "State", None)
+                    svc_display = getattr(target, "DisplayName", svc_name)
+
+                    is_running = svc_state == "Running"
+                    result["value"] = 1.0 if is_running else 0.0
+                    result["status"] = "ok" if is_running else "critical"
+                    result["event_type"] = "service_recovered" if is_running else "service_down"
+                    result["metadata"] = {
+                        "service_name": svc_name,
+                        "display_name": svc_display,
+                        "state": svc_state,
+                    }
+                    logger.info(
+                        f"WMIEvent service_change: {svc_name} → {svc_state} "
+                        f"({'recovered' if is_running else 'down'})"
+                    )
+                except Exception as parse_err:
+                    logger.warning(f"WMIEventListener: falha ao parsear TargetInstance: {parse_err}")
+                    result["metadata"] = {"raw": str(event)}
+            else:
+                result["metadata"] = {"raw": str(event)}
+
             self.callback(result)
         except Exception as e:
             logger.error(f"WMIEventListener dispatch erro: {e}")

@@ -60,6 +60,7 @@ class ThresholdEvaluator:
             ("disk", SensorStatus.WARNING): "disk_full",
             ("ping", SensorStatus.CRITICAL): "host_unreachable",
             ("service", SensorStatus.CRITICAL): "service_down",
+            ("service", SensorStatus.OK): "service_recovered",
         }
         key = (metric_type.lower(), status)
         return mapping.get(key, f"{metric_type}_{status.value}")
