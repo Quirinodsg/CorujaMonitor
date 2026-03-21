@@ -189,3 +189,30 @@
   height: 8px;
   border-radius: 50%;
 }
+
+/* ── Edge legend line ── */
+.topo-legend-sep {
+  width: 1px;
+  height: 16px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 4px;
+}
+
+.topo-legend-line {
+  display: inline-block;
+  width: 18px;
+  height: 2px;
+  border-radius: 1px;
+  vertical-align: middle;
+}
+
+/* ── Critical pulse animation ── */
+@keyframes topo-pulse {
+  0%   { r: 30; opacity: 0.4; }
+  50%  { r: 38; opacity: 0.1; }
+  100% { r: 30; opacity: 0.4; }
+}
+
+.topo-pulse {
+  animation: topo-pulse 2s ease-in-out infinite;
+}
