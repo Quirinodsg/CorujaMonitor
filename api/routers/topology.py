@@ -160,18 +160,27 @@ async def delete_node(node_id: str, db: Session = Depends(get_db)):
 
 
 def _get_server_status(server_id: int, db: Session) -> str:
-    """Deriva status do servidor a partir dos alertas abertos mais recentes."""
+    """Deriva status do servidor: critical/warning se tem incidente aberto, ok se tem métricas recentes, unknown caso contrário."""
     try:
-        row = db.execute(text("""
-            SELECT severity FROM alerts
+        # Verifica incidentes abertos
+        incident = db.execute(text("""
+            SELECT severity FROM incidents
             WHERE sensor_id IN (SELECT id FROM sensors WHERE server_id = :sid)
               AND status = 'open'
             ORDER BY created_at DESC
             LIMIT 1
         """), {"sid": server_id}).fetchone()
-        if row:
-            return "critical" if row.severity == "critical" else "warning"
-        return "ok"
+        if incident:
+            return "critical" if incident.severity == "critical" else "warning"
+
+        # Sem incidentes — verifica se tem métricas nas últimas 2h
+        recent = db.execute(text("""
+            SELECT 1 FROM metrics
+            WHERE sensor_id IN (SELECT id FROM sensors WHERE server_id = :sid)
+              AND timestamp > NOW() - INTERVAL '2 hours'
+            LIMIT 1
+        """), {"sid": server_id}).fetchone()
+        return "ok" if recent else "unknown"
     except Exception:
         return "unknown"
 
