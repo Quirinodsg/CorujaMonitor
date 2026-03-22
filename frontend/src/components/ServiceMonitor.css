@@ -281,3 +281,65 @@
   font-size: 12px !important;
   word-break: break-all;
 }
+
+/* Selection mode */
+.sm-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  flex-wrap: wrap;
+}
+
+.sm-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sm-btn--secondary {
+  background: var(--bg-card, #1e293b);
+  border: 1px solid var(--border-color, #334155);
+  color: var(--text-secondary, #94a3b8);
+}
+.sm-btn--secondary:hover:not(:disabled) {
+  border-color: var(--accent, #3b82f6);
+  color: var(--text-primary, #e2e8f0);
+}
+.sm-btn--primary {
+  background: var(--accent, #3b82f6);
+  color: #fff;
+}
+.sm-btn--primary:hover:not(:disabled) { background: #2563eb; }
+.sm-btn:disabled, .sm-btn.disabled { opacity: 0.4; cursor: not-allowed; }
+
+.sm-save-msg {
+  font-size: 13px;
+  color: #22c55e;
+  white-space: nowrap;
+}
+
+.sm-row--changed {
+  background: rgba(59, 130, 246, 0.06) !important;
+}
+.sm-row--changed td:first-child::after {
+  content: '●';
+  color: #3b82f6;
+  font-size: 8px;
+  vertical-align: super;
+  margin-left: 2px;
+}
+
+.sm-table input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--accent, #3b82f6);
+}
+
+.sm-state--unknown {
+  color: var(--text-muted, #64748b);
+}

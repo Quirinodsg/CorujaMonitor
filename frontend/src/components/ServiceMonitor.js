@@ -7,30 +7,31 @@ function ServiceMonitor() {
   const [servers, setServers] = useState([]);
   const [selectedServer, setSelectedServer] = useState(null);
   const [services, setServices] = useState([]);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState('all'); // all | monitored | unmonitored
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
-  const [stats, setStats] = useState({ running: 0, stopped: 0, total: 0 });
   const [error, setError] = useState(null);
+  const [saveMsg, setSaveMsg] = useState(null);
+  // pending changes: sensor_id -> is_active (true/false)
+  const [pending, setPending] = useState({});
 
   const token = localStorage.getItem('token');
 
-  // Load servers list
+  // Load servers
   useEffect(() => {
     fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
       .then(data => {
-        const activeServers = (data || []).filter(s => s.is_active !== false);
-        setServers(activeServers);
-        if (activeServers.length > 0) {
-          setSelectedServer(activeServers[0].id);
-        }
+        const active = (data || []).filter(s => s.is_active !== false);
+        setServers(active);
+        if (active.length > 0) setSelectedServer(active[0].id);
       })
       .catch(() => {});
   }, [token]);
 
-  // Fetch services for selected server
+  // Fetch service list for selected server
   const fetchServices = useCallback(() => {
     if (!selectedServer) return;
     setLoading(true);
@@ -39,44 +40,88 @@ function ServiceMonitor() {
     fetch(`${API}/services/debug?server_id=${selectedServer}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
-      .then(r => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+      .then(r => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then(data => {
-        const sensors = data.sensors || [];
-        const mapped = sensors.map(s => ({
-          sensor_id: s.sensor_id,
-          server_id: s.server_id,
-          service_name: s.service_name || s.name.replace(/^Service /, ''),
-          display_name: s.display_name || s.name.replace(/^Service /, ''),
-          state: s.state || (s.is_running ? 'Running' : s.is_running === false ? 'Stopped' : 'Unknown'),
-          is_running: s.is_running,
-          status: s.last_status || 'unknown',
-          last_seen: s.last_seen,
-          metric_count: s.metric_count,
-        }));
-
-        setServices(mapped);
-        const running = mapped.filter(s => s.is_running).length;
-        const stopped = mapped.filter(s => !s.is_running && s.status !== 'unknown').length;
-        setStats({ running, stopped, total: mapped.length });
+        setServices(data.sensors || []);
+        setPending({});
         setLastUpdate(new Date());
       })
       .catch(e => setError(e.message))
       .finally(() => setLoading(false));
   }, [selectedServer, token]);
 
-  // Poll every 10s
   useEffect(() => {
     fetchServices();
-    const interval = setInterval(fetchServices, 10000);
-    return () => clearInterval(interval);
   }, [fetchServices]);
 
+  // Toggle a single service
+  const toggle = (sensorId, currentActive) => {
+    setPending(prev => {
+      const next = { ...prev };
+      // If toggling back to original, remove from pending
+      const original = services.find(s => s.sensor_id === sensorId)?.is_active;
+      const newVal = !currentActive;
+      if (newVal === original) {
+        delete next[sensorId];
+      } else {
+        next[sensorId] = newVal;
+      }
+      return next;
+    });
+  };
+
+  // Get effective is_active for a sensor (pending overrides saved)
+  const effectiveActive = (svc) => {
+    if (svc.sensor_id in pending) return pending[svc.sensor_id];
+    return svc.is_active;
+  };
+
+  // Select all / deselect all (filtered)
+  const toggleAll = (value) => {
+    const updates = {};
+    filtered.forEach(svc => {
+      if (effectiveActive(svc) !== value) {
+        updates[svc.sensor_id] = value;
+      }
+    });
+    setPending(prev => ({ ...prev, ...updates }));
+  };
+
+  // Save changes via PATCH /sensors/{id}
+  const saveChanges = async () => {
+    const entries = Object.entries(pending);
+    if (entries.length === 0) return;
+    setSaving(true);
+    setSaveMsg(null);
+    let ok = 0, fail = 0;
+    for (const [sensorId, isActive] of entries) {
+      try {
+        const r = await fetch(`${API}/sensors/${sensorId}`, {
+          method: 'PUT',
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ is_active: isActive })
+        });
+        if (r.ok) ok++;
+        else fail++;
+      } catch { fail++; }
+    }
+    setSaving(false);
+    setSaveMsg(fail === 0
+      ? `✅ ${ok} serviço(s) atualizado(s)`
+      : `⚠️ ${ok} ok, ${fail} erro(s)`
+    );
+    setTimeout(() => setSaveMsg(null), 4000);
+    fetchServices(); // reload to confirm
+  };
+
+  // Derived stats
+  const monitoredCount = services.filter(s => effectiveActive(s)).length;
+  const pendingCount = Object.keys(pending).length;
+
   const filtered = services.filter(s => {
-    if (filter === 'running' && !s.is_running) return false;
-    if (filter === 'stopped' && s.is_running !== false) return false;
+    const active = effectiveActive(s);
+    if (filter === 'monitored' && !active) return false;
+    if (filter === 'unmonitored' && active) return false;
     if (search) {
       const q = search.toLowerCase();
       return (s.service_name || '').toLowerCase().includes(q) ||
@@ -94,18 +139,14 @@ function ServiceMonitor() {
           <span className="sm-icon">⚙️</span>
           <div>
             <h2>Monitoramento de Serviços</h2>
-            <p>Serviços Windows (StartMode=Auto) via WMI</p>
+            <p>Selecione quais serviços Windows deseja monitorar</p>
           </div>
         </div>
         <div className="sm-status-bar">
-          <span className={`sm-ws-dot ${loading ? 'loading' : lastUpdate ? 'connected' : 'disconnected'}`} />
-          <span className="sm-ws-label">{loading ? 'Atualizando...' : lastUpdate ? 'Atualizado' : 'Aguardando...'}</span>
           {lastUpdate && (
-            <span className="sm-last-update">
-              {lastUpdate.toLocaleTimeString('pt-BR')}
-            </span>
+            <span className="sm-last-update">Atualizado: {lastUpdate.toLocaleTimeString('pt-BR')}</span>
           )}
-          <button className="sm-refresh-btn" onClick={fetchServices} disabled={loading} title="Atualizar agora">
+          <button className="sm-refresh-btn" onClick={fetchServices} disabled={loading} title="Recarregar">
             🔄
           </button>
         </div>
@@ -114,13 +155,8 @@ function ServiceMonitor() {
       <div className="sm-controls">
         <div className="sm-server-select">
           <label>Servidor</label>
-          <select
-            value={selectedServer || ''}
-            onChange={e => setSelectedServer(Number(e.target.value))}
-          >
-            {servers.map(s => (
-              <option key={s.id} value={s.id}>{s.hostname}</option>
-            ))}
+          <select value={selectedServer || ''} onChange={e => { setSelectedServer(Number(e.target.value)); setPending({}); }}>
+            {servers.map(s => <option key={s.id} value={s.id}>{s.hostname}</option>)}
           </select>
         </div>
 
@@ -134,13 +170,13 @@ function ServiceMonitor() {
         </div>
 
         <div className="sm-filter-tabs">
-          {['all', 'running', 'stopped'].map(f => (
-            <button
-              key={f}
-              className={`sm-tab ${filter === f ? 'active' : ''}`}
-              onClick={() => setFilter(f)}
-            >
-              {f === 'all' ? `Todos (${stats.total})` : f === 'running' ? `Rodando (${stats.running})` : `Parados (${stats.stopped})`}
+          {[
+            { key: 'all', label: `Todos (${services.length})` },
+            { key: 'monitored', label: `Monitorados (${monitoredCount})` },
+            { key: 'unmonitored', label: `Ignorados (${services.length - monitoredCount})` },
+          ].map(f => (
+            <button key={f.key} className={`sm-tab ${filter === f.key ? 'active' : ''}`} onClick={() => setFilter(f.key)}>
+              {f.label}
             </button>
           ))}
         </div>
@@ -148,15 +184,15 @@ function ServiceMonitor() {
 
       <div className="sm-stats">
         <div className="sm-stat sm-stat--ok">
-          <span className="sm-stat-value">{stats.running}</span>
-          <span className="sm-stat-label">Rodando</span>
-        </div>
-        <div className="sm-stat sm-stat--critical">
-          <span className="sm-stat-value">{stats.stopped}</span>
-          <span className="sm-stat-label">Parados</span>
+          <span className="sm-stat-value">{monitoredCount}</span>
+          <span className="sm-stat-label">Monitorados</span>
         </div>
         <div className="sm-stat">
-          <span className="sm-stat-value">{stats.total}</span>
+          <span className="sm-stat-value">{services.length - monitoredCount}</span>
+          <span className="sm-stat-label">Ignorados</span>
+        </div>
+        <div className="sm-stat">
+          <span className="sm-stat-value">{services.length}</span>
           <span className="sm-stat-label">Total</span>
         </div>
         {selectedServerObj && (
@@ -165,56 +201,83 @@ function ServiceMonitor() {
             <span className="sm-stat-label">Servidor</span>
           </div>
         )}
+
+        <div className="sm-actions">
+          <button className="sm-btn sm-btn--secondary" onClick={() => toggleAll(true)} disabled={saving}>
+            Marcar todos
+          </button>
+          <button className="sm-btn sm-btn--secondary" onClick={() => toggleAll(false)} disabled={saving}>
+            Desmarcar todos
+          </button>
+          <button
+            className={`sm-btn sm-btn--primary ${pendingCount === 0 ? 'disabled' : ''}`}
+            onClick={saveChanges}
+            disabled={saving || pendingCount === 0}
+          >
+            {saving ? 'Salvando...' : `Salvar${pendingCount > 0 ? ` (${pendingCount})` : ''}`}
+          </button>
+          {saveMsg && <span className="sm-save-msg">{saveMsg}</span>}
+        </div>
       </div>
 
-      {error && (
-        <div className="sm-error">
-          ⚠️ Erro ao carregar serviços: {error}
-        </div>
-      )}
+      {error && <div className="sm-error">⚠️ {error}</div>}
 
-      {!error && filtered.length === 0 ? (
-        <div className="sm-empty">
-          {loading
-            ? 'Carregando serviços...'
-            : services.length === 0
-              ? 'Nenhum serviço encontrado. A sonda precisa coletar dados deste servidor via WMI.'
-              : 'Nenhum serviço encontrado com os filtros aplicados.'}
-        </div>
+      {loading && services.length === 0 ? (
+        <div className="sm-empty">Carregando serviços...</div>
+      ) : filtered.length === 0 ? (
+        <div className="sm-empty">Nenhum serviço encontrado.</div>
       ) : (
         <div className="sm-table-wrap">
           <table className="sm-table">
             <thead>
               <tr>
-                <th>Status</th>
+                <th style={{ width: 48 }}>
+                  <input
+                    type="checkbox"
+                    title="Marcar/desmarcar todos visíveis"
+                    checked={filtered.length > 0 && filtered.every(s => effectiveActive(s))}
+                    onChange={e => toggleAll(e.target.checked)}
+                  />
+                </th>
                 <th>Nome do Serviço</th>
-                <th>Estado</th>
-                <th>Métricas</th>
-                <th>Última Atualização</th>
+                <th>Descrição</th>
+                <th>Estado Atual</th>
+                <th>Última Coleta</th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map(svc => (
-                <tr key={svc.sensor_id} className={`sm-row sm-row--${svc.status}`}>
-                  <td>
-                    <span className={`sm-badge sm-badge--${svc.is_running ? 'ok' : 'critical'}`}>
-                      {svc.is_running ? '●' : '●'}
-                    </span>
-                  </td>
-                  <td className="sm-service-name">{svc.service_name}</td>
-                  <td>
-                    <span className={`sm-state sm-state--${svc.is_running ? 'running' : 'stopped'}`}>
-                      {svc.state}
-                    </span>
-                  </td>
-                  <td className="sm-metric-count">{svc.metric_count || 0}</td>
-                  <td className="sm-timestamp">
-                    {svc.last_seen
-                      ? new Date(svc.last_seen).toLocaleTimeString('pt-BR')
-                      : '—'}
-                  </td>
-                </tr>
-              ))}
+              {filtered.map(svc => {
+                const active = effectiveActive(svc);
+                const changed = svc.sensor_id in pending;
+                return (
+                  <tr
+                    key={svc.sensor_id}
+                    className={`sm-row ${changed ? 'sm-row--changed' : ''}`}
+                    onClick={() => toggle(svc.sensor_id, active)}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <td onClick={e => e.stopPropagation()}>
+                      <input
+                        type="checkbox"
+                        checked={active}
+                        onChange={() => toggle(svc.sensor_id, active)}
+                      />
+                    </td>
+                    <td className="sm-service-name">{svc.service_name}</td>
+                    <td className="sm-display-name">{svc.display_name}</td>
+                    <td>
+                      {svc.state ? (
+                        <span className={`sm-state sm-state--${svc.is_running ? 'running' : 'stopped'}`}>
+                          {svc.state}
+                        </span>
+                      ) : <span className="sm-state sm-state--unknown">—</span>}
+                    </td>
+                    <td className="sm-timestamp">
+                      {svc.last_seen ? new Date(svc.last_seen).toLocaleTimeString('pt-BR') : '—'}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
