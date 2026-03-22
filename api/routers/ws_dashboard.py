@@ -205,7 +205,7 @@ from fastapi import Depends
 from sqlalchemy.orm import Session
 from database import get_db
 
-@router.get("/api/v1/services/debug")
+@router.get("/services/debug")
 def services_debug(server_id: int = None, db: Session = Depends(get_db)):
     """Diagnóstico: mostra sensores service no banco"""
     from models import Sensor, Server, Metric
