@@ -237,14 +237,16 @@ async def create_probe_metrics_bulk(
 
         if not sensor:
             # Tentar encontrar sensor pelo tipo exato (ignorando nome diferente)
-            sensor = db.query(Sensor).filter(
-                Sensor.server_id == server.id,
-                Sensor.sensor_type == metric_data.sensor_type
-            ).first()
-            if sensor:
-                # Atualizar nome para o padrão da sonda
-                sensor.name = sensor_name
-                db.flush()
+            # EXCEÇÃO: 'service' — cada serviço é um sensor distinto, nunca reutilizar por tipo
+            if metric_data.sensor_type != 'service':
+                sensor = db.query(Sensor).filter(
+                    Sensor.server_id == server.id,
+                    Sensor.sensor_type == metric_data.sensor_type
+                ).first()
+                if sensor:
+                    # Atualizar nome para o padrão da sonda
+                    sensor.name = sensor_name
+                    db.flush()
 
         if not sensor:
             # Set default thresholds based on sensor type
