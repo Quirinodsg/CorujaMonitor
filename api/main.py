@@ -199,7 +199,7 @@ app.include_router(timescale_migration.router)  # TimescaleDB Migration
 app.include_router(multi_probe.router)  # Multi-Probe Management
 app.include_router(probe_nodes.router)  # Probe Nodes distribuídos
 app.include_router(metrics_batch.router)  # Ingestão em lote de métricas
-app.include_router(ws_dashboard.router)   # WebSocket Dashboard tempo real
+app.include_router(ws_dashboard.router, prefix="/api/v1")   # WebSocket Dashboard tempo real
 app.include_router(discovery.router)      # Discovery de rede/SNMP/WMI
 app.include_router(observability.router)  # Observability v3 (health-score, impact-map, intelligent alerts, WS)
 app.include_router(topology.router)       # Topology v3 (graph, impact, nodes)

@@ -4,7 +4,7 @@ import './Dashboard.css';
 
 const WS_URL = (() => {
   const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  return `${proto}//${window.location.hostname}:8000/ws/dashboard`;
+  return `${proto}//${window.location.hostname}:8000/api/v1/ws/dashboard`;
 })();
 
 const IcoServer = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>;
