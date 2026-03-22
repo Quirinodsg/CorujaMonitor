@@ -174,6 +174,11 @@ async def ws_services(
             db = SessionLocal()
             try:
                 services = _get_services_status(db, server_id=server_id)
+                # Debug: count total service sensors regardless of server filter
+                from models import Sensor
+                total_service_sensors = db.query(Sensor).filter(
+                    Sensor.sensor_type == 'service'
+                ).count()
             finally:
                 db.close()
 
@@ -184,9 +189,43 @@ async def ws_services(
                 "count": len(services),
                 "running": sum(1 for s in services if s["is_running"]),
                 "stopped": sum(1 for s in services if s["is_running"] is False),
+                "debug": {
+                    "total_service_sensors_in_db": total_service_sensors,
+                    "filter_server_id": server_id,
+                }
             }))
             await asyncio.sleep(5)
     except WebSocketDisconnect:
         logger.info("WebSocket services desconectado")
     except Exception as e:
         logger.debug(f"WebSocket services erro: {e}")
+
+
+from fastapi import Depends
+from sqlalchemy.orm import Session
+from database import get_db
+
+@router.get("/api/v1/services/debug")
+def services_debug(server_id: int = None, db: Session = Depends(get_db)):
+    """Diagnóstico: mostra sensores service no banco"""
+    from models import Sensor, Server, Metric
+    from sqlalchemy import func
+
+    query = db.query(Sensor).filter(Sensor.sensor_type == 'service')
+    if server_id:
+        query = query.filter(Sensor.server_id == server_id)
+
+    sensors = query.all()
+    result = []
+    for s in sensors:
+        srv = db.query(Server).filter(Server.id == s.server_id).first()
+        metric_count = db.query(Metric).filter(Metric.sensor_id == s.id).count()
+        result.append({
+            "sensor_id": s.id,
+            "server_id": s.server_id,
+            "server_hostname": srv.hostname if srv else None,
+            "name": s.name,
+            "is_active": s.is_active,
+            "metric_count": metric_count,
+        })
+    return {"total": len(result), "sensors": result[:50]}
