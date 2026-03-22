@@ -207,7 +207,7 @@ from database import get_db
 
 @router.get("/services/debug")
 def services_debug(server_id: int = None, db: Session = Depends(get_db)):
-    """Diagnóstico: mostra sensores service no banco"""
+    """Lista sensores de serviço com status atual"""
     from models import Sensor, Server, Metric
     from sqlalchemy import func
 
@@ -216,16 +216,53 @@ def services_debug(server_id: int = None, db: Session = Depends(get_db)):
         query = query.filter(Sensor.server_id == server_id)
 
     sensors = query.all()
+    if not sensors:
+        return {"total": 0, "sensors": []}
+
+    sensor_ids = [s.id for s in sensors]
+
+    # Latest metric per sensor (single batch query)
+    subq = (
+        db.query(Metric.sensor_id, func.max(Metric.id).label('max_id'))
+        .filter(Metric.sensor_id.in_(sensor_ids))
+        .group_by(Metric.sensor_id)
+        .subquery()
+    )
+    latest = db.query(Metric).join(subq, Metric.id == subq.c.max_id).all()
+    latest_map = {m.sensor_id: m for m in latest}
+
+    # Server hostname cache
+    server_ids = list({s.server_id for s in sensors})
+    servers_map = {
+        srv.id: srv.hostname
+        for srv in db.query(Server).filter(Server.id.in_(server_ids)).all()
+    }
+
+    # Metric count per sensor (batch)
+    counts = (
+        db.query(Metric.sensor_id, func.count(Metric.id).label('cnt'))
+        .filter(Metric.sensor_id.in_(sensor_ids))
+        .group_by(Metric.sensor_id)
+        .all()
+    )
+    count_map = {row.sensor_id: row.cnt for row in counts}
+
     result = []
     for s in sensors:
-        srv = db.query(Server).filter(Server.id == s.server_id).first()
-        metric_count = db.query(Metric).filter(Metric.sensor_id == s.id).count()
+        m = latest_map.get(s.id)
+        meta = (m.extra_metadata or {}) if m else {}
         result.append({
             "sensor_id": s.id,
             "server_id": s.server_id,
-            "server_hostname": srv.hostname if srv else None,
+            "server_hostname": servers_map.get(s.server_id),
             "name": s.name,
+            "service_name": meta.get("service_name", s.name.replace("Service ", "", 1)),
+            "display_name": meta.get("display_name", s.name.replace("Service ", "", 1)),
             "is_active": s.is_active,
-            "metric_count": metric_count,
+            "is_running": bool(m and m.value == 1) if m else None,
+            "state": meta.get("state", "Unknown"),
+            "last_status": m.status if m else "unknown",
+            "last_seen": m.timestamp.isoformat() if m else None,
+            "metric_count": count_map.get(s.id, 0),
         })
-    return {"total": len(result), "sensors": result[:50]}
+    return {"total": len(result), "sensors": result}

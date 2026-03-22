@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import './ServiceMonitor.css';
 
 const API = `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
@@ -7,12 +7,12 @@ function ServiceMonitor() {
   const [servers, setServers] = useState([]);
   const [selectedServer, setSelectedServer] = useState(null);
   const [services, setServices] = useState([]);
-  const [filter, setFilter] = useState('all'); // all | running | stopped
+  const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
-  const [connected, setConnected] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [stats, setStats] = useState({ running: 0, stopped: 0, total: 0 });
-  const wsRef = useRef(null);
+  const [error, setError] = useState(null);
 
   const token = localStorage.getItem('token');
 
@@ -23,55 +23,56 @@ function ServiceMonitor() {
       .then(data => {
         const activeServers = (data || []).filter(s => s.is_active !== false);
         setServers(activeServers);
-        if (activeServers.length > 0 && !selectedServer) {
+        if (activeServers.length > 0) {
           setSelectedServer(activeServers[0].id);
         }
       })
       .catch(() => {});
   }, [token]);
 
-  // WebSocket connection
-  const connectWS = useCallback((serverId) => {
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
+  // Fetch services for selected server
+  const fetchServices = useCallback(() => {
+    if (!selectedServer) return;
+    setLoading(true);
+    setError(null);
 
-    const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
-    const host = `${window.location.hostname}:8000`;
-    const url = `${proto}://${host}/api/v1/ws/services?token=${token}&server_id=${serverId}`;
+    fetch(`${API}/services/debug?server_id=${selectedServer}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(data => {
+        const sensors = data.sensors || [];
+        const mapped = sensors.map(s => ({
+          sensor_id: s.sensor_id,
+          server_id: s.server_id,
+          service_name: s.service_name || s.name.replace(/^Service /, ''),
+          display_name: s.display_name || s.name.replace(/^Service /, ''),
+          state: s.state || (s.is_running ? 'Running' : s.is_running === false ? 'Stopped' : 'Unknown'),
+          is_running: s.is_running,
+          status: s.last_status || 'unknown',
+          last_seen: s.last_seen,
+          metric_count: s.metric_count,
+        }));
 
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
+        setServices(mapped);
+        const running = mapped.filter(s => s.is_running).length;
+        const stopped = mapped.filter(s => !s.is_running && s.status !== 'unknown').length;
+        setStats({ running, stopped, total: mapped.length });
+        setLastUpdate(new Date());
+      })
+      .catch(e => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [selectedServer, token]);
 
-    ws.onopen = () => setConnected(true);
-    ws.onclose = () => {
-      setConnected(false);
-      // Reconnect after 5s
-      setTimeout(() => {
-        if (wsRef.current === ws) connectWS(serverId);
-      }, 5000);
-    };
-    ws.onerror = () => setConnected(false);
-    ws.onmessage = (evt) => {
-      try {
-        const msg = JSON.parse(evt.data);
-        if (msg.type === 'services') {
-          setServices(msg.data || []);
-          setStats({ running: msg.running || 0, stopped: msg.stopped || 0, total: msg.count || 0 });
-          setLastUpdate(new Date());
-        }
-      } catch (_) {}
-    };
-  }, [token]);
-
+  // Poll every 10s
   useEffect(() => {
-    if (selectedServer) {
-      connectWS(selectedServer);
-    }
-    return () => {
-      if (wsRef.current) wsRef.current.close();
-    };
-  }, [selectedServer, connectWS]);
+    fetchServices();
+    const interval = setInterval(fetchServices, 10000);
+    return () => clearInterval(interval);
+  }, [fetchServices]);
 
   const filtered = services.filter(s => {
     if (filter === 'running' && !s.is_running) return false;
@@ -97,13 +98,16 @@ function ServiceMonitor() {
           </div>
         </div>
         <div className="sm-status-bar">
-          <span className={`sm-ws-dot ${connected ? 'connected' : 'disconnected'}`} />
-          <span className="sm-ws-label">{connected ? 'Tempo real' : 'Reconectando...'}</span>
+          <span className={`sm-ws-dot ${loading ? 'loading' : lastUpdate ? 'connected' : 'disconnected'}`} />
+          <span className="sm-ws-label">{loading ? 'Atualizando...' : lastUpdate ? 'Atualizado' : 'Aguardando...'}</span>
           {lastUpdate && (
             <span className="sm-last-update">
-              Atualizado: {lastUpdate.toLocaleTimeString('pt-BR')}
+              {lastUpdate.toLocaleTimeString('pt-BR')}
             </span>
           )}
+          <button className="sm-refresh-btn" onClick={fetchServices} disabled={loading} title="Atualizar agora">
+            🔄
+          </button>
         </div>
       </div>
 
@@ -136,7 +140,7 @@ function ServiceMonitor() {
               className={`sm-tab ${filter === f ? 'active' : ''}`}
               onClick={() => setFilter(f)}
             >
-              {f === 'all' ? 'Todos' : f === 'running' ? 'Rodando' : 'Parados'}
+              {f === 'all' ? `Todos (${stats.total})` : f === 'running' ? `Rodando (${stats.running})` : `Parados (${stats.stopped})`}
             </button>
           ))}
         </div>
@@ -157,17 +161,25 @@ function ServiceMonitor() {
         </div>
         {selectedServerObj && (
           <div className="sm-stat sm-stat--info">
-            <span className="sm-stat-value">{selectedServerObj.hostname}</span>
+            <span className="sm-stat-value sm-stat-hostname">{selectedServerObj.hostname}</span>
             <span className="sm-stat-label">Servidor</span>
           </div>
         )}
       </div>
 
-      {filtered.length === 0 ? (
+      {error && (
+        <div className="sm-error">
+          ⚠️ Erro ao carregar serviços: {error}
+        </div>
+      )}
+
+      {!error && filtered.length === 0 ? (
         <div className="sm-empty">
-          {services.length === 0
-            ? 'Aguardando dados do servidor...'
-            : 'Nenhum serviço encontrado com os filtros aplicados.'}
+          {loading
+            ? 'Carregando serviços...'
+            : services.length === 0
+              ? 'Nenhum serviço encontrado. A sonda precisa coletar dados deste servidor via WMI.'
+              : 'Nenhum serviço encontrado com os filtros aplicados.'}
         </div>
       ) : (
         <div className="sm-table-wrap">
@@ -176,8 +188,8 @@ function ServiceMonitor() {
               <tr>
                 <th>Status</th>
                 <th>Nome do Serviço</th>
-                <th>Descrição</th>
                 <th>Estado</th>
+                <th>Métricas</th>
                 <th>Última Atualização</th>
               </tr>
             </thead>
@@ -190,12 +202,12 @@ function ServiceMonitor() {
                     </span>
                   </td>
                   <td className="sm-service-name">{svc.service_name}</td>
-                  <td className="sm-display-name">{svc.display_name}</td>
                   <td>
                     <span className={`sm-state sm-state--${svc.is_running ? 'running' : 'stopped'}`}>
-                      {svc.state || (svc.is_running ? 'Running' : 'Stopped')}
+                      {svc.state}
                     </span>
                   </td>
+                  <td className="sm-metric-count">{svc.metric_count || 0}</td>
                   <td className="sm-timestamp">
                     {svc.last_seen
                       ? new Date(svc.last_seen).toLocaleTimeString('pt-BR')

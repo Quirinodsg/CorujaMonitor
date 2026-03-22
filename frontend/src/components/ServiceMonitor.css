@@ -240,3 +240,44 @@
   border: 1px solid var(--border-color, #334155);
   border-radius: 8px;
 }
+
+.sm-ws-dot.loading { background: #f59e0b; animation: sm-pulse 1s infinite; }
+
+@keyframes sm-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.sm-refresh-btn {
+  background: none;
+  border: 1px solid var(--border-color, #334155);
+  border-radius: 6px;
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  padding: 4px 8px;
+  font-size: 14px;
+  transition: all 0.15s;
+}
+.sm-refresh-btn:hover:not(:disabled) { border-color: var(--accent, #3b82f6); color: var(--text-primary, #e2e8f0); }
+.sm-refresh-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.sm-error {
+  background: #ef444422;
+  border: 1px solid #ef444444;
+  border-radius: 8px;
+  padding: 12px 16px;
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.sm-metric-count {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+}
+
+.sm-stat-hostname {
+  font-size: 12px !important;
+  word-break: break-all;
+}
