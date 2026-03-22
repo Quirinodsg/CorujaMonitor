@@ -24,6 +24,7 @@ from collectors.memory_collector import MemoryCollector
 from collectors.disk_collector import DiskCollector
 from collectors.network_collector import NetworkCollector
 from collectors.service_collector import ServiceCollector
+from collectors.wmi_service_collector import WMIServiceCollector
 from collectors.hyperv_collector import HyperVCollector
 from collectors.udm_collector import UDMCollector
 from collectors.system_collector import SystemCollector
@@ -67,8 +68,7 @@ class ProbeCore:
             DiskCollector(),                   # 4. Disk
             SystemCollector(),                 # 5. Uptime
             NetworkCollector(),                # 6. Network IN/OUT
-            # Service monitoring removed from default sensors
-            # Services can be added manually if needed
+            WMIServiceCollector(),             # 7. Serviços Windows (StartMode=Auto)
             HyperVCollector(),
             UDMCollector(self.config.udm_targets),
             DockerCollector()                  # Docker monitoring
