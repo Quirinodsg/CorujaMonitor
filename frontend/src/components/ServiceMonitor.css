@@ -343,3 +343,75 @@
 .sm-state--unknown {
   color: var(--text-muted, #64748b);
 }
+
+/* ── No Discovery State ─────────────────────────────────────────── */
+.sm-no-discovery {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-secondary, #8b949e);
+}
+
+.sm-no-discovery-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.sm-no-discovery h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary, #e6edf3);
+  margin: 0 0 8px;
+}
+
+.sm-no-discovery p {
+  font-size: 14px;
+  line-height: 1.6;
+  max-width: 480px;
+  margin: 0 0 24px;
+}
+
+.sm-no-discovery-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.sm-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-secondary, #161b22);
+  border: 1px solid var(--border-color, #30363d);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  text-align: left;
+}
+
+.sm-step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--accent-blue, #1f6feb);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Inactive row (not yet selected for monitoring) */
+.sm-row--inactive td {
+  opacity: 0.55;
+}
+.sm-row--inactive:hover td {
+  opacity: 1;
+}

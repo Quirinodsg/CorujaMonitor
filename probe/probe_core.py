@@ -347,11 +347,63 @@ class ProbeCore:
                     f"latências={report['query_latency_ms']}"
                 )
 
+                # Enviar catálogo de serviços descobertos para a API (estilo PRTG/Zabbix)
+                # Faz upsert de sensores tipo 'service' — usuário seleciona quais monitorar na UI
+                self._sync_services_discovery(server_id, conn)
+
             finally:
                 pool.release(hostname, conn)
 
         except Exception as e:
             logger.error(f"❌ WMI collection failed for {server.get('hostname')}: {e}", exc_info=True)
+
+    def _sync_services_discovery(self, server_id: int, wmi_conn):
+        """
+        Envia catálogo de serviços Windows descobertos via WMI para a API.
+        Estilo PRTG/Zabbix: sonda descobre → API armazena → usuário seleciona na UI.
+        Apenas serviços com StartMode=Auto são enviados.
+        """
+        try:
+            from engine.wmi_engine import WMIEngine
+            engine = WMIEngine(wmi_conn)
+            # Coletar catálogo completo (sem filtrar por is_active — isso é papel da UI)
+            rows = wmi_conn.query(
+                "SELECT Name,DisplayName,State,StartMode FROM Win32_Service WHERE StartMode='Auto'"
+            )
+            if not rows:
+                logger.debug(f"Nenhum serviço Auto encontrado para server_id={server_id}")
+                return
+
+            services = [
+                {
+                    "service_name": r.Name,
+                    "display_name": r.DisplayName or r.Name,
+                    "state": r.State or "Unknown",
+                    "start_mode": r.StartMode or "Auto",
+                }
+                for r in rows
+            ]
+
+            with httpx.Client(timeout=15.0, verify=False) as client:
+                resp = client.post(
+                    f"{self.config.api_url}/api/v1/servers/{server_id}/services/sync",
+                    json={
+                        "probe_token": self.config.probe_token,
+                        "services": services,
+                    }
+                )
+                if resp.status_code == 200:
+                    result = resp.json()
+                    logger.info(
+                        f"🔍 Service discovery server_id={server_id}: "
+                        f"{result.get('created', 0)} novos, {result.get('updated', 0)} atualizados "
+                        f"({len(services)} total)"
+                    )
+                else:
+                    logger.warning(f"Service sync falhou: HTTP {resp.status_code} — {resp.text[:200]}")
+
+        except Exception as e:
+            logger.warning(f"Service discovery falhou para server_id={server_id}: {e}")
     
     def _collect_snmp_remote(self, server):
             """Collect metrics from remote device via SNMP"""

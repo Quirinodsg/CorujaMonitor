@@ -19,7 +19,7 @@ function ServiceMonitor() {
 
   const token = localStorage.getItem('token');
 
-  // Load servers
+  // Load all servers for the tenant
   useEffect(() => {
     fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
@@ -31,12 +31,13 @@ function ServiceMonitor() {
       .catch(() => {});
   }, [token]);
 
-  // Fetch service list for selected server
+  // Fetch service list for selected server (includes inactive sensors = not yet discovered)
   const fetchServices = useCallback(() => {
     if (!selectedServer) return;
     setLoading(true);
     setError(null);
 
+    // /services/debug returns ALL service sensors (active + inactive) for the server
     fetch(`${API}/services/debug?server_id=${selectedServer}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
@@ -58,7 +59,6 @@ function ServiceMonitor() {
   const toggle = (sensorId, currentActive) => {
     setPending(prev => {
       const next = { ...prev };
-      // If toggling back to original, remove from pending
       const original = services.find(s => s.sensor_id === sensorId)?.is_active;
       const newVal = !currentActive;
       if (newVal === original) {
@@ -87,7 +87,7 @@ function ServiceMonitor() {
     setPending(prev => ({ ...prev, ...updates }));
   };
 
-  // Save changes via PATCH /sensors/{id}
+  // Save changes via PUT /sensors/{id}
   const saveChanges = async () => {
     const entries = Object.entries(pending);
     if (entries.length === 0) return;
@@ -111,12 +111,13 @@ function ServiceMonitor() {
       : `⚠️ ${ok} ok, ${fail} erro(s)`
     );
     setTimeout(() => setSaveMsg(null), 4000);
-    fetchServices(); // reload to confirm
+    fetchServices();
   };
 
   // Derived stats
   const monitoredCount = services.filter(s => effectiveActive(s)).length;
   const pendingCount = Object.keys(pending).length;
+  const hasDiscovery = services.length > 0;
 
   const filtered = services.filter(s => {
     const active = effectiveActive(s);
@@ -156,7 +157,9 @@ function ServiceMonitor() {
         <div className="sm-server-select">
           <label>Servidor</label>
           <select value={selectedServer || ''} onChange={e => { setSelectedServer(Number(e.target.value)); setPending({}); }}>
-            {servers.map(s => <option key={s.id} value={s.id}>{s.hostname}</option>)}
+            {servers.map(s => (
+              <option key={s.id} value={s.id}>{s.hostname}</option>
+            ))}
           </select>
         </div>
 
@@ -203,10 +206,10 @@ function ServiceMonitor() {
         )}
 
         <div className="sm-actions">
-          <button className="sm-btn sm-btn--secondary" onClick={() => toggleAll(true)} disabled={saving}>
+          <button className="sm-btn sm-btn--secondary" onClick={() => toggleAll(true)} disabled={saving || !hasDiscovery}>
             Marcar todos
           </button>
-          <button className="sm-btn sm-btn--secondary" onClick={() => toggleAll(false)} disabled={saving}>
+          <button className="sm-btn sm-btn--secondary" onClick={() => toggleAll(false)} disabled={saving || !hasDiscovery}>
             Desmarcar todos
           </button>
           <button
@@ -222,11 +225,37 @@ function ServiceMonitor() {
 
       {error && <div className="sm-error">⚠️ {error}</div>}
 
+      {/* No discovery yet — guide the user */}
+      {!loading && !hasDiscovery && (
+        <div className="sm-no-discovery">
+          <div className="sm-no-discovery-icon">🔍</div>
+          <h3>Nenhum serviço descoberto ainda</h3>
+          <p>
+            A sonda Windows precisa fazer o discovery via WMI neste servidor.<br />
+            Aguarde o próximo ciclo de coleta ou verifique se a credencial WMI está configurada para <strong>{selectedServerObj?.hostname}</strong>.
+          </p>
+          <div className="sm-no-discovery-steps">
+            <div className="sm-step">
+              <span className="sm-step-num">1</span>
+              <span>Credencial WMI configurada no tenant/grupo/servidor</span>
+            </div>
+            <div className="sm-step">
+              <span className="sm-step-num">2</span>
+              <span>Sonda Windows conecta via WMI remoto</span>
+            </div>
+            <div className="sm-step">
+              <span className="sm-step-num">3</span>
+              <span>Catálogo de serviços aparece aqui para seleção</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {loading && services.length === 0 ? (
         <div className="sm-empty">Carregando serviços...</div>
-      ) : filtered.length === 0 ? (
+      ) : hasDiscovery && filtered.length === 0 ? (
         <div className="sm-empty">Nenhum serviço encontrado.</div>
-      ) : (
+      ) : hasDiscovery ? (
         <div className="sm-table-wrap">
           <table className="sm-table">
             <thead>
@@ -252,7 +281,7 @@ function ServiceMonitor() {
                 return (
                   <tr
                     key={svc.sensor_id}
-                    className={`sm-row ${changed ? 'sm-row--changed' : ''}`}
+                    className={`sm-row ${changed ? 'sm-row--changed' : ''} ${!active ? 'sm-row--inactive' : ''}`}
                     onClick={() => toggle(svc.sensor_id, active)}
                     style={{ cursor: 'pointer' }}
                   >
@@ -266,11 +295,13 @@ function ServiceMonitor() {
                     <td className="sm-service-name">{svc.service_name}</td>
                     <td className="sm-display-name">{svc.display_name}</td>
                     <td>
-                      {svc.state ? (
+                      {svc.state && svc.state !== 'Unknown' ? (
                         <span className={`sm-state sm-state--${svc.is_running ? 'running' : 'stopped'}`}>
                           {svc.state}
                         </span>
-                      ) : <span className="sm-state sm-state--unknown">—</span>}
+                      ) : (
+                        <span className="sm-state sm-state--unknown">Aguardando coleta</span>
+                      )}
                     </td>
                     <td className="sm-timestamp">
                       {svc.last_seen ? new Date(svc.last_seen).toLocaleTimeString('pt-BR') : '—'}
@@ -281,7 +312,7 @@ function ServiceMonitor() {
             </tbody>
           </table>
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

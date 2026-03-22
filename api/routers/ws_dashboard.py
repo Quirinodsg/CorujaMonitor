@@ -207,7 +207,7 @@ from database import get_db
 
 @router.get("/services/debug")
 def services_debug(server_id: int = None, db: Session = Depends(get_db)):
-    """Lista sensores de serviço com status atual"""
+    """Lista sensores de serviço com status atual — inclui ativos e inativos (para UI de seleção)"""
     from models import Sensor, Server, Metric
     from sqlalchemy import func
 
