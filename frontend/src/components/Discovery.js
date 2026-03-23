@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './Discovery.css';
 
-const API = '';
+const API = '/api/v1';
 
 function Discovery() {
   const [tab, setTab] = useState('network');
@@ -11,7 +11,7 @@ function Discovery() {
 
   // Network scan state
   const [subnet, setSubnet] = useState('192.168.1.0/24');
-  const [timeout, setTimeout_] = useState(1000);
+  const [scanTimeout, setScanTimeout] = useState(1000);
 
   // SNMP discovery state
   const [snmpTarget, setSnmpTarget] = useState('');
@@ -35,7 +35,7 @@ function Discovery() {
       const res = await fetch(`${API}/discovery/network-scan`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ subnet, timeout_ms: timeout }),
+        body: JSON.stringify({ subnet, timeout_ms: scanTimeout }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
@@ -133,7 +133,7 @@ function Discovery() {
             </div>
             <div className="disc-form-row">
               <label>Timeout (ms)</label>
-              <input type="number" value={timeout} onChange={e => setTimeout_(Number(e.target.value))} min={100} max={5000} />
+              <input type="number" value={scanTimeout} onChange={e => setScanTimeout(Number(e.target.value))} min={100} max={5000} />
             </div>
             <button className="disc-btn-scan" onClick={runNetworkScan} disabled={scanning}>
               {scanning ? '⏳ Escaneando...' : '▶ Iniciar Scan'}
@@ -208,15 +208,9 @@ function Discovery() {
             <table className="disc-table">
               <thead>
                 <tr>
-                  {tab === 'network' && <>
-                    <th>IP</th><th>Hostname</th><th>Status</th><th>Latência</th><th>Portas Abertas</th><th>Ação</th>
-                  </>}
-                  {tab === 'snmp' && <>
-                    <th>OID</th><th>Nome</th><th>Tipo</th><th>Valor</th><th>Ação</th>
-                  </>}
-                  {tab === 'wmi' && <>
-                    <th>Sensor</th><th>Tipo</th><th>Valor</th><th>Unidade</th><th>Ação</th>
-                  </>}
+                  {tab === 'network' && <><th>IP</th><th>Hostname</th><th>Status</th><th>Latência</th><th>Portas Abertas</th><th>Ação</th></>}
+                  {tab === 'snmp' && <><th>OID</th><th>Nome</th><th>Tipo</th><th>Valor</th><th>Ação</th></>}
+                  {tab === 'wmi' && <><th>Sensor</th><th>Tipo</th><th>Valor</th><th>Unidade</th><th>Ação</th></>}
                 </tr>
               </thead>
               <tbody>
@@ -228,33 +222,15 @@ function Discovery() {
                       <td><span className={`disc-badge disc-badge-${r.status === 'up' ? 'ok' : 'down'}`}>{r.status}</span></td>
                       <td>{r.latency_ms != null ? `${r.latency_ms}ms` : '—'}</td>
                       <td>{(r.open_ports || []).join(', ') || '—'}</td>
-                      <td>
-                        <button className="disc-btn-add" disabled={r.added} onClick={() => addToMonitoring(r)}>
-                          {r.added ? '✓ Adicionado' : '+ Monitorar'}
-                        </button>
-                      </td>
+                      <td><button className="disc-btn-add" disabled={r.added} onClick={() => addToMonitoring(r)}>{r.added ? '✓ Adicionado' : '+ Monitorar'}</button></td>
                     </>}
                     {tab === 'snmp' && <>
-                      <td><code>{r.oid}</code></td>
-                      <td>{r.name}</td>
-                      <td>{r.type}</td>
-                      <td>{r.value}</td>
-                      <td>
-                        <button className="disc-btn-add" disabled={r.added} onClick={() => addToMonitoring(r)}>
-                          {r.added ? '✓ Adicionado' : '+ Monitorar'}
-                        </button>
-                      </td>
+                      <td><code>{r.oid}</code></td><td>{r.name}</td><td>{r.type}</td><td>{r.value}</td>
+                      <td><button className="disc-btn-add" disabled={r.added} onClick={() => addToMonitoring(r)}>{r.added ? '✓ Adicionado' : '+ Monitorar'}</button></td>
                     </>}
                     {tab === 'wmi' && <>
-                      <td>{r.name}</td>
-                      <td>{r.type}</td>
-                      <td>{r.value}</td>
-                      <td>{r.unit}</td>
-                      <td>
-                        <button className="disc-btn-add" disabled={r.added} onClick={() => addToMonitoring(r)}>
-                          {r.added ? '✓ Adicionado' : '+ Monitorar'}
-                        </button>
-                      </td>
+                      <td>{r.name}</td><td>{r.type}</td><td>{r.value}</td><td>{r.unit}</td>
+                      <td><button className="disc-btn-add" disabled={r.added} onClick={() => addToMonitoring(r)}>{r.added ? '✓ Adicionado' : '+ Monitorar'}</button></td>
                     </>}
                   </tr>
                 ))}
