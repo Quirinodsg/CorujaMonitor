@@ -171,11 +171,16 @@ services:
     depends_on:
       - api
       - frontend
+    entrypoint: ["/docker-entrypoint-ssl.sh"]
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/docker-entrypoint-ssl.sh:/docker-entrypoint-ssl.sh:ro
+      - ./scripts:/scripts:ro
     environment:
       - TZ=America/Sao_Paulo
+      - CORUJA_SERVER_IP=192.168.31.161
+      - CORUJA_DOMAIN=coruja.techbiz.com.br
 
 volumes:
   postgres_data:
