@@ -41,7 +41,6 @@ async function fetchAllData() {
   if (_cache && now - _cacheTs < CACHE_TTL) return _cache;
   const token = localStorage.getItem("token");
   const headers = { Authorization: "Bearer " + token };
-  const base = window.location.protocol + "//" + window.location.hostname + ":8000/api/v1";
   const [r1, r2] = await Promise.allSettled([
     fetch(base + "/servers?limit=200", { headers }),
     fetch(base + "/sensors?limit=200", { headers }),
