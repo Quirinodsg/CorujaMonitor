@@ -109,7 +109,8 @@ app = FastAPI(
     title="Coruja Monitor API",
     description="Enterprise monitoring platform with AIOps capabilities",
     version="3.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 # CORS — allow_credentials=False é obrigatório quando allow_origins=["*"]
