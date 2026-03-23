@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './KubernetesDashboard.css';
 
-const API_BASE = `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+const API_BASE = '/api/v1';
 
 const KubernetesDashboard = () => {
   const [clusters, setClusters] = useState([]);

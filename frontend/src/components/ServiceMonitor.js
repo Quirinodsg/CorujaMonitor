@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './ServiceMonitor.css';
 
-const API = `${window.location.protocol}//${window.location.hostname}:8000/api/v1`;
+const API = '/api/v1';
 
 function ServiceMonitor() {
   const [servers, setServers] = useState([]);
@@ -19,14 +19,30 @@ function ServiceMonitor() {
 
   const token = localStorage.getItem('token');
 
-  // Load all servers for the tenant
+  // Load all servers for the tenant, then pick the first one that has service sensors
   useEffect(() => {
     fetch(`${API}/servers`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => r.json())
-      .then(data => {
+      .then(async data => {
         const active = (data || []).filter(s => s.is_active !== false);
         setServers(active);
-        if (active.length > 0) setSelectedServer(active[0].id);
+        if (active.length === 0) return;
+
+        // Try to find a server that already has service sensors
+        try {
+          const res = await fetch(`${API}/services/debug`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          const all = await res.json();
+          const serverIdsWithServices = new Set(
+            (all.sensors || []).map(s => s.server_id)
+          );
+          // Pick first server that has services, fallback to first server
+          const preferred = active.find(s => serverIdsWithServices.has(s.id));
+          setSelectedServer(preferred ? preferred.id : active[0].id);
+        } catch {
+          setSelectedServer(active[0].id);
+        }
       })
       .catch(() => {});
   }, [token]);
@@ -295,12 +311,12 @@ function ServiceMonitor() {
                     <td className="sm-service-name">{svc.service_name}</td>
                     <td className="sm-display-name">{svc.display_name}</td>
                     <td>
-                      {svc.state && svc.state !== 'Unknown' ? (
+                      {svc.metric_count > 0 ? (
                         <span className={`sm-state sm-state--${svc.is_running ? 'running' : 'stopped'}`}>
-                          {svc.state}
+                          {svc.state && svc.state !== 'Unknown' ? svc.state : (svc.is_running ? 'Running' : 'Stopped')}
                         </span>
                       ) : (
-                        <span className="sm-state sm-state--unknown">Aguardando coleta</span>
+                        <span className="sm-state sm-state--pending">Aguardando</span>
                       )}
                     </td>
                     <td className="sm-timestamp">

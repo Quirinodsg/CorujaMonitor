@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './ObservabilityDashboard.css';
 
-const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
-const WS_URL = API.replace(/^http/, 'ws');
+const API = '';
+const WS_URL = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
 
 function HealthGauge({ score }) {
   const color = score >= 90 ? '#22c55e' : score >= 70 ? '#f59e0b' : '#ef4444';

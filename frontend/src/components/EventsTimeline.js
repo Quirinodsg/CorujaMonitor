@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EventsTimeline.css';
 
-const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+const API = '';
 
 const SEV_COLOR = { critical: '#ef4444', warning: '#f59e0b', info: '#60a5fa', ok: '#22c55e' };
 const SEV_ICON = { critical: '🔴', warning: '🟡', info: '🔵', ok: '🟢' };

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './IntelligentAlerts.css';
 
-const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+const API = '';
 
 const SEV = {
   critical: { color: '#EF4444', bg: 'rgba(239,68,68,0.12)', label: 'Crítico' },

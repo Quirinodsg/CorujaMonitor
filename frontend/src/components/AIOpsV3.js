@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './AIOpsV3.css';
 
-const API = process.env.REACT_APP_API_URL || `${window.location.protocol}//${window.location.hostname}:8000`;
+const API = '';
 
 const AGENT_ICONS = {
   anomaly: '📈', correlation: '🔗', root_cause: '🔍', rootcause: '🔍',
