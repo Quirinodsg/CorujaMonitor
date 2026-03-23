@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import api from '../services/api';
 import './SystemReset.css';
 
 function SystemReset() {
@@ -14,17 +15,8 @@ function SystemReset() {
 
   const loadStats = async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/v1/system/stats', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setStats(data);
-      }
+      const res = await api.get('/system/stats');
+      if (res.data) setStats(res.data);
     } catch (error) {
       console.error('Erro ao carregar estatísticas:', error);
     }
@@ -45,30 +37,17 @@ function SystemReset() {
     setMessage(null);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/v1/system/reset', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const res = await api.post('/system/reset');
+      const data = res.data;
+      setMessage({
+        type: 'success',
+        text: `Sistema resetado com sucesso! Apagados: ${data.deleted.metrics} métricas, ${data.deleted.sensors} sensores, ${data.deleted.servers} servidores, ${data.deleted.probes} probes, ${data.deleted.tenants} empresas`
       });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        setMessage({
-          type: 'success',
-          text: `Sistema resetado com sucesso! Apagados: ${data.deleted.metrics} métricas, ${data.deleted.sensors} sensores, ${data.deleted.servers} servidores, ${data.deleted.probes} probes, ${data.deleted.tenants} empresas`
-        });
-        setShowConfirm(false);
-        setConfirmText('');
-        loadStats();
-      } else {
-        setMessage({ type: 'error', text: data.detail || 'Erro ao resetar sistema' });
-      }
+      setShowConfirm(false);
+      setConfirmText('');
+      loadStats();
     } catch (error) {
-      setMessage({ type: 'error', text: 'Erro ao conectar com servidor' });
+      setMessage({ type: 'error', text: error.response?.data?.detail || 'Erro ao resetar sistema' });
     } finally {
       setLoading(false);
     }
