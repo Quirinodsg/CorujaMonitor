@@ -179,6 +179,7 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl
       - ./nginx/docker-entrypoint-ssl.sh:/docker-entrypoint-ssl.sh:ro
       - ./scripts:/scripts:ro
+      - /var/www/certbot:/var/www/certbot:ro
     environment:
       - TZ=America/Sao_Paulo
       - CORUJA_SERVER_IP=192.168.31.161
