@@ -36,6 +36,7 @@ class AlertEngine:
     - Cooldown por tipo de alerta (5min padrão, configurável)
     - Agrupamento inteligente por host/tipo
     - Supressão topológica (switch caiu → não alertar filhos)
+    - Supressão por DependencyEngine (ping CRITICAL → suprimir filhos)
     - Prioriza automaticamente
     - Notifica canais configurados
     - Flood protection (> 100 eventos/min → 1 alerta)
@@ -50,6 +51,8 @@ class AlertEngine:
         notifier: Optional[AlertNotifier] = None,
         notification_channels: Optional[list[str]] = None,
         cooldown_seconds: int = DEFAULT_COOLDOWN_SECONDS,
+        dependency_engine=None,
+        redis_client=None,
     ):
         self._suppressor = suppressor or DuplicateSuppressor()
         self._grouper = grouper or EventGrouper()
@@ -57,6 +60,8 @@ class AlertEngine:
         self._notifier = notifier or AlertNotifier()
         self._channels = notification_channels or []
         self._cooldown_seconds = cooldown_seconds
+        self._dependency_engine = dependency_engine
+        self._redis = redis_client
 
         # Janelas de manutenção: {host_id: (start_dt, end_dt)}
         self._maintenance_windows: MaintenanceWindows = {}
@@ -115,6 +120,9 @@ class AlertEngine:
 
         # 4. Supressão topológica (switch caiu → suprimir filhos)
         post_topology = self._apply_topology_suppression(post_cooldown)
+
+        # 4b. Supressão por DependencyEngine (ping CRITICAL → suprimir filhos)
+        post_topology = self._apply_dependency_suppression(post_topology)
 
         if not post_topology:
             return []
@@ -178,6 +186,33 @@ class AlertEngine:
                     key, self._cooldown_seconds - (now - last_fired),
                 )
             else:
+                passed.append(event)
+        return passed
+
+    def _apply_dependency_suppression(self, events: list[Event]) -> list[Event]:
+        """
+        Supressão via DependencyEngine: se sensor pai (ping) está CRITICAL,
+        suprimir eventos de sensores filhos do mesmo host.
+        Fail-open: se DependencyEngine não tem cache para o host, permite.
+        """
+        if not self._dependency_engine:
+            return events
+        passed = []
+        for event in events:
+            host_id = str(event.host_id)
+            sensor_id = str(getattr(event, 'sensor_id', event.host_id))
+            try:
+                if not self._dependency_engine.should_execute(sensor_id, host_id):
+                    self._metrics["alerts_topology_suppressed"] += 1
+                    logger.info(
+                        "AlertEngine: supressão por DependencyEngine — sensor %s host %s suprimido",
+                        sensor_id, host_id,
+                    )
+                else:
+                    passed.append(event)
+            except Exception as e:
+                # Fail-open: exceção no DependencyEngine não bloqueia o alerta
+                logger.warning("AlertEngine: DependencyEngine erro (fail-open): %s", e)
                 passed.append(event)
         return passed
 

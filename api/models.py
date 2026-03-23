@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON, Index
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON, Index, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from database import Base
@@ -130,6 +130,8 @@ class Sensor(Base):
     enabled = Column(Boolean, default=True)          # False = nunca executa
     paused_until = Column(DateTime(timezone=True), nullable=True)  # Pausa temporária
     priority = Column(Integer, default=3)            # 1 (baixa) a 5 (crítica/estrelas PRTG)
+    alert_mode = Column(String(20), default='normal')  # normal | silent | metric_only
+    cooldown_seconds = Column(Integer, default=300)  # Cooldown por sensor em segundos
     # ─────────────────────────────────────────────────────────────────────
     
     server = relationship("Server", back_populates="sensors")
@@ -943,4 +945,27 @@ class PredictionSample(Base):
 
     __table_args__ = (
         Index('idx_prediction_samples_sensor_ts', 'sensor_id', 'timestamp'),
+    )
+
+
+class DefaultSensorProfile(Base):
+    """
+    Perfis padrão de sensores por tipo de ativo (v3.5 Enterprise Hardening).
+    Aplicados automaticamente ao criar novos servidores.
+    """
+    __tablename__ = "default_sensor_profiles"
+
+    id                 = Column(Integer, primary_key=True, index=True)
+    asset_type         = Column(String(50), nullable=False)   # VM | physical_server | network_device
+    sensor_type        = Column(String(50), nullable=False)   # cpu | memory | disk | network_in | ...
+    enabled            = Column(Boolean, default=True)
+    alert_mode         = Column(String(20), default='normal') # normal | silent | metric_only
+    threshold_warning  = Column(Float, nullable=True)
+    threshold_critical = Column(Float, nullable=True)
+    created_at         = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at         = Column(DateTime(timezone=True), onupdate=func.now())
+
+    __table_args__ = (
+        UniqueConstraint('asset_type', 'sensor_type', name='uq_profile_asset_sensor'),
+        Index('idx_default_profiles_asset_type', 'asset_type'),
     )

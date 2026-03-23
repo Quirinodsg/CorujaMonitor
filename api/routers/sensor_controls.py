@@ -88,6 +88,7 @@ def _sensor_to_response(sensor: Sensor) -> dict:
         "priority": priority,
         "is_paused": is_paused,
         "priority_stars": "⭐" * priority,
+        "alert_mode": sensor.alert_mode if sensor.alert_mode is not None else "normal",
     }
 
 
@@ -164,6 +165,37 @@ async def enable_sensor(
     db.commit()
     db.refresh(sensor)
     return {"message": f"Sensor '{sensor.name}' habilitado", **_sensor_to_response(sensor)}
+
+
+class AlertModeRequest(BaseModel):
+    mode: str = Field(description="normal | silent | metric_only")
+
+
+@router.patch("/{sensor_id}/alert-mode")
+async def set_alert_mode(
+    sensor_id: int,
+    body: AlertModeRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """
+    Define modo de alerta do sensor.
+    - normal: coleta e alarma normalmente
+    - silent: coleta mas NÃO gera incidentes/alertas
+    - metric_only: coleta mas NÃO gera incidentes e NÃO envia ao predictor
+    """
+    if body.mode not in ("normal", "silent", "metric_only"):
+        raise HTTPException(status_code=400, detail="mode deve ser 'normal', 'silent' ou 'metric_only'")
+    sensor = _get_sensor_for_user(sensor_id, db, current_user)
+    sensor.alert_mode = body.mode
+    db.commit()
+    db.refresh(sensor)
+    labels = {
+        "normal": "normal (com alarmes)",
+        "silent": "silencioso (sem alarmes)",
+        "metric_only": "apenas métrica (sem incidentes, sem predictor)",
+    }
+    return {"message": f"Sensor '{sensor.name}' agora em modo {labels[body.mode]}", **_sensor_to_response(sensor)}
 
 
 @router.patch("/{sensor_id}/priority")

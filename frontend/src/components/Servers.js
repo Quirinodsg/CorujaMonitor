@@ -747,6 +747,16 @@ function Servers({ selectedServerId, selectedSensorId }) {
     }
   };
 
+  const handleSetAlertMode = async (sensorId, mode) => {
+    try {
+      await api.patch(`/sensors/${sensorId}/alert-mode`, { mode });
+      loadSensors(selectedServer.id);
+    } catch (error) {
+      console.error('Erro ao definir modo de alerta:', error);
+      alert('Erro: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const handleResumeSensor = async (sensorId) => {
     try {
       await api.patch(`/sensors/${sensorId}/resume`);
@@ -773,6 +783,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
     const isAcknowledged = sensor.is_acknowledged;
     const now = new Date();
     const isPaused = sensor.paused_until && new Date(sensor.paused_until) > now;
+    const isDisabled = sensor.enabled === false;
+    const isSilent = sensor.alert_mode === 'silent';
     const sensorPriority = sensor.priority || 3;
     const sensorNameLength = sensor.name ? sensor.name.length : 0;
     
@@ -780,7 +792,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
       <div 
         key={sensor.id}
         id={`sensor-${sensor.id}`}
-        className={`sensor-card ${highlightedSensorId === sensor.id ? 'highlighted' : ''} ${isPaused ? 'sensor-is-paused' : ''}`}
+        className={`sensor-card ${highlightedSensorId === sensor.id ? 'highlighted' : ''} ${isPaused ? 'sensor-is-paused' : ''} ${isDisabled ? 'sensor-is-disabled' : ''}`}
         data-sensor-type={sensor.sensor_type}
         data-sensor-name-length={sensorNameLength}
         data-status={sensor.status}
@@ -811,11 +823,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
           >
             ✏️
           </button>
-          {isPaused ? (
+          {(isPaused || isDisabled) ? (
             <button
               className="sensor-action-btn sensor-action-resume"
               onClick={(e) => { e.stopPropagation(); handleResumeSensor(sensor.id); }}
-              title="Retomar sensor"
+              title={isDisabled ? "Reativar sensor" : "Retomar sensor"}
             >▶</button>
           ) : (
             <div className="sensor-pause-menu" onClick={(e) => e.stopPropagation()}>
@@ -825,6 +837,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <button onClick={() => handlePauseSensor(sensor.id, 60)}>⏸ 1 hora</button>
                 <button onClick={() => handlePauseSensor(sensor.id, 1440)}>⏸ 1 dia</button>
                 <button onClick={() => handlePauseSensor(sensor.id, null)} className="pause-permanent">⛔ Permanente</button>
+                <hr style={{margin:'2px 0', borderColor:'rgba(255,255,255,0.1)'}}/>
+                {isSilent
+                  ? <button onClick={() => handleSetAlertMode(sensor.id, 'normal')} style={{color:'#10B981'}}>🔔 Reativar alarmes</button>
+                  : <button onClick={() => handleSetAlertMode(sensor.id, 'silent')} style={{color:'#F59E0B'}}>🔕 Silencioso (sem alarmes)</button>
+                }
               </div>
             </div>
           )}
@@ -904,6 +921,21 @@ function Servers({ selectedServerId, selectedSensorId }) {
         {isPaused && (
           <div className="sensor-paused-badge">
             ⏸ PAUSADO até {new Date(sensor.paused_until).toLocaleTimeString('pt-BR')}
+          </div>
+        )}
+        {isDisabled && (
+          <div className="sensor-paused-badge sensor-disabled-badge">
+            ⛔ DESABILITADO
+          </div>
+        )}
+        {isSilent && !isDisabled && (
+          <div className="sensor-paused-badge sensor-silent-badge">
+            🔕 SILENCIOSO
+          </div>
+        )}
+        {sensor.alert_mode === 'metric_only' && !isDisabled && !isPaused && (
+          <div className="sensor-paused-badge sensor-metric-only-badge">
+            📊 APENAS MÉTRICA
           </div>
         )}
       </div>

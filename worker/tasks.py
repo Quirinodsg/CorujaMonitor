@@ -47,36 +47,105 @@ app.conf.beat_schedule = {
 
 @app.task
 def evaluate_all_thresholds():
-    """Evaluate thresholds for all active sensors"""
+    """Evaluate thresholds for all active sensors — v3.5 Enterprise Hardening"""
+    import redis as redis_lib
     db = SessionLocal()
+
+    # Redis para cooldown — fail-open se indisponível
     try:
+        redis_client = redis_lib.Redis.from_url(settings.CELERY_BROKER_URL, socket_connect_timeout=2)
+        redis_client.ping()
+    except Exception as e:
+        logger.warning("Redis indisponível para cooldown: %s — prosseguindo sem cooldown Redis", e)
+        redis_client = None
+
+    try:
+        now = datetime.now(timezone.utc)
         sensors = db.query(Sensor).filter(Sensor.is_active == True).all()
-        
+
         for sensor in sensors:
+            # 1. Skip disabled sensors
+            if not getattr(sensor, 'enabled', True):
+                continue
+
+            # 2. Skip sensors paused until future timestamp
+            paused_until = getattr(sensor, 'paused_until', None)
+            if paused_until is not None:
+                pu = paused_until
+                if pu.tzinfo is None:
+                    pu = pu.replace(tzinfo=timezone.utc)
+                if pu > now:
+                    continue
+
+            # 3. Check metric_only — coleta mas não cria Incident nem envia ao predictor
+            alert_mode = getattr(sensor, 'alert_mode', 'normal') or 'normal'
+            is_metric_only = alert_mode == 'metric_only'
+
+            # 4. Skip silent sensors (no alerts, no incidents)
+            if alert_mode == 'silent':
+                continue
+
             # Get latest metric
             latest_metric = db.query(Metric).filter(
                 Metric.sensor_id == sensor.id
             ).order_by(Metric.timestamp.desc()).first()
-            
+
             if not latest_metric:
                 continue
-            
+
+            # metric_only: coleta registrada, mas não cria Incident e não envia ao predictor
+            if is_metric_only:
+                continue
+
             # Evaluate threshold
             threshold_breached, severity = evaluate_thresholds(
                 sensor, latest_metric.value
             )
-            
+
             if threshold_breached:
-                # Check if there's already an open incident
+                # 5. Deduplicação: Incident aberto já existe?
                 existing_incident = db.query(Incident).filter(
                     Incident.sensor_id == sensor.id,
                     Incident.status == "open"
                 ).first()
-                
+
                 if not existing_incident:
+                    # 6. Supressão por dependência: ping do mesmo server CRITICAL?
+                    if sensor.server_id and sensor.sensor_type in (
+                        'cpu', 'memory', 'disk', 'network_in', 'network_out', 'network'
+                    ):
+                        ping_sensor = db.query(Sensor).filter(
+                            Sensor.server_id == sensor.server_id,
+                            Sensor.sensor_type == 'ping',
+                            Sensor.is_active == True
+                        ).first()
+                        if ping_sensor:
+                            ping_incident = db.query(Incident).filter(
+                                Incident.sensor_id == ping_sensor.id,
+                                Incident.status == "open",
+                                Incident.severity == "critical"
+                            ).first()
+                            if ping_incident:
+                                logger.info(
+                                    "Supressão por dependência: ping CRITICAL (sensor %s) → skip sensor %s (%s)",
+                                    ping_sensor.id, sensor.id, sensor.sensor_type
+                                )
+                                continue
+
+                    # 7. Cooldown via Redis
+                    cooldown_key = f"cooldown:{sensor.id}"
+                    cooldown_secs = getattr(sensor, 'cooldown_seconds', None) or 300
+                    if redis_client is not None:
+                        try:
+                            if redis_client.exists(cooldown_key):
+                                logger.debug("Cooldown ativo para sensor %s — skip", sensor.id)
+                                continue
+                        except Exception:
+                            pass  # fail-open
+
                     # Get sensor type specific description
                     description = get_incident_description(sensor, latest_metric)
-                    
+
                     # Create new incident
                     incident = Incident(
                         sensor_id=sensor.id,
@@ -88,12 +157,19 @@ def evaluate_all_thresholds():
                     db.add(incident)
                     db.commit()
                     db.refresh(incident)
-                    
+
+                    # Setar cooldown Redis após criar Incident
+                    if redis_client is not None:
+                        try:
+                            redis_client.setex(cooldown_key, cooldown_secs, "1")
+                        except Exception:
+                            pass
+
                     print(f"✅ Incidente criado: {incident.title} (ID: {incident.id})")
-                    
+
                     # Execute AIOps analysis automatically
                     execute_aiops_analysis.delay(incident.id)
-                    
+
                     # Attempt self-healing
                     attempt_self_healing.delay(incident.id)
 
@@ -118,13 +194,12 @@ def evaluate_all_thresholds():
                         db.commit()
                         print(f"⚠️ Incidente {existing_incident.id} atualizado para {severity}")
             else:
-                # Check if we should auto-resolve incidents
                 # Auto-resolve both 'open' and 'acknowledged' incidents when sensor is back to normal
                 open_incidents = db.query(Incident).filter(
                     Incident.sensor_id == sensor.id,
                     Incident.status.in_(['open', 'acknowledged'])
                 ).all()
-                
+
                 for incident in open_incidents:
                     incident.status = "resolved"
                     incident.resolved_at = datetime.now(timezone.utc)
@@ -132,7 +207,7 @@ def evaluate_all_thresholds():
                     db.commit()
                     logger.info(f"✅ Incidente {incident.id} auto-resolvido (sensor {sensor.name} voltou ao normal)")
                     print(f"✅ Incidente {incident.id} auto-resolvido")
-        
+
     except Exception as e:
         print(f"❌ Erro ao avaliar thresholds: {e}")
     finally:

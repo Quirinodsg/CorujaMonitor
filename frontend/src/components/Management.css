@@ -880,6 +880,38 @@
   z-index: 5;
 }
 
+.sensor-disabled-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(107, 114, 128, 0.4);
+  z-index: 5;
+}
+
+.sensor-silent-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+  color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(124, 58, 237, 0.4);
+  z-index: 5;
+}
+
 .sensor-last-note {
   display: flex;
   align-items: center;
@@ -3910,6 +3942,24 @@
   border: 1px solid rgba(245, 158, 11, 0.25);
 }
 
+.sensor-disabled-badge {
+  background: rgba(239, 68, 68, 0.12) !important;
+  color: #F87171 !important;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.sensor-silent-badge {
+  background: rgba(107, 114, 128, 0.12) !important;
+  color: #9CA3AF !important;
+  border-color: rgba(107, 114, 128, 0.25) !important;
+}
+
+.sensor-metric-only-badge {
+  background: rgba(99, 102, 241, 0.12) !important;
+  color: #818CF8 !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
 .sensor-priority {
   font-size: 13px;
   text-align: center;
@@ -4003,4 +4053,22 @@
 .sensor-is-paused {
   opacity: 0.6;
   border-left: 3px solid #F59E0B !important;
+}
+
+.sensor-is-disabled {
+  opacity: 0.45;
+  border-left: 3px solid #EF4444 !important;
+  filter: grayscale(0.4);
+}
+
+.sensor-disabled-badge {
+  background: rgba(239, 68, 68, 0.12);
+  color: #F87171;
+  border-color: rgba(239, 68, 68, 0.25) !important;
+}
+
+.sensor-silent-badge {
+  background: rgba(245, 158, 11, 0.12);
+  color: #FCD34D;
+  border-color: rgba(245, 158, 11, 0.25) !important;
 }

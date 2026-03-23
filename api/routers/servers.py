@@ -142,59 +142,58 @@ async def create_server(
     
     # Auto-create default sensors for Windows servers
     if server.device_type == 'server' and server.monitoring_protocol == 'wmi':
-        from models import Sensor
-        
-        # PING removido - agora é criado automaticamente pelo worker a cada 60s
-        default_sensors = [
-            {
-                "name": "CPU Usage",
-                "sensor_type": "cpu",
-                "threshold_warning": 80,
-                "threshold_critical": 95
-            },
-            {
-                "name": "Memory Usage",
-                "sensor_type": "memory",
-                "threshold_warning": 80,
-                "threshold_critical": 95
-            },
-            {
-                "name": "Disk C:",
-                "sensor_type": "disk",
-                "threshold_warning": 80,
-                "threshold_critical": 95
-            },
-            {
-                "name": "Uptime",
-                "sensor_type": "uptime",
-                "threshold_warning": None,
-                "threshold_critical": None
-            },
-            {
-                "name": "Network IN",
-                "sensor_type": "network_in",
-                "threshold_warning": 80,
-                "threshold_critical": 95
-            },
-            {
-                "name": "Network OUT",
-                "sensor_type": "network_out",
-                "threshold_warning": 80,
-                "threshold_critical": 95
-            }
-        ]
-        
-        for sensor_data in default_sensors:
-            sensor = Sensor(
-                server_id=new_server.id,
-                name=sensor_data["name"],
-                sensor_type=sensor_data["sensor_type"],
-                threshold_warning=sensor_data["threshold_warning"],
-                threshold_critical=sensor_data["threshold_critical"],
-                is_active=True
-            )
-            db.add(sensor)
-        
+        from models import Sensor, DefaultSensorProfile
+
+        # Mapeamento device_type → asset_type
+        asset_type_map = {
+            'server': 'physical_server',
+            'vm': 'VM',
+            'switch': 'network_device',
+            'router': 'network_device',
+            'firewall': 'network_device',
+        }
+        asset_type = asset_type_map.get((server.device_type or 'server').lower(), 'physical_server')
+
+        profiles = db.query(DefaultSensorProfile).filter(
+            DefaultSensorProfile.asset_type == asset_type
+        ).all()
+
+        if profiles:
+            for p in profiles:
+                if not p.enabled:
+                    continue
+                sensor = Sensor(
+                    server_id=new_server.id,
+                    name=p.sensor_type.replace('_', ' ').title(),
+                    sensor_type=p.sensor_type,
+                    alert_mode=p.alert_mode,
+                    threshold_warning=p.threshold_warning,
+                    threshold_critical=p.threshold_critical,
+                    is_active=True
+                )
+                db.add(sensor)
+        else:
+            # Perfil de fábrica hardcoded
+            factory = [
+                {"name": "CPU Usage",   "sensor_type": "cpu",         "alert_mode": "normal",      "threshold_warning": 80, "threshold_critical": 95},
+                {"name": "Memory Usage","sensor_type": "memory",       "alert_mode": "normal",      "threshold_warning": 80, "threshold_critical": 95},
+                {"name": "Disk C:",     "sensor_type": "disk",         "alert_mode": "normal",      "threshold_warning": 80, "threshold_critical": 95},
+                {"name": "Network IN",  "sensor_type": "network_in",   "alert_mode": "metric_only", "threshold_warning": 80, "threshold_critical": 95},
+                {"name": "Network OUT", "sensor_type": "network_out",  "alert_mode": "metric_only", "threshold_warning": 80, "threshold_critical": 95},
+                {"name": "Uptime",      "sensor_type": "uptime",       "alert_mode": "normal",      "threshold_warning": None, "threshold_critical": None},
+            ]
+            for s in factory:
+                sensor = Sensor(
+                    server_id=new_server.id,
+                    name=s["name"],
+                    sensor_type=s["sensor_type"],
+                    alert_mode=s["alert_mode"],
+                    threshold_warning=s["threshold_warning"],
+                    threshold_critical=s["threshold_critical"],
+                    is_active=True
+                )
+                db.add(sensor)
+
         db.commit()
     
     # Auto-create default sensors for SNMP devices (routers, switches, etc)
