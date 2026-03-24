@@ -3,7 +3,7 @@ import { API_URL } from '../config';
 
 const api = axios.create({
   baseURL: API_URL,
-  timeout: 8000,
+  timeout: 30000,
 });
 
 // Log para verificar baseURL
