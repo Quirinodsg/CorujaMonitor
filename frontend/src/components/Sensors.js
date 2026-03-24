@@ -301,6 +301,35 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
     }
   };
 
+  const isSensorPaused = (sensor) => {
+    if (!sensor.paused_until) return false;
+    return new Date(sensor.paused_until) > new Date();
+  };
+
+  const handlePauseSensor = async (e, sensor) => {
+    e.stopPropagation();
+    const minutes = prompt(`Pausar sensor "${sensor.name}" por quantos minutos?\n(Ex: 30, 60, 120)`, '60');
+    if (minutes === null) return;
+    const mins = parseInt(minutes, 10);
+    if (isNaN(mins) || mins <= 0) { alert('Informe um número de minutos válido.'); return; }
+    try {
+      await api.patch(`/sensors/${sensor.id}/pause`, { duration_minutes: mins });
+      await loadAllSensors();
+    } catch (error) {
+      alert('Erro ao pausar sensor: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleResumeSensor = async (e, sensor) => {
+    e.stopPropagation();
+    try {
+      await api.patch(`/sensors/${sensor.id}/resume`);
+      await loadAllSensors();
+    } catch (error) {
+      alert('Erro ao retomar sensor: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const getFilteredSensors = () => {
     let result = sensors;
     if (filterStatus !== 'all') {
@@ -503,14 +532,30 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
                       const isAcknowledged = sensor.is_acknowledged;
                       const hasNote = sensor.last_note && sensor.last_note_by;
                       
+                      const isPaused = isSensorPaused(sensor);
                       return (
                         <div 
                           key={sensor.id} 
                           className="sensor-card clickable"
                           onClick={() => handleSensorClick(sensor)}
-                          style={{ cursor: sensor.server_id ? 'pointer' : 'default', opacity: sensor.server_id ? 1 : 0.7 }}
+                          style={{ cursor: sensor.server_id ? 'pointer' : 'default', opacity: isPaused ? 0.6 : (sensor.server_id ? 1 : 0.7) }}
                           title={hasNote ? `Última nota: ${sensor.last_note}\n\nPor: ${sensor.last_note_by_name || 'Técnico'}\nEm: ${sensor.last_note_at ? new Date(sensor.last_note_at).toLocaleString('pt-BR') : ''}` : ''}
                         >
+                          {isPaused && (
+                            <div style={{
+                              background: '#ff9800',
+                              color: 'white',
+                              fontSize: '11px',
+                              fontWeight: 'bold',
+                              padding: '3px 8px',
+                              borderRadius: '4px',
+                              marginBottom: '6px',
+                              textAlign: 'center',
+                              letterSpacing: '0.5px'
+                            }}>
+                              ⏸ PAUSADO até {new Date(sensor.paused_until).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
+                            </div>
+                          )}
                           {isAcknowledged && (
                             <div className="sensor-acknowledged-badge" title="Verificado pela TI - Alertas suprimidos">
                               ✓ Verificado pela TI
@@ -581,6 +626,45 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
                               onMouseLeave={(e) => e.target.style.transform = 'translateY(0)'}
                             >
                               ✓ Resolver Incidente
+                            </button>
+                          )}
+
+                          {/* Botão Pausar / Retomar */}
+                          {isPaused ? (
+                            <button
+                              onClick={(e) => handleResumeSensor(e, sensor)}
+                              style={{
+                                width: '100%',
+                                padding: '6px 10px',
+                                marginTop: '6px',
+                                background: '#ff9800',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ▶ Retomar Sensor
+                            </button>
+                          ) : (
+                            <button
+                              onClick={(e) => handlePauseSensor(e, sensor)}
+                              style={{
+                                width: '100%',
+                                padding: '6px 10px',
+                                marginTop: '6px',
+                                background: '#607d8b',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '6px',
+                                fontSize: '12px',
+                                fontWeight: '600',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              ⏸ Pausar Sensor
                             </button>
                           )}
                           

@@ -40,6 +40,7 @@ class SensorCreate(BaseModel):
     config: Optional[Dict[str, Any]] = None
     threshold_warning: Optional[float] = None
     threshold_critical: Optional[float] = None
+    alert_mode: Optional[str] = None  # None = auto-detect; 'normal'|'silent'|'metric_only' = explicit
 
 class StandaloneSensorCreate(BaseModel):
     probe_id: int
@@ -102,7 +103,17 @@ async def create_sensor(
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
     
-    new_sensor = Sensor(**sensor.dict())
+    sensor_data = sensor.dict()
+
+    # Requirement 1.2: network_in/network_out → metric_only por padrão
+    # Exceção: se config tiver internet_link=True, mantém alert_mode normal
+    # Se alert_mode foi explicitamente fornecido, respeita o valor
+    if sensor_data.get('sensor_type') in ('network_in', 'network_out') and sensor_data.get('alert_mode') is None:
+        config = sensor_data.get('config') or {}
+        if not config.get('internet_link'):
+            sensor_data['alert_mode'] = 'metric_only'
+
+    new_sensor = Sensor(**sensor_data)
     db.add(new_sensor)
     db.commit()
     db.refresh(new_sensor)
