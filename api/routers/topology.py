@@ -26,18 +26,18 @@ class TopologyNodeCreate(BaseModel):
 def _get_server_status(server_id: int, db: Session) -> str:
     try:
         row = db.execute(text("""
-            WITH latest AS (
-                SELECT DISTINCT ON (sen.id) sen.id, m.status
-                FROM sensors sen
-                LEFT JOIN metrics m ON m.sensor_id = sen.id
-                WHERE sen.server_id = :sid
-                ORDER BY sen.id, m.timestamp DESC
-            )
             SELECT
-                COUNT(*) FILTER (WHERE status = 'critical') AS crit,
-                COUNT(*) FILTER (WHERE status = 'warning')  AS warn,
-                COUNT(*) AS total
-            FROM latest
+                COUNT(*) FILTER (WHERE m.status = 'critical') AS crit,
+                COUNT(*) FILTER (WHERE m.status = 'warning')  AS warn,
+                COUNT(sen.id) AS total
+            FROM sensors sen
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = sen.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
+            WHERE sen.server_id = :sid AND sen.is_active = true
         """), {"sid": server_id}).fetchone()
         if not row or row.total == 0:
             return "unknown"
@@ -48,6 +48,47 @@ def _get_server_status(server_id: int, db: Session) -> str:
         return "ok"
     except Exception:
         return "unknown"
+
+
+def _get_all_server_statuses(server_ids: list, db: Session) -> dict:
+    """Busca status de todos os servidores em uma única query batch."""
+    if not server_ids:
+        return {}
+    try:
+        ids_str = ",".join(str(sid) for sid in server_ids)
+        rows = db.execute(text(f"""
+            SELECT
+                sen.server_id,
+                COUNT(*) FILTER (WHERE m.status = 'critical') AS crit,
+                COUNT(*) FILTER (WHERE m.status = 'warning')  AS warn,
+                COUNT(sen.id) AS total
+            FROM sensors sen
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = sen.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
+            WHERE sen.server_id IN ({ids_str}) AND sen.is_active = true
+            GROUP BY sen.server_id
+        """)).fetchall()
+        result = {}
+        for r in rows:
+            if r.total == 0:
+                result[r.server_id] = "unknown"
+            elif r.crit > 0:
+                result[r.server_id] = "critical"
+            elif r.warn > 0:
+                result[r.server_id] = "warning"
+            else:
+                result[r.server_id] = "ok"
+        # Servidores sem sensores ficam como unknown
+        for sid in server_ids:
+            if sid not in result:
+                result[sid] = "unknown"
+        return result
+    except Exception:
+        return {sid: "unknown" for sid in server_ids}
 
 
 # ─── Layer detection ─────────────────────────────────────────────────────────
@@ -192,6 +233,20 @@ def _build_graph(rows, db: Session) -> tuple[list, list]:
     nodes = []
     server_nodes = []
 
+    # Coletar todos os server_ids para buscar status em batch
+    server_ids = []
+    for r in rows:
+        meta = r.metadata or {}
+        sid_str = meta.get("server_id")
+        if sid_str:
+            try:
+                server_ids.append(int(sid_str))
+            except Exception:
+                pass
+
+    # Busca status de todos os servidores em uma única query
+    status_map = _get_all_server_statuses(server_ids, db)
+
     for r in rows:
         meta = r.metadata or {}
         server_id_str = meta.get("server_id")
@@ -200,8 +255,7 @@ def _build_graph(rows, db: Session) -> tuple[list, list]:
         if server_id_str:
             try:
                 sid = int(server_id_str)
-                status = _get_server_status(sid, db)
-                # Detecta layer via device_type no metadata
+                status = status_map.get(sid, "unknown")
                 device_type = meta.get("device_type", "server").lower()
                 hostname = meta.get("hostname", "").upper()
                 if device_type in ("switch", "router", "firewall", "network"):
@@ -300,8 +354,11 @@ async def get_topology_graph(db: Session = Depends(get_db)):
 
         nodes = []
         server_nodes = []
+        server_ids = [s.id for s in servers]
+        status_map = _get_all_server_statuses(server_ids, db)
+
         for s in servers:
-            status = _get_server_status(s.id, db)
+            status = status_map.get(s.id, "unknown")
             layer = _detect_layer(s)
             nodes.append({
                 "id": str(s.id),
@@ -426,9 +483,13 @@ async def sync_from_servers(db: Session = Depends(get_db)):
         created = updated = 0
         server_nodes = []
 
+        # Busca status de todos os servidores em batch
+        server_ids = [s.id for s in servers]
+        status_map = _get_all_server_statuses(server_ids, db)
+
         for s in servers:
             try:
-                status = _get_server_status(s.id, db)
+                status = status_map.get(s.id, "unknown")
                 layer = _detect_layer(s)
                 meta = json.dumps({
                     "server_id": str(s.id),
