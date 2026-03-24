@@ -16,8 +16,12 @@ router = APIRouter()
 def _get_overview(db: Session) -> dict:
     try:
         from models import Server, Sensor, Incident
-        total_servers = db.query(Server).count()
-        total_sensors = db.query(Sensor).count()
+        total_servers = db.query(Server).filter(Server.is_active == True).count()
+        # Excluir sensor_type='service' — consistente com /dashboard/overview HTTP
+        total_sensors = db.query(Sensor).filter(
+            Sensor.is_active == True,
+            Sensor.sensor_type != 'service'
+        ).count()
         open_incidents = db.query(Incident).filter(Incident.status == "open").count()
         critical = db.query(Incident).filter(
             Incident.status == "open", Incident.severity == "critical"
@@ -251,16 +255,23 @@ def services_debug(server_id: int = None, db: Session = Depends(get_db)):
     for s in sensors:
         m = latest_map.get(s.id)
         meta = (m.extra_metadata or {}) if m else {}
+        cfg = s.config or {}
+        # display_name: métrica > config > fallback do nome
+        svc_name = cfg.get("service_name") or s.name.replace("Service ", "", 1)
+        disp_name = cfg.get("display_name") or svc_name
+        # state: métrica > config (estado no momento do discovery) > Unknown
+        cfg_state = cfg.get("state", "Unknown")
+        cfg_running = cfg_state == "Running"
         result.append({
             "sensor_id": s.id,
             "server_id": s.server_id,
             "server_hostname": servers_map.get(s.server_id),
             "name": s.name,
-            "service_name": meta.get("service_name", s.name.replace("Service ", "", 1)),
-            "display_name": meta.get("display_name", s.name.replace("Service ", "", 1)),
+            "service_name": meta.get("service_name", svc_name),
+            "display_name": meta.get("display_name", disp_name),
             "is_active": s.is_active,
-            "is_running": bool(m and m.value == 1) if m else None,
-            "state": meta.get("state", "Unknown"),
+            "is_running": bool(m and m.value == 1) if m else cfg_running,
+            "state": meta.get("state") or cfg_state,
             "last_status": m.status if m else "unknown",
             "last_seen": m.timestamp.isoformat() if m else None,
             "metric_count": count_map.get(s.id, 0),

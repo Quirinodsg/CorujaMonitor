@@ -23,19 +23,19 @@ function Companies({ onNavigate }) {
   const loadCompanies = async () => {
     try {
       const response = await api.get('/tenants');
-      setCompanies(response.data);
-      
-      // Load probes for each company
+      const companiesList = response.data;
+      setCompanies(companiesList);
+
+      // Load probes for all companies in parallel
+      const probesResults = await Promise.all(
+        companiesList.map(company =>
+          api.get(`/probes?tenant_id=${company.id}`)
+            .then(r => ({ id: company.id, data: r.data }))
+            .catch(() => ({ id: company.id, data: [] }))
+        )
+      );
       const probesData = {};
-      for (const company of response.data) {
-        try {
-          const probesResponse = await api.get(`/probes?tenant_id=${company.id}`);
-          probesData[company.id] = probesResponse.data;
-        } catch (error) {
-          console.error(`Erro ao carregar probes da empresa ${company.id}:`, error);
-          probesData[company.id] = [];
-        }
-      }
+      probesResults.forEach(({ id, data }) => { probesData[id] = data; });
       setCompanyProbes(probesData);
     } catch (error) {
       console.error('Erro ao carregar empresas:', error);
