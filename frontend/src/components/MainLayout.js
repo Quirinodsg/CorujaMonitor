@@ -56,15 +56,22 @@ function MainLayout({ user, onLogout }) {
     const fetchStatus = async () => {
       try {
         const token = localStorage.getItem('token');
-        const r = await fetch('/api/v1/dashboard/health-summary', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (r.ok) {
-          const d = await r.json();
+        const [healthRes, alertsRes] = await Promise.allSettled([
+          fetch('/api/v1/dashboard/health-summary', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/v1/intelligent-alerts?status=open&limit=1', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
+        if (healthRes.status === 'fulfilled' && healthRes.value.ok) {
+          const d = await healthRes.value.json();
           const critical = d.critical || 0;
           const warning = d.warning || 0;
           setSystemStatus(critical > 0 ? 'critical' : warning > 0 ? 'warning' : 'ok');
-          setAlertCount(critical + warning);
+        }
+        if (alertsRes.status === 'fulfilled' && alertsRes.value.ok) {
+          const d = await alertsRes.value.json();
+          const count = d.total ?? (Array.isArray(d.alerts) ? d.alerts.length : (Array.isArray(d) ? d.length : 0));
+          setAlertCount(count);
+        } else {
+          setAlertCount(0);
         }
       } catch (_) {}
     };

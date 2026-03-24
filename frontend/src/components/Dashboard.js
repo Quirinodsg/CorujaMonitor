@@ -83,7 +83,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
       const [overviewRes, healthRes, incidentsRes, serversRes] = await Promise.allSettled([
         api.get('/dashboard/overview'),
         api.get('/dashboard/health-summary'),
-        api.get('/incidents?limit=10'),
+        api.get('/incidents?status=open&limit=10'),
         api.get('/servers')
       ]);
 
