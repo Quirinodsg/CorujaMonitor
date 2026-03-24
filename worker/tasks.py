@@ -39,9 +39,9 @@ app.conf.beat_schedule = {
         'task': 'tasks.generate_monthly_reports',
         'schedule': crontab(hour=0, minute=0, day_of_month=1),
     },
-    'auto-backup-5-times-daily': {
+    'auto-backup-3-times-daily': {
         'task': 'tasks.create_automatic_backup',
-        'schedule': crontab(hour='*/5'),
+        'schedule': crontab(hour='7,12,18', minute=0),
     },
 }
 
@@ -1054,7 +1054,7 @@ Coruja Monitor - Sistema de Monitoramento
 
 @app.task
 def create_automatic_backup():
-    """Cria backup automático do banco de dados 5x ao dia"""
+    """Cria backup automático do banco de dados 3x ao dia (07h, 12h, 18h)"""
     try:
         logger.info("🔄 Iniciando backup automático do banco de dados...")
         
@@ -1093,8 +1093,8 @@ def create_automatic_backup():
         
         logger.info(f"✅ Backup automático criado: {backup_filename} ({size_mb} MB)")
         
-        # Limpar backups antigos (manter últimos 30)
-        cleanup_old_backups(BACKUP_DIR, keep_last=30)
+        # Limpar backups antigos (manter últimos 9 = 3 dias de histórico)
+        cleanup_old_backups(BACKUP_DIR, keep_last=9)
         
         return {
             "success": True,
