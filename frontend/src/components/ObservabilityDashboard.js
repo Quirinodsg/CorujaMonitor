@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
+import api from '../services/api';
 import './ObservabilityDashboard.css';
 
-const API = '';
 const WS_URL = `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
 
 function HealthGauge({ score }) {
@@ -46,26 +46,21 @@ export default function ObservabilityDashboard() {
   const fetchData = async () => {
     try {
       const [hRes, iRes, aRes] = await Promise.all([
-        fetch(`${API}/api/v1/observability/health-score`),
-        fetch(`${API}/api/v1/observability/impact-map`),
-        fetch(`${API}/api/v1/alerts/intelligent?status=open&limit=10`),
+        api.get('/observability/health-score'),
+        api.get('/observability/impact-map'),
+        api.get('/alerts/intelligent?status=open&limit=10'),
       ]);
-      if (hRes.ok) {
-        const d = await hRes.json();
-        if (d.error && !d.score) {
-          // Erro real sem dados úteis
-          console.error('health-score error:', d.error);
-          setFetchError(d.error);
-        } else {
-          setHealth(d);
-          setFetchError(null);
-          if (d.error) console.warn('health-score partial error:', d.error);
-        }
+      const hData = hRes.data;
+      if (hData.error && !hData.score) {
+        console.error('health-score error:', hData.error);
+        setFetchError(hData.error);
       } else {
-        setFetchError(`HTTP ${hRes.status}`);
+        setHealth(hData);
+        setFetchError(null);
+        if (hData.error) console.warn('health-score partial error:', hData.error);
       }
-      if (iRes.ok) setImpactMap((await iRes.json()).nodes || []);
-      if (aRes.ok) setAlerts((await aRes.json()).alerts || []);
+      setImpactMap((iRes.data).nodes || []);
+      setAlerts((aRes.data).alerts || []);
     } catch (e) {
       console.error('ObservabilityDashboard fetch error:', e);
       setFetchError(e.message);
