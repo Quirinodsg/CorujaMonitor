@@ -36,7 +36,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
 
   const loadSensorIncidents = async () => {
     try {
-      const response = await api.get('/incidents/?status=open');
+      const response = await api.get('/incidents/?status=open&limit=200');
       const incidentsMap = {};
       response.data.forEach(incident => {
         incidentsMap[incident.sensor_id] = incident;

@@ -93,47 +93,80 @@ def get_predictions(
     Retorna predições proativas de falha para as próximas N horas.
     Alimenta o predictor com métricas recentes e persiste amostras no banco.
     """
-    predictor = _get_predictor()
+    try:
+        predictor = _get_predictor()
+    except Exception as e:
+        logger.warning("FailurePredictor não disponível: %s", e)
+        return {
+            "predictions": [],
+            "total": 0,
+            "horizon_hours": hours,
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "status": "predictor_unavailable",
+            "message": str(e),
+        }
 
-    # Alimentar predictor com métricas recentes (últimas 6h) e persistir
-    sensors = db.query(Sensor).filter(Sensor.is_active == True).all()
+    try:
+        # Buscar últimas 100 métricas por sensor em uma única query batch
+        # Evita N queries sequenciais (uma por sensor)
+        rows = db.execute(text("""
+            SELECT m.sensor_id, m.value, m.timestamp,
+                   s.sensor_type, srv.hostname, srv.id as server_id
+            FROM (
+                SELECT sensor_id, value, timestamp,
+                       ROW_NUMBER() OVER (PARTITION BY sensor_id ORDER BY timestamp DESC) as rn
+                FROM metrics
+                WHERE timestamp >= NOW() - INTERVAL '6 hours'
+            ) m
+            JOIN sensors s ON s.id = m.sensor_id AND s.is_active = true
+            JOIN servers srv ON srv.id = s.server_id
+            WHERE m.rn <= 100
+            ORDER BY m.sensor_id, m.timestamp
+        """)).fetchall()
 
-    for sensor in sensors:
-        server = db.query(Server).filter(Server.id == sensor.server_id).first()
-        if not server:
-            continue
-        host = server.hostname or f"server-{server.id}"
-        metric_key = sensor.sensor_type
+        # Agrupar amostras por sensor para persistência em batch
+        samples_by_sensor = {}
+        for row in rows:
+            if row.value is None:
+                continue
+            host = row.hostname or f"server-{row.server_id}"
+            ts = row.timestamp.timestamp() if row.timestamp else time.time()
+            predictor.add_sample(host, row.sensor_type, row.value, ts)
+            sid = row.sensor_id
+            if sid not in samples_by_sensor:
+                samples_by_sensor[sid] = []
+            samples_by_sensor[sid].append((ts, row.value))
 
-        recent = db.query(Metric).filter(
-            Metric.sensor_id == sensor.id,
-        ).order_by(desc(Metric.timestamp)).limit(100).all()
+        # Persistir amostras novas em batch
+        for sensor_id, samples in samples_by_sensor.items():
+            _persist_samples(db, sensor_id, samples)
 
-        new_samples = []
-        for m in recent:
-            if m.value is not None:
-                ts = m.timestamp.timestamp() if m.timestamp else time.time()
-                predictor.add_sample(host, metric_key, m.value, ts)
-                new_samples.append((ts, m.value))
+        # Obter predições
+        all_preds = predictor.predict_all()
 
-        if new_samples:
-            _persist_samples(db, sensor.id, new_samples)
+        filtered = [
+            p for p in all_preds
+            if p["hours_until_breach"] <= hours
+            and (severity is None or p["severity"] == severity)
+        ]
 
-    # Obter predições
-    all_preds = predictor.predict_all()
+        return {
+            "predictions": filtered,
+            "total": len(filtered),
+            "horizon_hours": hours,
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        }
 
-    filtered = [
-        p for p in all_preds
-        if p["hours_until_breach"] <= hours
-        and (severity is None or p["severity"] == severity)
-    ]
-
-    return {
-        "predictions": filtered,
-        "total": len(filtered),
-        "horizon_hours": hours,
-        "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
-    }
+    except Exception as e:
+        logger.error("Erro ao gerar predições: %s", e, exc_info=True)
+        return {
+            "predictions": [],
+            "total": 0,
+            "horizon_hours": hours,
+            "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "status": "error",
+            "message": str(e),
+        }
 
 
 @router.post("/ingest")

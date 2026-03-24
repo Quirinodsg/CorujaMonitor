@@ -48,23 +48,21 @@ async def get_health_score(db: Session = Depends(get_db)):
     Baseado em: sensores ok/total, incidentes abertos, alertas críticos.
     """
     try:
-        # Total sensors and their statuses — status comes from latest metric per sensor
+        # Usa LATERAL com índice idx_metrics_sensor_timestamp para evitar full scan
         sensor_stats = db.execute(text("""
-            WITH latest AS (
-                SELECT DISTINCT ON (sensor_id)
-                    sensor_id,
-                    status
-                FROM metrics
-                ORDER BY sensor_id, timestamp DESC
-            )
             SELECT
-                COUNT(*) FILTER (WHERE l.status = 'ok') as ok_count,
-                COUNT(*) FILTER (WHERE l.status = 'warning') as warning_count,
-                COUNT(*) FILTER (WHERE l.status = 'critical') as critical_count,
-                COUNT(*) FILTER (WHERE l.status IS NULL OR l.status NOT IN ('ok','warning','critical')) as unknown_count,
+                COUNT(*) FILTER (WHERE m.status = 'ok') as ok_count,
+                COUNT(*) FILTER (WHERE m.status = 'warning') as warning_count,
+                COUNT(*) FILTER (WHERE m.status = 'critical') as critical_count,
+                COUNT(*) FILTER (WHERE m.status IS NULL OR m.status NOT IN ('ok','warning','critical')) as unknown_count,
                 COUNT(s.id) as total
             FROM sensors s
-            LEFT JOIN latest l ON l.sensor_id = s.id
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = s.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
             WHERE s.is_active = true
         """)).fetchone()
 
@@ -126,25 +124,23 @@ async def get_impact_map(db: Session = Depends(get_db)):
     """
     try:
         rows = db.execute(text("""
-            WITH latest AS (
-                SELECT DISTINCT ON (sensor_id)
-                    sensor_id,
-                    status
-                FROM metrics
-                ORDER BY sensor_id, timestamp DESC
-            )
             SELECT
                 s.id as server_id,
                 s.name as server_name,
                 s.ip_address,
-                COUNT(sen.id) FILTER (WHERE l.status = 'critical') as critical_sensors,
-                COUNT(sen.id) FILTER (WHERE l.status = 'warning') as warning_sensors,
+                COUNT(sen.id) FILTER (WHERE m.status = 'critical') as critical_sensors,
+                COUNT(sen.id) FILTER (WHERE m.status = 'warning') as warning_sensors,
                 COUNT(sen.id) as total_sensors
             FROM servers s
             LEFT JOIN sensors sen ON sen.server_id = s.id AND sen.is_active = true
-            LEFT JOIN latest l ON l.sensor_id = sen.id
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = sen.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
             GROUP BY s.id, s.name, s.ip_address
-            HAVING COUNT(sen.id) FILTER (WHERE l.status IN ('critical','warning')) > 0
+            HAVING COUNT(sen.id) FILTER (WHERE m.status IN ('critical','warning')) > 0
             ORDER BY critical_sensors DESC, warning_sensors DESC
             LIMIT 50
         """)).fetchall()
@@ -292,18 +288,17 @@ async def ws_observability(websocket: WebSocket):
             db = SessionLocal()
             try:
                 sensor_stats = db.execute(text("""
-                    WITH latest AS (
-                        SELECT DISTINCT ON (sensor_id)
-                            sensor_id, status
-                        FROM metrics
-                        ORDER BY sensor_id, timestamp DESC
-                    )
                     SELECT
-                        COUNT(s.id) FILTER (WHERE l.status = 'ok') as ok_count,
-                        COUNT(s.id) FILTER (WHERE l.status = 'critical') as critical_count,
+                        COUNT(s.id) FILTER (WHERE m.status = 'ok') as ok_count,
+                        COUNT(s.id) FILTER (WHERE m.status = 'critical') as critical_count,
                         COUNT(s.id) as total
                     FROM sensors s
-                    LEFT JOIN latest l ON l.sensor_id = s.id
+                    LEFT JOIN LATERAL (
+                        SELECT status FROM metrics
+                        WHERE sensor_id = s.id
+                        ORDER BY timestamp DESC
+                        LIMIT 1
+                    ) m ON TRUE
                     WHERE s.is_active = true
                 """)).fetchone()
 
