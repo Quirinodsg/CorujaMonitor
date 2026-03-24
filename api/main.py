@@ -32,9 +32,10 @@ logging.root.handlers = [_handler]
 
 class SlashNormalizerMiddleware:
     """
-    Remove trailing slash das URLs antes de rotear.
-    Permite que /api/v1/servers e /api/v1/servers/ funcionem igualmente
-    sem depender do redirect 307 do FastAPI (que expõe hostname interno Docker).
+    Adiciona trailing slash nas URLs de coleção antes de rotear.
+    Os routers FastAPI definem rotas com "/" então /api/v1/servers
+    precisa virar /api/v1/servers/ para ser encontrado com redirect_slashes=False.
+    Evita o 307 redirect do FastAPI que exporia hostname interno Docker ao browser.
     """
     def __init__(self, app: ASGIApp):
         self.app = app
@@ -42,12 +43,19 @@ class SlashNormalizerMiddleware:
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] == "http":
             path = scope.get("path", "")
-            # Remove trailing slash exceto na raiz "/"
-            if path != "/" and path.endswith("/"):
+            # Adiciona trailing slash em paths de coleção sem slash e sem extensão
+            # Ex: /api/v1/servers → /api/v1/servers/
+            # Não afeta: /api/v1/servers/123, /api/v1/servers/check, /health, /
+            if (
+                path.startswith("/api/")
+                and not path.endswith("/")
+                and "." not in path.split("/")[-1]
+                and not path.split("/")[-1].lstrip("-").isdigit()
+            ):
                 scope = dict(scope)
-                scope["path"] = path.rstrip("/")
+                scope["path"] = path + "/"
                 raw = scope.get("raw_path", path.encode())
-                scope["raw_path"] = raw.rstrip(b"/")
+                scope["raw_path"] = raw + b"/"
         await self.app(scope, receive, send)
 
 
@@ -131,7 +139,6 @@ app = FastAPI(
     description="Enterprise monitoring platform with AIOps capabilities",
     version="3.0.0",
     lifespan=lifespan,
-    redirect_slashes=False,
 )
 
 # CORS — allow_credentials=False é obrigatório quando allow_origins=["*"]
