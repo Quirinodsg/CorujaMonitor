@@ -52,7 +52,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       // Load servers and sensors in parallel
       const [serversResponse, sensorsResponse] = await Promise.all([
         api.get('/servers'),
-        api.get('/sensors?exclude_type=service')
+        api.get('/sensors')
       ]);
 
       const serversMap = {};
