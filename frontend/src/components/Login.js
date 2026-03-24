@@ -61,34 +61,31 @@ function Login({ onLogin }) {
     setLoading(true);
 
     try {
-      // Preparar payload
-      const payload = {
-        username,
-        password
-      };
-      
-      // Adicionar mfa_code apenas se estiver preenchido
+      const payload = { username, password };
       if (mfaCode && mfaCode.trim()) {
         payload.mfa_code = mfaCode.trim();
       }
-      
-      // Usar API_URL do config.js (já inclui /api/v1)
-      const response = await axios.post(`${API_URL}/auth/login`, payload);
 
-      // Verificar se MFA é necessário
+      const response = await axios.post(`${API_URL}/auth/login`, payload, {
+        timeout: 15000,
+      });
+
       if (response.data.mfa_required) {
         setMfaRequired(true);
         setError('');
-        setLoading(false);
         return;
       }
 
-      // Login bem-sucedido
       if (response.data.access_token) {
         onLogin(response.data.access_token, response.data.user);
       }
     } catch (err) {
-      setError(err.response?.data?.detail || 'Erro ao fazer login');
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        setError('Tempo limite esgotado. Verifique a conexão e tente novamente.');
+      } else {
+        setError(err.response?.data?.detail || 'Erro ao fazer login');
+      }
+    } finally {
       setLoading(false);
     }
   };
