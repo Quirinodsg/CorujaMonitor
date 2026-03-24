@@ -32,26 +32,28 @@ logging.root.handlers = [_handler]
 
 class SlashNormalizerMiddleware:
     """
-    Adiciona trailing slash nas URLs de coleção antes de rotear.
-    Os routers FastAPI definem rotas com "/" então /api/v1/servers
-    precisa virar /api/v1/servers/ para ser encontrado com redirect_slashes=False.
-    Evita o 307 redirect do FastAPI que exporia hostname interno Docker ao browser.
+    Adiciona trailing slash APENAS nas rotas de coleção raiz (nível 3).
+    Ex: /api/v1/servers → /api/v1/servers/   ✓
+        /api/v1/auth/login → sem alteração    ✓ (tem sub-path)
+        /api/v1/servers/123 → sem alteração   ✓ (tem ID)
     """
+    # Rotas de coleção raiz que precisam de trailing slash
+    _COLLECTION_ROUTES = {
+        "/api/v1/servers", "/api/v1/probes", "/api/v1/sensors",
+        "/api/v1/tenants", "/api/v1/incidents", "/api/v1/users",
+        "/api/v1/sensor-groups", "/api/v1/reports", "/api/v1/custom-reports",
+        "/api/v1/maintenance", "/api/v1/notifications", "/api/v1/knowledge-base",
+        "/api/v1/ai-activities", "/api/v1/sensor-notes", "/api/v1/backup",
+        "/api/v1/thresholds", "/api/v1/metrics",
+    }
+
     def __init__(self, app: ASGIApp):
         self.app = app
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if scope["type"] == "http":
             path = scope.get("path", "")
-            # Adiciona trailing slash em paths de coleção sem slash e sem extensão
-            # Ex: /api/v1/servers → /api/v1/servers/
-            # Não afeta: /api/v1/servers/123, /api/v1/servers/check, /health, /
-            if (
-                path.startswith("/api/")
-                and not path.endswith("/")
-                and "." not in path.split("/")[-1]
-                and not path.split("/")[-1].lstrip("-").isdigit()
-            ):
+            if path in self._COLLECTION_ROUTES:
                 scope = dict(scope)
                 scope["path"] = path + "/"
                 raw = scope.get("raw_path", path.encode())
