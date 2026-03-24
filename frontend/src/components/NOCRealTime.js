@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 import './NOCRealTime.css';
 
-const REQUEST_TIMEOUT_MS = 5000;
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 2000;
 
@@ -32,16 +31,12 @@ function NOCRealTime({ onExit }) {
     } catch (_) {}
   }, [soundEnabled]);
 
-  // Carregar dados com timeout e retry
+  // Carregar dados com retry
   const loadDashboard = useCallback(async () => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-
     try {
       const response = await api.get('/noc-realtime/realtime/dashboard', {
-        signal: controller.signal,
+        timeout: 30000,
       });
-      clearTimeout(timeoutId);
 
       if (data && response.data.incidents) {
         const newCritical = response.data.incidents.filter(inc =>
@@ -57,8 +52,7 @@ function NOCRealTime({ onExit }) {
       setLoadError(null);
       retryCountRef.current = 0;
     } catch (error) {
-      clearTimeout(timeoutId);
-      const isTimeout = error.name === 'AbortError' || error.code === 'ECONNABORTED';
+      const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       console.error('Erro ao carregar dashboard NOC:', error);
 
       if (retryCountRef.current < MAX_RETRIES) {

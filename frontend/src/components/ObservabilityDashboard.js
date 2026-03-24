@@ -46,9 +46,9 @@ export default function ObservabilityDashboard() {
   const fetchData = async () => {
     try {
       const [hRes, iRes, aRes] = await Promise.all([
-        api.get('/observability/health-score'),
-        api.get('/observability/impact-map'),
-        api.get('/alerts/intelligent?status=open&limit=10'),
+        api.get('/observability/health-score', { timeout: 30000 }),
+        api.get('/observability/impact-map', { timeout: 30000 }),
+        api.get('/alerts/intelligent?status=open&limit=10', { timeout: 30000 }),
       ]);
       const hData = hRes.data;
       if (hData.error && !hData.score) {

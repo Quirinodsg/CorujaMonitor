@@ -44,7 +44,7 @@ class SlashNormalizerMiddleware:
         "/api/v1/sensor-groups", "/api/v1/reports", "/api/v1/custom-reports",
         "/api/v1/maintenance", "/api/v1/notifications", "/api/v1/knowledge-base",
         "/api/v1/ai-activities", "/api/v1/sensor-notes", "/api/v1/backup",
-        "/api/v1/thresholds", "/api/v1/metrics",
+        "/api/v1/thresholds", "/api/v1/metrics", "/api/v1/credentials",
     }
 
     def __init__(self, app: ASGIApp):
