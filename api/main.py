@@ -30,6 +30,27 @@ logging.root.handlers = [_handler]
 # ─────────────────────────────────────────────────────────────────────────────
 
 
+class SlashNormalizerMiddleware:
+    """
+    Remove trailing slash das URLs antes de rotear.
+    Permite que /api/v1/servers e /api/v1/servers/ funcionem igualmente
+    sem depender do redirect 307 do FastAPI (que expõe hostname interno Docker).
+    """
+    def __init__(self, app: ASGIApp):
+        self.app = app
+
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        if scope["type"] == "http":
+            path = scope.get("path", "")
+            # Remove trailing slash exceto na raiz "/"
+            if path != "/" and path.endswith("/"):
+                scope = dict(scope)
+                scope["path"] = path.rstrip("/")
+                raw = scope.get("raw_path", path.encode())
+                scope["raw_path"] = raw.rstrip(b"/")
+        await self.app(scope, receive, send)
+
+
 class ForceCORSMiddleware:
     """
     Middleware ASGI minimalista que injeta Access-Control-Allow-Origin em TODA resposta.
@@ -110,6 +131,7 @@ app = FastAPI(
     description="Enterprise monitoring platform with AIOps capabilities",
     version="3.0.0",
     lifespan=lifespan,
+    redirect_slashes=False,
 )
 
 # CORS — allow_credentials=False é obrigatório quando allow_origins=["*"]
@@ -126,6 +148,11 @@ app.add_middleware(
 # incluindo erros 401/403/500 onde o CORSMiddleware falha.
 # Registrado por último = executa primeiro (mais externo na cadeia ASGI).
 app.add_middleware(ForceCORSMiddleware)
+
+# SlashNormalizerMiddleware — remove trailing slash das URLs antes de rotear.
+# Evita 307 redirect do FastAPI que expõe hostname interno Docker ao browser.
+# Registrado após ForceCORSMiddleware para ser o mais externo.
+app.add_middleware(SlashNormalizerMiddleware)
 
 # GlobalErrorHandlerMiddleware — captura exceções não tratadas, retorna JSON estruturado.
 # Registrado após ForceCORSMiddleware para que CORS seja aplicado mesmo em erros 500.
