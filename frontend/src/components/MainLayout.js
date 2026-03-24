@@ -58,7 +58,7 @@ function MainLayout({ user, onLogout }) {
         const token = localStorage.getItem('token');
         const [healthRes, alertsRes] = await Promise.allSettled([
           fetch('/api/v1/dashboard/health-summary', { headers: { Authorization: `Bearer ${token}` } }),
-          fetch('/api/v1/intelligent-alerts?status=open&limit=1', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/v1/alerts/intelligent?status=open&limit=1', { headers: { Authorization: `Bearer ${token}` } }),
         ]);
         if (healthRes.status === 'fulfilled' && healthRes.value.ok) {
           const d = await healthRes.value.json();
@@ -172,8 +172,12 @@ function MainLayout({ user, onLogout }) {
     }
   };
 
-  if (nocMode) {
-    return <NOCMode onExit={() => setNocMode(false)} />;
+  if (nocMode || currentPage === 'noc-realtime') {
+    return (
+      currentPage === 'noc-realtime'
+        ? <NOCRealTime onExit={() => setCurrentPage('dashboard')} />
+        : <NOCMode onExit={() => setNocMode(false)} />
+    );
   }
 
   return (
