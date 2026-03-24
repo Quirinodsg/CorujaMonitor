@@ -8,45 +8,32 @@ import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from database import SessionLocal
-from models import Sensor, Incident
 from sqlalchemy import text
 
 db = SessionLocal()
 
 try:
-    # 1. Buscar sensores network_in/network_out sem internet_link
-    sensors = db.query(Sensor).filter(
-        Sensor.sensor_type.in_(['network_in', 'network_out'])
-    ).all()
+    # 1. Setar alert_mode via SQL direto (mais confiável que ORM)
+    result = db.execute(text("""
+        UPDATE sensors
+        SET alert_mode = 'metric_only'
+        WHERE sensor_type IN ('network_in', 'network_out')
+          AND (config IS NULL OR (config->>'internet_link')::boolean IS NOT TRUE)
+    """))
+    print(f"Sensores atualizados: {result.rowcount}")
 
-    fixed = 0
-    skipped = 0
-    for s in sensors:
-        config = s.config or {}
-        if config.get('internet_link'):
-            skipped += 1
-            continue
-        if s.alert_mode != 'metric_only':
-            s.alert_mode = 'metric_only'
-            fixed += 1
-
-    print(f"Sensores corrigidos (metric_only): {fixed}")
-    print(f"Sensores ignorados (internet_link=True): {skipped}")
-
-    # 2. Fechar incidentes abertos de sensores network_in/network_out (sem internet_link)
-    network_sensor_ids = [
-        s.id for s in sensors
-        if not (s.config or {}).get('internet_link')
-    ]
-
-    if network_sensor_ids:
-        closed = db.query(Incident).filter(
-            Incident.sensor_id.in_(network_sensor_ids),
-            Incident.status == 'open'
-        ).update({'status': 'resolved'}, synchronize_session=False)
-        print(f"Incidentes fechados: {closed}")
-    else:
-        print("Nenhum incidente para fechar")
+    # 2. Fechar todos os incidentes abertos de network_in/network_out
+    result2 = db.execute(text("""
+        UPDATE incidents
+        SET status = 'resolved', resolved_at = NOW()
+        WHERE status = 'open'
+          AND sensor_id IN (
+              SELECT id FROM sensors
+              WHERE sensor_type IN ('network_in', 'network_out')
+                AND (config IS NULL OR (config->>'internet_link')::boolean IS NOT TRUE)
+          )
+    """))
+    print(f"Incidentes fechados: {result2.rowcount}")
 
     db.commit()
     print("Concluído com sucesso.")
