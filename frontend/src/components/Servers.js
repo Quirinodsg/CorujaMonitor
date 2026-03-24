@@ -368,7 +368,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const loadSensors = async (serverId) => {
     try {
-      const response = await api.get(`/sensors/?server_id=${serverId}&exclude_type=service`);
+      const response = await api.get(`/sensors/?server_id=${serverId}`);
       
       // Sort sensors by defined order
       const sortedSensors = response.data.sort((a, b) => {
@@ -470,7 +470,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
         icon: '⚙️',
         sensors: [],
         priority: 3,
-        color: '#ff9800'
+        color: '#ff9800',
+        showSummary: true
       },
       applications: {
         name: 'Aplicações',
@@ -972,6 +973,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
               {isExpanded && (
                 <div className="sensor-group-content">
                   {groupKey === 'docker' && group.showSummary && renderDockerSummary(group.sensors)}
+                  {groupKey === 'services' && group.showSummary && renderServicesSummary(group.sensors)}
                   
                   <div className="sensors-grid">
                     {group.sensors.map(sensor => renderSensorCard(sensor))}
