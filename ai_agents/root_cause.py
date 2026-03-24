@@ -43,12 +43,15 @@ class RootCauseEngine:
             # Sem topologia: usar host do evento mais antigo como causa raiz
             sorted_events = sorted(events, key=lambda e: e.timestamp)
             oldest = sorted_events[0]
+            # Extrair descrição útil do evento
+            desc = getattr(oldest, 'description', None) or str(oldest.host_id)
+            event_type = getattr(oldest, 'type', 'unknown')
             return RootCauseResult(
                 root_node_id=str(oldest.host_id),
                 confidence=0.5,
                 affected_nodes=[str(e.host_id) for e in events],
                 affected_nodes_count=len(events),
-                reasoning="Sem topologia disponível — usando host do evento mais antigo",
+                reasoning=f"Análise baseada em {len(events)} evento(s): {desc}",
             )
 
         affected_host_ids = {str(e.host_id) for e in events}
@@ -64,12 +67,13 @@ class RootCauseEngine:
             # Sem ancestrais comuns — usar host do evento mais antigo
             sorted_events = sorted(events, key=lambda e: e.timestamp)
             oldest = sorted_events[0]
+            desc = getattr(oldest, 'description', None) or str(oldest.host_id)
             return RootCauseResult(
                 root_node_id=str(oldest.host_id),
                 confidence=0.5,
                 affected_nodes=list(affected_host_ids),
                 affected_nodes_count=len(affected_host_ids),
-                reasoning="Sem ancestrais comuns — usando host do evento mais antigo",
+                reasoning=f"Análise baseada em {len(events)} evento(s): {desc}",
             )
 
         # Nó com maior score = mais descendentes afetados

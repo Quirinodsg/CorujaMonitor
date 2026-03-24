@@ -6,6 +6,7 @@ import MFASetup from './MFASetup';
 import SystemReset from './SystemReset';
 import Credentials from './Credentials';
 import TestTools from './TestTools';
+import DefaultSensorProfiles from './DefaultSensorProfiles';
 import './Management.css';
 import './Settings.css';
 
@@ -2799,6 +2800,12 @@ function Settings({ onNavigate }) {
           🎨 Aparência
         </button>
         <button 
+          className={`tab ${activeTab === 'sensor-profiles' ? 'active' : ''}`}
+          onClick={() => setActiveTab('sensor-profiles')}
+        >
+          📡 Sensores Padrão
+        </button>
+        <button 
           className={`tab ${activeTab === 'thresholds' ? 'active' : ''}`}
           onClick={() => setActiveTab('thresholds')}
         >
@@ -2856,6 +2863,7 @@ function Settings({ onNavigate }) {
 
       <div className="settings-content">
         {activeTab === 'appearance' && renderAppearance()}
+        {activeTab === 'sensor-profiles' && <DefaultSensorProfiles />}
         {activeTab === 'thresholds' && <ThresholdConfig />}
         {activeTab === 'notifications' && renderNotifications()}
         {activeTab === 'users' && renderUsers()}

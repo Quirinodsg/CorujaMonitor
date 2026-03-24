@@ -264,7 +264,16 @@ class PipelineOrchestrator:
             event_count = len(context.events)
             title = f"Pipeline v3: {event_count} evento(s) correlacionado(s)"
             if root_cause_text:
-                title = f"Causa raiz: {root_cause_text[:80]}"
+                # Usar a descrição do evento mais recente como título se disponível
+                if context.events:
+                    sorted_ev = sorted(context.events, key=lambda e: e.timestamp, reverse=True)
+                    ev_desc = getattr(sorted_ev[0], 'description', None)
+                    if ev_desc:
+                        title = ev_desc[:120]
+                    else:
+                        title = f"Causa raiz: {root_cause_text[:80]}"
+                else:
+                    title = f"Causa raiz: {root_cause_text[:80]}"
 
             row = self._db.execute(
                 text("""
