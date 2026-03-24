@@ -21,9 +21,10 @@ async def get_dashboard_overview(
             Server.is_active == True
         ).scalar()
         
-        # Total sensors
+        # Total sensors (excluindo tipo 'service')
         total_sensors = db.query(func.count(Sensor.id)).join(Server).filter(
-            Sensor.is_active == True
+            Sensor.is_active == True,
+            Sensor.sensor_type != 'service'
         ).scalar()
         
         # Open incidents
@@ -56,10 +57,11 @@ async def get_dashboard_overview(
             Server.is_active == True
         ).scalar()
         
-        # Total sensors
+        # Total sensors (excluindo tipo 'service')
         total_sensors = db.query(func.count(Sensor.id)).join(Server).filter(
             Server.tenant_id == current_user.tenant_id,
-            Sensor.is_active == True
+            Sensor.is_active == True,
+            Sensor.sensor_type != 'service'
         ).scalar()
         
         # Open incidents
@@ -105,45 +107,37 @@ async def get_health_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    # Get latest metric for each sensor
-    from sqlalchemy import distinct
-    
-    # Admin vê todos os sensores, usuário normal vê apenas do seu tenant
+    from sqlalchemy import text
+
     if current_user.role == 'admin':
-        sensors = db.query(Sensor).join(Server).filter(
-            Sensor.is_active == True
-        ).all()
+        tenant_filter = ""
+        params = {}
     else:
-        sensors = db.query(Sensor).join(Server).filter(
-            Server.tenant_id == current_user.tenant_id,
-            Sensor.is_active == True
-        ).all()
-    
-    health_summary = {
-        "healthy": 0,
-        "warning": 0,
-        "critical": 0,
-        "unknown": 0,
-        "acknowledged": 0  # Novo: Verificado pela TI
+        tenant_filter = "AND srv.tenant_id = :tenant_id"
+        params = {"tenant_id": current_user.tenant_id}
+
+    rows = db.execute(text(f"""
+        SELECT
+            SUM(CASE WHEN s.is_acknowledged = TRUE THEN 1 ELSE 0 END) AS acknowledged,
+            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'critical' THEN 1 ELSE 0 END) AS critical,
+            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'warning' THEN 1 ELSE 0 END) AS warning,
+            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'ok' THEN 1 ELSE 0 END) AS healthy,
+            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status IS NULL THEN 1 ELSE 0 END) AS unknown
+        FROM sensors s
+        JOIN servers srv ON srv.id = s.server_id
+        LEFT JOIN LATERAL (
+            SELECT status FROM metrics
+            WHERE sensor_id = s.id
+            ORDER BY timestamp DESC
+            LIMIT 1
+        ) m ON TRUE
+        WHERE s.is_active = TRUE AND s.sensor_type != 'service' {tenant_filter}
+    """), params).fetchone()
+
+    return {
+        "healthy": int(rows.healthy or 0),
+        "warning": int(rows.warning or 0),
+        "critical": int(rows.critical or 0),
+        "unknown": int(rows.unknown or 0),
+        "acknowledged": int(rows.acknowledged or 0),
     }
-    
-    for sensor in sensors:
-        # Se sensor foi reconhecido por técnico, conta separadamente
-        if sensor.is_acknowledged:
-            health_summary["acknowledged"] += 1
-            continue
-            
-        latest_metric = db.query(Metric).filter(
-            Metric.sensor_id == sensor.id
-        ).order_by(Metric.timestamp.desc()).first()
-        
-        if not latest_metric:
-            health_summary["unknown"] += 1
-        elif latest_metric.status == "critical":
-            health_summary["critical"] += 1
-        elif latest_metric.status == "warning":
-            health_summary["warning"] += 1
-        else:
-            health_summary["healthy"] += 1
-    
-    return health_summary

@@ -30,7 +30,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
 
   useEffect(() => {
     loadAllSensors();
-    const interval = setInterval(loadAllSensors, 10000); // Refresh every 10s
+    const interval = setInterval(loadAllSensors, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
 
@@ -52,7 +52,7 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
       // Load servers and sensors in parallel
       const [serversResponse, sensorsResponse] = await Promise.all([
         api.get('/servers'),
-        api.get('/sensors')
+        api.get('/sensors?exclude_type=service')
       ]);
 
       const serversMap = {};

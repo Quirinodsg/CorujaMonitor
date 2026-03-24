@@ -47,7 +47,7 @@ function SystemHealth({ onNavigate }) {
 
   useEffect(() => {
     load();
-    const interval = setInterval(load, 10000);
+    const interval = setInterval(load, 30000);
     return () => clearInterval(interval);
   }, [load]);
 

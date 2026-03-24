@@ -15,7 +15,7 @@ function Incidents({ onNavigateToServer, onNavigate }) {
 
   useEffect(() => {
     loadIncidents();
-    const interval = setInterval(loadIncidents, 15000); // Refresh every 15s
+    const interval = setInterval(loadIncidents, 30000); // Refresh every 30s
     return () => clearInterval(interval);
   }, []);
 

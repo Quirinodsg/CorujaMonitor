@@ -321,7 +321,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
   useEffect(() => {
     if (selectedServer) {
       loadSensors(selectedServer.id);
-      const interval = setInterval(() => loadSensors(selectedServer.id), 10000); // Refresh every 10s
+      const interval = setInterval(() => loadSensors(selectedServer.id), 20000); // Refresh every 20s
       return () => clearInterval(interval);
     }
   }, [selectedServer]);
