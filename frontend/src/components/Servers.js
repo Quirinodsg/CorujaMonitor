@@ -368,7 +368,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const loadSensors = async (serverId) => {
     try {
-      const response = await api.get(`/sensors/?server_id=${serverId}`);
+      const response = await api.get(`/sensors/?server_id=${serverId}&exclude_type=service`);
       
       // Sort sensors by defined order
       const sortedSensors = response.data.sort((a, b) => {

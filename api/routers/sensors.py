@@ -83,6 +83,7 @@ class SensorResponse(BaseModel):
     enabled: Optional[bool] = True
     paused_until: Optional[datetime] = None
     priority: Optional[int] = 3
+    alert_mode: Optional[str] = 'normal'  # normal | silent
 
     class Config:
         from_attributes = True
@@ -110,6 +111,7 @@ async def create_sensor(
 @router.get("/", response_model=List[SensorResponse])
 async def list_sensors(
     server_id: Optional[int] = None,
+    exclude_type: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -121,7 +123,14 @@ async def list_sensors(
     
     if server_id:
         query = query.filter(Sensor.server_id == server_id)
-    
+
+    # Excluir sensores inativos (ex: serviços descobertos mas não selecionados pelo usuário)
+    query = query.filter(Sensor.is_active == True)
+
+    # Excluir tipo específico (ex: exclude_type=service para não mostrar serviços na lista principal)
+    if exclude_type:
+        query = query.filter(Sensor.sensor_type != exclude_type)
+
     sensors = query.all()
     return sensors
 
