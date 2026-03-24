@@ -35,7 +35,7 @@ function CustomReports() {
 
   const loadMyReports = async () => {
     try {
-      const response = await api.get('/custom-reports/');
+      const response = await api.get('/custom-reports');
       setMyReports(response.data);
     } catch (error) {
       console.error('Erro ao carregar meus relatórios:', error);

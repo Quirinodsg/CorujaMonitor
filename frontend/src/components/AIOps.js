@@ -29,7 +29,7 @@ function AIOps() {
 
   const loadSensors = async () => {
     try {
-      const response = await api.get('/sensors/');
+      const response = await api.get('/sensors');
       setSensors(response.data);
     } catch (error) {
       console.error('Erro ao carregar sensores:', error);

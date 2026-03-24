@@ -65,7 +65,7 @@ export default function AdvancedMetrics() {
         // 2. Buscar métricas de cada sensor em paralelo
         const results = await Promise.allSettled(
           sensorList.map(sensor =>
-            fetch(`${API}/api/v1/metrics/?sensor_id=${sensor.id}&start_time=${since}&limit=200`, {
+            fetch(`${API}/api/v1/metrics?sensor_id=${sensor.id}&start_time=${since}&limit=200`, {
               headers: { Authorization: `Bearer ${token}` },
             })
               .then(r => r.ok ? r.json() : [])

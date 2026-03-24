@@ -65,7 +65,7 @@ function Reports() {
   const loadMyReports = async () => {
     try {
       console.log('Carregando meus relatórios...');
-      const response = await api.get('/custom-reports/');
+      const response = await api.get('/custom-reports');
       console.log('Meus relatórios carregados:', response.data);
       setMyReports(response.data);
     } catch (error) {

@@ -40,7 +40,7 @@ function AdvancedDashboard({ user, onNavigate }) {
         api.get('/dashboard/overview'),
         api.get('/dashboard/health-summary'),
         api.get('/incidents?limit=10'),
-        api.get('/servers/')
+        api.get('/servers')
       ]);
 
       // Processar dados para o formato do dashboard avançado

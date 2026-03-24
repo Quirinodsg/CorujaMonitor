@@ -328,7 +328,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
   const loadServers = async () => {
     try {
-      const response = await api.get('/servers/');
+      const response = await api.get('/servers');
       setServers(response.data);
       setLoading(false);
     } catch (error) {

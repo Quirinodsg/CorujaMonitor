@@ -26,8 +26,8 @@ function Incidents({ onNavigateToServer, onNavigate }) {
       setIncidents(incidentsResponse.data);
 
       // Load sensors and servers
-      const sensorsResponse = await api.get('/sensors/');
-      const serversResponse = await api.get('/servers/');
+      const sensorsResponse = await api.get('/sensors');
+      const serversResponse = await api.get('/servers');
 
       const sensorsMap = {};
       sensorsResponse.data.forEach(sensor => {

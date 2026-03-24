@@ -38,7 +38,7 @@ function Credentials() {
 
   const loadCredentials = async () => {
     try {
-      const response = await api.get('/credentials/');
+      const response = await api.get('/credentials');
       setCredentials(response.data);
     } catch (error) {
       console.error('Erro ao carregar credenciais:', error);
@@ -49,7 +49,7 @@ function Credentials() {
 
   const loadTenants = async () => {
     try {
-      const response = await api.get('/tenants/');
+      const response = await api.get('/tenants');
       setTenants(response.data);
     } catch (error) {
       console.error('Erro ao carregar tenants:', error);
@@ -58,7 +58,7 @@ function Credentials() {
 
   const loadGroups = async () => {
     try {
-      const response = await api.get('/servers/');
+      const response = await api.get('/servers');
       const uniqueGroups = [...new Set(response.data.map(s => s.group_name).filter(Boolean))];
       setGroups(uniqueGroups);
     } catch (error) {
@@ -68,7 +68,7 @@ function Credentials() {
 
   const loadServers = async () => {
     try {
-      const response = await api.get('/servers/');
+      const response = await api.get('/servers');
       setServers(response.data);
     } catch (error) {
       console.error('Erro ao carregar servidores:', error);

@@ -33,7 +33,7 @@ function TestTools() {
 
   const loadServers = async () => {
     try {
-      const response = await api.get('/servers/');
+      const response = await api.get('/servers');
       setServers(response.data);
     } catch (error) {
       console.error('Erro ao carregar servidores:', error);

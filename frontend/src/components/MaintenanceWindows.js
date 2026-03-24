@@ -27,8 +27,8 @@ function MaintenanceWindows() {
   const loadData = async () => {
     try {
       const [windowsRes, serversRes] = await Promise.all([
-        api.get('/maintenance/'),
-        api.get('/servers/')
+        api.get('/maintenance'),
+        api.get('/servers')
       ]);
       
       setWindows(windowsRes.data);

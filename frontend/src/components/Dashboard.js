@@ -84,7 +84,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
         api.get('/dashboard/overview'),
         api.get('/dashboard/health-summary'),
         api.get('/incidents?limit=10'),
-        api.get('/servers/')
+        api.get('/servers')
       ]);
 
       if (overviewRes.status === 'fulfilled') setOverview(overviewRes.value.data);
