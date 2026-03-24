@@ -21,10 +21,9 @@ async def get_dashboard_overview(
             Server.is_active == True
         ).scalar()
         
-        # Total sensors (excluindo tipo 'service')
+        # Total sensors
         total_sensors = db.query(func.count(Sensor.id)).join(Server).filter(
             Sensor.is_active == True,
-            Sensor.sensor_type != 'service'
         ).scalar()
         
         # Open incidents
@@ -57,11 +56,10 @@ async def get_dashboard_overview(
             Server.is_active == True
         ).scalar()
         
-        # Total sensors (excluindo tipo 'service')
+        # Total sensors
         total_sensors = db.query(func.count(Sensor.id)).join(Server).filter(
             Server.tenant_id == current_user.tenant_id,
             Sensor.is_active == True,
-            Sensor.sensor_type != 'service'
         ).scalar()
         
         # Open incidents
@@ -131,7 +129,7 @@ async def get_health_summary(
             ORDER BY timestamp DESC
             LIMIT 1
         ) m ON TRUE
-        WHERE s.is_active = TRUE AND s.sensor_type != 'service' {tenant_filter}
+        WHERE s.is_active = TRUE {tenant_filter}
     """), params).fetchone()
 
     return {
