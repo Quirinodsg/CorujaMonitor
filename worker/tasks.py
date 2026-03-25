@@ -43,6 +43,10 @@ app.conf.beat_schedule = {
         'task': 'tasks.create_automatic_backup',
         'schedule': crontab(hour='7,12,18', minute=0),
     },
+    'collect-http-sensors-every-minute': {
+        'task': 'tasks.collect_http_sensors',
+        'schedule': 60.0,
+    },
 }
 
 @app.task
@@ -1104,6 +1108,84 @@ def create_automatic_backup():
     except Exception as e:
         logger.error(f"❌ Erro ao criar backup automático: {str(e)}")
         return {"success": False, "error": str(e)}
+
+
+@app.task
+def collect_http_sensors():
+    """
+    Coleta sensores HTTP standalone diretamente do servidor Linux.
+    Independente da probe Windows — garante monitoramento de sites externos.
+    """
+    import httpx as _httpx
+    import time as _time
+
+    db = SessionLocal()
+    try:
+        sensors = db.query(Sensor).filter(
+            Sensor.sensor_type == 'http',
+            Sensor.is_active == True,
+        ).all()
+
+        if not sensors:
+            return
+
+        logger.info(f"🌐 Coletando {len(sensors)} sensores HTTP...")
+        now = datetime.now(timezone.utc)
+
+        for sensor in sensors:
+            cfg = sensor.config or {}
+            http_cfg = cfg.get('http') or {}
+            url = http_cfg.get('url') or cfg.get('http_url')
+            if not url:
+                logger.warning(f"Sensor HTTP {sensor.id} sem URL configurada — pulando")
+                continue
+
+            method = http_cfg.get('method', 'GET')
+            elapsed_ms = 0.0
+            status = 'critical'
+
+            try:
+                t0 = _time.monotonic()
+                with _httpx.Client(timeout=15.0, verify=False, follow_redirects=True) as client:
+                    resp = client.request(method, url, headers={'User-Agent': 'CorujaMonitor/3.5'})
+                elapsed_ms = (_time.monotonic() - t0) * 1000
+
+                if resp.status_code < 400:
+                    w = sensor.threshold_warning or 2000
+                    c = sensor.threshold_critical or 5000
+                    if elapsed_ms >= c:
+                        status = 'critical'
+                    elif elapsed_ms >= w:
+                        status = 'warning'
+                    else:
+                        status = 'ok'
+                else:
+                    status = 'critical' if resp.status_code >= 500 else 'warning'
+
+                logger.info(f"🌐 HTTP {url}: {resp.status_code} em {elapsed_ms:.0f}ms → {status}")
+
+            except Exception as e:
+                logger.warning(f"🌐 HTTP {url} falhou: {e}")
+                status = 'critical'
+                elapsed_ms = 0.0
+
+            metric = Metric(
+                sensor_id=sensor.id,
+                value=round(elapsed_ms, 2),
+                unit='ms',
+                status=status,
+                timestamp=now,
+            )
+            db.add(metric)
+
+        db.commit()
+        logger.info("🌐 Coleta HTTP concluída")
+
+    except Exception as e:
+        logger.error(f"❌ Erro ao coletar sensores HTTP: {e}", exc_info=True)
+    finally:
+        db.close()
+
 
 def cleanup_old_backups(backup_dir: Path, keep_last: int = 30):
     """Remove backups antigos, mantendo apenas os últimos N"""
