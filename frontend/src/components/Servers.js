@@ -1649,6 +1649,13 @@ function Servers({ selectedServerId, selectedSensorId }) {
               >
                 📏
               </button>
+              <button
+                className={viewMode === 'table' ? 'active' : ''}
+                onClick={() => setViewMode('table')}
+                title="Tabela de servidores"
+              >
+                📋
+              </button>
             </div>
           </div>
 
@@ -2049,6 +2056,61 @@ function Servers({ selectedServerId, selectedSensorId }) {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+          {viewMode === 'table' && (
+            <div style={{ padding: '8px 0' }}>
+              <input
+                type="text"
+                placeholder="Buscar por nome ou IP..."
+                style={{
+                  width: 'calc(100% - 16px)', margin: '0 8px 8px', padding: '6px 10px',
+                  background: '#1e293b', border: '1px solid #334155', borderRadius: 5,
+                  color: '#e2e8f0', fontSize: 12, outline: 'none', boxSizing: 'border-box'
+                }}
+                id="srv-table-search"
+                onChange={e => {
+                  const q = e.target.value.toLowerCase();
+                  document.querySelectorAll('.srv-table-row').forEach(row => {
+                    row.style.display = (!q || row.dataset.search.includes(q)) ? '' : 'none';
+                  });
+                }}
+              />
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid #1e293b' }}>
+                    {['', 'Hostname', 'IP', 'Grupo'].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '5px 8px', color: '#64748b', fontWeight: 600, fontSize: 10, textTransform: 'uppercase' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...servers]
+                    .sort((a, b) => (a.hostname || '').localeCompare(b.hostname || ''))
+                    .map(server => {
+                      // Pegar status do ping via métricas se disponível
+                      const pingStatus = server.is_active ? 'ok' : 'unknown';
+                      const statusColor = { ok: '#22c55e', warning: '#f59e0b', critical: '#ef4444', unknown: '#6b7280' }[pingStatus] || '#6b7280';
+                      return (
+                        <tr key={server.id}
+                          className="srv-table-row"
+                          data-search={`${(server.hostname || '').toLowerCase()} ${(server.ip_address || '').toLowerCase()}`}
+                          style={{ borderBottom: '1px solid #0f172a', cursor: 'pointer' }}
+                          onMouseEnter={e => e.currentTarget.style.background = '#1e293b'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                          onClick={() => { setSelectedServer(server); setViewMode('tree'); }}
+                        >
+                          <td style={{ padding: '7px 8px' }}>
+                            <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusColor, display: 'inline-block', boxShadow: `0 0 5px ${statusColor}` }} />
+                          </td>
+                          <td style={{ padding: '7px 8px', color: '#e2e8f0', fontWeight: 500 }}>{server.hostname}</td>
+                          <td style={{ padding: '7px 8px', color: '#94a3b8', fontFamily: 'monospace', fontSize: 11 }}>{server.ip_address || '—'}</td>
+                          <td style={{ padding: '7px 8px', color: '#64748b', fontSize: 11 }}>{server.group_name || '—'}</td>
+                        </tr>
+                      );
+                    })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
