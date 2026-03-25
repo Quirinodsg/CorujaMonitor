@@ -270,7 +270,8 @@ async def create_probe_metrics_bulk(
                 name=sensor_name,
                 threshold_warning=threshold_warning,
                 threshold_critical=threshold_critical,
-                is_active=True
+                # Serviços descobertos ficam inativos por padrão — usuário seleciona na UI
+                is_active=(metric_data.sensor_type != 'service'),
             )
             db.add(sensor)
             db.flush()
@@ -373,7 +374,9 @@ async def get_latest_metrics_batch(
         Sensor.id.in_(ids),
         or_(
             Server.tenant_id == current_user.tenant_id,
-            Probe.tenant_id == current_user.tenant_id
+            Probe.tenant_id == current_user.tenant_id,
+            # Sensores HTTP sem server_id e sem probe_id (coletados pelo worker central)
+            (Sensor.server_id == None) & (Sensor.probe_id == None)
         )
     ).all()
     valid_ids = {s.id for s in sensors}
