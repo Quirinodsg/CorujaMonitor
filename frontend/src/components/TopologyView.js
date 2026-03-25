@@ -11,6 +11,34 @@ const STATUS_COLOR = {
   impacted: '#f97316',
 };
 
+// Ícone SVG por tipo de dispositivo (path dentro de viewBox 0 0 24 24)
+const DEVICE_ICONS = {
+  server:     'M2 3h20v6H2zm0 12h20v6H2zm0-6h20v3H2zM5 6h.01M5 18h.01',
+  switch:     'M6 3h12l3 6H3zm0 12h12l3 6H3zM3 9h18M3 15h18',
+  router:     'M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm0 4v4m0 4v4m-4-8h8',
+  firewall:   'M12 2L2 7v5c0 5.25 4.25 10.15 10 11.35C17.75 22.15 22 17.25 22 12V7z',
+  hypervisor: 'M3 3h18v18H3zM9 3v18M15 3v18M3 9h18M3 15h18',
+  ap:         'M8.5 8.5a5 5 0 0 1 7 0M5.5 5.5a9 9 0 0 1 13 0M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0-2 0M12 16v4',
+  vm:         'M4 4h16v12H4zM8 20h8M12 16v4',
+  container:  'M12 2l9 4.5v11L12 22l-9-4.5v-11zM12 2v20M3 6.5l9 4.5 9-4.5',
+  database:   'M12 2C6.48 2 2 4.24 2 7v10c0 2.76 4.48 5 10 5s10-2.24 10-5V7c0-2.76-4.48-5-10-5zm0 3c4.42 0 8 1.57 8 3.5S16.42 12 12 12 4 10.43 4 8.5 7.58 5 12 5z',
+  default:    'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM12 15a2 2 0 1 1 0-4 2 2 0 0 1 0 4z',
+};
+
+function getDeviceIcon(node) {
+  const t = (node.metadata?.device_type || node.type || 'server').toLowerCase();
+  if (t.includes('switch')) return DEVICE_ICONS.switch;
+  if (t.includes('router')) return DEVICE_ICONS.router;
+  if (t.includes('firewall')) return DEVICE_ICONS.firewall;
+  if (t.includes('hypervisor') || t.includes('hv')) return DEVICE_ICONS.hypervisor;
+  if (t.includes('ap') || t.includes('access_point') || t.includes('wifi')) return DEVICE_ICONS.ap;
+  if (t.includes('vm') || t.includes('virtual')) return DEVICE_ICONS.vm;
+  if (t.includes('container') || t.includes('docker')) return DEVICE_ICONS.container;
+  if (t.includes('database') || t.includes('db') || t.includes('sql')) return DEVICE_ICONS.database;
+  if (t.includes('server')) return DEVICE_ICONS.server;
+  return DEVICE_ICONS.default;
+}
+
 const EDGE_COLOR = {
   dependency: '#334155',
   database: '#6366f1',
@@ -238,12 +266,20 @@ export default function TopologyView() {
                     <circle cx={pos.x} cy={pos.y} r={r + 8} fill="none" stroke={color} strokeWidth="2" strokeOpacity="0.4" />
                   )}
                   <circle cx={pos.x} cy={pos.y} r={r} fill={'url(#grad-' + node.id + ')'} stroke={color} strokeWidth={isSelected ? 2.5 : 1.5} />
+                  {/* Ícone SVG do tipo de dispositivo */}
+                  <svg x={pos.x - 9} y={pos.y - 11} width="18" height="18" viewBox="0 0 24 24"
+                    fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
+                    style={{ pointerEvents: 'none' }}>
+                    <path d={getDeviceIcon(node)} />
+                  </svg>
+                  {/* Badge de status */}
                   <circle cx={pos.x + r - 5} cy={pos.y - r + 5} r="4.5" fill={color} stroke="#0d1117" strokeWidth="1.5" />
-                  <text x={pos.x} y={pos.y + 4} textAnchor="middle" fontSize="9" fill={color} fontWeight="600" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
+                  {/* Nome do nó */}
+                  <text x={pos.x} y={pos.y + r + 12} textAnchor="middle" fontSize="9" fill={color} fontWeight="600" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
                     {(node.name || '').substring(0, 13)}
                   </text>
-                  <text x={pos.x} y={pos.y + 38} textAnchor="middle" fontSize="8" fill="#475569" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
-                    {node.type}
+                  <text x={pos.x} y={pos.y + r + 22} textAnchor="middle" fontSize="7.5" fill="#475569" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
+                    {(node.metadata?.device_type || node.type || 'server').toLowerCase()}
                   </text>
                 </g>
               );
