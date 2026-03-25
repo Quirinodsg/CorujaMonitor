@@ -43,7 +43,7 @@ class SensorCreate(BaseModel):
     alert_mode: Optional[str] = None  # None = auto-detect; 'normal'|'silent'|'metric_only' = explicit
 
 class StandaloneSensorCreate(BaseModel):
-    probe_id: int
+    probe_id: Optional[int] = None
     name: str
     sensor_type: str
     category: str
@@ -347,13 +347,17 @@ async def create_standalone_sensor(
     from models import Probe
     
     # Verificar se a probe existe e pertence ao tenant do usuário
-    probe = db.query(Probe).filter(
-        Probe.id == sensor.probe_id,
-        Probe.tenant_id == current_user.tenant_id
-    ).first()
-    
-    if not probe:
-        raise HTTPException(status_code=404, detail="Probe not found")
+    probe = None
+    if sensor.probe_id:
+        probe = db.query(Probe).filter(
+            Probe.id == sensor.probe_id,
+            Probe.tenant_id == current_user.tenant_id
+        ).first()
+        if not probe:
+            raise HTTPException(status_code=404, detail="Probe not found")
+    elif sensor.sensor_type not in ('http', 'https'):
+        # Sensores não-HTTP precisam de probe (SNMP, etc.)
+        raise HTTPException(status_code=400, detail="probe_id é obrigatório para este tipo de sensor")
     
     # Criar configuração do sensor
     config = {
@@ -391,8 +395,8 @@ async def create_standalone_sensor(
     
     # Criar sensor sem server_id (standalone)
     new_sensor = Sensor(
-        server_id=None,  # Sensor independente
-        probe_id=sensor.probe_id,
+        server_id=None,
+        probe_id=sensor.probe_id if sensor.probe_id else None,
         name=sensor.name,
         sensor_type=sensor.sensor_type,
         config=config,
@@ -415,14 +419,18 @@ async def list_standalone_sensors(
 ):
     """Lista sensores independentes (não vinculados a servidores)"""
     from models import Probe
-    
-    # Buscar sensores sem server_id que pertencem às probes do tenant
-    sensors = db.query(Sensor).join(Probe).filter(
+    from sqlalchemy import or_
+
+    # Sensores sem server_id: com probe do tenant OU sem probe (coletados pelo worker central)
+    sensors = db.query(Sensor).outerjoin(Probe, Sensor.probe_id == Probe.id).filter(
         Sensor.server_id == None,
-        Probe.tenant_id == current_user.tenant_id
+        Sensor.is_active == True,
+        or_(
+            Probe.tenant_id == current_user.tenant_id,
+            Sensor.probe_id == None
+        )
     ).all()
-    
-    # Adicionar categoria do config para facilitar no frontend
+
     for sensor in sensors:
         if sensor.config and 'category' in sensor.config:
             sensor.category = sensor.config['category']
@@ -430,7 +438,7 @@ async def list_standalone_sensors(
             sensor.description = sensor.config['description']
         if sensor.config and 'ip_address' in sensor.config:
             sensor.ip_address = sensor.config['ip_address']
-    
+
     return sensors
 
 
