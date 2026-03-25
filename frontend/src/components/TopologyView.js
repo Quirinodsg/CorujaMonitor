@@ -159,8 +159,19 @@ export default function TopologyView() {
     setImpact(null);
     try {
       const r = await api.get('/topology/impact/' + node.id, { timeout: 15000 });
-      setImpact(r.data);
-    } catch (_) {}
+      // Enriquecer com vizinhos diretos do grafo local
+      const neighbors = graphData.edges
+        .filter(e => e.source === node.id || e.target === node.id)
+        .map(e => e.source === node.id ? e.target : e.source);
+      const uniqueNeighbors = [...new Set(neighbors)];
+      setImpact({ ...r.data, direct_neighbors: uniqueNeighbors });
+    } catch (_) {
+      // Fallback: só vizinhos locais
+      const neighbors = graphData.edges
+        .filter(e => e.source === node.id || e.target === node.id)
+        .map(e => e.source === node.id ? e.target : e.source);
+      setImpact({ total_impact: 0, affected_hosts: [], depends_on: [], direct_neighbors: [...new Set(neighbors)] });
+    }
   };
 
   const highlightedNodes = new Set();
@@ -295,18 +306,66 @@ export default function TopologyView() {
           {selected ? (
             <>
               <div className="topo-detail-title">{selected.name || selected.id}</div>
-              <div className="topo-detail-row"><span>Tipo</span><strong>{selected.type || '-'}</strong></div>
+              <div className="topo-detail-row"><span>Tipo</span><strong>{selected.metadata?.device_type || selected.type || 'server'}</strong></div>
               <div className="topo-detail-row">
                 <span>Status</span>
                 <strong style={{ color: STATUS_COLOR[selected.status] || '#9CA3AF' }}>{selected.status || 'unknown'}</strong>
               </div>
               {selected.metadata?.ip && <div className="topo-detail-row"><span>IP</span><strong>{selected.metadata.ip}</strong></div>}
-              {impact && (
+              {selected.metadata?.hostname && selected.metadata.hostname !== selected.name && (
+                <div className="topo-detail-row"><span>Hostname</span><strong>{selected.metadata.hostname}</strong></div>
+              )}
+              <div className="topo-detail-section-title">Blast Radius</div>
+              <div className="topo-blast-grid">
+                <div className="topo-blast-item">
+                  <div className="topo-blast-value">{impact?.total_impact ?? '—'}</div>
+                  <div className="topo-blast-label">Impacto</div>
+                </div>
+                <div className="topo-blast-item">
+                  <div className="topo-blast-value">{impact?.affected_hosts?.length ?? '—'}</div>
+                  <div className="topo-blast-label">Hosts</div>
+                </div>
+                <div className="topo-blast-item">
+                  <div className="topo-blast-value">{impact?.depends_on?.length ?? '—'}</div>
+                  <div className="topo-blast-label">Depende de</div>
+                </div>
+                <div className="topo-blast-item">
+                  <div className="topo-blast-value">{impact?.edge_count ?? '—'}</div>
+                  <div className="topo-blast-label">Conexões</div>
+                </div>
+              </div>
+              {impact && impact.total_impact === 0 && (
+                <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: 8 }}>
+                  Nenhum nó downstream detectado. Este servidor não tem dependentes diretos no grafo.
+                </div>
+              )}
+              {impact?.all_affected?.length > 0 && (
                 <>
-                  <div className="topo-detail-section-title">Blast Radius</div>
-                  <div className="topo-blast-grid">
-                    <div className="topo-blast-item"><div className="topo-blast-value">{impact.total_impact || 0}</div><div className="topo-blast-label">Impacto</div></div>
-                    <div className="topo-blast-item"><div className="topo-blast-value">{impact.affected_hosts?.length || 0}</div><div className="topo-blast-label">Hosts</div></div>
+                  <div className="topo-detail-section-title" style={{ marginTop: 12 }}>Nós Afetados</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', maxHeight: 80, overflowY: 'auto' }}>
+                    {impact.all_affected.slice(0, 8).map(id => {
+                      const n = graphData.nodes.find(x => x.id === id);
+                      return <div key={id} style={{ padding: '2px 0' }}>• {n?.name || id}</div>;
+                    })}
+                    {impact.all_affected.length > 8 && <div>+{impact.all_affected.length - 8} mais...</div>}
+                  </div>
+                </>
+              )}
+              {impact?.direct_neighbors?.length > 0 && (
+                <>
+                  <div className="topo-detail-section-title" style={{ marginTop: 12 }}>Conexões Diretas ({impact.direct_neighbors.length})</div>
+                  <div style={{ fontSize: '0.75rem', color: '#94a3b8', maxHeight: 100, overflowY: 'auto' }}>
+                    {impact.direct_neighbors.map(id => {
+                      const n = graphData.nodes.find(x => x.id === id);
+                      const c = STATUS_COLOR[n?.status] || '#6b7280';
+                      return (
+                        <div key={id} style={{ padding: '3px 0', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ width: 6, height: 6, borderRadius: '50%', background: c, flexShrink: 0 }} />
+                          <span>{n?.name || id}</span>
+                          <span style={{ color: '#475569', fontSize: '0.7rem' }}>{n?.metadata?.device_type || n?.type || ''}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </>
               )}
