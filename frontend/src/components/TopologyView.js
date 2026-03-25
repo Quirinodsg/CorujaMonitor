@@ -117,6 +117,8 @@ export default function TopologyView() {
   const [error, setError] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
+  const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'list'
+  const [listSearch, setListSearch] = useState('');
 
   const W = 900, H = 480;
   const positions = useForceLayout(graphData.nodes, graphData.edges, W, H);
@@ -213,11 +215,90 @@ export default function TopologyView() {
         <button className="ds-btn ds-btn--ghost" onClick={syncFromServers} disabled={syncing} style={{ fontSize: 12 }}>
           {syncing ? 'Sincronizando...' : 'Sincronizar'}
         </button>
+        <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
+          <button
+            className={`ds-btn ${viewMode === 'graph' ? 'ds-btn--primary' : 'ds-btn--ghost'}`}
+            style={{ fontSize: 12 }}
+            onClick={() => setViewMode('graph')}
+          >🕸️ Grafo</button>
+          <button
+            className={`ds-btn ${viewMode === 'list' ? 'ds-btn--primary' : 'ds-btn--ghost'}`}
+            style={{ fontSize: 12 }}
+            onClick={() => setViewMode('list')}
+          >📋 Lista</button>
+        </div>
         {syncMsg && <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: 8 }}>{syncMsg}</span>}
         <span className="topo-stats">{graphData.nodes.length} nos - {graphData.edges.length} conexoes</span>
       </div>
-      <div className="topo-main">
-        <div className="topo-graph-card">
+
+      {viewMode === 'list' ? (
+        <div style={{ padding: '16px 0' }}>
+          <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="text"
+              placeholder="Buscar por nome ou IP..."
+              value={listSearch}
+              onChange={e => setListSearch(e.target.value)}
+              style={{
+                background: '#1e293b', border: '1px solid #334155', borderRadius: 6,
+                color: '#e2e8f0', padding: '6px 12px', fontSize: 13, width: 260,
+                outline: 'none'
+              }}
+            />
+            <span style={{ fontSize: 12, color: '#475569' }}>
+              {graphData.nodes.filter(n => {
+                const q = listSearch.toLowerCase();
+                return !q || (n.name || '').toLowerCase().includes(q) || (n.metadata?.ip || '').includes(q);
+              }).length} servidores
+            </span>
+          </div>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid #1e293b' }}>
+                {['Status', 'Nome', 'IP', 'Tipo', 'Conexões'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '8px 12px', color: '#64748b', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {graphData.nodes
+                .filter(n => {
+                  const q = listSearch.toLowerCase();
+                  return !q || (n.name || '').toLowerCase().includes(q) || (n.metadata?.ip || '').includes(q);
+                })
+                .sort((a, b) => {
+                  const order = { critical: 0, warning: 1, unknown: 2, ok: 3 };
+                  return (order[a.status] ?? 2) - (order[b.status] ?? 2);
+                })
+                .map(node => {
+                  const color = STATUS_COLOR[node.status] || STATUS_COLOR.unknown;
+                  const connCount = graphData.edges.filter(e => e.source === node.id || e.target === node.id).length;
+                  return (
+                    <tr key={node.id}
+                      style={{ borderBottom: '1px solid #0f172a', cursor: 'pointer', transition: 'background 0.15s' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#1e293b'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                      onClick={() => { setViewMode('graph'); setSelected(node); handleNodeClick(node); }}
+                    >
+                      <td style={{ padding: '10px 12px' }}>
+                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ width: 8, height: 8, borderRadius: '50%', background: color, boxShadow: `0 0 6px ${color}` }} />
+                          <span style={{ color, fontSize: 11, fontWeight: 600 }}>{(node.status || 'unknown').toUpperCase()}</span>
+                        </span>
+                      </td>
+                      <td style={{ padding: '10px 12px', color: '#e2e8f0', fontWeight: 500 }}>{node.name || node.id}</td>
+                      <td style={{ padding: '10px 12px', color: '#94a3b8', fontFamily: 'monospace' }}>{node.metadata?.ip || '—'}</td>
+                      <td style={{ padding: '10px 12px', color: '#64748b' }}>{node.metadata?.device_type || node.type || 'server'}</td>
+                      <td style={{ padding: '10px 12px', color: '#64748b', textAlign: 'center' }}>{connCount}</td>
+                    </tr>
+                  );
+                })}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <div className="topo-main">
+          <div className="topo-graph-card">
           <svg viewBox={'0 0 ' + W + ' ' + H} className="topo-svg" aria-label="Grafo de topologia">
             <defs>
               {['dep','db','http','infra'].map(t => (
@@ -375,6 +456,7 @@ export default function TopologyView() {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }
