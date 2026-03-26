@@ -118,8 +118,8 @@ Backend-first implementation: database migration → SQLAlchemy models → healt
 - [ ] 8. Checkpoint - Ensure all backend tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 9. Hyper-V WMI Collector
-  - [ ] 9.1 Implement `probe/collectors/hyperv_wmi_collector.py`
+- [x] 9. Hyper-V WMI Collector
+  - [x] 9.1 Implement `probe/collectors/hyperv_wmi_collector.py`
     - Create `HyperVWMICollector` class using existing `WMIEngine`/`wmi_pool` infrastructure
     - Implement `collect_host(host_config)` with 10s timeout per host
     - Query `Msvm_ComputerSystem` for VM list and power states

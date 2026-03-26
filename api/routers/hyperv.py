@@ -361,3 +361,110 @@ async def get_ai_suggestions(
             )
         )
     return suggestions
+
+
+# ─── POST /ingest (probe → API) ──────────────────────────────────────────────
+
+from pydantic import BaseModel
+from typing import Any
+
+
+class HyperVIngestVM(BaseModel):
+    name: str
+    state: str
+    vcpus: Optional[int] = 0
+    memory_mb: Optional[int] = 0
+    cpu_percent: Optional[float] = 0
+    disk_bytes: Optional[float] = 0
+    uptime_seconds: Optional[float] = 0
+
+
+class HyperVIngestHost(BaseModel):
+    total_cpus: int = 0
+    total_memory_gb: float = 0
+    total_storage_gb: float = 0
+    cpu_percent: float = 0
+    memory_percent: float = 0
+    storage_percent: float = 0
+    vm_count: int = 0
+    running_vm_count: int = 0
+    wmi_latency_ms: float = 0
+    status: str = "unknown"
+
+
+class HyperVIngestPayload(BaseModel):
+    hostname: str
+    ip: str
+    host: HyperVIngestHost
+    vms: List[HyperVIngestVM] = []
+
+
+@router.post("/ingest")
+async def ingest_hyperv_data(
+    payload: HyperVIngestPayload,
+    probe_token: str = Query(...),
+    db: Session = Depends(get_db),
+):
+    """Receive Hyper-V data from probe and upsert into DB."""
+    from models import Probe
+    probe = db.query(Probe).filter(Probe.token == probe_token).first()
+    if not probe:
+        raise HTTPException(status_code=401, detail="Invalid probe token")
+
+    now = datetime.now(timezone.utc)
+    h = payload.host
+
+    # Upsert host
+    host = db.query(HyperVHost).filter(HyperVHost.hostname == payload.hostname).first()
+    if not host:
+        host = HyperVHost(
+            hostname=payload.hostname,
+            ip_address=payload.ip,
+            total_cpus=h.total_cpus,
+            total_memory_gb=h.total_memory_gb,
+            total_storage_gb=h.total_storage_gb,
+        )
+        db.add(host)
+        db.flush()
+
+    host.cpu_percent = h.cpu_percent
+    host.memory_percent = h.memory_percent
+    host.storage_percent = h.storage_percent
+    host.vm_count = h.vm_count
+    host.running_vm_count = h.running_vm_count
+    host.wmi_latency_ms = h.wmi_latency_ms
+    host.status = h.status
+    host.last_seen = now
+    host.total_cpus = h.total_cpus or host.total_cpus
+    host.total_memory_gb = h.total_memory_gb or host.total_memory_gb
+    host.total_storage_gb = h.total_storage_gb or host.total_storage_gb
+
+    # Compute health score
+    vm_ratio = (h.running_vm_count / h.vm_count) if h.vm_count > 0 else 0.0
+    host.health_score = compute_health_score(
+        h.cpu_percent, h.memory_percent, h.storage_percent, vm_ratio, 0
+    )
+
+    # Store host-level metrics
+    for mt, val in [("cpu", h.cpu_percent), ("memory", h.memory_percent), ("storage", h.storage_percent)]:
+        db.add(HyperVMetric(host_id=host.id, metric_type=mt, value=val, timestamp=now))
+
+    # Upsert VMs
+    for vm_data in payload.vms:
+        vm = db.query(HyperVVM).filter(
+            HyperVVM.host_id == host.id, HyperVVM.name == vm_data.name
+        ).first()
+        if not vm:
+            vm = HyperVVM(host_id=host.id, name=vm_data.name, state=vm_data.state)
+            db.add(vm)
+            db.flush()
+        vm.state = vm_data.state
+        vm.vcpus = vm_data.vcpus
+        vm.memory_mb = vm_data.memory_mb
+        vm.cpu_percent = vm_data.cpu_percent
+        vm.disk_bytes = vm_data.disk_bytes
+        vm.uptime_seconds = vm_data.uptime_seconds
+        vm.last_updated = now
+
+    db.commit()
+    return {"status": "ok", "hostname": payload.hostname, "vms": len(payload.vms)}

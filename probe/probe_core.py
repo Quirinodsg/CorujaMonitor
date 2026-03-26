@@ -26,6 +26,7 @@ from collectors.network_collector import NetworkCollector
 from collectors.service_collector import ServiceCollector
 from collectors.wmi_service_collector import WMIServiceCollector
 from collectors.hyperv_collector import HyperVCollector
+from collectors.hyperv_wmi_collector import HyperVWMICollector
 from collectors.udm_collector import UDMCollector
 from collectors.system_collector import SystemCollector
 from collectors.ping_collector import PingCollector
@@ -193,6 +194,9 @@ class ProbeCore:
         # Collect standalone sensors (HTTP, SNMP, etc.)
         self._collect_standalone_sensors()
         
+        # Collect Hyper-V hosts via WMI
+        self._collect_hyperv_hosts()
+        
         # Collect from Kubernetes clusters (if collector is available)
         if self.kubernetes_collector:
             try:
@@ -349,7 +353,7 @@ class ProbeCore:
 
                 # Enviar catálogo de serviços descobertos para a API (estilo PRTG/Zabbix)
                 # Faz upsert de sensores tipo 'service' — usuário seleciona quais monitorar na UI
-                self._sync_services_discovery(server_id, conn)
+                self._sync_services_discovery(server_id, conn, hostname=hostname)
 
             finally:
                 pool.release(hostname, conn)
@@ -357,7 +361,7 @@ class ProbeCore:
         except Exception as e:
             logger.error(f"❌ WMI collection failed for {server.get('hostname')}: {e}", exc_info=True)
 
-    def _sync_services_discovery(self, server_id: int, wmi_conn):
+    def _sync_services_discovery(self, server_id: int, wmi_conn, hostname: str = None):
         """
         Envia catálogo de serviços Windows descobertos via WMI para a API.
         Estilo PRTG/Zabbix: sonda descobre → API armazena → usuário seleciona na UI.
@@ -394,11 +398,39 @@ class ProbeCore:
                 )
                 if resp.status_code == 200:
                     result = resp.json()
+                    # Apenas serviços que o usuário ativou na UI recebem métricas
+                    active_services = set(result.get('active_services', []))
                     logger.info(
                         f"🔍 Service discovery server_id={server_id}: "
                         f"{result.get('created', 0)} novos, {result.get('updated', 0)} atualizados "
-                        f"({len(services)} total)"
+                        f"({len(services)} total, {len(active_services)} ativos)"
                     )
+                    # Enfileirar métricas APENAS para serviços ativos (selecionados pelo usuário)
+                    timestamp = datetime.now().isoformat()
+                    srv_hostname = hostname or f'server_{server_id}'
+                    enqueued = 0
+                    for svc in services:
+                        if svc['service_name'] not in active_services:
+                            continue  # Ignorar serviços não selecionados pelo usuário
+                        is_running = svc['state'].lower() == 'running'
+                        self.buffer.append({
+                            'hostname': srv_hostname,
+                            'server_id': server_id,
+                            'sensor_type': 'service',
+                            'name': f"Service {svc['service_name']}",
+                            'value': 1 if is_running else 0,
+                            'unit': 'state',
+                            'status': 'ok' if is_running else 'warning',
+                            'timestamp': timestamp,
+                            'metadata': {
+                                'service_name': svc['service_name'],
+                                'display_name': svc['display_name'],
+                                'state': svc['state'],
+                                'start_mode': svc['start_mode'],
+                            }
+                        })
+                        enqueued += 1
+                    logger.info(f"📊 {enqueued}/{len(services)} métricas de serviço enfileiradas para {srv_hostname}")
                 else:
                     logger.warning(f"Service sync falhou: HTTP {resp.status_code} — {resp.text[:200]}")
 
@@ -534,6 +566,27 @@ class ProbeCore:
 
         except Exception as e:
             logger.error(f"Error collecting standalone sensors: {e}")
+
+    def _collect_hyperv_hosts(self):
+        """Collect Hyper-V metrics from configured hosts and send to API."""
+        # Pre-configured Hyper-V hosts
+        hyperv_hosts = [
+            {"hostname": "SRVHVSPRD010", "ip": "192.168.31.110"},
+            {"hostname": "SRVHVSPRD011", "ip": "192.168.31.111"},
+        ]
+        try:
+            collector = HyperVWMICollector(
+                api_url=self.config.api_url,
+                probe_token=self.config.probe_token,
+            )
+            payloads = collector.collect_all(hyperv_hosts)
+            if payloads:
+                logger.info(f"🖥️ HyperV: collected {len(payloads)} hosts")
+                collector.send_to_api(payloads)
+            else:
+                logger.debug("HyperV: no data collected")
+        except Exception as e:
+            logger.error(f"HyperV collection error: {e}")
 
     def _parse_snmp_metrics(self, snmp_result, server):
         """Parse SNMP raw data into metrics format"""
