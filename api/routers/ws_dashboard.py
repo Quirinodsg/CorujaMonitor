@@ -17,10 +17,8 @@ def _get_overview(db: Session) -> dict:
     try:
         from models import Server, Sensor, Incident
         total_servers = db.query(Server).filter(Server.is_active == True).count()
-        # Excluir sensor_type='service' — consistente com /dashboard/overview HTTP
         total_sensors = db.query(Sensor).filter(
             Sensor.is_active == True,
-            Sensor.sensor_type != 'service'
         ).count()
         open_incidents = db.query(Incident).filter(Incident.status == "open").count()
         critical = db.query(Incident).filter(
