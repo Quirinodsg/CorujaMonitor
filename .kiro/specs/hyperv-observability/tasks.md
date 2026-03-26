@@ -67,8 +67,8 @@ Backend-first implementation: database migration → SQLAlchemy models → healt
 - [ ] 4. Checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 5. Hyper-V REST API router
-  - [ ] 5.1 Implement `api/routers/hyperv.py`
+- [x] 5. Hyper-V REST API router
+  - [x] 5.1 Implement `api/routers/hyperv.py`
     - Create FastAPI router with prefix `/api/v1/hyperv`
     - Implement 7 endpoints: `GET /overview`, `GET /hosts`, `GET /hosts/{host_id}/vms`, `GET /vms`, `GET /finops/recommendations`, `GET /heatmap`, `GET /ai/suggestions`
     - Support query parameters: `period` (24h, 7d, 30d), `host`, `status` (running, stopped, paused, saved)
@@ -93,8 +93,8 @@ Backend-first implementation: database migration → SQLAlchemy models → healt
     - **Property 14: Hotspot Detection**
     - **Validates: Requirements 8.1**
 
-- [ ] 6. Hyper-V WebSocket
-  - [ ] 6.1 Implement `api/routers/hyperv_ws.py`
+- [x] 6. Hyper-V WebSocket
+  - [x] 6.1 Implement `api/routers/hyperv_ws.py`
     - Create WebSocket endpoint at `/api/v1/ws/hyperv`
     - Implement connection manager with per-client subscription filters (`host_id`, `status`)
     - Broadcast messages with structure: `{"type": "...", "timestamp": "...", "data": {...}}`
@@ -111,7 +111,7 @@ Backend-first implementation: database migration → SQLAlchemy models → healt
     - **Property 7: WebSocket Subscription Filtering**
     - **Validates: Requirements 3.4**
 
-- [ ] 7. Register routers in `api/main.py`
+- [x] 7. Register routers in `api/main.py`
   - Import and register `hyperv.router` and `hyperv_ws.router` via `app.include_router()`
   - _Requirements: 2.1, 3.1_
 
@@ -141,8 +141,8 @@ Backend-first implementation: database migration → SQLAlchemy models → healt
 - [ ] 10. Checkpoint - Ensure all backend and probe tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 11. HyperV Dashboard React component
-  - [ ] 11.1 Create `frontend/src/components/HyperVDashboard.js` and `HyperVDashboard.css`
+- [x] 11. HyperV Dashboard React component
+  - [x] 11.1 Create `frontend/src/components/HyperVDashboard.js` and `HyperVDashboard.css`
     - Implement main `HyperVDashboard` component with state management
     - Header section: 5 summary cards (Total Hosts, Total VMs, VMs Rodando, Alertas Ativos, Health Score)
     - 3 gauge charts (CPU%, Memory%, Storage%)
@@ -170,12 +170,12 @@ Backend-first implementation: database migration → SQLAlchemy models → healt
     - **Property 17: Recomendado Badge Threshold**
     - **Validates: Requirements 9.3**
 
-- [ ] 12. Sidebar and MainLayout integration
-  - [ ] 12.1 Add Hyper-V menu item to `frontend/src/components/Sidebar.js`
+- [x] 12. Sidebar and MainLayout integration
+  - [x] 12.1 Add Hyper-V menu item to `frontend/src/components/Sidebar.js`
     - Add `{ id: "hyperv", icon: "🖥️", label: "Hyper-V" }` to the "Observabilidade" category in the `CATS` array
     - _Requirements: 5.1, 5.2, 5.3_
 
-  - [ ] 12.2 Add Hyper-V case to `frontend/src/components/MainLayout.js`
+  - [x] 12.2 Add Hyper-V case to `frontend/src/components/MainLayout.js`
     - Import `HyperVDashboard` and add `case 'hyperv': return <HyperVDashboard />;` to the page rendering switch
     - _Requirements: 5.2_
 

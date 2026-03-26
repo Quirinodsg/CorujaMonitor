@@ -25,6 +25,7 @@ var CATS = [
     { id: "observability",    icon: "🔭", label: "Observabilidade" },
     { id: "topology",         icon: "🕸️", label: "Topologia" },
     { id: "advanced-metrics", icon: "📈", label: "Métricas Avançadas" },
+    { id: "hyperv",           icon: "🖥️", label: "Hyper-V" },
   ]},
   { id: "system", label: "Sistema", icon: "🔧", items: [
     { id: "discovery",     icon: "🔍", label: "Discovery" },
