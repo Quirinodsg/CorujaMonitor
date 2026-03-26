@@ -84,11 +84,11 @@ function HyperVDashboard() {
       if (filterStatus) params.status = filterStatus;
 
       var [ovRes, hostRes, vmRes, finRes, aiRes] = await Promise.allSettled([
-        api.get('/api/v1/hyperv/overview', { params }),
-        api.get('/api/v1/hyperv/hosts', { params }),
-        api.get('/api/v1/hyperv/vms', { params }),
-        api.get('/api/v1/hyperv/finops/recommendations', { params }),
-        api.get('/api/v1/hyperv/ai/suggestions', { params }),
+        api.get('/hyperv/overview', { params }),
+        api.get('/hyperv/hosts', { params }),
+        api.get('/hyperv/vms', { params }),
+        api.get('/hyperv/finops/recommendations', { params }),
+        api.get('/hyperv/ai/suggestions', { params }),
       ]);
 
       if (ovRes.status === 'fulfilled') setOverview(ovRes.value.data);
@@ -171,7 +171,7 @@ function HyperVDashboard() {
     setExpandedHost(hostId);
     if (!hostVms[hostId]) {
       try {
-        var res = await api.get(`/api/v1/hyperv/hosts/${hostId}/vms`);
+        var res = await api.get(`/hyperv/hosts/${hostId}/vms`);
         setHostVms(prev => ({ ...prev, [hostId]: Array.isArray(res.data) ? res.data : [] }));
       } catch (_) {
         setHostVms(prev => ({ ...prev, [hostId]: [] }));
