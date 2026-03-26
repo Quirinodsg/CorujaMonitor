@@ -1630,8 +1630,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
         {sidebarCollapsed ? '☰' : '✓'}
       </button>
 
-      <div className={`servers-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-        <div className="servers-list">
+      <div className={`servers-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''} ${viewMode === 'table' ? 'table-fullscreen' : ''}`}>
+        <div className={`servers-list ${viewMode === 'table' ? 'servers-list-fullscreen' : ''}`}>
           <div className="servers-list-header">
             <h2>Servidores ({servers.length})</h2>
             <div className="view-toggle">
@@ -1802,7 +1802,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
             )}
           </div>
 
-          {viewMode === 'tree' ? (
+          {viewMode !== 'table' && (viewMode === 'tree' ? (
             <div className="tree-view">
               {Object.entries(groupServersByCompany()).map(([groupName, groupServers]) => (
                 <div key={groupName} className="tree-group">
@@ -2057,7 +2057,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 </div>
               ))}
             </div>
-          )}
+          ))}
           {viewMode === 'table' && (
             <div style={{ padding: '8px 0' }}>
               <input

@@ -4072,3 +4072,17 @@
   color: #FCD34D;
   border-color: rgba(245, 158, 11, 0.25) !important;
 }
+
+/* Table fullscreen mode */
+.servers-layout.table-fullscreen {
+  display: block;
+}
+.servers-list.servers-list-fullscreen {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border-right: none;
+}
+.servers-layout.table-fullscreen .server-details {
+  display: none;
+}
