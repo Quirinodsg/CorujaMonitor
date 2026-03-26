@@ -158,6 +158,46 @@ async def get_integrity_status(current_user: dict = Depends(get_current_user)):
         }
 
 
+@router.post("/security/integrity/generate")
+async def generate_checksums(current_user: dict = Depends(get_current_user)):
+    """Gera checksums de integridade executando o script diretamente"""
+    import subprocess
+    import sys
+    try:
+        script_path = Path(__file__).parent.parent.parent / "security" / "integrity_check.py"
+        result = subprocess.run(
+            [sys.executable, str(script_path), "generate"],
+            capture_output=True, text=True, timeout=60,
+            cwd=str(Path(__file__).parent.parent.parent)
+        )
+        if result.returncode == 0:
+            return {"status": "success", "message": "Checksums gerados com sucesso", "output": result.stdout[-500:]}
+        else:
+            return {"status": "error", "message": result.stderr[-500:] or result.stdout[-500:]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/security/vulnerabilities/scan")
+async def run_vulnerability_scan(current_user: dict = Depends(get_current_user)):
+    """Executa scan de vulnerabilidades"""
+    import subprocess
+    import sys
+    try:
+        script_path = Path(__file__).parent.parent.parent / "security" / "scan_dependencies.py"
+        result = subprocess.run(
+            [sys.executable, str(script_path)],
+            capture_output=True, text=True, timeout=120,
+            cwd=str(Path(__file__).parent.parent.parent)
+        )
+        if result.returncode == 0:
+            return {"status": "success", "message": "Scan concluído", "output": result.stdout[-500:]}
+        else:
+            return {"status": "error", "message": result.stderr[-500:] or result.stdout[-500:]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.post("/security/integrity/verify")
 async def verify_integrity(current_user: dict = Depends(get_current_user)):
     """

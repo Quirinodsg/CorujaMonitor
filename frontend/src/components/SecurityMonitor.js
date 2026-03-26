@@ -242,15 +242,27 @@ const SecurityMonitor = () => {
             {integrityStatus.status === 'not_configured' ? (
               <div className="alert alert-warning">
                 <p>{integrityStatus.message}</p>
-                <button className="btn-primary">Gerar Checksums</button>
+                <button className="btn-primary" onClick={async () => {
+                  try {
+                    const res = await api.post('/security/integrity/generate');
+                    alert(res.data.status === 'success' ? '✅ ' + res.data.message : '❌ ' + res.data.message);
+                    loadSecurityData();
+                  } catch (e) { alert('Erro: ' + (e.response?.data?.detail || e.message)); }
+                }}>Gerar Checksums</button>
               </div>
             ) : (
               <div className="integrity-info">
                 <p><strong>Status:</strong> {integrityStatus.status}</p>
                 <p><strong>Arquivos Monitorados:</strong> {integrityStatus.total_files}</p>
                 <p><strong>Gerado em:</strong> {new Date(integrityStatus.generated_at).toLocaleString()}</p>
-                <button className="btn-primary" onClick={() => alert('Verificação em desenvolvimento')}>
-                  Verificar Integridade
+                <button className="btn-primary" onClick={async () => {
+                  try {
+                    const res = await api.post('/security/integrity/generate');
+                    alert(res.data.status === 'success' ? '✅ ' + res.data.message : '❌ ' + res.data.message);
+                    loadSecurityData();
+                  } catch (e) { alert('Erro: ' + (e.response?.data?.detail || e.message)); }
+                }}>
+                  Regenerar Checksums
                 </button>
               </div>
             )}
@@ -266,7 +278,13 @@ const SecurityMonitor = () => {
             {vulnerabilities.status === 'not_scanned' ? (
               <div className="alert alert-warning">
                 <p>{vulnerabilities.message}</p>
-                <button className="btn-primary">Executar Scan</button>
+                <button className="btn-primary" onClick={async () => {
+                  try {
+                    const res = await api.post('/security/vulnerabilities/scan');
+                    alert(res.data.status === 'success' ? '✅ ' + res.data.message : '❌ ' + res.data.message);
+                    loadSecurityData();
+                  } catch (e) { alert('Erro: ' + (e.response?.data?.detail || e.message)); }
+                }}>Executar Scan</button>
               </div>
             ) : (
               <div className="vuln-info">
@@ -287,7 +305,13 @@ const SecurityMonitor = () => {
                   <p>Status: {vulnerabilities.docker.status}</p>
                 </div>
                 
-                <button className="btn-primary" onClick={() => alert('Scan em desenvolvimento')}>
+                <button className="btn-primary" onClick={async () => {
+                  try {
+                    const res = await api.post('/security/vulnerabilities/scan');
+                    alert(res.data.status === 'success' ? '✅ ' + res.data.message : '❌ ' + res.data.message);
+                    loadSecurityData();
+                  } catch (e) { alert('Erro: ' + (e.response?.data?.detail || e.message)); }
+                }}>
                   Executar Novo Scan
                 </button>
               </div>
