@@ -969,3 +969,79 @@ class DefaultSensorProfile(Base):
         UniqueConstraint('asset_type', 'sensor_type', name='uq_profile_asset_sensor'),
         Index('idx_default_profiles_asset_type', 'asset_type'),
     )
+
+
+# ── Hyper-V Observability Dashboard ──────────────────────────────────────────
+import uuid
+from sqlalchemy.dialects.postgresql import UUID as PG_UUID
+
+
+class HyperVHost(Base):
+    __tablename__ = "hyperv_hosts"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    hostname = Column(String(255), nullable=False)
+    ip_address = Column(String(50), nullable=False)
+    total_cpus = Column(Integer, nullable=False)
+    total_memory_gb = Column(Float, nullable=False)
+    total_storage_gb = Column(Float, nullable=False)
+    cpu_percent = Column(Float)
+    memory_percent = Column(Float)
+    storage_percent = Column(Float)
+    vm_count = Column(Integer, default=0)
+    running_vm_count = Column(Integer, default=0)
+    status = Column(String(20), default="unknown")
+    health_score = Column(Float, default=0)
+    wmi_latency_ms = Column(Float)
+    last_seen = Column(DateTime(timezone=True))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    vms = relationship("HyperVVM", back_populates="host")
+
+
+class HyperVVM(Base):
+    __tablename__ = "hyperv_vms"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    host_id = Column(PG_UUID(as_uuid=True), ForeignKey("hyperv_hosts.id"), nullable=False)
+    name = Column(String(255), nullable=False)
+    state = Column(String(20), nullable=False)
+    vcpus = Column(Integer)
+    memory_mb = Column(Integer)
+    disk_bytes = Column(Float)
+    cpu_percent = Column(Float)
+    memory_percent = Column(Float)
+    uptime_seconds = Column(Float)
+    last_updated = Column(DateTime(timezone=True), server_default=func.now())
+
+    host = relationship("HyperVHost", back_populates="vms")
+
+
+class HyperVMetric(Base):
+    __tablename__ = "hyperv_metrics"
+    __table_args__ = (
+        Index('idx_hyperv_metrics_host_ts', 'host_id', 'timestamp'),
+        Index('idx_hyperv_metrics_vm_ts', 'vm_id', 'timestamp'),
+    )
+
+    id = Column(Integer, primary_key=True, index=True)
+    host_id = Column(PG_UUID(as_uuid=True), ForeignKey("hyperv_hosts.id"), nullable=False)
+    vm_id = Column(PG_UUID(as_uuid=True), ForeignKey("hyperv_vms.id"), nullable=True)
+    metric_type = Column(String(50), nullable=False)
+    value = Column(Float, nullable=False)
+    timestamp = Column(DateTime(timezone=True), nullable=False)
+
+
+class HyperVFinOpsRecommendation(Base):
+    __tablename__ = "hyperv_finops_recommendations"
+
+    id = Column(PG_UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    vm_id = Column(PG_UUID(as_uuid=True), ForeignKey("hyperv_vms.id"))
+    host_id = Column(PG_UUID(as_uuid=True), ForeignKey("hyperv_hosts.id"))
+    category = Column(String(50), nullable=False)
+    description = Column(Text, nullable=False)
+    suggested_action = Column(Text, nullable=False)
+    estimated_savings = Column(Float)
+    confidence = Column(Float)
+    status = Column(String(20), default="active")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
