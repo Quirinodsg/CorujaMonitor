@@ -72,6 +72,7 @@ services:
       - ./sensor_dsl:/app/sensor_dsl
       - api_logs:/app/logs
       - backups_data:/app/backups
+      - ./security:/app/security
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/routers --reload-dir /app/core --reload-dir /app/ai_agents --reload-dir /app/alert_engine --reload-exclude '*.py.bak' --reload-exclude 'fix_*.py' --reload-exclude 'migrate_*.py' --reload-exclude 'seed_*.py' --reload-exclude 'create_*.py' --reload-exclude 'check_*.py' --reload-exclude 'cleanup_*.py' --reload-delay 2
 
   worker:

@@ -17,8 +17,8 @@ from auth import get_current_user
 router = APIRouter()
 
 # Caminho para logs e arquivos de segurança
-SECURITY_DIR = Path(__file__).parent.parent.parent / "security"
-CHECKSUMS_FILE = Path(__file__).parent.parent.parent / "checksums.json"
+SECURITY_DIR = Path("/app/security")
+CHECKSUMS_FILE = Path("/app/checksums.json")
 SCAN_RESULTS_FILE = SECURITY_DIR / "scan_results.json"
 
 @router.get("/security/status")
@@ -164,11 +164,11 @@ async def generate_checksums(current_user: dict = Depends(get_current_user)):
     import subprocess
     import sys
     try:
-        script_path = Path(__file__).parent.parent.parent / "security" / "integrity_check.py"
+        script_path = Path("/app/security/integrity_check.py")
         result = subprocess.run(
             [sys.executable, str(script_path), "generate"],
             capture_output=True, text=True, timeout=60,
-            cwd=str(Path(__file__).parent.parent.parent)
+            cwd="/app"
         )
         if result.returncode == 0:
             return {"status": "success", "message": "Checksums gerados com sucesso", "output": result.stdout[-500:]}
@@ -184,11 +184,11 @@ async def run_vulnerability_scan(current_user: dict = Depends(get_current_user))
     import subprocess
     import sys
     try:
-        script_path = Path(__file__).parent.parent.parent / "security" / "scan_dependencies.py"
+        script_path = Path("/app/security/scan_dependencies.py")
         result = subprocess.run(
             [sys.executable, str(script_path)],
             capture_output=True, text=True, timeout=120,
-            cwd=str(Path(__file__).parent.parent.parent)
+            cwd="/app"
         )
         if result.returncode == 0:
             return {"status": "success", "message": "Scan concluído", "output": result.stdout[-500:]}
