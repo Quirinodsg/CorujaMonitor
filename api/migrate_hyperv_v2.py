@@ -2,28 +2,42 @@
 Migration: Add memory_demand_mb and disk_max_bytes columns to hyperv_vms table.
 Run: docker exec -it coruja-api python migrate_hyperv_v2.py
 """
-import sys
-sys.path.insert(0, '.')
-from database import engine
+import os
+import logging
+
+logger = logging.getLogger(__name__)
+
+def get_connection():
+    import psycopg2
+    return psycopg2.connect(
+        host=os.getenv("POSTGRES_HOST", "localhost"),
+        port=int(os.getenv("POSTGRES_PORT", 5432)),
+        dbname=os.getenv("POSTGRES_DB", "coruja"),
+        user=os.getenv("POSTGRES_USER", "coruja"),
+        password=os.getenv("POSTGRES_PASSWORD", "coruja"),
+    )
 
 def migrate():
-    with engine.connect() as conn:
-        # Add memory_demand_mb column
-        try:
-            conn.execute("ALTER TABLE hyperv_vms ADD COLUMN IF NOT EXISTS memory_demand_mb INTEGER")
-            print("Added memory_demand_mb column")
-        except Exception as e:
-            print(f"memory_demand_mb: {e}")
+    conn = get_connection()
+    cursor = conn.cursor()
 
-        # Add disk_max_bytes column
-        try:
-            conn.execute("ALTER TABLE hyperv_vms ADD COLUMN IF NOT EXISTS disk_max_bytes DOUBLE PRECISION")
-            print("Added disk_max_bytes column")
-        except Exception as e:
-            print(f"disk_max_bytes: {e}")
+    steps = [
+        ("memory_demand_mb", "ALTER TABLE hyperv_vms ADD COLUMN IF NOT EXISTS memory_demand_mb INTEGER"),
+        ("disk_max_bytes", "ALTER TABLE hyperv_vms ADD COLUMN IF NOT EXISTS disk_max_bytes DOUBLE PRECISION"),
+    ]
 
-        conn.commit()
-        print("Migration complete!")
+    for name, ddl in steps:
+        try:
+            cursor.execute(ddl)
+            conn.commit()
+            print(f"OK: {name}")
+        except Exception as e:
+            conn.rollback()
+            print(f"SKIP {name}: {e}")
+
+    cursor.close()
+    conn.close()
+    print("Migration complete!")
 
 if __name__ == "__main__":
     migrate()
