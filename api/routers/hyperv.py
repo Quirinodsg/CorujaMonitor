@@ -356,10 +356,9 @@ async def get_ai_suggestions(
 
     # Map FinOps categories to AI suggestion categories
     category_map = {
-        "rebalance": "move VM to less loaded host",
-        "idle": "shutdown idle VM",
-        "overprovisioned": "balance cluster workload",
-        "right-size": "balance cluster workload",
+        "rebalance": "migrar VM para host menos carregado",
+        "right-size": "reduzir recursos (CPU/RAM)",
+        "scale-up": "aumentar recursos (CPU/RAM)",
     }
 
     suggestions = []
@@ -534,50 +533,70 @@ def _generate_finops_recommendations(db: Session, host, vms_data):
             vcpus = vm.vcpus or 0
             mem_gb = (vm.memory_mb or 0) / 1024
             cpu_pct = vm.cpu_percent or 0
-            mem_pct = vm.memory_percent or 0
+            # Memory: use internal % (demand/assigned) for right-sizing decisions
+            mem_demand_mb = vm.memory_demand_mb or 0
+            mem_assigned_mb = vm.memory_mb or 1
+            mem_internal_pct = (mem_demand_mb / mem_assigned_mb * 100) if mem_assigned_mb > 0 else 0
 
-            # Idle VM: CPU < 2% and low memory usage
-            if vm.state == "Running" and cpu_pct < 2 and mem_pct < 3:
-                savings = round(vcpus * COST_VCPU + mem_gb * COST_RAM_GB, 2)
-                db.add(HyperVFinOpsRecommendation(
-                    host_id=host.id, vm_id=vm.id,
-                    category="idle",
-                    description=f"VM {vm.name} ociosa (CPU {cpu_pct}%, Mem {mem_pct}%) — {vcpus} vCPU, {mem_gb:.0f}GB RAM",
-                    suggested_action=f"Desligar {vm.name} libera {vcpus} vCPUs e {mem_gb:.0f}GB RAM",
-                    estimated_savings=savings,
-                    confidence=0.7,
-                    status="active",
-                ))
-
-            # Overprovisioned vCPU: >= 8 vCPUs but < 5% CPU
-            if vm.state == "Running" and vcpus >= 8 and cpu_pct < 5:
-                target_vcpus = max(2, vcpus // 2)
+            # ── RIGHT-SIZE CPU: reduzir vCPUs se uso baixo ──
+            if vm.state == "Running" and vcpus >= 8 and cpu_pct < 10:
+                target_vcpus = max(4, vcpus // 2)
                 freed = vcpus - target_vcpus
                 savings = round(freed * COST_VCPU, 2)
                 db.add(HyperVFinOpsRecommendation(
                     host_id=host.id, vm_id=vm.id,
-                    category="overprovisioned",
-                    description=f"VM {vm.name}: {vcpus} vCPUs alocadas, uso {cpu_pct}% CPU",
-                    suggested_action=f"Reduzir de {vcpus} para {target_vcpus} vCPUs (libera {freed} vCPUs)",
+                    category="right-size",
+                    description=f"VM {vm.name}: {vcpus} vCPUs, uso {cpu_pct}% CPU",
+                    suggested_action=f"Reduzir CPU de {vcpus} para {target_vcpus} vCPUs (libera {freed} vCPUs)",
                     estimated_savings=savings,
                     confidence=0.85,
                     status="active",
                 ))
 
-            # Right-size memory: >= 16GB but < 5% of host
-            if vm.state == "Running" and (vm.memory_mb or 0) >= 16384 and mem_pct < 5:
-                target_mb = max(4096, (vm.memory_mb or 8192) // 2)
-                freed_gb = ((vm.memory_mb or 0) - target_mb) / 1024
+            # ── RIGHT-SIZE CPU: aumentar vCPUs se uso alto ──
+            if vm.state == "Running" and cpu_pct > 80:
+                target_vcpus = min(vcpus * 2, 64)
+                added = target_vcpus - vcpus
+                if added > 0:
+                    db.add(HyperVFinOpsRecommendation(
+                        host_id=host.id, vm_id=vm.id,
+                        category="scale-up",
+                        description=f"VM {vm.name}: CPU em {cpu_pct}% com {vcpus} vCPUs",
+                        suggested_action=f"Aumentar CPU de {vcpus} para {target_vcpus} vCPUs (+{added})",
+                        estimated_savings=0,
+                        confidence=0.9,
+                        status="active",
+                    ))
+
+            # ── RIGHT-SIZE RAM: reduzir se uso interno < 30% ──
+            if vm.state == "Running" and mem_gb >= 16 and mem_internal_pct < 30 and mem_internal_pct > 0:
+                target_gb = max(4, int(mem_gb * 0.5))
+                freed_gb = mem_gb - target_gb
                 savings = round(freed_gb * COST_RAM_GB, 2)
                 db.add(HyperVFinOpsRecommendation(
                     host_id=host.id, vm_id=vm.id,
                     category="right-size",
-                    description=f"VM {vm.name}: {mem_gb:.0f}GB RAM alocada, usa {mem_pct}% do host",
-                    suggested_action=f"Reduzir de {mem_gb:.0f}GB para {target_mb // 1024}GB (libera {freed_gb:.0f}GB)",
+                    description=f"VM {vm.name}: {mem_gb:.0f}GB RAM, uso interno {mem_internal_pct:.0f}%",
+                    suggested_action=f"Reduzir RAM de {mem_gb:.0f}GB para {target_gb}GB (libera {freed_gb:.0f}GB)",
                     estimated_savings=savings,
                     confidence=0.75,
                     status="active",
                 ))
+
+            # ── RIGHT-SIZE RAM: aumentar se uso interno > 85% ──
+            if vm.state == "Running" and mem_internal_pct > 85:
+                target_gb = min(int(mem_gb * 1.5), 256)
+                added_gb = target_gb - int(mem_gb)
+                if added_gb > 0:
+                    db.add(HyperVFinOpsRecommendation(
+                        host_id=host.id, vm_id=vm.id,
+                        category="scale-up",
+                        description=f"VM {vm.name}: RAM em {mem_internal_pct:.0f}% ({mem_demand_mb // 1024}GB/{mem_gb:.0f}GB)",
+                        suggested_action=f"Aumentar RAM de {mem_gb:.0f}GB para {target_gb}GB (+{added_gb}GB)",
+                        estimated_savings=0,
+                        confidence=0.9,
+                        status="active",
+                    ))
 
         # Host-level: rebalance if memory > 80%
         if (host.memory_percent or 0) > 80:
