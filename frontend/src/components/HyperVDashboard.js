@@ -104,7 +104,7 @@ function HyperVDashboard() {
         api.get('/hyperv/vms', { params }),
         api.get('/hyperv/finops/recommendations', { params }),
         api.get('/hyperv/ai/suggestions', { params }),
-        api.get('/hyperv/cost-config/'),
+        api.get('/hyperv/cost-config'),
       ]);
 
       if (ovRes.status === 'fulfilled') setOverview(ovRes.value.data);
@@ -417,7 +417,7 @@ function HyperVDashboard() {
                     <button disabled={savingCosts} onClick={async () => {
                       setSavingCosts(true);
                       try {
-                        await api.put('/hyperv/cost-config/', { costs: costDraft });
+                        await api.put('/hyperv/cost-config', { costs: costDraft });
                         setCostConfig(costDraft);
                         setEditingCosts(false);
                       } catch (err) { console.error('Erro ao salvar custos:', err); }
