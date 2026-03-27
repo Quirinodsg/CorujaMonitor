@@ -532,7 +532,9 @@ function HyperVDashboard() {
                     var memAssignedGB = vm.memory_mb != null ? (vm.memory_mb / 1024).toFixed(1) : '—';
                     var memDemandGB = vm.memory_demand_mb != null && vm.memory_demand_mb > 0 ? (vm.memory_demand_mb / 1024).toFixed(1) : null;
                     var memLabel = memDemandGB ? memDemandGB + '/' + memAssignedGB + ' GB' : memAssignedGB + ' GB';
-                    if (vm.memory_percent != null && vm.memory_percent > 0) memLabel += ' (' + fmt(vm.memory_percent, '%') + ')';
+                    // Show % of VM's own allocated RAM used (demand/assigned), not % of host
+                    var memVmPct = (memDemandGB && vm.memory_mb > 0) ? ((vm.memory_demand_mb / vm.memory_mb) * 100).toFixed(0) : null;
+                    if (memVmPct) memLabel += ' (' + memVmPct + '%)';
                     var diskUsed = vm.disk_bytes != null && vm.disk_bytes > 0 ? (vm.disk_bytes / 1073741824).toFixed(1) : '—';
                     var diskMax = vm.disk_max_bytes != null && vm.disk_max_bytes > 0 ? (vm.disk_max_bytes / 1073741824).toFixed(0) : null;
                     var diskLabel = diskMax ? diskUsed + '/' + diskMax + ' GB' : (diskUsed !== '—' ? diskUsed + ' GB' : '—');
