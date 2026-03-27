@@ -20,6 +20,9 @@ class HyperVHostResponse(BaseModel):
     hostname: str
     ip_address: str
     status: str
+    total_cpus: Optional[int] = None
+    total_memory_gb: Optional[float] = None
+    total_storage_gb: Optional[float] = None
     cpu_percent: Optional[float] = None
     memory_percent: Optional[float] = None
     storage_percent: Optional[float] = None

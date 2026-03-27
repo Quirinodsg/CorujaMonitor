@@ -237,7 +237,7 @@ function HyperVDashboard() {
         </div>
         <div className="hyperv-card">
           <div className="card-label">Recomendações</div>
-          <div className="card-value warning">{finops.length}</div>
+          <div className="card-value warning">{recommendations.length}</div>
         </div>
         <div className="hyperv-card">
           <div className="card-label">Health Score</div>
@@ -281,6 +281,73 @@ function HyperVDashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── Cluster Overview ── */}
+      {hosts.length > 0 && (() => {
+        var totalCpus = hosts.reduce((s, h) => s + (h.total_cpus || 0), 0);
+        // Fallback: estimate total_cpus from API overview if host data doesn't have it
+        var clusterCpus = totalCpus > 0 ? totalCpus : (overview?.total_hosts || 0) * 48;
+        var totalVcpus = vms.reduce((s, v) => s + (v.vcpus || 0), 0);
+        var vcpuFree = Math.max(0, clusterCpus * 4 - totalVcpus); // 4:1 overcommit ratio
+        var totalMemGB = hosts.reduce((s, h) => s + (h.total_memory_gb || 0), 0);
+        var usedMemGB = vms.reduce((s, v) => s + ((v.memory_mb || 0) / 1024), 0);
+        var freeMemGB = Math.max(0, totalMemGB - usedMemGB);
+        var totalStorGB = hosts.reduce((s, h) => s + (h.total_storage_gb || 0), 0);
+        // FinOps cost estimation in R$ (based on typical datacenter costs)
+        // vCPU: R$15/mês, RAM: R$8/GB/mês, Storage: R$0.50/GB/mês, Energia: R$0.80/kWh
+        var costVcpu = totalVcpus * 15;
+        var costMem = usedMemGB * 8;
+        var costStor = totalStorGB * 0.5;
+        var costEnergy = hosts.length * 500 * 0.80; // ~500W per host * R$0.80/kWh
+        var totalCost = costVcpu + costMem + costStor + costEnergy;
+        var savingsVcpu = recommendations.filter(r => r.category === 'overprovisioned').length * 16 * 15 * 0.5;
+        var savingsIdle = recommendations.filter(r => r.category === 'idle').length * 200;
+        var savingsRightSize = recommendations.filter(r => r.category === 'right-size').length * 64;
+        var totalSavings = savingsVcpu + savingsIdle + savingsRightSize;
+        return (
+        <div className="hyperv-cluster-overview">
+          <h3>🏢 Visão do Cluster</h3>
+          <div className="cluster-grid">
+            <div className="cluster-card">
+              <div className="cluster-label">Servidores Físicos</div>
+              <div className="cluster-value">{hosts.length}</div>
+              <div className="cluster-detail">{hosts.map(h => h.hostname).join(', ')}</div>
+            </div>
+            <div className="cluster-card">
+              <div className="cluster-label">CPUs Físicas (Lógicas)</div>
+              <div className="cluster-value">{clusterCpus}</div>
+              <div className="cluster-detail">{totalVcpus} vCPUs alocadas · Ratio {clusterCpus > 0 ? (totalVcpus / clusterCpus).toFixed(1) : 0}:1</div>
+            </div>
+            <div className="cluster-card">
+              <div className="cluster-label">Memória Total</div>
+              <div className="cluster-value">{totalMemGB.toFixed(0)} GB</div>
+              <div className="cluster-detail">{usedMemGB.toFixed(0)} GB alocada · {freeMemGB.toFixed(0)} GB livre</div>
+            </div>
+            <div className="cluster-card">
+              <div className="cluster-label">Storage Total</div>
+              <div className="cluster-value">{totalStorGB.toFixed(0)} GB</div>
+              <div className="cluster-detail">Uso médio {avgStor.toFixed(1)}%</div>
+            </div>
+            <div className="cluster-card">
+              <div className="cluster-label">Capacidade de Expansão</div>
+              <div className="cluster-value" style={{color: freeMemGB > 64 ? 'var(--success)' : 'var(--warning)'}}>{freeMemGB > 64 ? '✓ Disponível' : '⚠ Limitada'}</div>
+              <div className="cluster-detail">{freeMemGB.toFixed(0)} GB RAM livre · ~{vcpuFree} vCPUs (4:1)</div>
+            </div>
+            <div className="cluster-card">
+              <div className="cluster-label">Custo Estimado Mensal</div>
+              <div className="cluster-value">R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 0})}</div>
+              <div className="cluster-detail">vCPU R${costVcpu.toFixed(0)} · RAM R${costMem.toFixed(0)} · Disco R${costStor.toFixed(0)} · Energia R${costEnergy.toFixed(0)}</div>
+            </div>
+          </div>
+          {totalSavings > 0 && (
+            <div className="cluster-savings">
+              💰 Economia potencial com FinOps: <strong>R$ {totalSavings.toLocaleString('pt-BR', {minimumFractionDigits: 0})}/mês</strong>
+              <span className="savings-detail"> (vCPU overprovisioned: R${savingsVcpu.toFixed(0)} · VMs idle: R${savingsIdle.toFixed(0)} · Right-size: R${savingsRightSize.toFixed(0)})</span>
+            </div>
+          )}
+        </div>
+        );
+      })()}
 
       {/* ── Host Table ── */}
       <div className="hyperv-host-table-wrap">
@@ -402,8 +469,8 @@ function HyperVDashboard() {
                 <div className="finops-desc">{rec.vm_name || rec.description}</div>
                 {rec.suggested_action && <div className="finops-desc">{rec.suggested_action}</div>}
               </div>
-              {rec.estimated_savings != null && (
-                <span className="finops-savings">-R$ {rec.estimated_savings.toFixed(0)}/mês</span>
+              {rec.estimated_savings != null && rec.estimated_savings > 0 && (
+                <span className="finops-savings">-R$ {rec.estimated_savings.toLocaleString('pt-BR', {minimumFractionDigits: 0})}/mês</span>
               )}
             </div>
           ))}

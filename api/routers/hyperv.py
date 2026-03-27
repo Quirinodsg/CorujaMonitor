@@ -120,6 +120,9 @@ async def get_hosts(
                 hostname=h.hostname,
                 ip_address=h.ip_address,
                 status=h.status or "unknown",
+                total_cpus=h.total_cpus,
+                total_memory_gb=h.total_memory_gb,
+                total_storage_gb=h.total_storage_gb,
                 cpu_percent=h.cpu_percent,
                 memory_percent=h.memory_percent,
                 storage_percent=h.storage_percent,
@@ -503,7 +506,7 @@ def _generate_finops_recommendations(db: Session, host, vms_data):
                     category="idle",
                     description=f"VM {vm.name} está ociosa (CPU {vm.cpu_percent or 0}%, Mem {vm.memory_percent or 0}%)",
                     suggested_action=f"Considere desligar {vm.name} para liberar recursos",
-                    estimated_savings=round((vm.vcpus or 1) * 0.02 + (vm.memory_mb or 0) / 1024 * 0.01, 2),
+                    estimated_savings=round((vm.vcpus or 1) * 15 + (vm.memory_mb or 0) / 1024 * 8, 0),
                     confidence=0.7,
                     status="active",
                 ))
@@ -515,7 +518,7 @@ def _generate_finops_recommendations(db: Session, host, vms_data):
                     category="overprovisioned",
                     description=f"VM {vm.name} tem {vm.vcpus} vCPUs mas usa apenas {vm.cpu_percent or 0}% CPU",
                     suggested_action=f"Reduzir vCPUs de {vm.name} para {max(2, (vm.vcpus or 4) // 2)}",
-                    estimated_savings=round((vm.vcpus or 4) * 0.015, 2),
+                    estimated_savings=round(((vm.vcpus or 4) - max(2, (vm.vcpus or 4) // 2)) * 15, 0),
                     confidence=0.85,
                     status="active",
                 ))
@@ -527,7 +530,7 @@ def _generate_finops_recommendations(db: Session, host, vms_data):
                     category="right-size",
                     description=f"VM {vm.name} tem {(vm.memory_mb or 0) // 1024}GB RAM mas usa {vm.memory_percent or 0}% do host",
                     suggested_action=f"Reduzir memória de {vm.name} para {max(4096, (vm.memory_mb or 8192) // 2)}MB",
-                    estimated_savings=round((vm.memory_mb or 0) / 1024 * 0.008, 2),
+                    estimated_savings=round(((vm.memory_mb or 0) - max(4096, (vm.memory_mb or 8192) // 2)) / 1024 * 8, 0),
                     confidence=0.75,
                     status="active",
                 ))
