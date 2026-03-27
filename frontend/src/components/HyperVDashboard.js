@@ -331,7 +331,7 @@ function HyperVDashboard() {
                       <td>💻 {vm.name}</td>
                       <td>{vm.state}</td>
                       <td>{fmt(vm.cpu_percent, '%')}</td>
-                      <td>{vm.memory_mb != null ? vm.memory_mb + ' MB' : '—'}</td>
+                      <td>{vm.memory_percent != null && vm.memory_percent > 0 ? fmt(vm.memory_percent, '%') : (vm.memory_mb != null ? vm.memory_mb + ' MB' : '—')}</td>
                       <td>—</td>
                       <td>—</td>
                       <td>{vm.vcpus ?? '—'} vCPU</td>
