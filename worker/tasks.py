@@ -120,10 +120,10 @@ def evaluate_all_thresholds():
                 ).first()
 
                 if not existing_incident:
-                    # 6. Supressão por dependência: ping do mesmo server CRITICAL?
-                    if sensor.server_id and sensor.sensor_type in (
-                        'cpu', 'memory', 'disk', 'network_in', 'network_out', 'network'
-                    ):
+                    # 6. Supressão por dependência: PING é sensor MASTER do servidor
+                    # Se PING DOWN aberto → suprimir TODOS os outros sensores do mesmo server
+                    # (uptime, cpu, memory, disk, network, service — tudo depende do ping)
+                    if sensor.server_id and sensor.sensor_type != 'ping':
                         ping_sensor = db.query(Sensor).filter(
                             Sensor.server_id == sensor.server_id,
                             Sensor.sensor_type == 'ping',
@@ -132,12 +132,11 @@ def evaluate_all_thresholds():
                         if ping_sensor:
                             ping_incident = db.query(Incident).filter(
                                 Incident.sensor_id == ping_sensor.id,
-                                Incident.status == "open",
-                                Incident.severity == "critical"
+                                Incident.status.in_(["open", "acknowledged"])
                             ).first()
                             if ping_incident:
                                 logger.info(
-                                    "Supressão por dependência: ping CRITICAL (sensor %s) → skip sensor %s (%s)",
+                                    "Supressão: PING master (sensor %s) com incidente aberto → skip %s (%s)",
                                     ping_sensor.id, sensor.id, sensor.sensor_type
                                 )
                                 continue
