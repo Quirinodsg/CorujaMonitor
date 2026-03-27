@@ -196,7 +196,11 @@ function HyperVDashboard() {
 
   /* ── Computed: top consumers ── */
   var topCpu = [...vms].sort((a, b) => (b.cpu_percent || 0) - (a.cpu_percent || 0)).slice(0, 5);
-  var topMem = [...vms].sort((a, b) => (b.memory_percent || 0) - (a.memory_percent || 0)).slice(0, 5);
+  // Sort memory by internal VM usage (demand/assigned), not % of host
+  var topMem = [...vms].map(v => {
+    var intPct = (v.memory_demand_mb && v.memory_mb > 0) ? (v.memory_demand_mb / v.memory_mb) * 100 : (v.memory_percent || 0);
+    return { ...v, _memInternalPct: intPct };
+  }).sort((a, b) => b._memInternalPct - a._memInternalPct).slice(0, 5);
 
   /* ── Gauge color ── */
   function gaugeColor(v) {
@@ -585,7 +589,7 @@ function HyperVDashboard() {
                 <div key={vm.id || i} className="consumer-item">
                   <span className="rank">{i + 1}.</span>
                   <span className="name">{vm.name}</span>
-                  <span className="value" style={{ color: gaugeColor(vm.memory_percent || 0) }}>{fmt(vm.memory_percent, '%')}</span>
+                  <span className="value" style={{ color: gaugeColor(vm._memInternalPct || 0) }}>{fmt(vm._memInternalPct, '%')}</span>
                 </div>
               ))}
             </div>
