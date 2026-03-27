@@ -375,6 +375,7 @@ class HyperVIngestVM(BaseModel):
     vcpus: Optional[int] = 0
     memory_mb: Optional[int] = 0
     cpu_percent: Optional[float] = 0
+    memory_percent: Optional[float] = 0
     disk_bytes: Optional[float] = 0
     uptime_seconds: Optional[float] = 0
 
@@ -462,6 +463,7 @@ async def ingest_hyperv_data(
         vm.vcpus = vm_data.vcpus
         vm.memory_mb = vm_data.memory_mb
         vm.cpu_percent = vm_data.cpu_percent
+        vm.memory_percent = vm_data.memory_percent
         vm.disk_bytes = vm_data.disk_bytes
         vm.uptime_seconds = vm_data.uptime_seconds
         vm.last_updated = now

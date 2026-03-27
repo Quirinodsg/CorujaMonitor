@@ -1,13 +1,13 @@
 """
 Hyper-V WMI Collector — Coruja Monitor v3.5
 
-Coleta métricas de hosts Hyper-V via WMI (Msvm_ComputerSystem, Msvm_SummaryInformation,
-Win32_ComputerSystem) e envia para a API /api/v1/hyperv/ via httpx.
+Coleta métricas de hosts Hyper-V via PowerShell Remoting (Invoke-Command)
+e envia para a API /api/v1/hyperv/ingest via httpx.
 
-Usa o WMI pool existente para reutilizar conexões.
+Usa Invoke-Command para executar Get-VM no host remoto — NÃO requer
+módulo Hyper-V instalado na sonda, apenas WinRM habilitado nos hosts.
+
 Pré-configurado para SRVHVSPRD010 e SRVHVSPRD011.
-
-Requirements: 1.1-1.7, 12.1-12.4
 """
 import logging
 import time
@@ -20,67 +20,44 @@ logger = logging.getLogger(__name__)
 
 
 class HyperVWMICollector:
-    """Collects Hyper-V metrics via WMI/PowerShell from configured hosts."""
+    """Collects Hyper-V metrics via PowerShell Remoting from configured hosts."""
 
     def __init__(self, api_url: str = "", probe_token: str = ""):
         self.api_url = api_url
         self.probe_token = probe_token
 
     def collect_host(self, hostname: str, ip: str) -> Optional[Dict[str, Any]]:
-        """Collect all Hyper-V metrics for a single host.
-
-        Uses PowerShell remoting (Invoke-Command) to query Hyper-V data.
-        Timeout: 10s per host.
-
-        Returns structured payload or None on failure.
-        """
+        """Collect all Hyper-V metrics for a single host via Invoke-Command."""
         start = time.monotonic()
         try:
-            # 1. Get host info (CPUs, memory)
-            host_info = self._query_host_info(hostname)
-            if not host_info:
-                logger.warning(f"HyperV: host info failed for {hostname}")
+            logger.info(f"HyperV: collecting from {hostname} ({ip})...")
+
+            # Single Invoke-Command that runs everything on the remote host
+            payload = self._query_remote(hostname)
+            if not payload:
+                logger.warning(f"HyperV: no data from {hostname}")
                 return self._error_payload(hostname, ip, start)
 
-            # 2. Get VM list with states and resource usage
-            vms = self._query_vms(hostname)
-
-            # 3. Build payload
             elapsed_ms = (time.monotonic() - start) * 1000
-            running = sum(1 for v in vms if v.get("state") == "Running")
+            # Enrich payload
+            payload["hostname"] = hostname
+            payload["ip"] = ip
+            payload["type"] = "hyperv"
+            payload["timestamp"] = datetime.utcnow().isoformat() + "Z"
+            if "host" in payload:
+                payload["host"]["wmi_latency_ms"] = round(elapsed_ms, 1)
+                payload["host"]["status"] = "online"
 
-            # Aggregate CPU/memory from VMs
-            total_vm_cpu = sum(v.get("cpu_percent", 0) for v in vms) if vms else 0
-            avg_cpu = total_vm_cpu / len(vms) if vms else 0
-
-            payload = {
-                "type": "hyperv",
-                "hostname": hostname,
-                "ip": ip,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-                "host": {
-                    "total_cpus": host_info.get("total_cpus", 0),
-                    "total_memory_gb": host_info.get("total_memory_gb", 0),
-                    "total_storage_gb": host_info.get("total_storage_gb", 0),
-                    "cpu_percent": round(avg_cpu, 1),
-                    "memory_percent": host_info.get("memory_percent", 0),
-                    "storage_percent": host_info.get("storage_percent", 0),
-                    "vm_count": len(vms),
-                    "running_vm_count": running,
-                    "wmi_latency_ms": round(elapsed_ms, 1),
-                    "status": "online",
-                },
-                "vms": vms,
-            }
-
+            vm_count = len(payload.get("vms", []))
+            running = sum(1 for v in payload.get("vms", []) if v.get("state") == "Running")
             logger.info(
-                f"HyperV: {hostname} — {len(vms)} VMs ({running} running), "
-                f"CPU {avg_cpu:.1f}%, latency {elapsed_ms:.0f}ms"
+                f"HyperV: {hostname} — {vm_count} VMs ({running} running), "
+                f"latency {elapsed_ms:.0f}ms"
             )
             return payload
 
         except Exception as e:
-            logger.error(f"HyperV: collect failed for {hostname}: {e}")
+            logger.error(f"HyperV: collect failed for {hostname}: {e}", exc_info=True)
             return self._error_payload(hostname, ip, start)
 
     def collect_all(self, hosts: List[Dict[str, str]]) -> List[Dict[str, Any]]:
@@ -93,7 +70,7 @@ class HyperVWMICollector:
         return results
 
     def send_to_api(self, payloads: List[Dict[str, Any]]):
-        """Send collected payloads to the Hyper-V API for persistence."""
+        """Send collected payloads to the Hyper-V ingest API."""
         if not self.api_url or not payloads:
             return
 
@@ -102,98 +79,123 @@ class HyperVWMICollector:
         for payload in payloads:
             try:
                 with httpx.Client(timeout=10.0, verify=False) as client:
-                    # Upsert host
-                    host_data = payload.get("host", {})
                     resp = client.post(
                         f"{self.api_url}/api/v1/hyperv/ingest",
                         json=payload,
                         params={"probe_token": self.probe_token},
                     )
                     if resp.status_code < 300:
-                        logger.debug(f"HyperV: sent data for {payload['hostname']}")
+                        logger.info(f"HyperV: sent data for {payload['hostname']} OK")
                     else:
-                        logger.warning(f"HyperV: API returned {resp.status_code} for {payload['hostname']}")
+                        logger.warning(
+                            f"HyperV: API returned {resp.status_code} for "
+                            f"{payload['hostname']}: {resp.text[:200]}"
+                        )
             except Exception as e:
-                logger.warning(f"HyperV: failed to send data for {payload.get('hostname')}: {e}")
+                logger.warning(f"HyperV: failed to send {payload.get('hostname')}: {e}")
 
-    # ── Private: PowerShell queries ──────────────────────────────────────
+    # ── Private: PowerShell remoting ─────────────────────────────────────
 
-    def _query_host_info(self, hostname: str) -> Optional[Dict[str, Any]]:
-        """Query Win32_ComputerSystem + Win32_OperatingSystem for host resources."""
-        ps_script = f"""
-$cs = Get-CimInstance -ComputerName {hostname} -ClassName Win32_ComputerSystem -ErrorAction Stop
-$os = Get-CimInstance -ComputerName {hostname} -ClassName Win32_OperatingSystem -ErrorAction Stop
-$disk = Get-CimInstance -ComputerName {hostname} -ClassName Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue
-$totalDiskGB = ($disk | Measure-Object -Property Size -Sum).Sum / 1GB
-$freeDiskGB = ($disk | Measure-Object -Property FreeSpace -Sum).Sum / 1GB
-$usedPct = if ($totalDiskGB -gt 0) {{ [math]::Round((($totalDiskGB - $freeDiskGB) / $totalDiskGB) * 100, 1) }} else {{ 0 }}
-$memPct = [math]::Round((($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize) * 100, 1)
-@{{
-    total_cpus = $cs.NumberOfLogicalProcessors
-    total_memory_gb = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
-    total_storage_gb = [math]::Round($totalDiskGB, 1)
-    memory_percent = $memPct
-    storage_percent = $usedPct
-}} | ConvertTo-Json
+    def _query_remote(self, hostname: str) -> Optional[Dict[str, Any]]:
+        """Run a single Invoke-Command on the remote host to collect everything."""
+        # This script runs ENTIRELY on the remote host via Invoke-Command.
+        # The sonda does NOT need the Hyper-V PowerShell module installed.
+        remote_script = r"""
+$ErrorActionPreference = 'Stop'
+try {
+    # Host info
+    $cs = Get-CimInstance Win32_ComputerSystem
+    $os = Get-CimInstance Win32_OperatingSystem
+    $disk = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue
+    $totalDiskGB = if ($disk) { [math]::Round(($disk | Measure-Object -Property Size -Sum).Sum / 1GB, 1) } else { 0 }
+    $freeDiskGB  = if ($disk) { [math]::Round(($disk | Measure-Object -Property FreeSpace -Sum).Sum / 1GB, 1) } else { 0 }
+    $storagePct  = if ($totalDiskGB -gt 0) { [math]::Round((($totalDiskGB - $freeDiskGB) / $totalDiskGB) * 100, 1) } else { 0 }
+    $memPct      = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
+
+    # VMs — use CPUUsage property (always available on Get-VM) + Measure-VM as fallback
+    $vms = Get-VM -ErrorAction Stop
+    $totalMemGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
+    $vmList = @()
+    $totalCpu = 0
+    foreach ($vm in $vms) {
+        # CPUUsage is a built-in property of Get-VM (integer 0-100)
+        $cpuUsage = $vm.CPUUsage
+        if (-not $cpuUsage) { $cpuUsage = 0 }
+        $totalCpu += $cpuUsage
+        $memMB = [math]::Round($vm.MemoryAssigned / 1MB)
+        $memPctVM = if ($totalMemGB -gt 0) { [math]::Round(($memMB / 1024) / $totalMemGB * 100, 1) } else { 0 }
+        $vmList += @{
+            name           = $vm.Name
+            state          = $vm.State.ToString()
+            vcpus          = $vm.ProcessorCount
+            memory_mb      = $memMB
+            cpu_percent    = $cpuUsage
+            memory_percent = $memPctVM
+            disk_bytes     = 0
+            uptime_seconds = if ($vm.Uptime) { [int]$vm.Uptime.TotalSeconds } else { 0 }
+        }
+    }
+
+    $running = ($vms | Where-Object { $_.State -eq 'Running' }).Count
+    $avgCpu  = if ($vms.Count -gt 0) { [math]::Round($totalCpu / $vms.Count, 1) } else { 0 }
+
+    @{
+        host = @{
+            total_cpus       = $cs.NumberOfLogicalProcessors
+            total_memory_gb  = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
+            total_storage_gb = $totalDiskGB
+            cpu_percent      = $avgCpu
+            memory_percent   = $memPct
+            storage_percent  = $storagePct
+            vm_count         = $vms.Count
+            running_vm_count = $running
+        }
+        vms = $vmList
+    } | ConvertTo-Json -Depth 4 -Compress
+} catch {
+    @{ error = $_.Exception.Message } | ConvertTo-Json -Compress
+}
 """
-        return self._run_ps(ps_script)
 
-    def _query_vms(self, hostname: str) -> List[Dict[str, Any]]:
-        """Query Hyper-V VMs with CPU, memory, state via Get-VM."""
-        ps_script = f"""
-$vms = Get-VM -ComputerName {hostname} -ErrorAction Stop
-$result = @()
-foreach ($vm in $vms) {{
-    $cpu = (Get-VMProcessor -VM $vm -ErrorAction SilentlyContinue)
-    $mem = (Get-VMMemory -VM $vm -ErrorAction SilentlyContinue)
-    $cpuUsage = 0
-    try {{
-        $cpuUsage = (Measure-VM -VM $vm -ErrorAction SilentlyContinue).AvgCPUUsage
-    }} catch {{ }}
-    $result += @{{
-        name = $vm.Name
-        state = $vm.State.ToString()
-        vcpus = if ($cpu) {{ $cpu.Count }} else {{ 0 }}
-        memory_mb = [math]::Round($vm.MemoryAssigned / 1MB)
-        cpu_percent = $cpuUsage
-        disk_bytes = 0
-        uptime_seconds = if ($vm.Uptime) {{ [int]$vm.Uptime.TotalSeconds }} else {{ 0 }}
-    }}
-}}
-$result | ConvertTo-Json -Depth 3
-"""
-        data = self._run_ps(ps_script)
-        if data is None:
-            return []
-        if isinstance(data, dict):
-            return [data]
-        if isinstance(data, list):
-            return data
-        return []
+        ps_command = (
+            f'Invoke-Command -ComputerName {hostname} '
+            f'-ScriptBlock {{ {remote_script} }}'
+        )
 
-    def _run_ps(self, script: str) -> Any:
-        """Execute PowerShell script and parse JSON output."""
         try:
             result = subprocess.run(
-                ["powershell", "-NoProfile", "-Command", script],
+                ["powershell", "-NoProfile", "-Command", ps_command],
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=15,
             )
+
             if result.returncode != 0:
-                logger.debug(f"PS error: {result.stderr[:200]}")
+                stderr = result.stderr.strip()[:300] if result.stderr else ""
+                logger.warning(f"HyperV PS error for {hostname}: {stderr}")
                 return None
-            if not result.stdout.strip():
+
+            stdout = result.stdout.strip()
+            if not stdout:
+                logger.warning(f"HyperV: empty output from {hostname}")
                 return None
-            return json.loads(result.stdout)
+
+            data = json.loads(stdout)
+
+            if "error" in data:
+                logger.warning(f"HyperV remote error on {hostname}: {data['error']}")
+                return None
+
+            return data
+
         except subprocess.TimeoutExpired:
-            logger.warning("PS timeout (10s)")
+            logger.warning(f"HyperV: timeout (15s) for {hostname}")
             return None
         except json.JSONDecodeError as e:
-            logger.debug(f"PS JSON parse error: {e}")
+            logger.warning(f"HyperV: JSON parse error for {hostname}: {e}")
             return None
         except Exception as e:
-            logger.debug(f"PS exec error: {e}")
+            logger.warning(f"HyperV: exec error for {hostname}: {e}")
             return None
 
     def _error_payload(self, hostname: str, ip: str, start: float) -> Dict[str, Any]:
