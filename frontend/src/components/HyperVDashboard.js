@@ -382,7 +382,7 @@ function HyperVDashboard() {
             <h4 className="collapsible-header" onClick={() => setShowCostBreakdown(!showCostBreakdown)}>
               {showCostBreakdown ? '▼' : '▶'} 📊 Composição de Custos Mensais — R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
             </h4>
-            {showCostBreakdown && (
+            {showCostBreakdown && (<>
             <div className="cost-cols">
               <div className="cost-col">
                 <table className="hw-table">
@@ -407,41 +407,39 @@ function HyperVDashboard() {
                 </table>
               </div>
             </div>
-            )}
-          </div>
-
-          {/* ── Calculadora VM Interativa ── */}
-          <div className="vm-calculator">
-            <h4>🧮 Calculadora de Custo VM</h4>
-            <div className="calc-inputs">
-              <div className="calc-field">
-                <label>RAM (GB)</label>
-                <input type="number" min="1" max="512" value={calcRam} onChange={e => setCalcRam(Number(e.target.value) || 1)} />
-                <span className="calc-unit-cost">R$ {(calcRam * COST_RAM_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-              </div>
-              <div className="calc-field">
-                <label>vCPU</label>
-                <input type="number" min="1" max="128" value={calcCpu} onChange={e => setCalcCpu(Number(e.target.value) || 1)} />
-                <span className="calc-unit-cost">R$ {(calcCpu * COST_VCPU).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-              </div>
-              <div className="calc-field">
-                <label>Disco (GB)</label>
-                <input type="number" min="10" max="10000" value={calcDisk} onChange={e => setCalcDisk(Number(e.target.value) || 10)} />
-                <span className="calc-unit-cost">R$ {(calcDisk * COST_DISK_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-              </div>
-              <div className="calc-field">
-                <label>IP Público</label>
-                <div className="calc-toggle">
-                  <button className={calcIp ? 'active' : ''} onClick={() => setCalcIp(true)}>Sim</button>
-                  <button className={!calcIp ? 'active' : ''} onClick={() => setCalcIp(false)}>Não</button>
+            <div className="vm-calculator">
+              <h4>🧮 Calculadora de Custo VM</h4>
+              <div className="calc-inputs">
+                <div className="calc-field">
+                  <label>RAM (GB)</label>
+                  <input type="number" min="1" max="512" value={calcRam} onChange={e => setCalcRam(Number(e.target.value) || 1)} />
+                  <span className="calc-unit-cost">R$ {(calcRam * COST_RAM_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
                 </div>
-                <span className="calc-unit-cost">{calcIp ? 'R$ ' + COST_IP.toLocaleString('pt-BR',{minimumFractionDigits:2}) : 'R$ 0,00'}</span>
-              </div>
-              <div className="calc-field calc-result">
-                <label>Custo Mensal</label>
-                <div className="calc-total-value">R$ {(calcRam * COST_RAM_GB + calcCpu * COST_VCPU + calcDisk * COST_DISK_GB + (calcIp ? COST_IP : 0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                <div className="calc-field">
+                  <label>vCPU</label>
+                  <input type="number" min="1" max="128" value={calcCpu} onChange={e => setCalcCpu(Number(e.target.value) || 1)} />
+                  <span className="calc-unit-cost">R$ {(calcCpu * COST_VCPU).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                </div>
+                <div className="calc-field">
+                  <label>Disco (GB)</label>
+                  <input type="number" min="10" max="10000" value={calcDisk} onChange={e => setCalcDisk(Number(e.target.value) || 10)} />
+                  <span className="calc-unit-cost">R$ {(calcDisk * COST_DISK_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                </div>
+                <div className="calc-field">
+                  <label>IP Público</label>
+                  <div className="calc-toggle">
+                    <button className={calcIp ? 'active' : ''} onClick={() => setCalcIp(true)}>Sim</button>
+                    <button className={!calcIp ? 'active' : ''} onClick={() => setCalcIp(false)}>Não</button>
+                  </div>
+                  <span className="calc-unit-cost">{calcIp ? 'R$ ' + COST_IP.toLocaleString('pt-BR',{minimumFractionDigits:2}) : 'R$ 0,00'}</span>
+                </div>
+                <div className="calc-field calc-result">
+                  <label>Custo Mensal</label>
+                  <div className="calc-total-value">R$ {(calcRam * COST_RAM_GB + calcCpu * COST_VCPU + calcDisk * COST_DISK_GB + (calcIp ? COST_IP : 0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                </div>
               </div>
             </div>
+            </>)}
           </div>
 
           {totalSavings > 0 && (
