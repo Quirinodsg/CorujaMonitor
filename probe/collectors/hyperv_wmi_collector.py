@@ -124,21 +124,44 @@ try {
     # ── VMs ──
     $vms = Get-VM -ErrorAction Stop
     $totalMemGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
+    $hostLogicalCPUs = $cs.NumberOfLogicalProcessors
+
+    # ── VM CPU via performance counter (real usage, not instantaneous snapshot) ──
+    $vmCpuMap = @{}
+    try {
+        $counters = Get-CimInstance Win32_PerfFormattedData_HvStats_HyperVHypervisorVirtualProcessor -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -notlike '*_Total*' -and $_.Name -notlike '*Hv*' }
+        foreach ($c in $counters) {
+            # Name format: "VMName:Hv VP 0", extract VM name
+            $parts = $c.Name -split ':'
+            if ($parts.Count -ge 1) {
+                $vmName = $parts[0]
+                if (-not $vmCpuMap.ContainsKey($vmName)) { $vmCpuMap[$vmName] = @() }
+                $vmCpuMap[$vmName] += $c.PercentTotalRunTime
+            }
+        }
+    } catch {}
+
     $vmList = @()
     foreach ($vm in $vms) {
-        # CPU: CPUUsage is instantaneous 0-100 from Get-VM
-        $cpuUsage = $vm.CPUUsage
-        if ($null -eq $cpuUsage -or $cpuUsage -lt 0) { $cpuUsage = 0 }
+        # CPU: prefer perf counter (average across vCPUs), fallback to CPUUsage
+        $cpuUsage = 0
+        if ($vmCpuMap.ContainsKey($vm.Name) -and $vmCpuMap[$vm.Name].Count -gt 0) {
+            $cpuUsage = [math]::Round(($vmCpuMap[$vm.Name] | Measure-Object -Average).Average, 1)
+        } else {
+            $cpuUsage = $vm.CPUUsage
+            if ($null -eq $cpuUsage -or $cpuUsage -lt 0) { $cpuUsage = 0 }
+        }
 
-        # Memory: assigned to this VM (what the VM is using from the host)
+        # Memory assigned (what the host allocated to this VM)
         $memAssignedMB = [math]::Round($vm.MemoryAssigned / 1MB)
-        # Memory demand (actual usage inside the VM, if available via integration services)
+        # Memory demand (actual RAM usage inside the VM via Integration Services)
         $memDemandMB = 0
-        try { $memDemandMB = [math]::Round($vm.MemoryDemand / 1MB) } catch {}
-        # % of host memory this VM consumes
+        try { if ($vm.MemoryDemand -gt 0) { $memDemandMB = [math]::Round($vm.MemoryDemand / 1MB) } } catch {}
+        # % of host memory this VM consumes (based on assigned)
         $memPctOfHost = if ($totalMemGB -gt 0) { [math]::Round(($memAssignedMB / 1024) / $totalMemGB * 100, 1) } else { 0 }
 
-        # VHD: FileSize = actual used, MaxInternalSize = provisioned capacity
+        # VHD: FileSize = actual used on disk, Size = provisioned max capacity
         $diskUsedBytes = [long]0
         $diskMaxBytes  = [long]0
         try {

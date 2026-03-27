@@ -236,8 +236,8 @@ function HyperVDashboard() {
           <div className="card-value success">{overview?.running_vms ?? vms.filter(v => v.state === 'Running').length}</div>
         </div>
         <div className="hyperv-card">
-          <div className="card-label">Alertas Ativos</div>
-          <div className="card-value critical">{overview?.active_alerts ?? 0}</div>
+          <div className="card-label">Recomendações</div>
+          <div className="card-value warning">{finops.length}</div>
         </div>
         <div className="hyperv-card">
           <div className="card-label">Health Score</div>
@@ -327,7 +327,10 @@ function HyperVDashboard() {
                     </td>
                   </tr>
                   {expandedHost === h.id && (hostVms[h.id] || []).map(vm => {
-                    var memGB = vm.memory_mb != null ? (vm.memory_mb / 1024).toFixed(1) : '—';
+                    var memAssignedGB = vm.memory_mb != null ? (vm.memory_mb / 1024).toFixed(1) : '—';
+                    var memDemandGB = vm.memory_demand_mb != null && vm.memory_demand_mb > 0 ? (vm.memory_demand_mb / 1024).toFixed(1) : null;
+                    var memLabel = memDemandGB ? memDemandGB + '/' + memAssignedGB + ' GB' : memAssignedGB + ' GB';
+                    if (vm.memory_percent != null && vm.memory_percent > 0) memLabel += ' (' + fmt(vm.memory_percent, '%') + ')';
                     var diskUsed = vm.disk_bytes != null && vm.disk_bytes > 0 ? (vm.disk_bytes / 1073741824).toFixed(1) : '—';
                     var diskMax = vm.disk_max_bytes != null && vm.disk_max_bytes > 0 ? (vm.disk_max_bytes / 1073741824).toFixed(0) : null;
                     var diskLabel = diskMax ? diskUsed + '/' + diskMax + ' GB' : (diskUsed !== '—' ? diskUsed + ' GB' : '—');
@@ -336,7 +339,7 @@ function HyperVDashboard() {
                       <td>💻 {vm.name}</td>
                       <td>{vm.state}</td>
                       <td>{fmt(vm.cpu_percent, '%')}</td>
-                      <td>{memGB} GB {vm.memory_percent != null && vm.memory_percent > 0 ? '(' + fmt(vm.memory_percent, '%') + ')' : ''}</td>
+                      <td>{memLabel}</td>
                       <td>{diskLabel}</td>
                       <td>—</td>
                       <td>{vm.vcpus ?? '—'} vCPU</td>
