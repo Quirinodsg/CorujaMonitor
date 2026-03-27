@@ -293,16 +293,27 @@ function HyperVDashboard() {
         var usedMemGB = vms.reduce((s, v) => s + ((v.memory_mb || 0) / 1024), 0);
         var freeMemGB = Math.max(0, totalMemGB - usedMemGB);
         var totalStorGB = hosts.reduce((s, h) => s + (h.total_storage_gb || 0), 0);
-        // FinOps cost estimation in R$ (based on typical datacenter costs)
-        // vCPU: R$15/mês, RAM: R$8/GB/mês, Storage: R$0.50/GB/mês, Energia: R$0.80/kWh
-        var costVcpu = totalVcpus * 15;
-        var costMem = usedMemGB * 8;
-        var costStor = totalStorGB * 0.5;
-        var costEnergy = hosts.length * 500 * 0.80; // ~500W per host * R$0.80/kWh
-        var totalCost = costVcpu + costMem + costStor + costEnergy;
-        var savingsVcpu = recommendations.filter(r => r.category === 'overprovisioned').length * 16 * 15 * 0.5;
-        var savingsIdle = recommendations.filter(r => r.category === 'idle').length * 200;
-        var savingsRightSize = recommendations.filter(r => r.category === 'right-size').length * 64;
+        // FinOps cost estimation in R$ — custos reais do datacenter Techbiz
+        // Total mensal datacenter: R$ 50.428,70
+        // Pesos: RAM 25%, CPU 40%, Disco 25%, Rede/IP 10%
+        // Custos unitários: vCPU R$19,70/mês (8:1 oversub), RAM R$12,31/GB/mês, Disco R$0,45/GB/mês
+        var COST_VCPU = 19.70;   // R$/vCPU/mês
+        var COST_RAM_GB = 12.31; // R$/GB/mês
+        var COST_DISK_GB = 0.45; // R$/GB/mês
+        var COST_INFRA_HOST = 50428.70 / 2; // Infra fixa rateada por host (energia, ar, nobreak, pessoal, depreciação)
+        var costVcpu = totalVcpus * COST_VCPU;
+        var costMem = usedMemGB * COST_RAM_GB;
+        var costStor = totalStorGB * COST_DISK_GB;
+        var costInfra = hosts.length * COST_INFRA_HOST * 0.1; // 10% proporcional (resto é fixo)
+        var totalCost = 50428.70; // Custo total real do datacenter
+        var costVMs = costVcpu + costMem + costStor;
+        // Savings: cada vCPU liberada = R$19,70, cada GB RAM = R$12,31
+        var overRecs = recommendations.filter(r => r.category === 'overprovisioned');
+        var idleRecs = recommendations.filter(r => r.category === 'idle');
+        var rightRecs = recommendations.filter(r => r.category === 'right-size');
+        var savingsVcpu = overRecs.reduce((s, r) => s + (r.estimated_savings || 0), 0);
+        var savingsIdle = idleRecs.reduce((s, r) => s + (r.estimated_savings || 0), 0);
+        var savingsRightSize = rightRecs.reduce((s, r) => s + (r.estimated_savings || 0), 0);
         var totalSavings = savingsVcpu + savingsIdle + savingsRightSize;
         return (
         <div className="hyperv-cluster-overview">
@@ -334,9 +345,9 @@ function HyperVDashboard() {
               <div className="cluster-detail">{freeMemGB.toFixed(0)} GB RAM livre · ~{vcpuFree} vCPUs (4:1)</div>
             </div>
             <div className="cluster-card">
-              <div className="cluster-label">Custo Estimado Mensal</div>
-              <div className="cluster-value">R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 0})}</div>
-              <div className="cluster-detail">vCPU R${costVcpu.toFixed(0)} · RAM R${costMem.toFixed(0)} · Disco R${costStor.toFixed(0)} · Energia R${costEnergy.toFixed(0)}</div>
+              <div className="cluster-label">Custo Mensal Datacenter</div>
+              <div className="cluster-value">R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
+              <div className="cluster-detail">VMs: vCPU R${costVcpu.toLocaleString('pt-BR',{minimumFractionDigits:0})} · RAM R${costMem.toLocaleString('pt-BR',{minimumFractionDigits:0})} · Disco R${costStor.toLocaleString('pt-BR',{minimumFractionDigits:0})}</div>
             </div>
           </div>
           {totalSavings > 0 && (

@@ -512,9 +512,17 @@ async def ingest_hyperv_data(
 
 
 def _generate_finops_recommendations(db: Session, host, vms_data):
-    """Generate FinOps recommendations based on current VM metrics."""
+    """Generate FinOps recommendations based on current VM metrics.
+    Custos reais datacenter Techbiz:
+      vCPU: R$ 19,70/mês (8:1 oversub)
+      RAM:  R$ 12,31/GB/mês
+      Disco: R$ 0,45/GB/mês
+    """
+    COST_VCPU = 19.70
+    COST_RAM_GB = 12.31
+    COST_DISK_GB = 0.45
+
     try:
-        # Clear old active recommendations for this host
         db.query(HyperVFinOpsRecommendation).filter(
             HyperVFinOpsRecommendation.host_id == host.id,
             HyperVFinOpsRecommendation.status == "active",
@@ -523,38 +531,50 @@ def _generate_finops_recommendations(db: Session, host, vms_data):
         vms = db.query(HyperVVM).filter(HyperVVM.host_id == host.id).all()
 
         for vm in vms:
-            # Idle VM: CPU < 2% and running
-            if vm.state == "Running" and (vm.cpu_percent or 0) < 2 and (vm.memory_percent or 0) < 3:
+            vcpus = vm.vcpus or 0
+            mem_gb = (vm.memory_mb or 0) / 1024
+            cpu_pct = vm.cpu_percent or 0
+            mem_pct = vm.memory_percent or 0
+
+            # Idle VM: CPU < 2% and low memory usage
+            if vm.state == "Running" and cpu_pct < 2 and mem_pct < 3:
+                savings = round(vcpus * COST_VCPU + mem_gb * COST_RAM_GB, 2)
                 db.add(HyperVFinOpsRecommendation(
                     host_id=host.id, vm_id=vm.id,
                     category="idle",
-                    description=f"VM {vm.name} está ociosa (CPU {vm.cpu_percent or 0}%, Mem {vm.memory_percent or 0}%)",
-                    suggested_action=f"Considere desligar {vm.name} para liberar recursos",
-                    estimated_savings=round((vm.vcpus or 1) * 15 + (vm.memory_mb or 0) / 1024 * 8, 0),
+                    description=f"VM {vm.name} ociosa (CPU {cpu_pct}%, Mem {mem_pct}%) — {vcpus} vCPU, {mem_gb:.0f}GB RAM",
+                    suggested_action=f"Desligar {vm.name} libera {vcpus} vCPUs e {mem_gb:.0f}GB RAM",
+                    estimated_savings=savings,
                     confidence=0.7,
                     status="active",
                 ))
 
-            # Overprovisioned: has many vCPUs but low CPU usage
-            if vm.state == "Running" and (vm.vcpus or 0) >= 8 and (vm.cpu_percent or 0) < 5:
+            # Overprovisioned vCPU: >= 8 vCPUs but < 5% CPU
+            if vm.state == "Running" and vcpus >= 8 and cpu_pct < 5:
+                target_vcpus = max(2, vcpus // 2)
+                freed = vcpus - target_vcpus
+                savings = round(freed * COST_VCPU, 2)
                 db.add(HyperVFinOpsRecommendation(
                     host_id=host.id, vm_id=vm.id,
                     category="overprovisioned",
-                    description=f"VM {vm.name} tem {vm.vcpus} vCPUs mas usa apenas {vm.cpu_percent or 0}% CPU",
-                    suggested_action=f"Reduzir vCPUs de {vm.name} para {max(2, (vm.vcpus or 4) // 2)}",
-                    estimated_savings=round(((vm.vcpus or 4) - max(2, (vm.vcpus or 4) // 2)) * 15, 0),
+                    description=f"VM {vm.name}: {vcpus} vCPUs alocadas, uso {cpu_pct}% CPU",
+                    suggested_action=f"Reduzir de {vcpus} para {target_vcpus} vCPUs (libera {freed} vCPUs)",
+                    estimated_savings=savings,
                     confidence=0.85,
                     status="active",
                 ))
 
-            # Right-size memory: large memory but low usage
-            if vm.state == "Running" and (vm.memory_mb or 0) >= 16384 and (vm.memory_percent or 0) < 5:
+            # Right-size memory: >= 16GB but < 5% of host
+            if vm.state == "Running" and (vm.memory_mb or 0) >= 16384 and mem_pct < 5:
+                target_mb = max(4096, (vm.memory_mb or 8192) // 2)
+                freed_gb = ((vm.memory_mb or 0) - target_mb) / 1024
+                savings = round(freed_gb * COST_RAM_GB, 2)
                 db.add(HyperVFinOpsRecommendation(
                     host_id=host.id, vm_id=vm.id,
                     category="right-size",
-                    description=f"VM {vm.name} tem {(vm.memory_mb or 0) // 1024}GB RAM mas usa {vm.memory_percent or 0}% do host",
-                    suggested_action=f"Reduzir memória de {vm.name} para {max(4096, (vm.memory_mb or 8192) // 2)}MB",
-                    estimated_savings=round(((vm.memory_mb or 0) - max(4096, (vm.memory_mb or 8192) // 2)) / 1024 * 8, 0),
+                    description=f"VM {vm.name}: {mem_gb:.0f}GB RAM alocada, usa {mem_pct}% do host",
+                    suggested_action=f"Reduzir de {mem_gb:.0f}GB para {target_mb // 1024}GB (libera {freed_gb:.0f}GB)",
+                    estimated_savings=savings,
                     confidence=0.75,
                     status="active",
                 ))
