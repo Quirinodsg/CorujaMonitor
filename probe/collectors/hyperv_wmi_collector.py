@@ -103,7 +103,7 @@ class HyperVWMICollector:
         remote_script = r"""
 $ErrorActionPreference = 'Stop'
 try {
-    # Host info
+    # ── Host hardware ──
     $cs = Get-CimInstance Win32_ComputerSystem
     $os = Get-CimInstance Win32_OperatingSystem
     $disk = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue
@@ -112,46 +112,59 @@ try {
     $storagePct  = if ($totalDiskGB -gt 0) { [math]::Round((($totalDiskGB - $freeDiskGB) / $totalDiskGB) * 100, 1) } else { 0 }
     $memPct      = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
 
-    # Host CPU — use performance counter (real CPU usage, not per-VM)
+    # ── Host CPU — Win32_Processor LoadPercentage (works via Invoke-Command) ──
     $hostCpu = 0
     try {
-        $cpu = Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'" -ErrorAction SilentlyContinue
-        if ($cpu) { $hostCpu = [math]::Round($cpu.PercentProcessorTime, 1) }
+        $procs = Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue
+        if ($procs) {
+            $hostCpu = [math]::Round(($procs | Measure-Object -Property LoadPercentage -Average).Average, 1)
+        }
     } catch {}
 
-    # VMs
+    # ── VMs ──
     $vms = Get-VM -ErrorAction Stop
     $totalMemGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
     $vmList = @()
-    $totalVmCpu = 0
     foreach ($vm in $vms) {
+        # CPU: CPUUsage is instantaneous 0-100 from Get-VM
         $cpuUsage = $vm.CPUUsage
-        if (-not $cpuUsage) { $cpuUsage = 0 }
-        $totalVmCpu += $cpuUsage
-        $memMB = [math]::Round($vm.MemoryAssigned / 1MB)
-        $memPctVM = if ($totalMemGB -gt 0) { [math]::Round(($memMB / 1024) / $totalMemGB * 100, 1) } else { 0 }
+        if ($null -eq $cpuUsage -or $cpuUsage -lt 0) { $cpuUsage = 0 }
 
-        # VHD disk usage per VM
-        $diskBytes = [long]0
+        # Memory: assigned to this VM (what the VM is using from the host)
+        $memAssignedMB = [math]::Round($vm.MemoryAssigned / 1MB)
+        # Memory demand (actual usage inside the VM, if available via integration services)
+        $memDemandMB = 0
+        try { $memDemandMB = [math]::Round($vm.MemoryDemand / 1MB) } catch {}
+        # % of host memory this VM consumes
+        $memPctOfHost = if ($totalMemGB -gt 0) { [math]::Round(($memAssignedMB / 1024) / $totalMemGB * 100, 1) } else { 0 }
+
+        # VHD: FileSize = actual used, MaxInternalSize = provisioned capacity
+        $diskUsedBytes = [long]0
+        $diskMaxBytes  = [long]0
         try {
             $hdds = Get-VMHardDiskDrive -VM $vm -ErrorAction SilentlyContinue
             foreach ($hdd in $hdds) {
                 if ($hdd.Path) {
                     $vhd = Get-VHD -Path $hdd.Path -ErrorAction SilentlyContinue
-                    if ($vhd) { $diskBytes += $vhd.FileSize }
+                    if ($vhd) {
+                        $diskUsedBytes += $vhd.FileSize
+                        $diskMaxBytes  += $vhd.Size
+                    }
                 }
             }
         } catch {}
 
         $vmList += @{
-            name           = $vm.Name
-            state          = $vm.State.ToString()
-            vcpus          = $vm.ProcessorCount
-            memory_mb      = $memMB
-            cpu_percent    = $cpuUsage
-            memory_percent = $memPctVM
-            disk_bytes     = $diskBytes
-            uptime_seconds = if ($vm.Uptime) { [int]$vm.Uptime.TotalSeconds } else { 0 }
+            name            = $vm.Name
+            state           = $vm.State.ToString()
+            vcpus           = $vm.ProcessorCount
+            memory_mb       = $memAssignedMB
+            memory_demand_mb = $memDemandMB
+            cpu_percent     = $cpuUsage
+            memory_percent  = $memPctOfHost
+            disk_bytes      = $diskUsedBytes
+            disk_max_bytes  = $diskMaxBytes
+            uptime_seconds  = if ($vm.Uptime) { [int]$vm.Uptime.TotalSeconds } else { 0 }
         }
     }
 

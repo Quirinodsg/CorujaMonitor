@@ -326,18 +326,24 @@ function HyperVDashboard() {
                       </div>
                     </td>
                   </tr>
-                  {expandedHost === h.id && (hostVms[h.id] || []).map(vm => (
+                  {expandedHost === h.id && (hostVms[h.id] || []).map(vm => {
+                    var memGB = vm.memory_mb != null ? (vm.memory_mb / 1024).toFixed(1) : '—';
+                    var diskUsed = vm.disk_bytes != null && vm.disk_bytes > 0 ? (vm.disk_bytes / 1073741824).toFixed(1) : '—';
+                    var diskMax = vm.disk_max_bytes != null && vm.disk_max_bytes > 0 ? (vm.disk_max_bytes / 1073741824).toFixed(0) : null;
+                    var diskLabel = diskMax ? diskUsed + '/' + diskMax + ' GB' : (diskUsed !== '—' ? diskUsed + ' GB' : '—');
+                    return (
                     <tr key={vm.id} className="vm-row">
                       <td>💻 {vm.name}</td>
                       <td>{vm.state}</td>
                       <td>{fmt(vm.cpu_percent, '%')}</td>
-                      <td>{vm.memory_percent != null && vm.memory_percent > 0 ? fmt(vm.memory_percent, '%') : (vm.memory_mb != null ? vm.memory_mb + ' MB' : '—')}</td>
-                      <td>{vm.disk_bytes != null && vm.disk_bytes > 0 ? (vm.disk_bytes / 1073741824).toFixed(1) + ' GB' : '—'}</td>
+                      <td>{memGB} GB {vm.memory_percent != null && vm.memory_percent > 0 ? '(' + fmt(vm.memory_percent, '%') + ')' : ''}</td>
+                      <td>{diskLabel}</td>
                       <td>—</td>
                       <td>{vm.vcpus ?? '—'} vCPU</td>
                       <td>—</td>
                     </tr>
-                  ))}
+                    );
+                  })}
                   {expandedHost === h.id && (!hostVms[h.id] || hostVms[h.id].length === 0) && (
                     <tr className="vm-row"><td colSpan={8} style={{ textAlign: 'center' }}>Nenhuma VM encontrada</td></tr>
                   )}

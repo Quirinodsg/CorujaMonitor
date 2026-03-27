@@ -36,7 +36,9 @@ class HyperVVMResponse(BaseModel):
     state: str
     vcpus: Optional[int] = None
     memory_mb: Optional[int] = None
+    memory_demand_mb: Optional[int] = None
     disk_bytes: Optional[float] = None
+    disk_max_bytes: Optional[float] = None
     cpu_percent: Optional[float] = None
     memory_percent: Optional[float] = None
     uptime_seconds: Optional[float] = None

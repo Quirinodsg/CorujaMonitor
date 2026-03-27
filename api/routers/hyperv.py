@@ -160,7 +160,9 @@ async def get_host_vms(
             state=v.state,
             vcpus=v.vcpus,
             memory_mb=v.memory_mb,
+            memory_demand_mb=v.memory_demand_mb,
             disk_bytes=v.disk_bytes,
+            disk_max_bytes=v.disk_max_bytes,
             cpu_percent=v.cpu_percent,
             memory_percent=v.memory_percent,
             uptime_seconds=v.uptime_seconds,
@@ -203,7 +205,9 @@ async def get_all_vms(
             state=v.state,
             vcpus=v.vcpus,
             memory_mb=v.memory_mb,
+            memory_demand_mb=v.memory_demand_mb,
             disk_bytes=v.disk_bytes,
+            disk_max_bytes=v.disk_max_bytes,
             cpu_percent=v.cpu_percent,
             memory_percent=v.memory_percent,
             uptime_seconds=v.uptime_seconds,
@@ -374,9 +378,11 @@ class HyperVIngestVM(BaseModel):
     state: str
     vcpus: Optional[int] = 0
     memory_mb: Optional[int] = 0
+    memory_demand_mb: Optional[int] = 0
     cpu_percent: Optional[float] = 0
     memory_percent: Optional[float] = 0
     disk_bytes: Optional[float] = 0
+    disk_max_bytes: Optional[float] = 0
     uptime_seconds: Optional[float] = 0
 
 
@@ -462,9 +468,11 @@ async def ingest_hyperv_data(
         vm.state = vm_data.state
         vm.vcpus = vm_data.vcpus
         vm.memory_mb = vm_data.memory_mb
+        vm.memory_demand_mb = vm_data.memory_demand_mb
         vm.cpu_percent = vm_data.cpu_percent
         vm.memory_percent = vm_data.memory_percent
         vm.disk_bytes = vm_data.disk_bytes
+        vm.disk_max_bytes = vm_data.disk_max_bytes
         vm.uptime_seconds = vm_data.uptime_seconds
         vm.last_updated = now
 
