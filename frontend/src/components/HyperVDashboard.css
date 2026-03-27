@@ -591,26 +591,82 @@
   margin-top: var(--space-4);
   background: var(--surface-3);
   border-radius: var(--radius-md);
-  padding: var(--space-3);
+  padding: var(--space-4);
   border: 1px solid var(--border);
 }
 .vm-calculator h4 {
-  margin: 0 0 var(--space-2) 0;
+  margin: 0 0 var(--space-3) 0;
   font-size: var(--text-sm);
 }
-.calc-row {
+.calc-inputs {
   display: flex;
-  justify-content: space-between;
-  padding: var(--space-1) 0;
+  gap: var(--space-4);
+  align-items: flex-end;
+  flex-wrap: wrap;
+}
+.calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 120px;
+}
+.calc-field label {
   font-size: var(--text-xs);
   color: var(--text-secondary);
-  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
-.calc-total {
-  display: flex;
-  justify-content: space-between;
-  padding: var(--space-2) 0 0;
+.calc-field input {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  color: var(--text-primary);
   font-size: var(--text-sm);
+  width: 100px;
+}
+.calc-field input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.calc-unit-cost {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.calc-toggle {
+  display: flex;
+  gap: 0;
+}
+.calc-toggle button {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: var(--text-sm);
+}
+.calc-toggle button:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.calc-toggle button:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; border-left: none; }
+.calc-toggle button.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.calc-result {
+  min-width: 160px;
+}
+.calc-total-value {
+  font-size: var(--text-xl);
   font-weight: 700;
+  color: var(--success);
+}
+.collapsible-header {
+  cursor: pointer;
+  user-select: none;
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.collapsible-header:hover {
   color: var(--text-primary);
 }

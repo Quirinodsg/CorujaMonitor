@@ -69,6 +69,13 @@ function HyperVDashboard() {
   const [filterHost, setFilterHost] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
 
+  // Cost section
+  const [showCostBreakdown, setShowCostBreakdown] = useState(false);
+  const [calcRam, setCalcRam] = useState(4);
+  const [calcCpu, setCalcCpu] = useState(16);
+  const [calcDisk, setCalcDisk] = useState(512);
+  const [calcIp, setCalcIp] = useState(false);
+
   // WebSocket
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
@@ -334,9 +341,6 @@ function HyperVDashboard() {
         var savingsIdle = idleRecs.reduce((s, r) => s + (r.estimated_savings || 0), 0);
         var savingsRightSize = rightRecs.reduce((s, r) => s + (r.estimated_savings || 0), 0);
         var totalSavings = savingsVcpu + savingsIdle + savingsRightSize;
-        // Calculadora VM padrão (4GB RAM, 16 vCPU, 512GB disco, 1 IP)
-        var vmCalc = { ram: 4, vcpu: 16, disk: 512, ip: 1 };
-        var vmCalcCost = vmCalc.ram * COST_RAM_GB + vmCalc.vcpu * COST_VCPU + vmCalc.disk * COST_DISK_GB + vmCalc.ip * COST_IP;
         return (
         <div className="hyperv-cluster-overview">
           <h3>🏢 Visão do Cluster</h3>
@@ -373,9 +377,12 @@ function HyperVDashboard() {
             </div>
           </div>
 
-          {/* ── Composição de Custos ── */}
+          {/* ── Composição de Custos (collapsible) ── */}
           <div className="cluster-cost-breakdown">
-            <h4>📊 Composição de Custos Mensais</h4>
+            <h4 className="collapsible-header" onClick={() => setShowCostBreakdown(!showCostBreakdown)}>
+              {showCostBreakdown ? '▼' : '▶'} 📊 Composição de Custos Mensais — R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+            </h4>
+            {showCostBreakdown && (
             <div className="cost-cols">
               <div className="cost-col">
                 <table className="hw-table">
@@ -398,14 +405,41 @@ function HyperVDashboard() {
                     <tr><td>Rede/IP (16 IPs)</td><td>10%</td><td style={{textAlign:'right'}}>R$ {costNetPool.toLocaleString('pt-BR',{minimumFractionDigits:0})}</td><td style={{textAlign:'right'}}>R$ {COST_IP.toFixed(2)}/IP</td></tr>
                   </tbody>
                 </table>
-                <div className="vm-calculator">
-                  <h4>🧮 Calculadora VM Padrão</h4>
-                  <div className="calc-row"><span>RAM {vmCalc.ram} GB</span><span>R$ {(vmCalc.ram * COST_RAM_GB).toFixed(2)}</span></div>
-                  <div className="calc-row"><span>vCPU {vmCalc.vcpu}</span><span>R$ {(vmCalc.vcpu * COST_VCPU).toFixed(2)}</span></div>
-                  <div className="calc-row"><span>Disco {vmCalc.disk} GB</span><span>R$ {(vmCalc.disk * COST_DISK_GB).toFixed(2)}</span></div>
-                  <div className="calc-row"><span>IP Público {vmCalc.ip}</span><span>R$ {(vmCalc.ip * COST_IP).toFixed(2)}</span></div>
-                  <div className="calc-total"><span>Total/mês</span><span>R$ {vmCalcCost.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+              </div>
+            </div>
+            )}
+          </div>
+
+          {/* ── Calculadora VM Interativa ── */}
+          <div className="vm-calculator">
+            <h4>🧮 Calculadora de Custo VM</h4>
+            <div className="calc-inputs">
+              <div className="calc-field">
+                <label>RAM (GB)</label>
+                <input type="number" min="1" max="512" value={calcRam} onChange={e => setCalcRam(Number(e.target.value) || 1)} />
+                <span className="calc-unit-cost">R$ {(calcRam * COST_RAM_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+              </div>
+              <div className="calc-field">
+                <label>vCPU</label>
+                <input type="number" min="1" max="128" value={calcCpu} onChange={e => setCalcCpu(Number(e.target.value) || 1)} />
+                <span className="calc-unit-cost">R$ {(calcCpu * COST_VCPU).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+              </div>
+              <div className="calc-field">
+                <label>Disco (GB)</label>
+                <input type="number" min="10" max="10000" value={calcDisk} onChange={e => setCalcDisk(Number(e.target.value) || 10)} />
+                <span className="calc-unit-cost">R$ {(calcDisk * COST_DISK_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+              </div>
+              <div className="calc-field">
+                <label>IP Público</label>
+                <div className="calc-toggle">
+                  <button className={calcIp ? 'active' : ''} onClick={() => setCalcIp(true)}>Sim</button>
+                  <button className={!calcIp ? 'active' : ''} onClick={() => setCalcIp(false)}>Não</button>
                 </div>
+                <span className="calc-unit-cost">{calcIp ? 'R$ ' + COST_IP.toLocaleString('pt-BR',{minimumFractionDigits:2}) : 'R$ 0,00'}</span>
+              </div>
+              <div className="calc-field calc-result">
+                <label>Custo Mensal</label>
+                <div className="calc-total-value">R$ {(calcRam * COST_RAM_GB + calcCpu * COST_VCPU + calcDisk * COST_DISK_GB + (calcIp ? COST_IP : 0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
               </div>
             </div>
           </div>
