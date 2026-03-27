@@ -1,98 +1,106 @@
 """
 Hyper-V Cost Config API — Coruja Monitor
-GET  /api/v1/hyperv/cost-config       → lista custos editáveis
-PUT  /api/v1/hyperv/cost-config       → atualiza custos
+GET /api/v1/hyperv/cost-config — retorna todos os itens de custo
+PUT /api/v1/hyperv/cost-config — atualiza valores (batch)
 """
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from sqlalchemy import text
 from pydantic import BaseModel
-from typing import Dict, List
+from typing import List, Optional
 from datetime import datetime, timezone
 
 from database import get_db
 from auth import get_current_active_user
 from models import User
-from sqlalchemy.orm import Session
-from sqlalchemy import text
 
 router = APIRouter(prefix="/api/v1/hyperv/cost-config", tags=["Hyper-V Cost Config"])
 
 
-class CostConfigItem(BaseModel):
+class CostItem(BaseModel):
+    id: Optional[int] = None
     key: str
-    value: float
     label: str
-    unit: str
+    category: str
+    value: float
+    unit: Optional[str] = ""
+    editable: Optional[bool] = True
+    sort_order: Optional[int] = 0
 
 
 class CostConfigResponse(BaseModel):
-    items: List[CostConfigItem]
+    items: List[CostItem]
+    total_mensal: float
+    reajuste_anual: float
+    cost_vcpu: float
+    cost_ram_gb: float
+    cost_disk_gb: float
+    cost_ip: float
 
 
-class CostConfigUpdate(BaseModel):
-    costs: Dict[str, float]  # {"cost_vcpu": 19.70, "cost_ram_gb": 12.31, ...}
+class CostUpdateRequest(BaseModel):
+    items: List[dict]  # [{key: str, value: float}, ...]
 
 
-# ── Defaults (fallback if table doesn't exist yet) ──
-DEFAULTS = {
-    "cost_vcpu":    {"value": 19.70,  "label": "Custo vCPU",       "unit": "R$/vCPU/mês"},
-    "cost_ram_gb":  {"value": 12.31,  "label": "Custo RAM",        "unit": "R$/GB/mês"},
-    "cost_disk_gb": {"value": 0.45,   "label": "Custo Disco",      "unit": "R$/GB/mês"},
-    "cost_ip":      {"value": 315.18, "label": "Custo IP Público", "unit": "R$/IP/mês"},
-}
-
-
-def get_cost_map(db: Session) -> Dict[str, float]:
-    """Return {key: value} dict from DB, with fallback to defaults."""
-    try:
-        rows = db.execute(text("SELECT key, value FROM hyperv_cost_config")).fetchall()
-        if rows:
-            return {r[0]: float(r[1]) for r in rows}
-    except Exception:
-        pass
-    return {k: v["value"] for k, v in DEFAULTS.items()}
-
-
-@router.get("/", response_model=CostConfigResponse)
+@router.get("", response_model=CostConfigResponse)
 async def get_cost_config(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Lista custos editáveis do FinOps Hyper-V."""
-    try:
-        rows = db.execute(
-            text("SELECT key, value, label, unit FROM hyperv_cost_config ORDER BY id")
-        ).fetchall()
-        if rows:
-            return CostConfigResponse(
-                items=[CostConfigItem(key=r[0], value=float(r[1]), label=r[2], unit=r[3]) for r in rows]
-            )
-    except Exception:
-        pass
-    # Fallback
+    rows = db.execute(
+        text("SELECT id, key, label, category, value, unit, editable, sort_order FROM hyperv_cost_config ORDER BY sort_order")
+    ).fetchall()
+
+    items = []
+    config = {}
+    for r in rows:
+        items.append(CostItem(id=r[0], key=r[1], label=r[2], category=r[3], value=r[4], unit=r[5] or "", editable=r[6], sort_order=r[7]))
+        config[r[1]] = r[4]
+
+    # Calculate totals
+    infra_cats = ("infra", "rede", "software", "hardware", "pessoal")
+    total = sum(i.value for i in items if i.category in infra_cats)
+    reajuste = config.get("reajuste_anual", 0)
+    if reajuste > 0:
+        total *= (1 + reajuste / 100)
+
+    # Unit costs from weights
+    peso_cpu = config.get("peso_cpu", 40) / 100
+    peso_ram = config.get("peso_ram", 25) / 100
+    peso_disco = config.get("peso_disco", 25) / 100
+    peso_rede = config.get("peso_rede", 10) / 100
+    total_vcpus = config.get("total_vcpus", 1024) or 1
+    total_ram = config.get("total_ram_gb", 1024) or 1
+    total_disco = config.get("total_disco_gb", 28000) or 1
+    total_ips = config.get("total_ips", 16) or 1
+
     return CostConfigResponse(
-        items=[CostConfigItem(key=k, value=v["value"], label=v["label"], unit=v["unit"]) for k, v in DEFAULTS.items()]
+        items=items,
+        total_mensal=round(total, 2),
+        reajuste_anual=reajuste,
+        cost_vcpu=round(total * peso_cpu / total_vcpus, 2),
+        cost_ram_gb=round(total * peso_ram / total_ram, 2),
+        cost_disk_gb=round(total * peso_disco / total_disco, 2),
+        cost_ip=round(total * peso_rede / total_ips, 2),
     )
 
 
-@router.put("/")
+@router.put("")
 async def update_cost_config(
-    body: CostConfigUpdate,
+    req: CostUpdateRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Atualiza custos unitários do FinOps Hyper-V."""
-    now = datetime.now(timezone.utc)
-    updated = []
-    for key, value in body.costs.items():
-        if value < 0:
-            raise HTTPException(status_code=400, detail=f"Valor negativo não permitido: {key}")
-        try:
-            db.execute(
-                text("UPDATE hyperv_cost_config SET value = :val, updated_at = :ts WHERE key = :key"),
-                {"val": value, "ts": now, "key": key},
-            )
-            updated.append(key)
-        except Exception:
-            pass
+    updated = 0
+    for item in req.items:
+        key = item.get("key")
+        value = item.get("value")
+        if key is None or value is None:
+            continue
+        db.execute(
+            text("UPDATE hyperv_cost_config SET value = :val, updated_at = :now WHERE key = :key"),
+            {"val": float(value), "now": datetime.now(timezone.utc), "key": key}
+        )
+        updated += 1
     db.commit()
     return {"status": "ok", "updated": updated}
