@@ -293,21 +293,40 @@ function HyperVDashboard() {
         var usedMemGB = vms.reduce((s, v) => s + ((v.memory_mb || 0) / 1024), 0);
         var freeMemGB = Math.max(0, totalMemGB - usedMemGB);
         var totalStorGB = hosts.reduce((s, h) => s + (h.total_storage_gb || 0), 0);
-        // FinOps cost estimation in R$ — custos reais do datacenter Techbiz
-        // Total mensal datacenter: R$ 50.428,70
-        // Pesos: RAM 25%, CPU 40%, Disco 25%, Rede/IP 10%
-        // Custos unitários: vCPU R$19,70/mês (8:1 oversub), RAM R$12,31/GB/mês, Disco R$0,45/GB/mês
-        var COST_VCPU = 19.70;   // R$/vCPU/mês
-        var COST_RAM_GB = 12.31; // R$/GB/mês
-        var COST_DISK_GB = 0.45; // R$/GB/mês
-        var COST_INFRA_HOST = 50428.70 / 2; // Infra fixa rateada por host (energia, ar, nobreak, pessoal, depreciação)
+        // ── Custos reais datacenter Techbiz (metodologia documentada) ──
+        // Custos unitários derivados do rateio por peso
+        var COST_VCPU = 19.70;    // R$/vCPU/mês (CPU peso 40%, 1024 cores virtuais 8:1)
+        var COST_RAM_GB = 12.31;  // R$/GB/mês (RAM peso 25%, 1024 GB total)
+        var COST_DISK_GB = 0.45;  // R$/GB/mês (Disco peso 25%, 28.000 GB)
+        var COST_IP = 315.18;     // R$/IP/mês (Rede peso 10%, 16 IPs)
+        // Composição mensal fixa do datacenter
+        var infraItems = [
+          { cat: 'Energia', desc: 'Energia elétrica CPD', valor: 8050.13 },
+          { cat: 'Energia', desc: 'Energia ar condicionado', valor: 2388.62 },
+          { cat: 'Infra', desc: 'Manutenção nobreak', valor: 250.00 },
+          { cat: 'Infra', desc: 'Reparos elétricos', valor: 450.00 },
+          { cat: 'Infra', desc: 'Manutenção ar condicionado', valor: 333.33 },
+          { cat: 'Rede', desc: 'Link dedicado / IPs públicos', valor: 3500.00 },
+          { cat: 'Software', desc: 'Licença Twilio', valor: 25.00 },
+          { cat: 'Hardware', desc: 'Garantia servidores Dell', valor: 1666.67 },
+          { cat: 'Hardware', desc: 'Depreciação servidores', valor: 8333.33 },
+          { cat: 'Hardware', desc: 'Garantia storage', valor: 2000.00 },
+          { cat: 'Hardware', desc: 'Depreciação storage', valor: 2410.00 },
+          { cat: 'Hardware', desc: 'Depreciação storage bkp', valor: 1000.00 },
+          { cat: 'Hardware', desc: 'Depreciação switches', valor: 581.62 },
+          { cat: 'Pessoal', desc: 'Equipe infraestrutura (30%)', valor: 19440.00 },
+        ];
+        var totalCost = infraItems.reduce((s, i) => s + i.valor, 0);
+        // Custo alocado por recurso (pesos)
+        var costCpuPool = totalCost * 0.40;
+        var costRamPool = totalCost * 0.25;
+        var costDiskPool = totalCost * 0.25;
+        var costNetPool = totalCost * 0.10;
+        // Custo das VMs alocadas
         var costVcpu = totalVcpus * COST_VCPU;
         var costMem = usedMemGB * COST_RAM_GB;
         var costStor = totalStorGB * COST_DISK_GB;
-        var costInfra = hosts.length * COST_INFRA_HOST * 0.1; // 10% proporcional (resto é fixo)
-        var totalCost = 50428.70; // Custo total real do datacenter
-        var costVMs = costVcpu + costMem + costStor;
-        // Savings: cada vCPU liberada = R$19,70, cada GB RAM = R$12,31
+        // Savings
         var overRecs = recommendations.filter(r => r.category === 'overprovisioned');
         var idleRecs = recommendations.filter(r => r.category === 'idle');
         var rightRecs = recommendations.filter(r => r.category === 'right-size');
@@ -315,6 +334,9 @@ function HyperVDashboard() {
         var savingsIdle = idleRecs.reduce((s, r) => s + (r.estimated_savings || 0), 0);
         var savingsRightSize = rightRecs.reduce((s, r) => s + (r.estimated_savings || 0), 0);
         var totalSavings = savingsVcpu + savingsIdle + savingsRightSize;
+        // Calculadora VM padrão (4GB RAM, 16 vCPU, 512GB disco, 1 IP)
+        var vmCalc = { ram: 4, vcpu: 16, disk: 512, ip: 1 };
+        var vmCalcCost = vmCalc.ram * COST_RAM_GB + vmCalc.vcpu * COST_VCPU + vmCalc.disk * COST_DISK_GB + vmCalc.ip * COST_IP;
         return (
         <div className="hyperv-cluster-overview">
           <h3>🏢 Visão do Cluster</h3>
@@ -325,9 +347,9 @@ function HyperVDashboard() {
               <div className="cluster-detail">{hosts.map(h => h.hostname).join(', ')}</div>
             </div>
             <div className="cluster-card">
-              <div className="cluster-label">CPUs Físicas (Lógicas)</div>
-              <div className="cluster-value">{clusterCpus}</div>
-              <div className="cluster-detail">{totalVcpus} vCPUs alocadas · Ratio {clusterCpus > 0 ? (totalVcpus / clusterCpus).toFixed(1) : 0}:1</div>
+              <div className="cluster-label">CPUs Lógicas / vCPUs</div>
+              <div className="cluster-value">{clusterCpus} / {totalVcpus}</div>
+              <div className="cluster-detail">Overcommit {clusterCpus > 0 ? (totalVcpus / clusterCpus).toFixed(1) : 0}:1 (máx 8:1)</div>
             </div>
             <div className="cluster-card">
               <div className="cluster-label">Memória Total</div>
@@ -337,7 +359,7 @@ function HyperVDashboard() {
             <div className="cluster-card">
               <div className="cluster-label">Storage Total</div>
               <div className="cluster-value">{totalStorGB.toFixed(0)} GB</div>
-              <div className="cluster-detail">Uso médio {avgStor.toFixed(1)}%</div>
+              <div className="cluster-detail">Uso médio {avgStor.toFixed(1)}% · Cap. útil 28.000 GB</div>
             </div>
             <div className="cluster-card">
               <div className="cluster-label">Capacidade de Expansão</div>
@@ -347,13 +369,51 @@ function HyperVDashboard() {
             <div className="cluster-card">
               <div className="cluster-label">Custo Mensal Datacenter</div>
               <div className="cluster-value">R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</div>
-              <div className="cluster-detail">VMs: vCPU R${costVcpu.toLocaleString('pt-BR',{minimumFractionDigits:0})} · RAM R${costMem.toLocaleString('pt-BR',{minimumFractionDigits:0})} · Disco R${costStor.toLocaleString('pt-BR',{minimumFractionDigits:0})}</div>
+              <div className="cluster-detail">CPU 40% · RAM 25% · Disco 25% · Rede 10%</div>
             </div>
           </div>
+
+          {/* ── Composição de Custos ── */}
+          <div className="cluster-cost-breakdown">
+            <h4>📊 Composição de Custos Mensais</h4>
+            <div className="cost-cols">
+              <div className="cost-col">
+                <table className="hw-table">
+                  <thead><tr><th>Item</th><th>Categoria</th><th style={{textAlign:'right'}}>Valor</th></tr></thead>
+                  <tbody>
+                    {infraItems.map((item, i) => (
+                      <tr key={i}><td>{item.desc}</td><td>{item.cat}</td><td style={{textAlign:'right'}}>R$ {item.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>
+                    ))}
+                    <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}><td colSpan={2}>Total Mensal</td><td style={{textAlign:'right'}}>R$ {totalCost.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="cost-col">
+                <table className="hw-table">
+                  <thead><tr><th>Recurso</th><th>Peso</th><th style={{textAlign:'right'}}>Pool</th><th style={{textAlign:'right'}}>Unitário</th></tr></thead>
+                  <tbody>
+                    <tr><td>CPU ({totalVcpus} vCPUs)</td><td>40%</td><td style={{textAlign:'right'}}>R$ {costCpuPool.toLocaleString('pt-BR',{minimumFractionDigits:0})}</td><td style={{textAlign:'right'}}>R$ {COST_VCPU.toFixed(2)}/vCPU</td></tr>
+                    <tr><td>RAM ({totalMemGB.toFixed(0)} GB)</td><td>25%</td><td style={{textAlign:'right'}}>R$ {costRamPool.toLocaleString('pt-BR',{minimumFractionDigits:0})}</td><td style={{textAlign:'right'}}>R$ {COST_RAM_GB.toFixed(2)}/GB</td></tr>
+                    <tr><td>Disco (28.000 GB)</td><td>25%</td><td style={{textAlign:'right'}}>R$ {costDiskPool.toLocaleString('pt-BR',{minimumFractionDigits:0})}</td><td style={{textAlign:'right'}}>R$ {COST_DISK_GB.toFixed(2)}/GB</td></tr>
+                    <tr><td>Rede/IP (16 IPs)</td><td>10%</td><td style={{textAlign:'right'}}>R$ {costNetPool.toLocaleString('pt-BR',{minimumFractionDigits:0})}</td><td style={{textAlign:'right'}}>R$ {COST_IP.toFixed(2)}/IP</td></tr>
+                  </tbody>
+                </table>
+                <div className="vm-calculator">
+                  <h4>🧮 Calculadora VM Padrão</h4>
+                  <div className="calc-row"><span>RAM {vmCalc.ram} GB</span><span>R$ {(vmCalc.ram * COST_RAM_GB).toFixed(2)}</span></div>
+                  <div className="calc-row"><span>vCPU {vmCalc.vcpu}</span><span>R$ {(vmCalc.vcpu * COST_VCPU).toFixed(2)}</span></div>
+                  <div className="calc-row"><span>Disco {vmCalc.disk} GB</span><span>R$ {(vmCalc.disk * COST_DISK_GB).toFixed(2)}</span></div>
+                  <div className="calc-row"><span>IP Público {vmCalc.ip}</span><span>R$ {(vmCalc.ip * COST_IP).toFixed(2)}</span></div>
+                  <div className="calc-total"><span>Total/mês</span><span>R$ {vmCalcCost.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {totalSavings > 0 && (
             <div className="cluster-savings">
-              💰 Economia potencial com FinOps: <strong>R$ {totalSavings.toLocaleString('pt-BR', {minimumFractionDigits: 0})}/mês</strong>
-              <span className="savings-detail"> (vCPU overprovisioned: R${savingsVcpu.toFixed(0)} · VMs idle: R${savingsIdle.toFixed(0)} · Right-size: R${savingsRightSize.toFixed(0)})</span>
+              💰 Economia potencial com FinOps: <strong>R$ {totalSavings.toLocaleString('pt-BR', {minimumFractionDigits: 2})}/mês</strong>
+              <span className="savings-detail"> (Overprovisioned: R${savingsVcpu.toLocaleString('pt-BR',{minimumFractionDigits:0})} · Idle: R${savingsIdle.toLocaleString('pt-BR',{minimumFractionDigits:0})} · Right-size: R${savingsRightSize.toLocaleString('pt-BR',{minimumFractionDigits:0})})</span>
             </div>
           )}
           {/* ── Hardware Details per Host ── */}

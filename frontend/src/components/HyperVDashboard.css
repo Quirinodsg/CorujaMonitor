@@ -563,3 +563,54 @@
   border-bottom: 1px solid var(--border);
   color: var(--text-primary);
 }
+
+/* ── Cost Breakdown ── */
+.cluster-cost-breakdown {
+  margin-top: var(--space-5);
+}
+.cluster-cost-breakdown h4 {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.cost-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+@media (max-width: 1024px) {
+  .cost-cols { grid-template-columns: 1fr; }
+}
+.cost-col .hw-table td, .cost-col .hw-table th {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+}
+
+/* ── VM Calculator ── */
+.vm-calculator {
+  margin-top: var(--space-4);
+  background: var(--surface-3);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+}
+.vm-calculator h4 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+.calc-row {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-1) 0;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  border-bottom: 1px solid var(--border);
+}
+.calc-total {
+  display: flex;
+  justify-content: space-between;
+  padding: var(--space-2) 0 0;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+}
