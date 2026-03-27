@@ -469,4 +469,75 @@ async def ingest_hyperv_data(
         vm.last_updated = now
 
     db.commit()
+
+    # ── Auto-generate FinOps recommendations & AI suggestions ──
+    _generate_finops_recommendations(db, host, payload.vms)
+
     return {"status": "ok", "hostname": payload.hostname, "vms": len(payload.vms)}
+
+
+def _generate_finops_recommendations(db: Session, host, vms_data):
+    """Generate FinOps recommendations based on current VM metrics."""
+    try:
+        # Clear old active recommendations for this host
+        db.query(HyperVFinOpsRecommendation).filter(
+            HyperVFinOpsRecommendation.host_id == host.id,
+            HyperVFinOpsRecommendation.status == "active",
+        ).delete()
+
+        vms = db.query(HyperVVM).filter(HyperVVM.host_id == host.id).all()
+
+        for vm in vms:
+            # Idle VM: CPU < 2% and running
+            if vm.state == "Running" and (vm.cpu_percent or 0) < 2 and (vm.memory_percent or 0) < 3:
+                db.add(HyperVFinOpsRecommendation(
+                    host_id=host.id, vm_id=vm.id,
+                    category="idle",
+                    description=f"VM {vm.name} está ociosa (CPU {vm.cpu_percent or 0}%, Mem {vm.memory_percent or 0}%)",
+                    suggested_action=f"Considere desligar {vm.name} para liberar recursos",
+                    estimated_savings=round((vm.vcpus or 1) * 0.02 + (vm.memory_mb or 0) / 1024 * 0.01, 2),
+                    confidence=0.7,
+                    status="active",
+                ))
+
+            # Overprovisioned: has many vCPUs but low CPU usage
+            if vm.state == "Running" and (vm.vcpus or 0) >= 8 and (vm.cpu_percent or 0) < 5:
+                db.add(HyperVFinOpsRecommendation(
+                    host_id=host.id, vm_id=vm.id,
+                    category="overprovisioned",
+                    description=f"VM {vm.name} tem {vm.vcpus} vCPUs mas usa apenas {vm.cpu_percent or 0}% CPU",
+                    suggested_action=f"Reduzir vCPUs de {vm.name} para {max(2, (vm.vcpus or 4) // 2)}",
+                    estimated_savings=round((vm.vcpus or 4) * 0.015, 2),
+                    confidence=0.85,
+                    status="active",
+                ))
+
+            # Right-size memory: large memory but low usage
+            if vm.state == "Running" and (vm.memory_mb or 0) >= 16384 and (vm.memory_percent or 0) < 5:
+                db.add(HyperVFinOpsRecommendation(
+                    host_id=host.id, vm_id=vm.id,
+                    category="right-size",
+                    description=f"VM {vm.name} tem {(vm.memory_mb or 0) // 1024}GB RAM mas usa {vm.memory_percent or 0}% do host",
+                    suggested_action=f"Reduzir memória de {vm.name} para {max(4096, (vm.memory_mb or 8192) // 2)}MB",
+                    estimated_savings=round((vm.memory_mb or 0) / 1024 * 0.008, 2),
+                    confidence=0.75,
+                    status="active",
+                ))
+
+        # Host-level: rebalance if memory > 80%
+        if (host.memory_percent or 0) > 80:
+            db.add(HyperVFinOpsRecommendation(
+                host_id=host.id, vm_id=None,
+                category="rebalance",
+                description=f"Host {host.hostname} com memória alta ({host.memory_percent}%)",
+                suggested_action="Migrar VMs para host com mais recursos disponíveis",
+                estimated_savings=0,
+                confidence=0.9,
+                status="active",
+            ))
+
+        db.commit()
+    except Exception as e:
+        db.rollback()
+        import logging
+        logging.getLogger(__name__).warning(f"FinOps generation error: {e}")

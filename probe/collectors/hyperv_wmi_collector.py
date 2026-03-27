@@ -112,18 +112,37 @@ try {
     $storagePct  = if ($totalDiskGB -gt 0) { [math]::Round((($totalDiskGB - $freeDiskGB) / $totalDiskGB) * 100, 1) } else { 0 }
     $memPct      = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
 
-    # VMs — use CPUUsage property (always available on Get-VM) + Measure-VM as fallback
+    # Host CPU — use performance counter (real CPU usage, not per-VM)
+    $hostCpu = 0
+    try {
+        $cpu = Get-CimInstance Win32_PerfFormattedData_PerfOS_Processor -Filter "Name='_Total'" -ErrorAction SilentlyContinue
+        if ($cpu) { $hostCpu = [math]::Round($cpu.PercentProcessorTime, 1) }
+    } catch {}
+
+    # VMs
     $vms = Get-VM -ErrorAction Stop
     $totalMemGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
     $vmList = @()
-    $totalCpu = 0
+    $totalVmCpu = 0
     foreach ($vm in $vms) {
-        # CPUUsage is a built-in property of Get-VM (integer 0-100)
         $cpuUsage = $vm.CPUUsage
         if (-not $cpuUsage) { $cpuUsage = 0 }
-        $totalCpu += $cpuUsage
+        $totalVmCpu += $cpuUsage
         $memMB = [math]::Round($vm.MemoryAssigned / 1MB)
         $memPctVM = if ($totalMemGB -gt 0) { [math]::Round(($memMB / 1024) / $totalMemGB * 100, 1) } else { 0 }
+
+        # VHD disk usage per VM
+        $diskBytes = [long]0
+        try {
+            $hdds = Get-VMHardDiskDrive -VM $vm -ErrorAction SilentlyContinue
+            foreach ($hdd in $hdds) {
+                if ($hdd.Path) {
+                    $vhd = Get-VHD -Path $hdd.Path -ErrorAction SilentlyContinue
+                    if ($vhd) { $diskBytes += $vhd.FileSize }
+                }
+            }
+        } catch {}
+
         $vmList += @{
             name           = $vm.Name
             state          = $vm.State.ToString()
@@ -131,20 +150,19 @@ try {
             memory_mb      = $memMB
             cpu_percent    = $cpuUsage
             memory_percent = $memPctVM
-            disk_bytes     = 0
+            disk_bytes     = $diskBytes
             uptime_seconds = if ($vm.Uptime) { [int]$vm.Uptime.TotalSeconds } else { 0 }
         }
     }
 
     $running = ($vms | Where-Object { $_.State -eq 'Running' }).Count
-    $avgCpu  = if ($vms.Count -gt 0) { [math]::Round($totalCpu / $vms.Count, 1) } else { 0 }
 
     @{
         host = @{
             total_cpus       = $cs.NumberOfLogicalProcessors
             total_memory_gb  = [math]::Round($cs.TotalPhysicalMemory / 1GB, 1)
             total_storage_gb = $totalDiskGB
-            cpu_percent      = $avgCpu
+            cpu_percent      = $hostCpu
             memory_percent   = $memPct
             storage_percent  = $storagePct
             vm_count         = $vms.Count
@@ -167,7 +185,7 @@ try {
                 ["powershell", "-NoProfile", "-Command", ps_command],
                 capture_output=True,
                 text=True,
-                timeout=15,
+                timeout=30,
             )
 
             if result.returncode != 0:
@@ -189,7 +207,7 @@ try {
             return data
 
         except subprocess.TimeoutExpired:
-            logger.warning(f"HyperV: timeout (15s) for {hostname}")
+            logger.warning(f"HyperV: timeout (30s) for {hostname}")
             return None
         except json.JSONDecodeError as e:
             logger.warning(f"HyperV: JSON parse error for {hostname}: {e}")
