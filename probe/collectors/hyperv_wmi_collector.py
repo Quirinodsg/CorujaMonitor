@@ -147,18 +147,35 @@ try {
         }
     } catch {}
 
+    # ── VM Memory via Get-Counter (Current Pressure = real memory usage %) ──
+    $vmMemPressure = @{}
+    try {
+        $memSamples = (Get-Counter '\Hyper-V Dynamic Memory VM(*)\Current Pressure' -ErrorAction Stop).CounterSamples
+        foreach ($ms in $memSamples) {
+            $vmMemPressure[$ms.InstanceName.Trim()] = $ms.CookedValue
+        }
+    } catch {}
+
     $vmList = @()
     foreach ($vm in $vms) {
-        # CPU: Get-Counter returns lowercase names, match case-insensitive
+        # CPU: Get-Counter returns % per vCPU. Sum all vCPUs = total host CPU used by this VM
+        # Then normalize: (sum of vCPU%) / host_logical_cpus = % of host CPU
         $cpuUsage = 0
         $vmNameLower = $vm.Name.ToLower()
         if ($vmCpuMap.ContainsKey($vmNameLower) -and $vmCpuMap[$vmNameLower].Count -gt 0) {
-            $cpuUsage = [math]::Round(($vmCpuMap[$vmNameLower] | Measure-Object -Average).Average, 2)
+            $sumCpu = ($vmCpuMap[$vmNameLower] | Measure-Object -Sum).Sum
+            $cpuUsage = [math]::Round($sumCpu / $hostLogicalCPUs * 100, 1)
         } elseif ($vmCpuMap.ContainsKey($vm.Name) -and $vmCpuMap[$vm.Name].Count -gt 0) {
-            $cpuUsage = [math]::Round(($vmCpuMap[$vm.Name] | Measure-Object -Average).Average, 2)
-        } else {
-            $cpuUsage = $vm.CPUUsage
-            if ($null -eq $cpuUsage -or $cpuUsage -lt 0) { $cpuUsage = 0 }
+            $sumCpu = ($vmCpuMap[$vm.Name] | Measure-Object -Sum).Sum
+            $cpuUsage = [math]::Round($sumCpu / $hostLogicalCPUs * 100, 1)
+        }
+
+        # Memory: use Current Pressure from Get-Counter (same logic as CPU)
+        $memPressure = 0
+        if ($vmMemPressure.ContainsKey($vmNameLower)) {
+            $memPressure = [math]::Round($vmMemPressure[$vmNameLower], 1)
+        } elseif ($vmMemPressure.ContainsKey($vm.Name)) {
+            $memPressure = [math]::Round($vmMemPressure[$vm.Name], 1)
         }
 
         # Memory assigned (what the host allocated to this VM)
