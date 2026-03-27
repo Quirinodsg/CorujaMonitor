@@ -131,12 +131,12 @@ try {
     $totalMemGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
     $hostLogicalCPUs = $cs.NumberOfLogicalProcessors
 
-    # ── VM CPU via Get-Counter (returns real decimal CPU %) ──
+    # ── VM CPU via Get-Counter (Guest Run Time = what Task Manager shows inside VM) ──
     $vmCpuMap = @{}
     try {
-        $samples = (Get-Counter '\Hyper-V Hypervisor Virtual Processor(*)\% Total Run Time' -ErrorAction Stop).CounterSamples
+        $samples = (Get-Counter '\Hyper-V Hypervisor Virtual Processor(*)\% Guest Run Time' -ErrorAction Stop).CounterSamples
         foreach ($s in $samples) {
-            $inst = $s.InstanceName  # format: "vmname:hv vp 0"
+            $inst = $s.InstanceName
             if ($inst -like '*_total*') { continue }
             $parts = $inst -split ':'
             if ($parts.Count -ge 1) {
@@ -158,16 +158,17 @@ try {
 
     $vmList = @()
     foreach ($vm in $vms) {
-        # CPU: Get-Counter returns % per vCPU. Sum all vCPUs = total host CPU used by this VM
-        # Then normalize: (sum of vCPU%) / host_logical_cpus = % of host CPU
+        # CPU: sum Guest Run Time / vCPU count = what Task Manager shows inside the VM
         $cpuUsage = 0
         $vmNameLower = $vm.Name.ToLower()
+        $vcpuCount = $vm.ProcessorCount
+        if ($vcpuCount -lt 1) { $vcpuCount = 1 }
         if ($vmCpuMap.ContainsKey($vmNameLower) -and $vmCpuMap[$vmNameLower].Count -gt 0) {
             $sumCpu = ($vmCpuMap[$vmNameLower] | Measure-Object -Sum).Sum
-            $cpuUsage = [math]::Round($sumCpu / $hostLogicalCPUs * 100, 1)
+            $cpuUsage = [math]::Round($sumCpu / $vcpuCount, 1)
         } elseif ($vmCpuMap.ContainsKey($vm.Name) -and $vmCpuMap[$vm.Name].Count -gt 0) {
             $sumCpu = ($vmCpuMap[$vm.Name] | Measure-Object -Sum).Sum
-            $cpuUsage = [math]::Round($sumCpu / $hostLogicalCPUs * 100, 1)
+            $cpuUsage = [math]::Round($sumCpu / $vcpuCount, 1)
         }
 
         # Memory: use Current Pressure from Get-Counter (same logic as CPU)
