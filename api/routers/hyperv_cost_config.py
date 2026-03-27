@@ -104,3 +104,11 @@ async def update_cost_config(
         updated += 1
     db.commit()
     return {"status": "ok", "updated": updated}
+
+
+def get_cost_map(db):
+    """Return dict of cost config values for use by FinOps engine."""
+    rows = db.execute(
+        text("SELECT key, value FROM hyperv_cost_config")
+    ).fetchall()
+    return {r[0]: r[1] for r in rows} if rows else {}
