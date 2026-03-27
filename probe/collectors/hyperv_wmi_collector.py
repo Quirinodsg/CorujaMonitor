@@ -158,17 +158,14 @@ try {
 
     $vmList = @()
     foreach ($vm in $vms) {
-        # CPU: sum Guest Run Time / vCPU count = what Task Manager shows inside the VM
+        # CPU: sum of Guest Run Time across all vCPUs = total CPU load of this VM
+        # This is what matters for capacity planning (how much host CPU this VM uses)
         $cpuUsage = 0
         $vmNameLower = $vm.Name.ToLower()
-        $vcpuCount = $vm.ProcessorCount
-        if ($vcpuCount -lt 1) { $vcpuCount = 1 }
         if ($vmCpuMap.ContainsKey($vmNameLower) -and $vmCpuMap[$vmNameLower].Count -gt 0) {
-            $sumCpu = ($vmCpuMap[$vmNameLower] | Measure-Object -Sum).Sum
-            $cpuUsage = [math]::Round($sumCpu / $vcpuCount, 1)
+            $cpuUsage = [math]::Round(($vmCpuMap[$vmNameLower] | Measure-Object -Sum).Sum, 1)
         } elseif ($vmCpuMap.ContainsKey($vm.Name) -and $vmCpuMap[$vm.Name].Count -gt 0) {
-            $sumCpu = ($vmCpuMap[$vm.Name] | Measure-Object -Sum).Sum
-            $cpuUsage = [math]::Round($sumCpu / $vcpuCount, 1)
+            $cpuUsage = [math]::Round(($vmCpuMap[$vm.Name] | Measure-Object -Sum).Sum, 1)
         }
 
         # Memory: use Current Pressure from Get-Counter (same logic as CPU)
