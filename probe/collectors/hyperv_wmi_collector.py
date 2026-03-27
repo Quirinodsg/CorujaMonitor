@@ -131,28 +131,31 @@ try {
     $totalMemGB = [math]::Round($cs.TotalPhysicalMemory / 1GB, 2)
     $hostLogicalCPUs = $cs.NumberOfLogicalProcessors
 
-    # ── VM CPU via performance counter (real usage, not instantaneous snapshot) ──
+    # ── VM CPU via Get-Counter (returns real decimal CPU %) ──
     $vmCpuMap = @{}
     try {
-        $counters = Get-CimInstance Win32_PerfFormattedData_HvStats_HyperVHypervisorVirtualProcessor -ErrorAction SilentlyContinue |
-            Where-Object { $_.Name -notlike '*_Total*' -and $_.Name -notlike '*Hv*' }
-        foreach ($c in $counters) {
-            # Name format: "VMName:Hv VP 0", extract VM name
-            $parts = $c.Name -split ':'
+        $samples = (Get-Counter '\Hyper-V Hypervisor Virtual Processor(*)\% Total Run Time' -ErrorAction Stop).CounterSamples
+        foreach ($s in $samples) {
+            $inst = $s.InstanceName  # format: "vmname:hv vp 0"
+            if ($inst -like '*_total*') { continue }
+            $parts = $inst -split ':'
             if ($parts.Count -ge 1) {
-                $vmName = $parts[0]
+                $vmName = $parts[0].Trim()
                 if (-not $vmCpuMap.ContainsKey($vmName)) { $vmCpuMap[$vmName] = @() }
-                $vmCpuMap[$vmName] += $c.PercentTotalRunTime
+                $vmCpuMap[$vmName] += $s.CookedValue
             }
         }
     } catch {}
 
     $vmList = @()
     foreach ($vm in $vms) {
-        # CPU: prefer perf counter (average across vCPUs), fallback to CPUUsage
+        # CPU: Get-Counter returns lowercase names, match case-insensitive
         $cpuUsage = 0
-        if ($vmCpuMap.ContainsKey($vm.Name) -and $vmCpuMap[$vm.Name].Count -gt 0) {
-            $cpuUsage = [math]::Round(($vmCpuMap[$vm.Name] | Measure-Object -Average).Average, 1)
+        $vmNameLower = $vm.Name.ToLower()
+        if ($vmCpuMap.ContainsKey($vmNameLower) -and $vmCpuMap[$vmNameLower].Count -gt 0) {
+            $cpuUsage = [math]::Round(($vmCpuMap[$vmNameLower] | Measure-Object -Average).Average, 2)
+        } elseif ($vmCpuMap.ContainsKey($vm.Name) -and $vmCpuMap[$vm.Name].Count -gt 0) {
+            $cpuUsage = [math]::Round(($vmCpuMap[$vm.Name] | Measure-Object -Average).Average, 2)
         } else {
             $cpuUsage = $vm.CPUUsage
             if ($null -eq $cpuUsage -or $cpuUsage -lt 0) { $cpuUsage = 0 }
