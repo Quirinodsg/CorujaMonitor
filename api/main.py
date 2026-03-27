@@ -112,7 +112,7 @@ class ForceCORSMiddleware:
 
 from database import engine, Base
 from middleware.error_handler import GlobalErrorHandlerMiddleware
-from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery, observability, topology, aiops_v3, aiops_pipeline, internal_health, sensor_controls, service_map, audit, predictions, service_monitor, default_sensor_profiles, hyperv, hyperv_ws
+from routers import auth, tenants, probes, servers, sensors, metrics, incidents, reports, dashboard, probe_commands, users, sensor_notes, ai_analysis, notifications, maintenance, admin_tools, aiops, noc, noc_realtime, test_tools, knowledge_base, ai_activities, ai_config, threshold_config, seed_kb, custom_reports, backup, sensor_groups, kubernetes, kubernetes_alerts, metrics_dashboard, auth_config, credentials, mfa, security_monitor, system_reset, timescale_migration, multi_probe, probe_nodes, metrics_batch, ws_dashboard, discovery, observability, topology, aiops_v3, aiops_pipeline, internal_health, sensor_controls, service_map, audit, predictions, service_monitor, default_sensor_profiles, hyperv, hyperv_ws, hyperv_cost_config
 
 # WAF desabilitado temporariamente — conflito com CORSMiddleware no Starlette
 WAF_AVAILABLE = False
@@ -250,6 +250,7 @@ app.include_router(service_monitor.router, prefix="/api/v1", tags=["Service Moni
 app.include_router(default_sensor_profiles.router, prefix="/api/v1", tags=["Default Sensor Profiles"])
 app.include_router(hyperv.router)              # Hyper-V Observability REST API
 app.include_router(hyperv_ws.router)           # Hyper-V WebSocket real-time
+app.include_router(hyperv_cost_config.router)  # Hyper-V FinOps Cost Config
 
 @app.get("/")
 async def root():

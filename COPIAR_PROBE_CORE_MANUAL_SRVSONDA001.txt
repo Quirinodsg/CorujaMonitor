@@ -1,0 +1,251 @@
+═══════════════════════════════════════════════════════════════════════════════
+📋 COPIAR MANUALMENTE probe_core.py PARA SRVSONDA001 (Windows)
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANTE: Você copia arquivos MANUALMENTE para a máquina da sonda
+             (não usa git pull na SRVSONDA001)
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 1: ENVIAR PARA GIT (No seu PC de desenvolvimento)
+═══════════════════════════════════════════════════════════════════════════════
+
+No Windows (Git Bash):
+
+cd ~/Coruja\ Monitor
+./commit_probe_credenciais.ps1
+
+✅ Isso vai enviar o arquivo atualizado para o GitHub
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 2: COPIAR ARQUIVO ATUALIZADO (No seu PC de desenvolvimento)
+═══════════════════════════════════════════════════════════════════════════════
+
+2.1 - Localizar arquivo no seu PC:
+      C:\Users\[SEU_USUARIO]\Coruja Monitor\probe\probe_core.py
+
+2.2 - Copiar arquivo (Ctrl+C)
+
+2.3 - Conectar na SRVSONDA001:
+      - Via RDP (Remote Desktop)
+      - Via compartilhamento de rede
+      - Via pendrive/USB
+      - Via qualquer método que você usa normalmente
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 3: PARAR SERVIÇO DA PROBE (Na SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════════════
+
+No servidor SRVSONDA001, abrir PowerShell como Administrador:
+
+Stop-Service -Name "CorujaProbe" -Force
+
+✅ Aguardar mensagem: "Status: Stopped"
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 4: FAZER BACKUP DO ARQUIVO ANTIGO (Na SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════════════
+
+No PowerShell:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+Copy-Item probe_core.py probe_core.py.backup_12mar2026
+
+✅ Isso cria backup caso precise voltar
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 5: COLAR ARQUIVO NOVO (Na SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════════════
+
+5.1 - Ir para pasta: C:\Program Files\CorujaMonitor\Probe
+
+5.2 - Colar arquivo copiado (Ctrl+V)
+      Substituir o arquivo existente quando perguntar
+
+5.3 - Verificar se arquivo foi atualizado:
+      - Clicar com botão direito no arquivo
+      - Propriedades → Detalhes
+      - Verificar "Data de modificação" (deve ser hoje)
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 6: VERIFICAR CONTEÚDO DO ARQUIVO (Na SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════════════
+
+No PowerShell:
+
+Get-Content "C:\Program Files\CorujaMonitor\Probe\probe_core.py" | Select-String "_get_server_credential"rver_credential"
+
+✅ DEVE APARECER:
+   def _get_server_credential(self, server_id):
+
+Se aparecer, arquivo foi copiado corretamente!
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 7: REINICIAR SERVIÇO DA PROBE (Na SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════════════
+
+No PowerShell:
+
+Start-Service -Name "CorujaProbe"
+
+✅ Aguardar mensagem: "Status: Running"
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 8: VERIFICAR LOGS (Na SRVSONDA001)
+═══════════════════════════════════════════════════════════════════════════════
+
+No PowerShell:
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+Get-Content logs\probe.log -Tail 50 -Wait
+
+✅ AGUARDAR ATÉ 60 SEGUNDOS (intervalo de coleta)
+
+✅ DEVE APARECER:
+   [INFO] Coruja Probe started
+   [INFO] API URL: http://192.168.31.161:8000
+   [INFO] Found 1 servers to monitor remotely
+   [INFO] Collecting from remote server: SRVHVSPRD010 (192.168.31.110)
+   [INFO] Using WMI for SRVHVSPRD010
+   [INFO] 🔐 Usando credencial: Techbiz (Nível: Empresa)
+   [DEBUG] Usuário: Techbiz\coruja.monitor
+   [INFO] Collected WMI metrics from 192.168.31.110
+   [INFO] Sent 7 metrics to API
+
+❌ NÃO DEVE APARECER:
+   [WARNING] WMI credentials not configured
+   [WARNING] ⚠️ Nenhuma credencial WMI configurada
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 PASSO 9: VERIFICAR DASHBOARD
+═══════════════════════════════════════════════════════════════════════════════
+
+9.1 - Abrir navegador: http://192.168.31.161:3000
+
+9.2 - Ir em: Servidores → SRVHVSPRD010
+
+9.3 - Verificar sensores:
+
+      ✅ DEVE MOSTRAR VALORES (não mais "Aguardando dados..."):
+      - 📡 PING: X.XX ms (OK)
+      - 🖥️ CPU Usage: XX%
+      - 💾 Memory Usage: XX%
+      - 💿 Disk C:: XX%
+      - ⏱️ Uptime: X dias
+      - 🌐 Network In: XX MB/s
+      - 🌐 Network Out: XX MB/s
+
+9.4 - Verificar timestamp (deve ser recente - últimos 2 minutos)
+
+═══════════════════════════════════════════════════════════════════════════════
+✅ CHECKLIST RÁPIDO
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] 1. Enviar para Git (./commit_probe_credenciais.ps1)
+[ ] 2. Copiar probe_core.py do seu PC
+[ ] 3. Conectar na SRVSONDA001
+[ ] 4. Parar serviço: Stop-Service -Name "CorujaProbe" -Force
+[ ] 5. Fazer backup: Copy-Item probe_core.py probe_core.py.backup_12mar2026
+[ ] 6. Colar arquivo novo em C:\Program Files\CorujaMonitor\Probe\
+[ ] 7. Verificar: Get-Content probe_core.py | Select-String "_get_server_credential"
+[ ] 8. Reiniciar serviço: Start-Service -Name "CorujaProbe"
+[ ] 9. Ver logs: Get-Content logs\probe.log -Tail 50 -Wait
+[ ] 10. Verificar dashboard (aguardar 60 segundos)
+
+═══════════════════════════════════════════════════════════════════════════════
+🔧 TROUBLESHOOTING
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ PROBLEMA: Serviço não inicia após copiar arquivo
+✅ SOLUÇÃO:
+   1. Verificar se arquivo foi copiado corretamente
+   2. Verificar se não tem erro de sintaxe:
+      python "C:\Program Files\CorujaMonitor\Probe\probe_core.py"
+   3. Se der erro, restaurar backup:
+      Copy-Item probe_core.py.backup_12mar2026 probe_core.py -Force
+      Start-Service -Name "CorujaProbe"
+
+❌ PROBLEMA: Logs mostram "⚠️ Nenhuma credencial WMI configurada"
+✅ SOLUÇÃO:
+   1. Verificar se credencial "Techbiz" existe no dashboard
+   2. Ir em: Configurações → Credenciais
+   3. Verificar se está marcada como PADRÃO
+   4. Verificar se Nível = "Empresa (Tenant)"
+
+❌ PROBLEMA: Dashboard ainda mostra "Aguardando dados..."
+✅ SOLUÇÃO:
+   1. Aguardar 60 segundos (intervalo de coleta)
+   2. Verificar logs da Probe (Passo 8)
+   3. Limpar cache do navegador (Ctrl+Shift+R)
+   4. Verificar se timestamp das métricas é recente
+
+═══════════════════════════════════════════════════════════════════════════════
+📂 LOCALIZAÇÃO DOS ARQUIVOS
+═══════════════════════════════════════════════════════════════════════════════
+
+SEU PC (Desenvolvimento):
+   C:\Users\[SEU_USUARIO]\Coruja Monitor\probe\probe_core.py
+
+SRVSONDA001 (Produção):
+   C:\Program Files\CorujaMonitor\Probe\probe_core.py
+   C:\Program Files\CorujaMonitor\Probe\probe_core.py.backup_12mar2026 (backup)
+   C:\Program Files\CorujaMonitor\Probe\logs\probe.log (logs)
+
+═══════════════════════════════════════════════════════════════════════════════
+📊 O QUE MUDOU NO ARQUIVO
+═══════════════════════════════════════════════════════════════════════════════
+
+ANTES (linha ~215):
+   username = server.get('wmi_username')
+   password = server.get('wmi_password')
+   domain = server.get('wmi_domain', '')
+   
+   if not username or not password:
+       logger.warning(f"WMI credentials not configured for {hostname}")
+       return
+
+DEPOIS (linha ~215):
+   server_id = server.get('id')
+   
+   # Buscar credenciais do banco via API (sistema moderno como PRTG)
+   credential = self._get_server_credential(server_id)
+   
+   if not credential:
+       logger.warning(f"⚠️ Nenhuma credencial WMI configurada para {hostname}")
+       logger.info(f"💡 Configure credenciais em: Configurações → Credenciais")
+       return
+   
+   username = credential.get('wmi_username')
+   password = credential.get('wmi_password')
+   domain = credential.get('wmi_domain', '')
+
+NOVA FUNÇÃO (linha ~150):
+   def _get_server_credential(self, server_id):
+       """Busca credencial do servidor via API"""
+       # Chama: GET /api/v1/credentials/resolve/{server_id}
+       # Retorna credencial com herança resolvida
+
+═══════════════════════════════════════════════════════════════════════════════
+🎉 SUCESSO!
+═══════════════════════════════════════════════════════════════════════════════
+
+Se todos os passos acima funcionaram:
+
+✅ Probe agora busca credenciais do banco via API
+✅ Sistema de herança funcionando (Servidor → Grupo → Empresa)
+✅ Métricas WMI sendo coletadas do SRVHVSPRD010
+✅ Dashboard mostrando valores reais (não mais "Aguardando dados...")
+
+Sistema moderno igual PRTG/SolarWinds:
+✅ Configure uma vez, use em todos os servidores
+✅ Altere senha em 1 lugar → afeta todos automaticamente
+✅ Credenciais centralizadas e seguras (criptografia Fernet)
+
+═══════════════════════════════════════════════════════════════════════════════
+📝 HISTÓRICO REGISTRADO
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ Registrado no histórico que você copia arquivos MANUALMENTE para SRVSONDA001
+✅ Não usa git pull na máquina da sonda
+✅ Processo: Git → Copiar arquivo → Colar na sonda → Reiniciar serviço
+
+═══════════════════════════════════════════════════════════════════════════════

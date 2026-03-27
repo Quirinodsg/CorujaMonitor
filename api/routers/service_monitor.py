@@ -69,8 +69,15 @@ def sync_services(
             Sensor.name == sensor_name
         ).first()
 
+        svc_config = {
+            "service_name": svc.service_name,
+            "display_name": svc.display_name,
+            "start_mode": svc.start_mode,
+            "state": svc.state,
+        }
         if existing:
-            # Sensor já existe — não alterar is_active (preserva escolha do usuário)
+            # Atualizar display_name no config (pode ter mudado), mas preservar is_active
+            existing.config = svc_config
             updated += 1
         else:
             # Criar novo sensor desativado por padrão (usuário precisa selecionar)
@@ -78,18 +85,29 @@ def sync_services(
                 server_id=server_id,
                 sensor_type="service",
                 name=sensor_name,
+                config=svc_config,
                 threshold_warning=0.5,
                 threshold_critical=0.5,
-                is_active=False,   # desativado até o usuário selecionar
+                is_active=False,
             )
             db.add(sensor)
             created += 1
 
     db.commit()
 
+    # Retornar lista de serviços ativos para a sonda filtrar métricas
+    active_sensors = db.query(Sensor).filter(
+        Sensor.server_id == server_id,
+        Sensor.sensor_type == "service",
+        Sensor.is_active == True
+    ).all()
+    active_service_names = [
+        s.name.replace("Service ", "", 1) for s in active_sensors
+    ]
+
     logger.info(
         f"Service sync server_id={server_id}: {created} criados, {updated} atualizados "
-        f"({len(data.services)} total)"
+        f"({len(data.services)} total, {len(active_service_names)} ativos)"
     )
 
     return {
@@ -97,6 +115,7 @@ def sync_services(
         "total": len(data.services),
         "created": created,
         "updated": updated,
+        "active_services": active_service_names,
     }
 
 

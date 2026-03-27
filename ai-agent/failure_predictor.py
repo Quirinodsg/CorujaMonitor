@@ -79,8 +79,12 @@ class FailurePredictor:
             values = np.array([v for _, v in data])
             times  = np.array([t for t, _ in data])
 
+            # Normalizar timestamps para evitar instabilidade numérica
+            t0 = times[0]
+            times_norm = times - t0
+
             # Regressão linear para tendência
-            coeffs = np.polyfit(times, values, 1)
+            coeffs = np.polyfit(times_norm, values, 1)
             slope, intercept = coeffs
 
             if slope <= 0:
@@ -88,8 +92,9 @@ class FailurePredictor:
                 self._active_predictions.pop(key, None)
                 return None
 
-            # Quando vai atingir o threshold?
-            breach_time = (threshold - intercept) / slope
+            # Quando vai atingir o threshold? (em tempo normalizado)
+            breach_time_norm = (threshold - intercept) / slope
+            breach_time = breach_time_norm + t0
             now = time.time()
 
             if breach_time <= now or breach_time > now + PREDICTION_HORIZON:
@@ -99,9 +104,9 @@ class FailurePredictor:
             hours_until = round((breach_time - now) / 3600, 1)
 
             # Intervalo de confiança (±1 desvio padrão)
-            residuals = values - np.polyval(coeffs, times)
+            residuals = values - np.polyval(coeffs, times_norm)
             std = float(np.std(residuals))
-            predicted_value = float(np.polyval(coeffs, breach_time))
+            predicted_value = float(np.polyval(coeffs, breach_time_norm))
 
             # Calcular R² para qualidade da predição
             ss_res = float(np.sum(residuals ** 2))

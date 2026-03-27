@@ -1,0 +1,80 @@
+═══════════════════════════════════════════════════════════════════
+  DIAGNÓSTICO FINAL - CAPTURAR ERRO EXATO
+═══════════════════════════════════════════════════════════════════
+
+SITUAÇÃO:
+✓ Arquivo atualizado (10:14 AM, logger.info confirmado)
+✓ Script de diagnóstico funciona (25 OIDs, 3 métricas)
+✗ Probe em produção: logs param entre "Collecting SNMP" e "SNMP result status"
+→ Indica que collect_snmp_v2c() está lançando exceção
+
+CORREÇÃO APLICADA:
+Adicionado try/except específico para capturar e logar o erro exato
+
+═══════════════════════════════════════════════════════════════════
+EXECUTAR AGORA:
+═══════════════════════════════════════════════════════════════════
+
+PASSO 1: COPIAR ARQUIVO FINAL
+
+Na SRVSONDA001:
+Copiar: probe\probe_core.py (versão com try/except detalhado)
+Destino: C:\Program Files\CorujaMonitor\Probe\
+
+═══════════════════════════════════════════════════════════════════
+PASSO 2: RODAR E VER ERRO EXATO
+═══════════════════════════════════════════════════════════════════
+
+cd "C:\Program Files\CorujaMonitor\Probe"
+
+python probe_core.py
+
+AGORA DEVE APARECER:
+
+INFO:__main__:Collecting SNMP metrics from 192.168.31.161 (vv2c)
+ERROR:__main__:Error in SNMP v2c collection: [ERRO EXATO AQUI]
+Traceback (most recent call last):
+  [STACK TRACE COMPLETO]
+
+═══════════════════════════════════════════════════════════════════
+POSSÍVEIS ERROS:
+═══════════════════════════════════════════════════════════════════
+
+ERRO 1: "module 'pysnmp' has no attribute 'X'"
+→ Versão errada do pysnmp
+→ Reinstalar: pip uninstall pysnmp; pip install pysnmp==4.4.12
+
+ERRO 2: "timeout" ou "no response"
+→ Firewall bloqueando
+→ SNMP não está rodando no Linux
+
+ERRO 3: "ImportError"
+→ Dependência faltando
+→ Instalar: pip install pyasn1==0.4.8
+
+ERRO 4: Outro erro
+→ Copiar mensagem completa e enviar
+
+═══════════════════════════════════════════════════════════════════
+APÓS VER O ERRO:
+═══════════════════════════════════════════════════════════════════
+
+Copiar a mensagem de erro completa (incluindo Traceback) e enviar
+
+Isso vai mostrar exatamente o que está impedindo a coleta SNMP
+
+═══════════════════════════════════════════════════════════════════
+OBSERVAÇÃO IMPORTANTE:
+═══════════════════════════════════════════════════════════════════
+
+O script DIAGNOSTICAR_SNMP_PARSING.py funciona porque:
+- Chama collect_snmp_v2c() diretamente
+- Não passa pelo fluxo completo do probe_core.py
+- Pode estar usando imports diferentes
+
+A probe em produção pode ter:
+- Conflito de imports
+- Problema de contexto/escopo
+- Exceção silenciosa sendo capturada
+
+O try/except adicionado vai revelar o problema exato

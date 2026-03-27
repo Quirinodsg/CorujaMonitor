@@ -1,0 +1,2 @@
+# Este diretório armazena os certificados SSL (não versionados)
+# Execute scripts/generate-ssl-cert.sh para gerar os certificados

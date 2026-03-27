@@ -670,3 +670,90 @@
 .collapsible-header:hover {
   color: var(--text-primary);
 }
+
+/* ── Cost Edit Section ── */
+.cost-edit-section {
+  margin-bottom: var(--space-3);
+}
+.btn-edit-costs {
+  background: var(--surface-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-3);
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  transition: all 0.15s;
+}
+.btn-edit-costs:hover {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.cost-edit-form {
+  background: var(--surface-3);
+  border: 1px solid var(--primary);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}
+.cost-edit-form h5 {
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+.cost-edit-fields {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+.cost-edit-fields label {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  min-width: 140px;
+}
+.cost-edit-fields input {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  width: 120px;
+}
+.cost-edit-fields input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.cost-edit-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+.cost-edit-actions button {
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  transition: all 0.15s;
+}
+.cost-edit-actions button:first-child {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.cost-edit-actions button:first-child:hover {
+  opacity: 0.9;
+}
+.cost-edit-actions button:last-child:hover {
+  background: var(--surface-3);
+}
+.cost-edit-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

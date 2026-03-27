@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\event_engine\wmi_event_listener.py
+# hypothesis_version: 6.151.9
+
+[0.0, 1.0, 5000, 'DisplayName', 'Name', 'Running', 'State', 'critical', 'disk_failure', 'display_name', 'event', 'event_type', 'host', 'localhost', 'metadata', 'ok', 'raw', 'security_event', 'sensor_type', 'service_change', 'service_down', 'service_name', 'service_recovered', 'state', 'status', 'timestamp', 'unit', 'value', 'wmi_event']

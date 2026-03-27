@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\event_processor\threshold_evaluator.py
+# hypothesis_version: 6.151.9
+
+['cpu', 'critical', 'disk', 'disk_full', 'high_cpu', 'host_unreachable', 'low_memory', 'lower', 'memory', 'ping', 'service', 'service_down', 'service_recovered', 'warning']

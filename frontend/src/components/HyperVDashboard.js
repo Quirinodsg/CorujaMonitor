@@ -76,6 +76,14 @@ function HyperVDashboard() {
   const [calcDisk, setCalcDisk] = useState(512);
   const [calcIp, setCalcIp] = useState(false);
 
+  // Editable cost config from API
+  const [costConfig, setCostConfig] = useState({
+    cost_vcpu: 19.70, cost_ram_gb: 12.31, cost_disk_gb: 0.45, cost_ip: 315.18
+  });
+  const [editingCosts, setEditingCosts] = useState(false);
+  const [costDraft, setCostDraft] = useState({});
+  const [savingCosts, setSavingCosts] = useState(false);
+
   // WebSocket
   const [wsConnected, setWsConnected] = useState(false);
   const wsRef = useRef(null);
@@ -90,12 +98,13 @@ function HyperVDashboard() {
       if (filterHost) params.host = filterHost;
       if (filterStatus) params.status = filterStatus;
 
-      var [ovRes, hostRes, vmRes, finRes, aiRes] = await Promise.allSettled([
+      var [ovRes, hostRes, vmRes, finRes, aiRes, costRes] = await Promise.allSettled([
         api.get('/hyperv/overview', { params }),
         api.get('/hyperv/hosts', { params }),
         api.get('/hyperv/vms', { params }),
         api.get('/hyperv/finops/recommendations', { params }),
         api.get('/hyperv/ai/suggestions', { params }),
+        api.get('/hyperv/cost-config/'),
       ]);
 
       if (ovRes.status === 'fulfilled') setOverview(ovRes.value.data);
@@ -108,6 +117,11 @@ function HyperVDashboard() {
       if (aiRes.status === 'fulfilled') {
         var aiData = aiRes.value.data;
         setSuggestions(Array.isArray(aiData) ? aiData : (aiData.suggestions || []));
+      }
+      if (costRes.status === 'fulfilled' && costRes.value.data && costRes.value.data.items) {
+        var map = {};
+        costRes.value.data.items.forEach(function(item) { map[item.key] = item.value; });
+        setCostConfig(function(prev) { return Object.assign({}, prev, map); });
       }
     } catch (err) {
       console.error('Erro ao carregar dados Hyper-V:', err);
@@ -304,12 +318,11 @@ function HyperVDashboard() {
         var usedMemGB = vms.reduce((s, v) => s + ((v.memory_mb || 0) / 1024), 0);
         var freeMemGB = Math.max(0, totalMemGB - usedMemGB);
         var totalStorGB = hosts.reduce((s, h) => s + (h.total_storage_gb || 0), 0);
-        // ── Custos reais datacenter Techbiz (metodologia documentada) ──
-        // Custos unitários derivados do rateio por peso
-        var COST_VCPU = 19.70;    // R$/vCPU/mês (CPU peso 40%, 1024 cores virtuais 8:1)
-        var COST_RAM_GB = 12.31;  // R$/GB/mês (RAM peso 25%, 1024 GB total)
-        var COST_DISK_GB = 0.45;  // R$/GB/mês (Disco peso 25%, 28.000 GB)
-        var COST_IP = 315.18;     // R$/IP/mês (Rede peso 10%, 16 IPs)
+        // ── Custos editáveis via API (tabela hyperv_cost_config) ──
+        var COST_VCPU = costConfig.cost_vcpu;
+        var COST_RAM_GB = costConfig.cost_ram_gb;
+        var COST_DISK_GB = costConfig.cost_disk_gb;
+        var COST_IP = costConfig.cost_ip;
         // Composição mensal fixa do datacenter
         var infraItems = [
           { cat: 'Energia', desc: 'Energia elétrica CPD', valor: 8050.13 },
@@ -387,6 +400,34 @@ function HyperVDashboard() {
               {showCostBreakdown ? '▼' : '▶'} 📊 Composição de Custos Mensais — R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
             </h4>
             {showCostBreakdown && (<>
+            {/* ── Editar Custos Unitários ── */}
+            <div className="cost-edit-section">
+              {!editingCosts ? (
+                <button className="btn-edit-costs" onClick={() => { setCostDraft({...costConfig}); setEditingCosts(true); }}>✏️ Editar Custos Unitários</button>
+              ) : (
+                <div className="cost-edit-form">
+                  <h5>Editar Custos Unitários</h5>
+                  <div className="cost-edit-fields">
+                    <label>vCPU (R$/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_vcpu ?? ''} onChange={e => setCostDraft(d => ({...d, cost_vcpu: Number(e.target.value)}))} /></label>
+                    <label>RAM (R$/GB/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_ram_gb ?? ''} onChange={e => setCostDraft(d => ({...d, cost_ram_gb: Number(e.target.value)}))} /></label>
+                    <label>Disco (R$/GB/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_disk_gb ?? ''} onChange={e => setCostDraft(d => ({...d, cost_disk_gb: Number(e.target.value)}))} /></label>
+                    <label>IP (R$/IP/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_ip ?? ''} onChange={e => setCostDraft(d => ({...d, cost_ip: Number(e.target.value)}))} /></label>
+                  </div>
+                  <div className="cost-edit-actions">
+                    <button disabled={savingCosts} onClick={async () => {
+                      setSavingCosts(true);
+                      try {
+                        await api.put('/hyperv/cost-config/', { costs: costDraft });
+                        setCostConfig(costDraft);
+                        setEditingCosts(false);
+                      } catch (err) { console.error('Erro ao salvar custos:', err); }
+                      finally { setSavingCosts(false); }
+                    }}>{savingCosts ? 'Salvando...' : '💾 Salvar'}</button>
+                    <button onClick={() => setEditingCosts(false)}>Cancelar</button>
+                  </div>
+                </div>
+              )}
+            </div>
             <div className="cost-cols">
               <div className="cost-col">
                 <table className="hw-table">

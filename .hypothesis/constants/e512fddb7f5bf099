@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\smart_collector.py
+# hypothesis_version: 6.151.9
+
+[0.0, 100, 1000, 1024, 86400, 1000000, '%Y%m%d%H%M%S', 'CPU Usage', 'Memory Usage', 'Network IN', 'Network OUT', 'Uptime', 'bytes_per_sec', 'collection_method', 'cpu', 'critical', 'days', 'device', 'disk', 'free_gb', 'isatap', 'last_boot', 'logical_cpus', 'loopback', 'mbps', 'memory', 'metadata', 'methods_in_use', 'name', 'network_in', 'network_out', 'ok', 'percent', 'query_latency_ms', 'query_ms', 'remote_registry', 'status', 'teredo', 'total_gb', 'type', 'unit', 'uptime', 'uptime_seconds', 'used_gb', 'value', 'volume_name', 'warning', 'wmi_perfcounter', 'wmi_wql']

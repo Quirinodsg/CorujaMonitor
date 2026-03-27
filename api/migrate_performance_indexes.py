@@ -8,45 +8,35 @@ from database import engine
 from sqlalchemy import text
 
 def run():
-    with engine.connect() as conn:
-        indexes = [
-            # Índice principal para queries de última métrica por sensor (LATERAL)
-            """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_metrics_sensor_timestamp
-            ON metrics (sensor_id, timestamp DESC)
-            """,
-            # Índice para batch de métricas
-            """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_metrics_sensor_id
-            ON metrics (sensor_id)
-            """,
-            # Índice para sensores ativos por servidor
-            """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sensors_server_active
-            ON sensors (server_id, is_active, sensor_type)
-            """,
-            # Índice para incidentes abertos
-            """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_incidents_status_severity
-            ON incidents (status, severity)
-            """,
-            # Índice para servidores ativos por tenant
-            """
-            CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_servers_tenant_active
-            ON servers (tenant_id, is_active)
-            """,
-        ]
+    # CREATE INDEX CONCURRENTLY não pode rodar dentro de transaction block
+    # Usar autocommit=True via raw psycopg2
+    raw = engine.raw_connection()
+    raw.set_isolation_level(0)  # AUTOCOMMIT
+    cur = raw.cursor()
 
-        for idx_sql in indexes:
-            try:
-                conn.execute(text(idx_sql.strip()))
-                conn.commit()
-                name = [l.strip() for l in idx_sql.split('\n') if 'idx_' in l][0].split()[0]
-                print(f"✅ {name}")
-            except Exception as e:
-                print(f"⚠️  {e}")
+    indexes = [
+        ("idx_metrics_sensor_timestamp",
+         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_metrics_sensor_timestamp ON metrics (sensor_id, timestamp DESC)"),
+        ("idx_metrics_sensor_id",
+         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_metrics_sensor_id ON metrics (sensor_id)"),
+        ("idx_sensors_server_active",
+         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_sensors_server_active ON sensors (server_id, is_active, sensor_type)"),
+        ("idx_incidents_status_severity",
+         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_incidents_status_severity ON incidents (status, severity)"),
+        ("idx_servers_tenant_active",
+         "CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_servers_tenant_active ON servers (tenant_id, is_active)"),
+    ]
 
-    print("\n✅ Índices criados com sucesso")
+    for name, sql in indexes:
+        try:
+            cur.execute(sql)
+            print(f"✅ {name}")
+        except Exception as e:
+            print(f"⚠️  {name}: {e}")
+
+    cur.close()
+    raw.close()
+    print("\n✅ Concluído")
 
 if __name__ == "__main__":
     run()

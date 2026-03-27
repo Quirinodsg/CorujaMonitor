@@ -512,14 +512,14 @@ async def ingest_hyperv_data(
 
 def _generate_finops_recommendations(db: Session, host, vms_data):
     """Generate FinOps recommendations based on current VM metrics.
-    Custos reais datacenter Techbiz:
-      vCPU: R$ 19,70/mês (8:1 oversub)
-      RAM:  R$ 12,31/GB/mês
-      Disco: R$ 0,45/GB/mês
+    Custos lidos da tabela hyperv_cost_config (editáveis via API).
+    Fallback para valores padrão Techbiz se tabela não existir.
     """
-    COST_VCPU = 19.70
-    COST_RAM_GB = 12.31
-    COST_DISK_GB = 0.45
+    from routers.hyperv_cost_config import get_cost_map
+    cost_map = get_cost_map(db)
+    COST_VCPU = cost_map.get("cost_vcpu", 19.70)
+    COST_RAM_GB = cost_map.get("cost_ram_gb", 12.31)
+    COST_DISK_GB = cost_map.get("cost_disk_gb", 0.45)
 
     try:
         db.query(HyperVFinOpsRecommendation).filter(

@@ -49,9 +49,12 @@ async def list_incidents(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    query = db.query(Incident).join(Sensor).join(Server).filter(
-        Server.tenant_id == current_user.tenant_id
-    )
+    if current_user.role == 'admin':
+        query = db.query(Incident).join(Sensor).join(Server)
+    else:
+        query = db.query(Incident).join(Sensor).join(Server).filter(
+            Server.tenant_id == current_user.tenant_id
+        )
     
     if status:
         query = query.filter(Incident.status == status)

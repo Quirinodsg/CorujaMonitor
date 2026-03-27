@@ -344,6 +344,14 @@
   color: var(--text-muted, #64748b);
 }
 
+.sm-state--pending {
+  background: rgba(100, 116, 139, 0.15);
+  color: var(--text-muted, #64748b);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
 /* ── No Discovery State ─────────────────────────────────────────── */
 .sm-no-discovery {
   display: flex;

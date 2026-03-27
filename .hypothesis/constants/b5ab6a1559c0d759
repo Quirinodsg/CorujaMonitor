@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\wmi_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 100, 1000, 1024, ':', 'CPU Usage', 'MB', 'Memory Usage', 'Running', 'build_number', 'collection_method', 'core_count', 'cpu', 'critical', 'device', 'disk', 'display_name', 'free_gb', 'last_boot', 'logical_cpus', 'memory', 'memory_mb', 'metadata', 'name', 'ok', 'os_name', 'os_version', 'percent', 'pid', 'process', 'process_count', 'process_name', 'service', 'service_name', 'start_mode', 'state', 'status', 'total_gb', 'type', 'unit', 'used_gb', 'value', 'volume_name', 'warning', 'wmi_perfcounter', 'wmi_wql', 'wql']
