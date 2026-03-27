@@ -103,19 +103,24 @@ class HyperVWMICollector:
         remote_script = r"""
 $ErrorActionPreference = 'Stop'
 try {
-    # ── Host hardware ──
+    # ── Host hardware identity ──
     $cs = Get-CimInstance Win32_ComputerSystem
     $os = Get-CimInstance Win32_OperatingSystem
+    $bios = Get-CimInstance Win32_BIOS -ErrorAction SilentlyContinue
+    $procs = Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue
+    $procName = if ($procs) { ($procs | Select-Object -First 1).Name } else { '' }
+    $procSockets = if ($procs) { ($procs | Measure-Object).Count } else { 0 }
+    $procCoresPerSocket = if ($procs) { ($procs | Select-Object -First 1).NumberOfCores } else { 0 }
+
     $disk = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction SilentlyContinue
     $totalDiskGB = if ($disk) { [math]::Round(($disk | Measure-Object -Property Size -Sum).Sum / 1GB, 1) } else { 0 }
     $freeDiskGB  = if ($disk) { [math]::Round(($disk | Measure-Object -Property FreeSpace -Sum).Sum / 1GB, 1) } else { 0 }
     $storagePct  = if ($totalDiskGB -gt 0) { [math]::Round((($totalDiskGB - $freeDiskGB) / $totalDiskGB) * 100, 1) } else { 0 }
     $memPct      = [math]::Round(($os.TotalVisibleMemorySize - $os.FreePhysicalMemory) / $os.TotalVisibleMemorySize * 100, 1)
 
-    # ── Host CPU — Win32_Processor LoadPercentage (works via Invoke-Command) ──
+    # ── Host CPU usage ──
     $hostCpu = 0
     try {
-        $procs = Get-CimInstance Win32_Processor -ErrorAction SilentlyContinue
         if ($procs) {
             $hostCpu = [math]::Round(($procs | Measure-Object -Property LoadPercentage -Average).Average, 1)
         }
@@ -203,6 +208,14 @@ try {
             storage_percent  = $storagePct
             vm_count         = $vms.Count
             running_vm_count = $running
+            manufacturer     = $cs.Manufacturer
+            model            = $cs.Model
+            serial_number    = if ($bios) { $bios.SerialNumber } else { '' }
+            bios_version     = if ($bios) { $bios.SMBIOSBIOSVersion } else { '' }
+            os_version       = $os.Caption
+            processor_name   = $procName
+            processor_sockets = $procSockets
+            cores_per_socket = $procCoresPerSocket
         }
         vms = $vmList
     } | ConvertTo-Json -Depth 4 -Compress

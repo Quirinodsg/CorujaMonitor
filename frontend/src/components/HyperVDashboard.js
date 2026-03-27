@@ -345,6 +345,38 @@ function HyperVDashboard() {
               <span className="savings-detail"> (vCPU overprovisioned: R${savingsVcpu.toFixed(0)} · VMs idle: R${savingsIdle.toFixed(0)} · Right-size: R${savingsRightSize.toFixed(0)})</span>
             </div>
           )}
+          {/* ── Hardware Details per Host ── */}
+          <div className="cluster-hw-details">
+            <h4>🔧 Hardware dos Servidores</h4>
+            <table className="hw-table">
+              <thead>
+                <tr>
+                  <th>Host</th>
+                  <th>Fabricante / Modelo</th>
+                  <th>Serial</th>
+                  <th>Processador</th>
+                  <th>Sockets × Cores</th>
+                  <th>Logical CPUs</th>
+                  <th>RAM</th>
+                  <th>SO</th>
+                </tr>
+              </thead>
+              <tbody>
+                {hosts.map(h => (
+                  <tr key={h.id}>
+                    <td>{h.hostname}</td>
+                    <td>{[h.manufacturer, h.model].filter(Boolean).join(' ') || '—'}</td>
+                    <td>{h.serial_number || '—'}</td>
+                    <td style={{fontSize: '0.75rem'}}>{h.processor_name || '—'}</td>
+                    <td>{h.processor_sockets || '—'} × {h.cores_per_socket || '—'}</td>
+                    <td>{h.total_cpus || '—'}</td>
+                    <td>{h.total_memory_gb ? h.total_memory_gb.toFixed(0) + ' GB' : '—'}</td>
+                    <td style={{fontSize: '0.75rem'}}>{h.os_version || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
         );
       })()}

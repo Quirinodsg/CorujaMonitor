@@ -29,6 +29,14 @@ class HyperVHostResponse(BaseModel):
     wmi_latency_ms: Optional[float] = None
     vm_count: int
     health_score: float
+    manufacturer: Optional[str] = None
+    model: Optional[str] = None
+    serial_number: Optional[str] = None
+    bios_version: Optional[str] = None
+    os_version: Optional[str] = None
+    processor_name: Optional[str] = None
+    processor_sockets: Optional[int] = None
+    cores_per_socket: Optional[int] = None
 
 
 class HyperVVMResponse(BaseModel):

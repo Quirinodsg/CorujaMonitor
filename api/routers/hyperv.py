@@ -129,6 +129,14 @@ async def get_hosts(
                 wmi_latency_ms=h.wmi_latency_ms,
                 vm_count=h.vm_count or 0,
                 health_score=round(score, 1),
+                manufacturer=h.manufacturer,
+                model=h.model,
+                serial_number=h.serial_number,
+                bios_version=h.bios_version,
+                os_version=h.os_version,
+                processor_name=h.processor_name,
+                processor_sockets=h.processor_sockets,
+                cores_per_socket=h.cores_per_socket,
             )
         )
     return results
@@ -400,6 +408,14 @@ class HyperVIngestHost(BaseModel):
     running_vm_count: int = 0
     wmi_latency_ms: float = 0
     status: str = "unknown"
+    manufacturer: Optional[str] = None
+    model: Optional[str] = None
+    serial_number: Optional[str] = None
+    bios_version: Optional[str] = None
+    os_version: Optional[str] = None
+    processor_name: Optional[str] = None
+    processor_sockets: Optional[int] = None
+    cores_per_socket: Optional[int] = None
 
 
 class HyperVIngestPayload(BaseModel):
@@ -448,6 +464,14 @@ async def ingest_hyperv_data(
     host.total_cpus = h.total_cpus or host.total_cpus
     host.total_memory_gb = h.total_memory_gb or host.total_memory_gb
     host.total_storage_gb = h.total_storage_gb or host.total_storage_gb
+    if h.manufacturer: host.manufacturer = h.manufacturer
+    if h.model: host.model = h.model
+    if h.serial_number: host.serial_number = h.serial_number
+    if h.bios_version: host.bios_version = h.bios_version
+    if h.os_version: host.os_version = h.os_version
+    if h.processor_name: host.processor_name = h.processor_name
+    if h.processor_sockets: host.processor_sockets = h.processor_sockets
+    if h.cores_per_socket: host.cores_per_socket = h.cores_per_socket
 
     # Compute health score
     vm_ratio = (h.running_vm_count / h.vm_count) if h.vm_count > 0 else 0.0

@@ -534,3 +534,32 @@
   font-size: var(--text-xs);
   opacity: 0.8;
 }
+
+/* ── Hardware Details Table ── */
+.cluster-hw-details {
+  margin-top: var(--space-5);
+}
+.cluster-hw-details h4 {
+  margin: 0 0 var(--space-3) 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+.hw-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-xs);
+}
+.hw-table th {
+  text-align: left;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-3);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+.hw-table td {
+  padding: var(--space-2) var(--space-3);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
+}
