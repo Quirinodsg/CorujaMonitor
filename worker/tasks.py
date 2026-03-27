@@ -113,11 +113,25 @@ def evaluate_all_thresholds():
 
             if threshold_breached:
                 # 5. Deduplicação: Incident aberto OU acknowledged já existe?
-                # Não criar novo incidente se já existe um não-resolvido para o mesmo sensor
                 existing_incident = db.query(Incident).filter(
                     Incident.sensor_id == sensor.id,
                     Incident.status.in_(["open", "acknowledged"])
                 ).first()
+
+                # 5b. Para PING/Uptime: também verificar se já existe incidente
+                # criado nos últimos 30 min (mesmo que resolvido) — evita flood
+                if not existing_incident and sensor.sensor_type in ('ping', 'system'):
+                    recent_cutoff = now - timedelta(minutes=30)
+                    recent_incident = db.query(Incident).filter(
+                        Incident.sensor_id == sensor.id,
+                        Incident.created_at >= recent_cutoff
+                    ).first()
+                    if recent_incident:
+                        logger.debug(
+                            "Dedup temporal: sensor %s (%s) já tem incidente nos últimos 30min (ID %s) — skip",
+                            sensor.id, sensor.sensor_type, recent_incident.id
+                        )
+                        continue
 
                 if not existing_incident:
                     # 6. Supressão por dependência: PING é sensor MASTER do servidor
@@ -276,8 +290,8 @@ def get_incident_description(sensor, metric):
     elif sensor.sensor_type == 'ping':
         return f"Host DOWN — Ping sem resposta (timeout). Servidor: {sensor.name}"
     elif sensor.sensor_type == 'system':
-        minutes = int(value * 24 * 60)
-        return f"Servidor reiniciado — Uptime: {minutes} minutos. Servidor: {sensor.name}"
+        minutes = round(value * 24 * 60, 1)
+        return f"Reboot detectado: uptime atual é {minutes} minutos. O servidor foi reiniciado recentemente. Servidor: {sensor.name}"
     elif sensor.sensor_type == 'network':
         mbps = value / 1024 / 1024
         return f"Tráfego de rede: {mbps:.2f} MB/s (Crítico: {sensor.threshold_critical} MB/s, Aviso: {sensor.threshold_warning} MB/s)"

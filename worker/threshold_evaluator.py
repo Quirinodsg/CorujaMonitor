@@ -25,13 +25,13 @@ def evaluate_thresholds(sensor, value: float) -> Tuple[bool, str]:
         return False, "ok"
 
     # ── UPTIME/System sensor (Zabbix style) ──
-    # Alert ONLY on reboot detection: uptime drops to near 0 (< 0.007 days = ~10 min).
-    # This means the server was recently restarted.
-    # Do NOT alert on uptime < 12h or < 2h — that creates noise after every reboot.
-    # Once uptime passes 10 min, the reboot alert auto-resolves.
+    # Alert ONLY on reboot detection: uptime near 0.
+    # Uses a VERY tight window (< 2 minutes = 0.0014 days) to fire only ONCE.
+    # After 2 min uptime, it's OK and the incident auto-resolves.
+    # Combined with 30-min cooldown in tasks.py, this ensures 1 incident per reboot.
     if sensor.sensor_type == 'system':
-        if value <= 0.007:  # ~10 minutes — server just rebooted
-            return True, "warning"  # Warning, not critical — it's informational
+        if value <= 0.0014:  # ~2 minutes — just rebooted
+            return True, "warning"
         return False, "ok"
     
     # Special handling for network sensors
