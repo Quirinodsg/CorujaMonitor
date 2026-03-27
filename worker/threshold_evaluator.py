@@ -13,29 +13,25 @@ def evaluate_thresholds(sensor, value: float) -> Tuple[bool, str]:
         else:
             return False, "ok"
     
-    # Special handling for ping sensors
-    # Ping sensors: value=0 means offline (critical), otherwise check latency thresholds
+    # ── PING sensor (Zabbix/PRTG style) ──
+    # ONLY alert on DOWN (no response / timeout). value=0 means no response.
+    # High latency (300ms, 500ms) is just a metric — NEVER creates an incident.
+    # This matches how Zabbix "ICMP ping" and PRTG "Ping" sensors work:
+    # they only alert on "Request timed out", not on slow response.
     if sensor.sensor_type == 'ping':
         if value == 0:
-            return True, "critical"
-        # Check latency thresholds
-        if sensor.threshold_critical is not None and value >= sensor.threshold_critical:
-            return True, "critical"
-        if sensor.threshold_warning is not None and value >= sensor.threshold_warning:
-            return True, "warning"
+            return True, "critical"  # Host DOWN — no response
+        # Any response (even slow) = host is UP = OK
         return False, "ok"
 
-    # Special handling for uptime/system sensors
-    # Uptime value is in DAYS. A reboot is detected when uptime drops below threshold.
-    # Default: warning if uptime < 0.5 days (12h), critical if uptime < 0.083 days (2h)
-    # This catches reboots — server comes back with uptime near 0.
+    # ── UPTIME/System sensor (Zabbix style) ──
+    # Alert ONLY on reboot detection: uptime drops to near 0 (< 0.007 days = ~10 min).
+    # This means the server was recently restarted.
+    # Do NOT alert on uptime < 12h or < 2h — that creates noise after every reboot.
+    # Once uptime passes 10 min, the reboot alert auto-resolves.
     if sensor.sensor_type == 'system':
-        warn_threshold = sensor.threshold_warning if sensor.threshold_warning is not None else 0.5
-        crit_threshold = sensor.threshold_critical if sensor.threshold_critical is not None else 0.083
-        if value <= crit_threshold:
-            return True, "critical"
-        if value <= warn_threshold:
-            return True, "warning"
+        if value <= 0.007:  # ~10 minutes — server just rebooted
+            return True, "warning"  # Warning, not critical — it's informational
         return False, "ok"
     
     # Special handling for network sensors
