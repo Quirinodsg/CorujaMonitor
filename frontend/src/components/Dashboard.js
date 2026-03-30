@@ -323,7 +323,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l3 6H3zm0 12h12l3 6H3zM3 9h18M3 15h18"/></svg>
               Ativos de Rede
             </span>
-            <button className="dash-section-link" onClick={() => onNavigate('sensors')}>Ver todos →</button>
+            <button className="dash-section-link" onClick={() => onNavigate('sensor-library')}>Ver todos →</button>
           </div>
           <div className="dash-sites-grid">
             {networkAssets.map(asset => {
@@ -334,7 +334,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
               const deviceLabels = { switch: 'Switch', router: 'Roteador', firewall: 'Firewall', access_point: 'Access Point', ap: 'Access Point', ups: 'Nobreak', storage: 'Storage' };
               const dt = (asset.device_type || 'other').toLowerCase();
               return (
-                <div key={asset.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => onNavigate('sensors')}>
+                <div key={asset.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => onNavigate('sensor-library')}>
                   <div className="dash-site-status">
                     <span className="dash-site-badge">
                       <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'white' }} />

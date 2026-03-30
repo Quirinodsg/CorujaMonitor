@@ -2,6 +2,11 @@
 // Biblioteca de templates de sensores padrão
 
 export const sensorCategories = {
+  network_devices: {
+    name: 'Ativos de Rede',
+    icon: '🔀',
+    description: 'Switches, Routers, Access Points, Firewalls, Gateways'
+  },
   standard: {
     name: 'Sensores Padrão',
     icon: '⭐',

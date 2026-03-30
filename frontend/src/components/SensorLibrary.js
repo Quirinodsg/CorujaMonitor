@@ -18,6 +18,8 @@ function SensorLibrary() {
   const [sensorMetrics, setSensorMetrics] = useState({});
   const [addSuccess, setAddSuccess] = useState(false);
   const [addError, setAddError] = useState('');
+  const [networkDevices, setNetworkDevices] = useState([]);
+  const [networkStatuses, setNetworkStatuses] = useState({});
   
   const [newSensor, setNewSensor] = useState({
     probe_id: '',
@@ -45,6 +47,7 @@ function SensorLibrary() {
   useEffect(() => {
     loadSensors();
     loadProbes();
+    loadNetworkDevices();
     
     // Verificar se há tipo pré-selecionado na URL
     const urlParams = new URLSearchParams(window.location.search);
@@ -84,6 +87,25 @@ function SensorLibrary() {
       console.error('Erro ao carregar sensores:', error);
       setLoading(false);
     }
+  };
+
+  const loadNetworkDevices = async () => {
+    try {
+      const res = await api.get('/servers');
+      const netTypes = ['switch', 'router', 'firewall', 'access_point', 'ap', 'ups', 'storage', 'gateway'];
+      const devices = res.data.filter(s => netTypes.includes((s.device_type || '').toLowerCase()));
+      setNetworkDevices(devices);
+      if (devices.length > 0) {
+        try {
+          const statusRes = await api.get('/dashboard/network-assets-status?ids=' + devices.map(a => a.id).join(','));
+          setNetworkStatuses(statusRes.data);
+        } catch (_) {
+          const fallback = {};
+          devices.forEach(a => { fallback[a.id] = 'unknown'; });
+          setNetworkStatuses(fallback);
+        }
+      }
+    } catch (_) {}
   };
 
   const handleAddSensor = async () => {
@@ -331,6 +353,62 @@ function SensorLibrary() {
         <p>ℹ️ <strong>Biblioteca de Sensores Independentes</strong></p>
         <p>Adicione sensores que não estão vinculados a servidores específicos: Access Points, Ar-Condicionado, Nobreaks, Impressoras, Serviços Azure, Aplicações, etc.</p>
       </div>
+
+      {/* ── Ativos de Rede ── */}
+      {networkDevices.length > 0 && (selectedCategory === 'all' || selectedCategory === 'network_devices') && (
+        <div style={{ marginBottom: 24 }}>
+          <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+            🔀 Ativos de Rede ({networkDevices.length})
+          </h3>
+          <div className="sensors-grid">
+            {networkDevices.filter(d => !searchTerm || d.hostname?.toLowerCase().includes(searchTerm.toLowerCase()) || d.ip_address?.includes(searchTerm)).map(device => {
+              const status = networkStatuses[device.id] || 'unknown';
+              const statusColor = status === 'ok' ? '#10b981' : status === 'warning' ? '#f59e0b' : status === 'critical' ? '#ef4444' : '#6b7280';
+              const statusLabel = status === 'ok' ? 'ONLINE' : status === 'warning' ? 'AVISO' : status === 'critical' ? 'CRÍTICO' : 'Aguardando';
+              const statusBg = status === 'ok' ? '#10b98115' : status === 'warning' ? '#f59e0b15' : status === 'critical' ? '#ef444415' : '#6b728015';
+              const dt = (device.device_type || 'other').toLowerCase();
+              const deviceIcons = { switch: '🔀', router: '📡', firewall: '🔥', access_point: '📶', ap: '📶', ups: '🔋', storage: '🧠', gateway: '📡' };
+              const deviceLabels = { switch: 'Switch', router: 'Router', firewall: 'Firewall', access_point: 'Access Point', ap: 'Access Point', ups: 'UPS/Nobreak', storage: 'Storage', gateway: 'Gateway' };
+              return (
+                <div key={'net-' + device.id} className="sensor-card" style={{
+                  borderLeft: '4px solid ' + statusColor,
+                  background: statusBg,
+                  position: 'relative'
+                }}>
+                  <div style={{ position: 'absolute', top: 8, left: 10 }}>
+                    <span style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 4,
+                      padding: '2px 8px', borderRadius: 10, fontSize: 10, fontWeight: 700,
+                      background: statusColor, color: '#fff'
+                    }}>
+                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff' }} />
+                      {statusLabel}
+                    </span>
+                  </div>
+                  <div style={{ position: 'absolute', top: 8, right: 10, fontSize: 11, color: 'var(--text-secondary)' }}>
+                    {deviceLabels[dt] || dt}
+                  </div>
+                  <div style={{ marginTop: 28 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-primary)' }}>
+                      {deviceIcons[dt] || '📦'} {device.hostname}
+                    </div>
+                    {device.ip_address && (
+                      <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'monospace', marginTop: 4 }}>
+                        {device.ip_address}
+                      </div>
+                    )}
+                    {device.group_name && (
+                      <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginTop: 4 }}>
+                        📁 {device.group_name}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="filters-bar" style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center' }}>
         <div className="form-group" style={{ flex: 1, margin: 0 }}>
