@@ -35,6 +35,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const [wsConnected, setWsConnected] = useState(false);
   const [httpSensors, setHttpSensors] = useState([]);
   const [httpMetrics, setHttpMetrics] = useState({});
+  const [allStandaloneSensors, setAllStandaloneSensors] = useState([]);
   const [networkAssets, setNetworkAssets] = useState([]);
   const [networkAssetStatuses, setNetworkAssetStatuses] = useState({});
   const wsRef = useRef(null);
@@ -116,10 +117,12 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
 
       try {
         const standaloneRes = await api.get('/sensors/standalone');
-        const http = standaloneRes.data.filter(s => s.sensor_type === 'http' || s.category === 'network');
+        const allStandalone = standaloneRes.data;
+        setAllStandaloneSensors(allStandalone);
+        const http = allStandalone.filter(s => s.sensor_type === 'http' || s.category === 'network');
         setHttpSensors(http);
-        if (http.length > 0) {
-          const ids = http.map(s => s.id).join(',');
+        if (allStandalone.length > 0) {
+          const ids = allStandalone.map(s => s.id).join(',');
           const metricsRes = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`);
           setHttpMetrics(metricsRes.data);
         }
@@ -353,11 +356,9 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
 
       {/* ── Datacenter (Energia + Ar-Condicionado) ── */}
       {(() => {
-        const energySensors = (httpSensors || []).filter(s => (s.name || '').toLowerCase().match(/nobreak|ups|gerador|energia|battery|power/));
-        const hvacSensors = (httpSensors || []).filter(s => (s.name || '').toLowerCase().match(/ar.condicionado|hvac|temperatura|cooling|climate|chiller/));
-        // Também buscar de todos os sensores standalone via httpMetrics
-        const allStandalone = [...energySensors, ...hvacSensors];
-        if (allStandalone.length === 0 && energySensors.length === 0) return null;
+        const energySensors = (allStandaloneSensors || []).filter(s => (s.name || '').toLowerCase().match(/nobreak|ups|gerador|energia|battery|power|engetron/));
+        const hvacSensors = (allStandaloneSensors || []).filter(s => (s.name || '').toLowerCase().match(/ar.condicionado|hvac|temperatura|cooling|climate|chiller|conflex/));
+        if (energySensors.length === 0 && hvacSensors.length === 0) return null;
         return (
           <div className="dash-section">
             <div className="dash-section-header">
