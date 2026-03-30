@@ -757,3 +757,164 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* ── Premium VM Calculator ── */
+.vm-calc-premium {
+  margin-top: var(--space-5);
+  background: linear-gradient(135deg, var(--surface-2) 0%, var(--surface-3) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  padding: var(--space-5);
+}
+.vm-calc-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.vm-calc-icon {
+  font-size: 2rem;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--primary), #818cf8);
+  border-radius: var(--radius-md);
+}
+.vm-calc-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+@media (max-width: 1024px) {
+  .vm-calc-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.vm-calc-card {
+  background: var(--surface-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  border: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.vm-calc-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.1);
+}
+.vm-calc-card-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+}
+.vm-calc-card label {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+.vm-calc-card input[type="range"] {
+  width: 100%;
+  accent-color: var(--primary);
+  height: 6px;
+  cursor: pointer;
+}
+.vm-calc-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+.vm-calc-num {
+  width: 70px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px 8px;
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.vm-calc-num:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.vm-calc-price {
+  font-size: var(--text-sm);
+  color: var(--success);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.vm-calc-toggle {
+  display: flex;
+  gap: 0;
+}
+.vm-calc-toggle button {
+  padding: 6px 16px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.vm-calc-toggle button:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.vm-calc-toggle button:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; border-left: none; }
+.vm-calc-toggle button.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.vm-calc-result {
+  background: linear-gradient(135deg, #1e1b4b, #312e81);
+  border-radius: var(--radius-md);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+.vm-calc-result-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+}
+.vm-calc-result-row span:first-child {
+  color: rgba(255,255,255,0.7);
+  font-size: var(--text-sm);
+}
+.vm-calc-result-value {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(99, 102, 241, 0.5);
+}
+.vm-calc-result-annual {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: var(--space-1);
+  padding-top: var(--space-2);
+}
+.vm-calc-result-annual span:last-child {
+  color: rgba(255,255,255,0.5);
+  font-size: var(--text-sm);
+}
+.vm-calc-result-breakdown {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+.vm-calc-result-breakdown span {
+  font-size: 0.7rem;
+  color: rgba(255,255,255,0.4);
+  background: rgba(255,255,255,0.05);
+  padding: 2px 8px;
+  border-radius: 10px;
+}

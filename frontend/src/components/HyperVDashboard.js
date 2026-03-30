@@ -80,8 +80,13 @@ function HyperVDashboard() {
   const [costConfig, setCostConfig] = useState({
     cost_vcpu: 19.70, cost_ram_gb: 12.31, cost_disk_gb: 0.45, cost_ip: 315.18
   });
+  const [costItems, setCostItems] = useState([]);
+  const [reajuste, setReajuste] = useState(0);
   const [editingCosts, setEditingCosts] = useState(false);
+  const [editingInfra, setEditingInfra] = useState(false);
   const [costDraft, setCostDraft] = useState({});
+  const [infraDraft, setInfraDraft] = useState([]);
+  const [reajusteDraft, setReajusteDraft] = useState(0);
   const [savingCosts, setSavingCosts] = useState(false);
 
   // WebSocket
@@ -121,7 +126,14 @@ function HyperVDashboard() {
       if (costRes.status === 'fulfilled' && costRes.value.data && costRes.value.data.items) {
         var map = {};
         costRes.value.data.items.forEach(function(item) { map[item.key] = item.value; });
-        setCostConfig(function(prev) { return Object.assign({}, prev, map); });
+        setCostConfig(function(prev) { return Object.assign({}, prev, map, {
+          cost_vcpu: costRes.value.data.cost_vcpu,
+          cost_ram_gb: costRes.value.data.cost_ram_gb,
+          cost_disk_gb: costRes.value.data.cost_disk_gb,
+          cost_ip: costRes.value.data.cost_ip,
+        }); });
+        setCostItems(costRes.value.data.items);
+        setReajuste(costRes.value.data.reajuste_anual || 0);
       }
     } catch (err) {
       console.error('Erro ao carregar dados Hyper-V:', err);
@@ -398,32 +410,52 @@ function HyperVDashboard() {
           <div className="cluster-cost-breakdown">
             <h4 className="collapsible-header" onClick={() => setShowCostBreakdown(!showCostBreakdown)}>
               {showCostBreakdown ? '▼' : '▶'} 📊 Composição de Custos Mensais — R$ {totalCost.toLocaleString('pt-BR', {minimumFractionDigits: 2})}
+              {reajuste > 0 && <span style={{fontSize:'0.75rem', color:'var(--warning)', marginLeft:8}}>+{reajuste}% reajuste anual</span>}
             </h4>
             {showCostBreakdown && (<>
-            {/* ── Editar Custos Unitários ── */}
+            {/* ── Editar Itens de Infraestrutura ── */}
             <div className="cost-edit-section">
-              {!editingCosts ? (
-                <button className="btn-edit-costs" onClick={() => { setCostDraft({...costConfig}); setEditingCosts(true); }}>✏️ Editar Custos Unitários</button>
+              {!editingInfra ? (
+                <button className="btn-edit-costs" onClick={() => { setInfraDraft(costItems.filter(i => i.editable !== false)); setReajusteDraft(reajuste); setEditingInfra(true); }}>✏️ Editar Itens de Custo</button>
               ) : (
                 <div className="cost-edit-form">
-                  <h5>Editar Custos Unitários</h5>
-                  <div className="cost-edit-fields">
-                    <label>vCPU (R$/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_vcpu ?? ''} onChange={e => setCostDraft(d => ({...d, cost_vcpu: Number(e.target.value)}))} /></label>
-                    <label>RAM (R$/GB/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_ram_gb ?? ''} onChange={e => setCostDraft(d => ({...d, cost_ram_gb: Number(e.target.value)}))} /></label>
-                    <label>Disco (R$/GB/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_disk_gb ?? ''} onChange={e => setCostDraft(d => ({...d, cost_disk_gb: Number(e.target.value)}))} /></label>
-                    <label>IP (R$/IP/mês) <input type="number" step="0.01" min="0" value={costDraft.cost_ip ?? ''} onChange={e => setCostDraft(d => ({...d, cost_ip: Number(e.target.value)}))} /></label>
+                  <h5>Editar Composição de Custos</h5>
+                  <div style={{maxHeight:300, overflowY:'auto', marginBottom:'var(--space-3)'}}>
+                    <table className="hw-table" style={{width:'100%'}}>
+                      <thead><tr><th>Item</th><th>Categoria</th><th style={{textAlign:'right', width:140}}>Valor (R$)</th></tr></thead>
+                      <tbody>
+                        {infraDraft.map((item, i) => (
+                          <tr key={item.key || i}>
+                            <td style={{fontSize:'0.8rem'}}>{item.label}</td>
+                            <td style={{fontSize:'0.8rem'}}>{item.category}</td>
+                            <td><input type="number" step="0.01" min="0" value={item.value} onChange={e => {
+                              var next = [...infraDraft]; next[i] = {...next[i], value: Number(e.target.value) || 0}; setInfraDraft(next);
+                            }} style={{width:'100%', background:'var(--surface-1)', border:'1px solid var(--border)', borderRadius:4, padding:'4px 8px', color:'var(--text-primary)', textAlign:'right'}} /></td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div style={{display:'flex', alignItems:'center', gap:'var(--space-3)', marginBottom:'var(--space-3)'}}>
+                    <label style={{fontSize:'0.8rem', color:'var(--text-secondary)'}}>📈 Reajuste Anual (%)
+                      <input type="number" step="0.1" min="0" max="50" value={reajusteDraft} onChange={e => setReajusteDraft(Number(e.target.value) || 0)}
+                        style={{width:80, marginLeft:8, background:'var(--surface-1)', border:'1px solid var(--border)', borderRadius:4, padding:'4px 8px', color:'var(--text-primary)'}} />
+                    </label>
                   </div>
                   <div className="cost-edit-actions">
                     <button disabled={savingCosts} onClick={async () => {
                       setSavingCosts(true);
                       try {
-                        await api.put('/hyperv/cost-config', { costs: costDraft });
-                        setCostConfig(costDraft);
-                        setEditingCosts(false);
-                      } catch (err) { console.error('Erro ao salvar custos:', err); }
+                        var items = infraDraft.map(i => ({key: i.key, value: i.value}));
+                        items.push({key: 'reajuste_anual', value: reajusteDraft});
+                        await api.put('/hyperv/cost-config', { items });
+                        setReajuste(reajusteDraft);
+                        setEditingInfra(false);
+                        fetchData();
+                      } catch (err) { console.error('Erro ao salvar:', err); }
                       finally { setSavingCosts(false); }
                     }}>{savingCosts ? 'Salvando...' : '💾 Salvar'}</button>
-                    <button onClick={() => setEditingCosts(false)}>Cancelar</button>
+                    <button onClick={() => setEditingInfra(false)}>Cancelar</button>
                   </div>
                 </div>
               )}
@@ -433,10 +465,10 @@ function HyperVDashboard() {
                 <table className="hw-table">
                   <thead><tr><th>Item</th><th>Categoria</th><th style={{textAlign:'right'}}>Valor</th></tr></thead>
                   <tbody>
-                    {infraItems.map((item, i) => (
-                      <tr key={i}><td>{item.desc}</td><td>{item.cat}</td><td style={{textAlign:'right'}}>R$ {item.valor.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>
+                    {(costItems.length > 0 ? costItems.filter(i => ['infra','rede','software','hardware','pessoal','energia'].includes((i.category||'').toLowerCase())) : infraItems).map((item, i) => (
+                      <tr key={i}><td>{item.label || item.desc}</td><td>{item.category || item.cat}</td><td style={{textAlign:'right'}}>R$ {(item.value || item.valor || 0).toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>
                     ))}
-                    <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}><td colSpan={2}>Total Mensal</td><td style={{textAlign:'right'}}>R$ {totalCost.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>
+                    <tr style={{fontWeight:700, borderTop:'2px solid var(--border)'}}><td colSpan={2}>Total Mensal {reajuste > 0 ? `(+${reajuste}% reajuste)` : ''}</td><td style={{textAlign:'right'}}>R$ {totalCost.toLocaleString('pt-BR',{minimumFractionDigits:2})}</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -452,38 +484,77 @@ function HyperVDashboard() {
                 </table>
               </div>
             </div>
-            <div className="vm-calculator">
-              <h4>🧮 Calculadora de Custo VM</h4>
-              <div className="calc-inputs">
-                <div className="calc-field">
-                  <label>RAM (GB)</label>
-                  <input type="number" min="1" max="512" value={calcRam} onChange={e => setCalcRam(Number(e.target.value) || 1)} />
-                  <span className="calc-unit-cost">R$ {(calcRam * COST_RAM_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-                </div>
-                <div className="calc-field">
-                  <label>vCPU</label>
-                  <input type="number" min="1" max="128" value={calcCpu} onChange={e => setCalcCpu(Number(e.target.value) || 1)} />
-                  <span className="calc-unit-cost">R$ {(calcCpu * COST_VCPU).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-                </div>
-                <div className="calc-field">
-                  <label>Disco (GB)</label>
-                  <input type="number" min="10" max="10000" value={calcDisk} onChange={e => setCalcDisk(Number(e.target.value) || 10)} />
-                  <span className="calc-unit-cost">R$ {(calcDisk * COST_DISK_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
-                </div>
-                <div className="calc-field">
-                  <label>IP Público</label>
-                  <div className="calc-toggle">
-                    <button className={calcIp ? 'active' : ''} onClick={() => setCalcIp(true)}>Sim</button>
-                    <button className={!calcIp ? 'active' : ''} onClick={() => setCalcIp(false)}>Não</button>
+
+            {/* ── Calculadora de VM Premium ── */}
+            {(() => {
+              var vmTotal = calcCpu * COST_VCPU + calcRam * COST_RAM_GB + calcDisk * COST_DISK_GB + (calcIp ? COST_IP : 0);
+              var vmAnual = vmTotal * 12;
+              return (
+              <div className="vm-calc-premium">
+                <div className="vm-calc-header">
+                  <span className="vm-calc-icon">🧮</span>
+                  <div>
+                    <h4 style={{margin:0}}>Calculadora de Custo VM</h4>
+                    <span style={{fontSize:'0.75rem', color:'var(--text-secondary)'}}>Simule o custo mensal de uma nova VM</span>
                   </div>
-                  <span className="calc-unit-cost">{calcIp ? 'R$ ' + COST_IP.toLocaleString('pt-BR',{minimumFractionDigits:2}) : 'R$ 0,00'}</span>
                 </div>
-                <div className="calc-field calc-result">
-                  <label>Custo Mensal</label>
-                  <div className="calc-total-value">R$ {(calcRam * COST_RAM_GB + calcCpu * COST_VCPU + calcDisk * COST_DISK_GB + (calcIp ? COST_IP : 0)).toLocaleString('pt-BR',{minimumFractionDigits:2})}</div>
+                <div className="vm-calc-grid">
+                  <div className="vm-calc-card">
+                    <div className="vm-calc-card-icon" style={{background:'linear-gradient(135deg, #6366f1, #818cf8)'}}>💻</div>
+                    <label>vCPUs</label>
+                    <input type="range" min="1" max="128" value={calcCpu} onChange={e => setCalcCpu(Number(e.target.value))} />
+                    <div className="vm-calc-card-row">
+                      <input type="number" min="1" max="128" value={calcCpu} onChange={e => setCalcCpu(Number(e.target.value) || 1)} className="vm-calc-num" />
+                      <span className="vm-calc-price">R$ {(calcCpu * COST_VCPU).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                    </div>
+                  </div>
+                  <div className="vm-calc-card">
+                    <div className="vm-calc-card-icon" style={{background:'linear-gradient(135deg, #06b6d4, #22d3ee)'}}>🧠</div>
+                    <label>RAM (GB)</label>
+                    <input type="range" min="1" max="512" value={calcRam} onChange={e => setCalcRam(Number(e.target.value))} />
+                    <div className="vm-calc-card-row">
+                      <input type="number" min="1" max="512" value={calcRam} onChange={e => setCalcRam(Number(e.target.value) || 1)} className="vm-calc-num" />
+                      <span className="vm-calc-price">R$ {(calcRam * COST_RAM_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                    </div>
+                  </div>
+                  <div className="vm-calc-card">
+                    <div className="vm-calc-card-icon" style={{background:'linear-gradient(135deg, #f59e0b, #fbbf24)'}}>💾</div>
+                    <label>Disco (GB)</label>
+                    <input type="range" min="10" max="4000" step="10" value={calcDisk} onChange={e => setCalcDisk(Number(e.target.value))} />
+                    <div className="vm-calc-card-row">
+                      <input type="number" min="10" max="10000" value={calcDisk} onChange={e => setCalcDisk(Number(e.target.value) || 10)} className="vm-calc-num" />
+                      <span className="vm-calc-price">R$ {(calcDisk * COST_DISK_GB).toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                    </div>
+                  </div>
+                  <div className="vm-calc-card">
+                    <div className="vm-calc-card-icon" style={{background:'linear-gradient(135deg, #10b981, #34d399)'}}>🌐</div>
+                    <label>IP Público</label>
+                    <div className="vm-calc-toggle">
+                      <button className={calcIp ? 'active' : ''} onClick={() => setCalcIp(true)}>Sim</button>
+                      <button className={!calcIp ? 'active' : ''} onClick={() => setCalcIp(false)}>Não</button>
+                    </div>
+                    <span className="vm-calc-price" style={{marginTop:8}}>{calcIp ? 'R$ ' + COST_IP.toLocaleString('pt-BR',{minimumFractionDigits:2}) : 'R$ 0,00'}</span>
+                  </div>
+                </div>
+                <div className="vm-calc-result">
+                  <div className="vm-calc-result-row">
+                    <span>Custo Mensal</span>
+                    <span className="vm-calc-result-value">R$ {vmTotal.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                  </div>
+                  <div className="vm-calc-result-row vm-calc-result-annual">
+                    <span>Custo Anual</span>
+                    <span>R$ {vmAnual.toLocaleString('pt-BR',{minimumFractionDigits:2})}</span>
+                  </div>
+                  <div className="vm-calc-result-breakdown">
+                    <span>vCPU: {((calcCpu * COST_VCPU / vmTotal) * 100).toFixed(0)}%</span>
+                    <span>RAM: {((calcRam * COST_RAM_GB / vmTotal) * 100).toFixed(0)}%</span>
+                    <span>Disco: {((calcDisk * COST_DISK_GB / vmTotal) * 100).toFixed(0)}%</span>
+                    {calcIp && <span>IP: {((COST_IP / vmTotal) * 100).toFixed(0)}%</span>}
+                  </div>
                 </div>
               </div>
-            </div>
+              );
+            })()}
             </>)}
           </div>
 
