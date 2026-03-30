@@ -8,6 +8,9 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta, timezone
 from typing import List, Optional
+import logging
+
+logger = logging.getLogger(__name__)
 from uuid import UUID
 
 from database import get_db
@@ -435,6 +438,13 @@ async def ingest_hyperv_data(
     probe = db.query(Probe).filter(Probe.token == probe_token).first()
     if not probe:
         raise HTTPException(status_code=401, detail="Invalid probe token")
+
+    logger.info(
+        f"HyperV ingest: {payload.hostname} | status={payload.host.status} "
+        f"cpu={payload.host.cpu_percent} mem={payload.host.memory_percent} "
+        f"storage={payload.host.storage_percent} vms={payload.host.vm_count} "
+        f"running={payload.host.running_vm_count} | {len(payload.vms)} VM records"
+    )
 
     now = datetime.now(timezone.utc)
     h = payload.host
