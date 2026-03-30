@@ -399,7 +399,7 @@ async def get_latest_metrics_batch(
 
     result = {}
     for m in latest_metrics:
-        result[str(m.sensor_id)] = {
+        entry = {
             "id": m.id,
             "sensor_id": m.sensor_id,
             "value": m.value,
@@ -407,4 +407,7 @@ async def get_latest_metrics_batch(
             "status": m.status or "ok",
             "timestamp": m.timestamp.isoformat()
         }
+        if hasattr(m, 'extra_metadata') and m.extra_metadata:
+            entry["metadata"] = m.extra_metadata
+        result[str(m.sensor_id)] = entry
     return result

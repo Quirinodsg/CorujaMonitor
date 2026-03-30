@@ -385,6 +385,16 @@ function SensorLibrary() {
             </p>
           )}
           {metric?.timestamp && <p style={{ fontSize: 11, color: 'var(--text-secondary)' }}>🕐 {new Date(metric.timestamp).toLocaleString('pt-BR')}</p>}
+          {metric?.metadata && metric.metadata['Engetron temperatura'] && (
+            <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 11, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px', color: 'var(--text-secondary)' }}>
+              <span>🌡️ {metric.metadata['Engetron temperatura'].value}°C</span>
+              {metric.metadata['Engetron bateria_autonomia'] && <span>🔋 {metric.metadata['Engetron bateria_autonomia'].value} min</span>}
+              {metric.metadata['Engetron carga_max'] && <span>⚡ Carga: {metric.metadata['Engetron carga_max'].value}%</span>}
+              {metric.metadata['Engetron bateria_tensao'] && <span>🔌 {metric.metadata['Engetron bateria_tensao'].value}V</span>}
+              {metric.metadata['Engetron tensao_entrada_faseA'] && <span>📥 {metric.metadata['Engetron tensao_entrada_faseA'].value}V</span>}
+              {metric.metadata['Engetron tensao_saida_faseA'] && <span>📤 {metric.metadata['Engetron tensao_saida_faseA'].value}V</span>}
+            </div>
+          )}
         </div>
       </div>
     );

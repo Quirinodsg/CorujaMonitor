@@ -630,30 +630,37 @@ class ProbeCore:
             collector = EngetronCollector(ip=ip)
             metrics = collector.collect()
             if metrics:
-                # Enviar a métrica principal (status) com o sensor_id
-                main_metric = None
+                # Encontrar métricas-chave
+                all_data = {}
+                carga = 0
+                status = 'ok'
                 for m in metrics:
+                    all_data[m['name']] = {'value': m['value'], 'unit': m['unit'], 'status': m['status']}
+                    if 'carga_max' in m.get('name', ''):
+                        carga = m['value']
                     if m.get('name', '').endswith('status'):
-                        main_metric = m
-                        break
-                if not main_metric:
-                    main_metric = metrics[0]
+                        status = m['status']
+                    # Pior status ganha
+                    if m['status'] == 'critical':
+                        status = 'critical'
+                    elif m['status'] == 'warning' and status != 'critical':
+                        status = 'warning'
 
                 self.buffer.append({
                     'sensor_id': sensor['id'],
                     'sensor_type': 'engetron',
                     'name': name,
-                    'value': main_metric['value'],
-                    'unit': main_metric['unit'],
-                    'status': main_metric['status'],
+                    'value': carga if carga > 0 else 1,
+                    'unit': '%' if carga > 0 else 'status',
+                    'status': status,
                     'timestamp': timestamp.isoformat(),
                     'hostname': '__standalone__',
                     'metadata': {
                         'sensor_id': sensor['id'],
-                        'all_metrics': {m['name']: {'value': m['value'], 'unit': m['unit'], 'status': m['status']} for m in metrics}
+                        **all_data
                     }
                 })
-                logger.info(f"Engetron {name} ({ip}): {len(metrics)} metrics, status={main_metric['status']}")
+                logger.info(f"Engetron {name} ({ip}): {len(metrics)} metrics, carga={carga}%, status={status}")
             else:
                 self.buffer.append({
                     'sensor_id': sensor['id'],
