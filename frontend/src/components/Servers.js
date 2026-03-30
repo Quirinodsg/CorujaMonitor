@@ -888,7 +888,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
         )}
         <div className="sensor-thresholds">
           {sensor.sensor_type === 'ping' ? (
-            <>⚠️ {sensor.threshold_warning || 100}ms | 🔥 {sensor.threshold_critical || 200}ms</>
+            <>🏓 Alerta apenas se offline</>
           ) : sensor.sensor_type === 'network' ? (
             <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s</>
           ) : (sensor.sensor_type === 'system' || sensor.sensor_type === 'uptime') ? (
