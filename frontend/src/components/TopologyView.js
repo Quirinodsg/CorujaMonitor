@@ -30,15 +30,17 @@ const DEVICE_ICONS = {
 function getDeviceIcon(node) {
   const t = (node.metadata?.device_type || node.type || 'server').toLowerCase();
   const name = (node.name || '').toLowerCase();
+  // UDM (UniFi Dream Machine) = gateway/router — detectar pelo nome antes de tudo
+  if (name.includes('udm')) return DEVICE_ICONS.router;
   if (t.includes('application') || t.includes('app')) return DEVICE_ICONS.application;
   if (t.includes('service')) return DEVICE_ICONS.service;
-  if (t.includes('gateway') || name.includes('udm pro') || name.includes('udm-pro')) return DEVICE_ICONS.router;
+  if (t.includes('gateway')) return DEVICE_ICONS.router;
   if (t.includes('switch')) return DEVICE_ICONS.switch;
   if (t.includes('router')) return DEVICE_ICONS.router;
   if (t.includes('firewall')) return DEVICE_ICONS.firewall;
   if (t.includes('hypervisor') || t.includes('hv')) return DEVICE_ICONS.hypervisor;
   if (t.includes('ap') || t.includes('access_point') || t.includes('wifi')) return DEVICE_ICONS.ap;
-  if (t.includes('udm')) return DEVICE_ICONS.router;  // UDM = gateway/router
+  if (t.includes('udm')) return DEVICE_ICONS.router;
   if (t.includes('vm') || t.includes('virtual')) return DEVICE_ICONS.vm;
   if (t.includes('container') || t.includes('docker')) return DEVICE_ICONS.container;
   if (t.includes('database') || t.includes('db') || t.includes('sql')) return DEVICE_ICONS.database;
@@ -378,7 +380,7 @@ export default function TopologyView() {
                     {(node.name || '').substring(0, 13)}
                   </text>
                   <text x={pos.x} y={pos.y + r + 22} textAnchor="middle" fontSize="7.5" fill="#475569" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
-                    {(node.metadata?.device_type || node.type || 'server').toLowerCase()}
+                    {(node.name || '').toLowerCase().includes('udm') ? 'router' : (node.metadata?.device_type || node.type || 'server').toLowerCase()}
                   </text>
                 </g>
               );
