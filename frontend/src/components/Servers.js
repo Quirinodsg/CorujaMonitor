@@ -892,7 +892,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
           ) : sensor.sensor_type === 'network' ? (
             <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s</>
           ) : (sensor.sensor_type === 'system' || sensor.sensor_type === 'uptime') ? (
-            <>⚠️ {sensor.threshold_warning ? `${Math.floor(sensor.threshold_warning * 24)}h` : '12h'} | 🔥 {sensor.threshold_critical ? `${Math.floor(sensor.threshold_critical * 60)}min` : '2h'} (uptime mín.)</>
+            <>🔄 Alerta apenas em reboot</>
           ) : (
             <>⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%</>
           )}
