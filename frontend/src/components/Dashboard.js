@@ -351,6 +351,71 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
         </div>
       )}
 
+      {/* ── Datacenter (Energia + Ar-Condicionado) ── */}
+      {(() => {
+        const energySensors = (httpSensors || []).filter(s => (s.name || '').toLowerCase().match(/nobreak|ups|gerador|energia|battery|power/));
+        const hvacSensors = (httpSensors || []).filter(s => (s.name || '').toLowerCase().match(/ar.condicionado|hvac|temperatura|cooling|climate|chiller/));
+        // Também buscar de todos os sensores standalone via httpMetrics
+        const allStandalone = [...energySensors, ...hvacSensors];
+        if (allStandalone.length === 0 && energySensors.length === 0) return null;
+        return (
+          <div className="dash-section">
+            <div className="dash-section-header">
+              <span className="dash-section-title">
+                🏢 Datacenter
+              </span>
+              <button className="dash-section-link" onClick={() => onNavigate('sensor-library')}>Ver todos →</button>
+            </div>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {energySensors.length > 0 && (
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8, fontWeight: 600 }}>⚡ Energia</div>
+                  <div className="dash-sites-grid">
+                    {energySensors.map(s => {
+                      const m = httpMetrics[s.id];
+                      const status = m?.status || 'unknown';
+                      const color = status === 'ok' ? '#22C55E' : status === 'critical' ? '#EF4444' : '#6B7280';
+                      const label = status === 'ok' ? 'ONLINE' : status === 'critical' ? 'OFFLINE' : 'Aguardando';
+                      return (
+                        <div key={s.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => onNavigate('sensor-library')}>
+                          <div className="dash-site-status">
+                            <span className="dash-site-badge"><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'white' }} />{label}</span>
+                          </div>
+                          <div className="dash-site-name">🔋 {s.name}</div>
+                          {m && <div className="dash-site-url">📊 {m.value?.toFixed(1)} {m.unit}</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              {hvacSensors.length > 0 && (
+                <div style={{ flex: 1, minWidth: 200 }}>
+                  <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8, fontWeight: 600 }}>❄️ Ar-Condicionado</div>
+                  <div className="dash-sites-grid">
+                    {hvacSensors.map(s => {
+                      const m = httpMetrics[s.id];
+                      const status = m?.status || 'unknown';
+                      const color = status === 'ok' ? '#22C55E' : status === 'critical' ? '#EF4444' : '#6B7280';
+                      const label = status === 'ok' ? 'ONLINE' : status === 'critical' ? 'OFFLINE' : 'Aguardando';
+                      return (
+                        <div key={s.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => onNavigate('sensor-library')}>
+                          <div className="dash-site-status">
+                            <span className="dash-site-badge"><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'white' }} />{label}</span>
+                          </div>
+                          <div className="dash-site-name">❄️ {s.name}</div>
+                          {m && <div className="dash-site-url">🌡️ {m.value?.toFixed(1)} {m.unit}</div>}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* ── Incidents ── */}
       <div className="dash-section">
         <div className="dash-section-header">

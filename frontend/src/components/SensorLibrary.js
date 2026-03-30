@@ -317,11 +317,24 @@ function SensorLibrary() {
   };
 
   const filteredSensors = sensors.filter(sensor => {
-    const matchesCategory = selectedCategory === 'all' || sensor.category === selectedCategory;
-    const matchesSearch = sensor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = !searchTerm || sensor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (sensor.description && sensor.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesCategory && matchesSearch;
+    return matchesSearch;
   });
+
+  // Agrupar sensores por categoria visual
+  const sensorsByGroup = {
+    sites: filteredSensors.filter(s => s.sensor_type === 'http' || s.sensor_type === 'https' || s.category === 'network'),
+    energia: filteredSensors.filter(s => ['snmp_ups', 'ups', 'snmp'].includes(s.sensor_type) && (s.name || '').toLowerCase().match(/nobreak|ups|gerador|energia|battery|power/)),
+    hvac: filteredSensors.filter(s => (s.name || '').toLowerCase().match(/ar.condicionado|hvac|temperatura|cooling|climate|chiller/)),
+    outros: [],
+  };
+  // "Outros" = tudo que não caiu nas categorias acima
+  const categorized = new Set([...sensorsByGroup.sites, ...sensorsByGroup.energia, ...sensorsByGroup.hvac].map(s => s.id));
+  sensorsByGroup.outros = filteredSensors.filter(s => !categorized.has(s.id));
+
+  // Filtro por categoria selecionada
+  const showSection = (key) => selectedCategory === 'all' || selectedCategory === key;
 
   const getSensorIcon = (category) => {
     const icons = {
@@ -334,6 +347,47 @@ function SensorLibrary() {
       custom: '⚙️'
     };
     return icons[category] || '📊';
+  };
+
+  const renderSensorCard = (sensor, metric, statusColor, statusLabel, statusBg) => {
+    const isHttp = sensor.sensor_type === 'http' || sensor.category === 'network';
+    const isOnline = metric?.status === 'ok';
+    return (
+      <div key={sensor.id} className="sensor-card" style={{
+        borderLeft: `4px solid ${statusColor}`,
+        background: statusBg,
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{
+          position: 'absolute', top: 8, right: 8,
+          display: 'flex', gap: 4, alignItems: 'center', zIndex: 2
+        }}>
+          <button onClick={() => { setEditingSensor({ id: sensor.id, name: sensor.name, threshold_warning: sensor.threshold_warning || 80, threshold_critical: sensor.threshold_critical || 95, description: sensor.description || '' }); setShowEditModal(true); }}
+            title="Editar" style={{ width: 26, height: 26, border: 'none', borderRadius: 5, background: '#f0f4ff', cursor: 'pointer', fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>✏️</button>
+          <button onClick={() => handleDeleteSensor(sensor.id, sensor.name)}
+            title="Remover" style={{ width: 26, height: 26, border: 'none', borderRadius: 5, background: '#fff0f0', color: '#ef4444', cursor: 'pointer', fontSize: 16, fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>×</button>
+        </div>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20, background: statusColor, color: 'white', fontSize: 11, fontWeight: 700, marginBottom: 10 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'white', boxShadow: isOnline ? '0 0 6px white' : 'none' }} />
+          {statusLabel}
+        </div>
+        <div className="sensor-header">
+          <span style={{ fontSize: 20, flexShrink: 0 }}>{getSensorIcon(sensor.category)}</span>
+          <h3>{sensor.name}</h3>
+        </div>
+        <div className="sensor-details" style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>
+          {isHttp && sensor.config?.http_url && <p style={{ wordBreak: 'break-all', fontSize: 12, color: '#818cf8' }}>🔗 {sensor.config.http_url}</p>}
+          {sensor.config?.ip_address && <p>📍 {sensor.config.ip_address}</p>}
+          {metric && (
+            <p style={{ color: statusColor, fontWeight: 600 }}>
+              {isHttp ? `⏱️ ${metric.value ? Math.round(metric.value) + ' ms' : '-'}` : `📊 ${metric.value?.toFixed(1) || '-'} ${metric.unit || ''}`}
+            </p>
+          )}
+          {metric?.timestamp && <p style={{ fontSize: 11, color: 'var(--text-secondary)' }}>🕐 {new Date(metric.timestamp).toLocaleString('pt-BR')}</p>}
+        </div>
+      </div>
+    );
   };
 
   if (loading) {
@@ -425,128 +479,89 @@ function SensorLibrary() {
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            style={{ padding: '10px', borderRadius: '6px', border: '1px solid #ddd' }}
+            style={{ padding: '10px', borderRadius: '6px', border: '1px solid var(--border)', background: 'var(--surface-1)', color: 'var(--text-primary)' }}
           >
             <option value="all">Todas as Categorias</option>
-            {Object.entries(sensorCategories).map(([key, cat]) => (
-              <option key={key} value={key}>
-                {cat.icon} {cat.name}
-              </option>
-            ))}
+            <option value="sites">🌐 Sites</option>
+            <option value="network_devices">🔀 Ativos de Rede</option>
+            <option value="energia">⚡ Energia</option>
+            <option value="hvac">❄️ Ar-Condicionado</option>
           </select>
         </div>
       </div>
 
       <div className="sensors-grid">
-        {filteredSensors.length > 0 ? (
-          filteredSensors.map(sensor => {
-            const metric = sensorMetrics[String(sensor.id)];
-            const isHttp = sensor.sensor_type === 'http' || sensor.category === 'network';
-            const isOnline = metric?.status === 'ok';
-            const isOffline = metric && metric.status !== 'ok';
-            const statusColor = !metric ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
-            const statusLabel = !metric ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
-            const statusBg = !metric ? '#6b728015' : isOnline ? '#10b98115' : '#ef444415';
+        {/* ── Sites Monitorados ── */}
+        {showSection('sites') && sensorsByGroup.sites.length > 0 && (
+          <div style={{ gridColumn: '1 / -1', marginBottom: 8 }}>
+            <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              🌐 Sites Monitorados ({sensorsByGroup.sites.length})
+            </h3>
+          </div>
+        )}
+        {showSection('sites') && sensorsByGroup.sites.map(sensor => {
+          const metric = sensorMetrics[String(sensor.id)];
+          const isOnline = metric?.status === 'ok';
+          const statusColor = !metric ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
+          const statusLabel = !metric ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
+          const statusBg = !metric ? '#6b728015' : isOnline ? '#10b98115' : '#ef444415';
+          return renderSensorCard(sensor, metric, statusColor, statusLabel, statusBg);
+        })}
 
-            return (
-            <div key={sensor.id} className="sensor-card" style={{
-              borderLeft: `4px solid ${statusColor}`,
-              background: statusBg,
-              position: 'relative',
-              overflow: 'hidden'
-            }}>
-              <div style={{
-                position: 'absolute', top: '8px', right: '8px',
-                display: 'flex', flexDirection: 'row', gap: '4px', alignItems: 'center',
-                zIndex: 2
-              }}>
-                <button
-                  onClick={() => {
-                    setEditingSensor({
-                      id: sensor.id,
-                      name: sensor.name,
-                      threshold_warning: sensor.threshold_warning || 80,
-                      threshold_critical: sensor.threshold_critical || 95,
-                      description: sensor.description || ''
-                    });
-                    setShowEditModal(true);
-                  }}
-                  title="Editar sensor"
-                  style={{
-                    width: 26, height: 26, border: 'none', borderRadius: 5,
-                    background: '#f0f4ff', cursor: 'pointer', fontSize: 13,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                    flexShrink: 0
-                  }}
-                >✏️</button>
-                <button
-                  onClick={() => handleDeleteSensor(sensor.id, sensor.name)}
-                  title="Remover sensor"
-                  style={{
-                    width: 26, height: 26, border: 'none', borderRadius: 5,
-                    background: '#fff0f0', color: '#ef4444', cursor: 'pointer',
-                    fontSize: 16, fontWeight: 'bold',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0,
-                    flexShrink: 0
-                  }}
-                >×</button>
-              </div>
+        {/* ── Energia (Nobreaks, Geradores) ── */}
+        {showSection('energia') && sensorsByGroup.energia.length > 0 && (
+          <div style={{ gridColumn: '1 / -1', marginBottom: 8, marginTop: 16 }}>
+            <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              ⚡ Energia ({sensorsByGroup.energia.length})
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 400 }}>Nobreaks, Geradores, UPS</span>
+            </h3>
+          </div>
+        )}
+        {showSection('energia') && sensorsByGroup.energia.map(sensor => {
+          const metric = sensorMetrics[String(sensor.id)];
+          const isOnline = metric?.status === 'ok';
+          const statusColor = !metric ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
+          const statusLabel = !metric ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
+          const statusBg = !metric ? '#6b728015' : isOnline ? '#10b98115' : '#ef444415';
+          return renderSensorCard(sensor, metric, statusColor, statusLabel, statusBg);
+        })}
 
-              {/* Badge de status */}
-              <div style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '4px 10px',
-                borderRadius: '20px',
-                background: statusColor,
-                color: 'white',
-                fontSize: '11px',
-                fontWeight: '700',
-                marginBottom: '10px',
-                letterSpacing: '0.5px'
-              }}>
-                <span style={{
-                  width: 8, height: 8, borderRadius: '50%',
-                  background: 'white',
-                  boxShadow: isOnline ? '0 0 6px white' : 'none',
-                  animation: isOnline ? 'pulse 2s infinite' : 'none'
-                }} />
-                {statusLabel}
-              </div>
-              
-              <div className="sensor-header">
-                <span style={{ fontSize: 20, flexShrink: 0 }}>{getSensorIcon(sensor.category)}</span>
-                <h3>{sensor.name}</h3>
-              </div>
-              
-              <div className="sensor-details" style={{ fontSize: '13px', color: '#666', marginTop: '8px' }}>
-                {isHttp && sensor.config?.http_url && (
-                  <p style={{ wordBreak: 'break-all', fontSize: '12px', color: '#2196f3' }}>
-                    🔗 {sensor.config.http_url}
-                  </p>
-                )}
-                {sensor.ip_address && <p>📍 {sensor.ip_address}</p>}
-                {sensor.description && <p>📝 {sensor.description}</p>}
-                <p>🏷️ {sensorCategories[sensor.category]?.name || sensor.category}</p>
-                {metric && (
-                  <p style={{ color: statusColor, fontWeight: '600' }}>
-                    {isHttp
-                      ? `⏱️ ${metric.value ? Math.round(metric.value) + ' ms' : '-'}`
-                      : `📊 ${metric.value?.toFixed(1) || '-'} ${metric.unit || ''}`
-                    }
-                  </p>
-                )}
-                {metric?.timestamp && (
-                  <p style={{ fontSize: '11px', color: '#999' }}>
-                    🕐 {new Date(metric.timestamp).toLocaleString('pt-BR')}
-                  </p>
-                )}
-              </div>
-            </div>
-            );
-          })
-        ) : (
+        {/* ── Ar-Condicionado ── */}
+        {showSection('hvac') && sensorsByGroup.hvac.length > 0 && (
+          <div style={{ gridColumn: '1 / -1', marginBottom: 8, marginTop: 16 }}>
+            <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              ❄️ Ar-Condicionado ({sensorsByGroup.hvac.length})
+              <span style={{ fontSize: 11, color: 'var(--text-secondary)', fontWeight: 400 }}>Climatização, Temperatura</span>
+            </h3>
+          </div>
+        )}
+        {showSection('hvac') && sensorsByGroup.hvac.map(sensor => {
+          const metric = sensorMetrics[String(sensor.id)];
+          const isOnline = metric?.status === 'ok';
+          const statusColor = !metric ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
+          const statusLabel = !metric ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
+          const statusBg = !metric ? '#6b728015' : isOnline ? '#10b98115' : '#ef444415';
+          return renderSensorCard(sensor, metric, statusColor, statusLabel, statusBg);
+        })}
+
+        {/* ── Outros Sensores ── */}
+        {showSection('all') && sensorsByGroup.outros.length > 0 && (sensorsByGroup.sites.length > 0 || sensorsByGroup.energia.length > 0 || sensorsByGroup.hvac.length > 0) && (
+          <div style={{ gridColumn: '1 / -1', marginBottom: 8, marginTop: 16 }}>
+            <h3 style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+              📦 Outros Sensores ({sensorsByGroup.outros.length})
+            </h3>
+          </div>
+        )}
+        {(showSection('all') ? sensorsByGroup.outros : []).map(sensor => {
+          const metric = sensorMetrics[String(sensor.id)];
+          const isOnline = metric?.status === 'ok';
+          const statusColor = !metric ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
+          const statusLabel = !metric ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
+          const statusBg = !metric ? '#6b728015' : isOnline ? '#10b98115' : '#ef444415';
+          return renderSensorCard(sensor, metric, statusColor, statusLabel, statusBg);
+        })}
+
+        {filteredSensors.length === 0 && networkDevices.length === 0 && (
           <div className="no-data" style={{ gridColumn: '1 / -1', textAlign: 'center', padding: '40px' }}>
             <p>Nenhum sensor encontrado</p>
             <p>Clique em "Adicionar Sensor" para começar</p>
