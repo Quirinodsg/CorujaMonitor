@@ -565,15 +565,15 @@ class ProbeCore:
                         'metadata': {'sensor_id': sensor['id']}
                     })
 
-                # ── SNMP sensors (UPS, switches, APs, etc.) ──
-                elif sensor.get('sensor_type') in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch') and sensor.get('ip_address'):
-                    try:
-                        self._collect_snmp_standalone(sensor, timestamp)
-                    except Exception as e:
-                        logger.warning(f"SNMP {sensor['name']} error: {e}")
-
-                # ── Engetron UPS (HTTP scraping) ──
+                # ── Engetron UPS (HTTP scraping) — antes do SNMP genérico ──
                 elif sensor.get('ip_address') and (sensor.get('name', '').lower().find('engetron') >= 0 or sensor.get('name', '').lower().find('nobreak') >= 0):
+                    try:
+                        self._collect_engetron(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"Engetron {sensor['name']} error: {e}")
+
+                # ── SNMP sensors (switches, APs, etc.) ──
+                elif sensor.get('sensor_type') in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch') and sensor.get('ip_address'):
                     try:
                         self._collect_engetron(sensor, timestamp)
                     except Exception as e:
