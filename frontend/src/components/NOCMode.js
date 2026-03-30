@@ -13,7 +13,14 @@ function NOCMode({ onExit }) {
   const [autoRotate, setAutoRotate] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
-  const dashboards = ['global', 'heatmap', 'incidents', 'kpis'];
+  const dashboards = ['global', 'heatmap', 'incidents', 'kpis', 'datacenter'];
+
+  const [dcSites, setDcSites] = useState([]);
+  const [dcNetwork, setDcNetwork] = useState([]);
+  const [dcEnergy, setDcEnergy] = useState([]);
+  const [dcHvac, setDcHvac] = useState([]);
+  const [dcMetrics, setDcMetrics] = useState({});
+  const [dcNetStatuses, setDcNetStatuses] = useState({});
 
   const loadNOCData = useCallback(async () => {
     try {
@@ -36,11 +43,28 @@ function NOCMode({ onExit }) {
     }
   }, []);
 
+  const loadDatacenterData = useCallback(async () => {
+    try {
+      const [sr, svr] = await Promise.all([api.get('/sensors/standalone'), api.get('/servers')]);
+      const all = sr.data;
+      setDcSites(all.filter(s => s.sensor_type === 'http' || s.category === 'network'));
+      setDcEnergy(all.filter(s => (s.name||'').toLowerCase().match(/nobreak|ups|gerador|energia|engetron/)));
+      setDcHvac(all.filter(s => (s.name||'').toLowerCase().match(/ar.condicionado|hvac|temperatura|cooling|conflex/)));
+      const netTypes = ['switch','router','firewall','access_point','ap','gateway'];
+      const assets = svr.data.filter(s => netTypes.includes((s.device_type||'').toLowerCase()));
+      setDcNetwork(assets);
+      if (all.length > 0) { const mr = await api.get('/metrics/latest/batch?sensor_ids=' + all.map(s=>s.id).join(',')); setDcMetrics(mr.data); }
+      if (assets.length > 0) { try { const ns = await api.get('/dashboard/network-assets-status?ids=' + assets.map(a=>a.id).join(',')); setDcNetStatuses(ns.data); } catch(_){} }
+    } catch(_){}
+  }, []);
+
   useEffect(() => {
     loadNOCData();
-    const interval = setInterval(loadNOCData, 3000); // Atualiza a cada 3s
-    return () => clearInterval(interval);
-  }, [loadNOCData]);
+    loadDatacenterData();
+    const interval = setInterval(loadNOCData, 3000);
+    const dcInterval = setInterval(loadDatacenterData, 30000);
+    return () => { clearInterval(interval); clearInterval(dcInterval); };
+  }, [loadNOCData, loadDatacenterData]);
 
   useEffect(() => {
     if (autoRotate) {
@@ -199,12 +223,29 @@ function NOCMode({ onExit }) {
     </div>
   );
 
+  const renderDatacenter = () => {
+    const gs = (s) => ({ c: s==='ok'?'#22C55E':s==='warning'?'#F59E0B':s==='critical'?'#EF4444':'#6B7280', l: s==='ok'?'ONLINE':s==='warning'?'AVISO':s==='critical'?'OFFLINE':'AGUARDANDO' });
+    const cd = (k,n,st,ic,sub,ex) => { const{c,l}=gs(st); return <div key={k} style={{background:`${c}10`,border:`1px solid ${c}33`,borderLeft:`4px solid ${c}`,borderRadius:12,padding:'14px 18px',minWidth:170}}><div style={{marginBottom:6}}><span style={{display:'inline-flex',alignItems:'center',gap:4,padding:'2px 8px',borderRadius:20,fontSize:10,fontWeight:700,background:c,color:'#fff'}}><span style={{width:5,height:5,borderRadius:'50%',background:'#fff'}}/>{l}</span></div><div style={{fontSize:15,fontWeight:700,color:'#e2e8f0'}}>{ic} {n}</div>{sub&&<div style={{fontSize:11,color:'#94a3b8',fontFamily:'monospace',marginTop:2}}>{sub}</div>}{ex&&<div style={{fontSize:11,color:'#94a3b8',marginTop:4}}>{ex}</div>}</div>; };
+    const icons={switch:'🔀',router:'📡',firewall:'🔥',access_point:'📶',ap:'📶',gateway:'📡'};
+    const labels={switch:'Switch',router:'Router',firewall:'Firewall',access_point:'AP',ap:'AP',gateway:'Gateway'};
+    return (
+      <div className="noc-dashboard" style={{padding:20}}>
+        <h2 style={{color:'#e2e8f0',marginBottom:20,fontSize:20}}>🏢 Datacenter</h2>
+        {dcSites.length>0&&<><h3 style={{fontSize:14,color:'#64748b',marginBottom:12}}>🌐 Sites ({dcSites.length})</h3><div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:24}}>{dcSites.map(s=>{const m=dcMetrics[String(s.id)];return cd(s.id,s.name,m?.status||'unknown','🌐',s.config?.http?.url||'',m?`⏱️ ${Math.round(m.value||0)}ms`:null);})}</div></>}
+        {dcNetwork.length>0&&<><h3 style={{fontSize:14,color:'#64748b',marginBottom:12}}>🔀 Ativos de Rede ({dcNetwork.length})</h3><div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:24}}>{dcNetwork.map(a=>{const dt=(a.device_type||'').toLowerCase();return cd('n'+a.id,a.hostname,dcNetStatuses[a.id]||'unknown',icons[dt]||'📦',a.ip_address,labels[dt]||dt);})}</div></>}
+        {dcEnergy.length>0&&<><h3 style={{fontSize:14,color:'#64748b',marginBottom:12}}>⚡ Energia ({dcEnergy.length})</h3><div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:24}}>{dcEnergy.map(s=>{const m=dcMetrics[String(s.id)];const md=m?.metadata||{};const t=md['Engetron temperatura']?.value;const a=md['Engetron bateria_autonomia']?.value;return cd(s.id,s.name,m?.status||'unknown','🔋',s.config?.ip_address||'',t?`🌡️ ${t}°C · 🔋 ${a||'?'} min`:null);})}</div></>}
+        {dcHvac.length>0&&<><h3 style={{fontSize:14,color:'#64748b',marginBottom:12}}>❄️ Ar-Condicionado ({dcHvac.length})</h3><div style={{display:'flex',gap:12,flexWrap:'wrap',marginBottom:24}}>{dcHvac.map(s=>{const m=dcMetrics[String(s.id)];return cd(s.id,s.name,m?.status||'unknown','❄️',s.config?.ip_address||'',m?`📊 ${m.value?.toFixed(1)} ${m.unit}`:null);})}</div></>}
+      </div>
+    );
+  };
+
   const renderCurrentDashboard = () => {
     switch (dashboards[currentDashboard]) {
       case 'global': return renderGlobalStatus();
       case 'heatmap': return renderHeatmap();
       case 'incidents': return renderIncidentsTicker();
       case 'kpis': return renderKPIs();
+      case 'datacenter': return renderDatacenter();
       default: return renderGlobalStatus();
     }
   };

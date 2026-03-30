@@ -13,6 +13,12 @@ function NOCRealTime({ onExit }) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
   const [connectionStatus, setConnectionStatus] = useState('connecting');
+  const [dcSites, setDcSites] = useState([]);
+  const [dcNetwork, setDcNetwork] = useState([]);
+  const [dcEnergy, setDcEnergy] = useState([]);
+  const [dcHvac, setDcHvac] = useState([]);
+  const [dcMetrics, setDcMetrics] = useState({});
+  const [dcNetStatuses, setDcNetStatuses] = useState({});
   const retryCountRef = useRef(0);
 
   // Sons de alerta
@@ -69,14 +75,40 @@ function NOCRealTime({ onExit }) {
   // Atualização automática
   useEffect(() => {
     loadDashboard();
-    const interval = setInterval(loadDashboard, 3000); // Atualiza a cada 3s
-    return () => clearInterval(interval);
+    loadDatacenterData();
+    const interval = setInterval(loadDashboard, 3000);
+    const dcInterval = setInterval(loadDatacenterData, 30000);
+    return () => { clearInterval(interval); clearInterval(dcInterval); };
   }, [loadDashboard]);
+
+  const loadDatacenterData = async () => {
+    try {
+      const [standaloneRes, serversRes] = await Promise.all([
+        api.get('/sensors/standalone'),
+        api.get('/servers'),
+      ]);
+      const all = standaloneRes.data;
+      setDcSites(all.filter(s => s.sensor_type === 'http' || s.category === 'network'));
+      setDcEnergy(all.filter(s => (s.name || '').toLowerCase().match(/nobreak|ups|gerador|energia|battery|power|engetron/)));
+      setDcHvac(all.filter(s => (s.name || '').toLowerCase().match(/ar.condicionado|hvac|temperatura|cooling|climate|chiller|conflex/)));
+      const netTypes = ['switch', 'router', 'firewall', 'access_point', 'ap', 'ups', 'storage', 'gateway'];
+      const assets = serversRes.data.filter(s => netTypes.includes((s.device_type || '').toLowerCase()));
+      setDcNetwork(assets);
+      if (all.length > 0) {
+        const ids = all.map(s => s.id).join(',');
+        const mr = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`);
+        setDcMetrics(mr.data);
+      }
+      if (assets.length > 0) {
+        try { const sr = await api.get('/dashboard/network-assets-status?ids=' + assets.map(a => a.id).join(',')); setDcNetStatuses(sr.data); } catch (_) {}
+      }
+    } catch (_) {}
+  };
 
   // Rotação automática de views
   useEffect(() => {
     if (autoRotate) {
-      const views = ['overview', 'servers', 'incidents', 'metrics'];
+      const views = ['overview', 'servers', 'incidents', 'metrics', 'datacenter'];
       const rotateInterval = setInterval(() => {
         setCurrentView(prev => {
           const currentIndex = views.indexOf(prev);
@@ -412,12 +444,66 @@ function NOCRealTime({ onExit }) {
     </div>
   );
 
+  const renderDatacenter = () => {
+    const getStatus = (s) => {
+      const c = s === 'ok' ? '#22C55E' : s === 'warning' ? '#F59E0B' : s === 'critical' ? '#EF4444' : '#6B7280';
+      const l = s === 'ok' ? 'ONLINE' : s === 'warning' ? 'AVISO' : s === 'critical' ? 'OFFLINE' : 'AGUARDANDO';
+      return { c, l };
+    };
+    const card = (key, name, status, icon, sub, extra) => {
+      const { c, l } = getStatus(status);
+      return (
+        <div key={key} style={{ background: `${c}10`, border: `1px solid ${c}33`, borderLeft: `4px solid ${c}`, borderRadius: 12, padding: '14px 18px', minWidth: 170 }}>
+          <div style={{ marginBottom: 6 }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: c, color: '#fff' }}>
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff' }} />{l}
+            </span>
+          </div>
+          <div style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0' }}>{icon} {name}</div>
+          {sub && <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', marginTop: 2 }}>{sub}</div>}
+          {extra && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{extra}</div>}
+        </div>
+      );
+    };
+    const icons = { switch: '🔀', router: '📡', firewall: '🔥', access_point: '📶', ap: '📶', gateway: '📡' };
+    const labels = { switch: 'Switch', router: 'Router', firewall: 'Firewall', access_point: 'AP', ap: 'AP', gateway: 'Gateway' };
+    return (
+      <div style={{ padding: '8px 0' }}>
+        {dcSites.length > 0 && (<>
+          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>🌐 Sites Monitorados ({dcSites.length})</h3>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+            {dcSites.map(s => { const m = dcMetrics[String(s.id)]; return card(s.id, s.name, m?.status || 'unknown', '🌐', s.config?.http?.url || '', m ? `⏱️ ${Math.round(m.value||0)}ms` : null); })}
+          </div>
+        </>)}
+        {dcNetwork.length > 0 && (<>
+          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>🔀 Ativos de Rede ({dcNetwork.length})</h3>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+            {dcNetwork.map(a => { const dt = (a.device_type||'').toLowerCase(); return card('n'+a.id, a.hostname, dcNetStatuses[a.id]||'unknown', icons[dt]||'📦', a.ip_address, labels[dt]||dt); })}
+          </div>
+        </>)}
+        {dcEnergy.length > 0 && (<>
+          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>⚡ Energia ({dcEnergy.length})</h3>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+            {dcEnergy.map(s => { const m = dcMetrics[String(s.id)]; const md = m?.metadata||{}; const t = md['Engetron temperatura']?.value; const a = md['Engetron bateria_autonomia']?.value; return card(s.id, s.name, m?.status||'unknown', '🔋', s.config?.ip_address||'', t ? `🌡️ ${t}°C · 🔋 ${a||'?'} min` : null); })}
+          </div>
+        </>)}
+        {dcHvac.length > 0 && (<>
+          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>❄️ Ar-Condicionado ({dcHvac.length})</h3>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
+            {dcHvac.map(s => { const m = dcMetrics[String(s.id)]; return card(s.id, s.name, m?.status||'unknown', '❄️', s.config?.ip_address||'', m ? `📊 ${m.value?.toFixed(1)} ${m.unit}` : null); })}
+          </div>
+        </>)}
+      </div>
+    );
+  };
+
   const renderCurrentView = () => {
     switch (currentView) {
       case 'overview': return renderOverview();
       case 'servers': return renderServers();
       case 'incidents': return renderIncidents();
       case 'metrics': return renderMetrics();
+      case 'datacenter': return renderDatacenter();
       default: return renderOverview();
     }
   };
@@ -505,6 +591,13 @@ function NOCRealTime({ onExit }) {
         >
           <span className="nav-icon">📊</span>
           <span className="nav-label">Métricas</span>
+        </button>
+        <button 
+          className={`nav-btn ${currentView === 'datacenter' ? 'active' : ''}`}
+          onClick={() => { setCurrentView('datacenter'); setAutoRotate(false); }}
+        >
+          <span className="nav-icon">🏢</span>
+          <span className="nav-label">Datacenter</span>
         </button>
       </div>
 
