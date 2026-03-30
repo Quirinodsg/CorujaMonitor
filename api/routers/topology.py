@@ -584,13 +584,18 @@ async def sync_from_servers(db: Session = Depends(get_db)):
             try:
                 status = status_map.get(s.id, "unknown")
                 layer = _detect_layer(s)
+                # Detectar device_type pelo hostname (UDM = router)
+                raw_device_type = getattr(s, 'device_type', 'server') or 'server'
+                hostname_lower = (s.hostname or '').lower()
+                if 'udm' in hostname_lower:
+                    raw_device_type = 'router'
                 meta = json.dumps({
                     "server_id": str(s.id),
                     "name": s.hostname or s.ip_address or str(s.id),
                     "hostname": s.hostname,
                     "ip": s.ip_address,
                     "os_type": s.os_type,
-                    "device_type": getattr(s, 'device_type', 'server') or 'server',
+                    "device_type": raw_device_type,
                     "status": status,
                     "layer": layer,
                 })

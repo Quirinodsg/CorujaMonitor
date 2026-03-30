@@ -395,8 +395,13 @@ export default function TopologyView() {
         <div className="topo-detail">
           {selected ? (
             <>
-              <div className="topo-detail-title">{selected.name || selected.id}</div>
-              <div className="topo-detail-row"><span>Tipo</span><strong>{selected.metadata?.device_type || selected.type || 'server'}</strong></div>
+              <div className="topo-detail-title" style={{display:'flex', alignItems:'center', gap:10}}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke={STATUS_COLOR[selected.status] || '#6b7280'} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <path d={getDeviceIcon(selected)} />
+                </svg>
+                {selected.name || selected.id}
+              </div>
+              <div className="topo-detail-row"><span>Tipo</span><strong>{(selected.name || '').toLowerCase().includes('udm') ? 'router' : (selected.metadata?.device_type || selected.type || 'server')}</strong></div>
               <div className="topo-detail-row">
                 <span>Status</span>
                 <strong style={{ color: STATUS_COLOR[selected.status] || '#9CA3AF' }}>{selected.status || 'unknown'}</strong>
