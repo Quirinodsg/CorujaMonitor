@@ -105,7 +105,10 @@ def _detect_layer(server) -> int:
     os_type = (getattr(server, 'os_type', None) or '').lower()
     hostname = (getattr(server, 'hostname', None) or '').upper()
 
-    if device_type in ('switch', 'router', 'firewall', 'network', 'access_point', 'ap'):
+    if device_type in ('switch', 'router', 'firewall', 'network', 'access_point', 'ap', 'gateway'):
+        return 0
+    # UDM = UniFi Dream Machine = gateway/router
+    if 'udm' in hostname.lower() or 'udm' in device_type:
         return 0
     if device_type in ('hypervisor',) or 'hv' in hostname or 'hyperv' in os_type:
         return 1
@@ -258,7 +261,7 @@ def _build_graph(rows, db: Session) -> tuple[list, list]:
                 status = status_map.get(sid, "unknown")
                 device_type = meta.get("device_type", "server").lower()
                 hostname = meta.get("hostname", "").upper()
-                if device_type in ("switch", "router", "firewall", "network", "access_point", "ap"):
+                if device_type in ("switch", "router", "firewall", "network", "access_point", "ap", "gateway") or "udm" in hostname.lower() or "udm" in device_type:
                     layer = 0
                 elif device_type == "hypervisor" or "HV" in hostname:
                     layer = 1
@@ -347,11 +350,17 @@ def _generate_app_nodes(server_ids: list, db: Session) -> tuple[list, list]:
 
     try:
         sensors = db.execute(text(f"""
-            SELECT id, server_id, sensor_type, name, config
-            FROM sensors
-            WHERE server_id IN ({ids_str})
-              AND sensor_type IN ('http', 'https', 'service', 'port', 'tcp')
-              AND is_active = true
+            SELECT s.id, s.server_id, s.sensor_type, s.name, s.config,
+                   m.status as metric_status
+            FROM sensors s
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = s.id
+                ORDER BY timestamp DESC LIMIT 1
+            ) m ON true
+            WHERE s.server_id IN ({ids_str})
+              AND s.sensor_type IN ('http', 'https', 'service', 'port', 'tcp')
+              AND s.is_active = true
         """)).fetchall()
 
         for s in sensors:
@@ -365,17 +374,23 @@ def _generate_app_nodes(server_ids: list, db: Session) -> tuple[list, list]:
                 app_name = s.name or url or f"HTTP_{s.id}"
                 app_type = "application"
 
+            # Status real do sensor baseado na última métrica
+            metric_status = getattr(s, 'metric_status', None) or 'unknown'
+            if metric_status not in ('ok', 'warning', 'critical'):
+                metric_status = 'unknown'
+
             node_id = f"app_{s.id}"
             app_nodes.append({
                 "id": node_id,
                 "type": app_type,
                 "name": app_name,
-                "status": "unknown",
+                "status": metric_status,
                 "layer": 3,
                 "metadata": {
                     "sensor_id": str(s.id),
                     "sensor_type": s.sensor_type,
                     "server_id": str(s.server_id),
+                    "device_type": app_type,
                 },
                 "parent_id": str(s.server_id),
             })
@@ -478,7 +493,7 @@ async def get_impact(node_id: str, db: Session = Depends(get_db)):
             if sid:
                 device_type = meta.get("device_type", "server").lower()
                 hostname = meta.get("hostname", "").upper()
-                layer = 0 if device_type in ("switch", "router", "firewall", "access_point", "ap") else (1 if "HV" in hostname else 2)
+                layer = 0 if device_type in ("switch", "router", "firewall", "access_point", "ap", "gateway") or "udm" in hostname.lower() or "udm" in device_type else (1 if "HV" in hostname else 2)
                 server_nodes.append({"node_id": str(r.id), "server_id": int(sid), "layer": layer})
 
         edges = _load_persisted_edges(db)
