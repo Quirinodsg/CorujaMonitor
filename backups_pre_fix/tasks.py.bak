@@ -1391,15 +1391,13 @@ def ping_all_servers():
                 
                 if not ping_sensor:
                     # Create PING sensor automatically (nome maiúsculo para consistência com API)
-                    # PRTG/Zabbix style: thresholds de ping NÃO são por latência.
-                    # warning/critical só disparam em perda de pacotes ou timeout (value=0).
                     logger.info(f"✨ Criando sensor PING automático para {server.hostname}")
                     ping_sensor = Sensor(
                         server_id=server.id,
                         sensor_type='ping',
                         name='PING',  # Maiúsculo para consistência com API
-                        threshold_warning=None,   # Ping não usa threshold de latência
-                        threshold_critical=None,   # Ping não usa threshold de latência
+                        threshold_warning=100,
+                        threshold_critical=200,
                         is_active=True
                     )
                     db.add(ping_sensor)
@@ -1412,13 +1410,15 @@ def ping_all_servers():
                         ping_sensor.name = 'PING'
                         db.commit()
                 
-                # Determine status — PRTG/Zabbix style:
-                # Ping ONLY marks critical on DOWN (no response / timeout).
-                # High latency is just a metric value, NEVER changes status to warning/critical.
+                # Determine status
                 if latency_ms == 0:
-                    status = 'critical'  # Offline / timeout
+                    status = 'critical'  # Offline
+                elif latency_ms > ping_sensor.threshold_critical:
+                    status = 'critical'
+                elif latency_ms > ping_sensor.threshold_warning:
+                    status = 'warning'
                 else:
-                    status = 'ok'  # Any response = host is UP
+                    status = 'ok'
                 
                 # Create metric (usar UTC para consistência com PostgreSQL)
                 metric = Metric(
@@ -1436,8 +1436,39 @@ def ping_all_servers():
                 if latency_ms > 0:
                     _check_reboot_via_uptime(db, server, ping_sensor)
 
-                # NÃO criar incidentes aqui — evaluate_all_thresholds() já cuida disso.
-                # Duplicar a lógica aqui causava incidentes espúrios por latência.
+                # Avaliar threshold e criar/resolver incidente
+                threshold_breached, severity = evaluate_thresholds(ping_sensor, latency_ms)
+                if threshold_breached:
+                    existing = db.query(Incident).filter(
+                        Incident.sensor_id == ping_sensor.id,
+                        Incident.status == 'open'
+                    ).first()
+                    if not existing:
+                        description = get_incident_description(ping_sensor, metric)
+                        incident = Incident(
+                            sensor_id=ping_sensor.id,
+                            severity=severity,
+                            status='open',
+                            title=f"{server.hostname} - PING {severity.upper()}",
+                            description=description
+                        )
+                        db.add(incident)
+                        db.commit()
+                        db.refresh(incident)
+                        logger.warning(f"🚨 Incidente PING criado: {incident.title}")
+                        execute_aiops_analysis.delay(incident.id)
+                else:
+                    # Auto-resolver incidentes de ping abertos
+                    open_incidents = db.query(Incident).filter(
+                        Incident.sensor_id == ping_sensor.id,
+                        Incident.status.in_(['open', 'acknowledged'])
+                    ).all()
+                    for inc in open_incidents:
+                        inc.status = 'resolved'
+                        inc.resolved_at = datetime.now(timezone.utc)
+                        inc.resolution_notes = f"Auto-resolvido: PING voltou ao normal ({latency_ms}ms)"
+                        db.commit()
+                        logger.info(f"✅ Incidente PING {inc.id} auto-resolvido")
 
                 logger.debug(f"✅ Métrica PING salva: {server.hostname} = {latency_ms}ms ({status})")
                 

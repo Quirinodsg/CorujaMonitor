@@ -151,8 +151,6 @@ async def create_server(
             'switch': 'network_device',
             'router': 'network_device',
             'firewall': 'network_device',
-            'access_point': 'network_device',
-            'ap': 'network_device',
         }
         asset_type = asset_type_map.get((server.device_type or 'server').lower(), 'physical_server')
 
@@ -455,8 +453,8 @@ async def create_ping_sensor(
         server_id=server_id,
         sensor_type='ping',
         name='PING',
-        threshold_warning=None,
-        threshold_critical=None,
+        threshold_warning=100,
+        threshold_critical=200,
         is_active=True
     )
     db.add(ping_sensor)
@@ -497,8 +495,8 @@ async def create_ping_all_servers(
             server_id=server.id,
             sensor_type='ping',
             name='PING',
-            threshold_warning=None,
-            threshold_critical=None,
+            threshold_warning=100,
+            threshold_critical=200,
             is_active=True
         )
         db.add(ping_sensor)

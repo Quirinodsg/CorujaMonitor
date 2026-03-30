@@ -2191,21 +2191,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <label>Tipo de Dispositivo: *</label>
                 <select
                   value={newServer.device_type}
-                  onChange={(e) => {
-                    const dt = e.target.value;
-                    const isNetworkDevice = ['switch', 'router', 'firewall', 'access_point', 'ups'].includes(dt);
-                    setNewServer({
-                      ...newServer,
-                      device_type: dt,
-                      monitoring_protocol: isNetworkDevice ? 'snmp' : newServer.monitoring_protocol
-                    });
-                  }}
+                  onChange={(e) => setNewServer({...newServer, device_type: e.target.value})}
                 >
                   <option value="server">🖥️ Servidor</option>
                   <option value="switch">🔀 Switch</option>
                   <option value="router">📡 Roteador</option>
                   <option value="firewall">🔥 Firewall</option>
-                  <option value="access_point">📶 Access Point WiFi</option>
                   <option value="printer">🖨️ Impressora</option>
                   <option value="storage">🧠 Storage</option>
                   <option value="ups">🔋 Nobreak</option>
@@ -3881,31 +3872,10 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     }
                     setSNMPWizardStep(snmpWizardStep + 1);
                   } else {
-                    // Criar sensor SNMP via API
-                    (async () => {
-                      try {
-                        await api.post('/sensors/standalone', {
-                          probe_id: parseInt(snmpConfig.probe_id),
-                          name: snmpConfig.name,
-                          sensor_type: snmpConfig.device_type === 'ap' ? 'snmp_ap' : 'snmp',
-                          category: 'snmp',
-                          ip_address: snmpConfig.ip_address || null,
-                          snmp_version: snmpConfig.snmp_version || 'v2c',
-                          snmp_community: snmpConfig.snmp_community || 'public',
-                          snmp_port: snmpConfig.snmp_port ? parseInt(snmpConfig.snmp_port) : 161,
-                          snmp_oid: snmpConfig.snmp_oid || null,
-                          threshold_warning: parseFloat(snmpConfig.threshold_warning) || 80,
-                          threshold_critical: parseFloat(snmpConfig.threshold_critical) || 95,
-                          description: snmpConfig.description || `Sensor SNMP ${snmpConfig.device_type} - ${snmpConfig.name}`
-                        });
-                        alert(`✅ Sensor SNMP "${snmpConfig.name}" criado com sucesso na Biblioteca de Sensores!`);
-                        setShowSNMPWizard(false);
-                        setSNMPWizardStep(1);
-                      } catch (error) {
-                        console.error('Erro ao criar sensor SNMP:', error);
-                        alert('❌ Erro ao criar sensor: ' + (error.response?.data?.detail || error.message));
-                      }
-                    })();
+                    alert(`✔ Sensor SNMP configurado!\n\nO sensor será criado na Biblioteca de Sensores Independentes.`);
+                    setShowSNMPWizard(false);
+                    setSNMPWizardStep(1);
+                    window.location.hash = '#/sensor-library?type=snmp';
                   }
                 }}
               >

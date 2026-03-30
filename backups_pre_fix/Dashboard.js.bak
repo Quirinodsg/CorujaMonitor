@@ -35,8 +35,6 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const [wsConnected, setWsConnected] = useState(false);
   const [httpSensors, setHttpSensors] = useState([]);
   const [httpMetrics, setHttpMetrics] = useState({});
-  const [networkAssets, setNetworkAssets] = useState([]);
-  const [networkAssetStatuses, setNetworkAssetStatuses] = useState({});
   const wsRef = useRef(null);
   const reconnectRef = useRef(null);
 
@@ -94,25 +92,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
 
       if (healthRes.status === 'fulfilled') setHealthSummary(healthRes.value.data);
       if (incidentsRes.status === 'fulfilled') setIncidents(incidentsRes.value.data);
-      if (serversRes.status === 'fulfilled') {
-        setServers(serversRes.value.data);
-        // Filtrar ativos de rede (switch, router, firewall, access_point, ap, ups)
-        const netTypes = ['switch', 'router', 'firewall', 'access_point', 'ap', 'ups', 'storage'];
-        const assets = serversRes.value.data.filter(s => netTypes.includes((s.device_type || '').toLowerCase()));
-        setNetworkAssets(assets);
-        // Buscar status dos ativos de rede
-        if (assets.length > 0) {
-          try {
-            const statusRes = await api.get('/dashboard/network-assets-status?ids=' + assets.map(a => a.id).join(','));
-            setNetworkAssetStatuses(statusRes.data);
-          } catch (_) {
-            // Fallback: marcar como unknown
-            const fallback = {};
-            assets.forEach(a => { fallback[a.id] = 'unknown'; });
-            setNetworkAssetStatuses(fallback);
-          }
-        }
-      }
+      if (serversRes.status === 'fulfilled') setServers(serversRes.value.data);
 
       try {
         const standaloneRes = await api.get('/sensors/standalone');
@@ -308,42 +288,6 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                   </div>
                   <div className="dash-site-name">{sensor.name}</div>
                   {url && <div className="dash-site-url">{url}</div>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Ativos de Rede ── */}
-      {networkAssets.length > 0 && (
-        <div className="dash-section">
-          <div className="dash-section-header">
-            <span className="dash-section-title">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 3h12l3 6H3zm0 12h12l3 6H3zM3 9h18M3 15h18"/></svg>
-              Ativos de Rede
-            </span>
-            <button className="dash-section-link" onClick={() => onNavigate('servers')}>Ver todos →</button>
-          </div>
-          <div className="dash-sites-grid">
-            {networkAssets.map(asset => {
-              const status = networkAssetStatuses[asset.id] || 'unknown';
-              const color = status === 'ok' ? '#22C55E' : status === 'warning' ? '#F59E0B' : status === 'critical' ? '#EF4444' : '#6B7280';
-              const label = status === 'ok' ? 'ONLINE' : status === 'warning' ? 'AVISO' : status === 'critical' ? 'CRÍTICO' : 'Aguardando';
-              const deviceIcons = { switch: '🔀', router: '📡', firewall: '🔥', access_point: '📶', ap: '📶', ups: '🔋', storage: '🧠' };
-              const deviceLabels = { switch: 'Switch', router: 'Roteador', firewall: 'Firewall', access_point: 'Access Point', ap: 'Access Point', ups: 'Nobreak', storage: 'Storage' };
-              const dt = (asset.device_type || 'other').toLowerCase();
-              return (
-                <div key={asset.id} className="dash-site-card" style={{ '--site-color': color }}>
-                  <div className="dash-site-status">
-                    <span className="dash-site-badge">
-                      <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'white' }} />
-                      {label}
-                    </span>
-                    <span style={{ fontSize: 11, color: '#9CA3AF' }}>{deviceLabels[dt] || dt}</span>
-                  </div>
-                  <div className="dash-site-name">{deviceIcons[dt] || '📦'} {asset.hostname}</div>
-                  {asset.ip_address && <div className="dash-site-url">{asset.ip_address}</div>}
                 </div>
               );
             })}

@@ -18,8 +18,10 @@ def update_sensor_thresholds():
         for sensor in sensors:
             # Set default thresholds based on sensor type
             if sensor.sensor_type == 'ping':
-                sensor.threshold_warning = 100.0  # 100ms
-                sensor.threshold_critical = 200.0  # 200ms
+                # PING: sem threshold de latência — só alerta em DOWN (value=0)
+                # Estilo PRTG/Zabbix
+                sensor.threshold_warning = None
+                sensor.threshold_critical = None
             elif sensor.sensor_type == 'system':  # uptime
                 sensor.threshold_warning = 80.0
                 sensor.threshold_critical = 95.0

@@ -22,20 +22,16 @@ const DEVICE_ICONS = {
   vm:         'M4 4h16v12H4zM8 20h8M12 16v4',
   container:  'M12 2l9 4.5v11L12 22l-9-4.5v-11zM12 2v20M3 6.5l9 4.5 9-4.5',
   database:   'M12 2C6.48 2 2 4.24 2 7v10c0 2.76 4.48 5 10 5s10-2.24 10-5V7c0-2.76-4.48-5-10-5zm0 3c4.42 0 8 1.57 8 3.5S16.42 12 12 12 4 10.43 4 8.5 7.58 5 12 5z',
-  application:'M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5',
-  service:    'M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z',
   default:    'M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2zM12 15a2 2 0 1 1 0-4 2 2 0 0 1 0 4z',
 };
 
 function getDeviceIcon(node) {
   const t = (node.metadata?.device_type || node.type || 'server').toLowerCase();
-  if (t.includes('application') || t.includes('app')) return DEVICE_ICONS.application;
-  if (t.includes('service')) return DEVICE_ICONS.service;
   if (t.includes('switch')) return DEVICE_ICONS.switch;
   if (t.includes('router')) return DEVICE_ICONS.router;
   if (t.includes('firewall')) return DEVICE_ICONS.firewall;
   if (t.includes('hypervisor') || t.includes('hv')) return DEVICE_ICONS.hypervisor;
-  if (t.includes('ap') || t.includes('access_point') || t.includes('wifi') || t.includes('udm')) return DEVICE_ICONS.ap;
+  if (t.includes('ap') || t.includes('access_point') || t.includes('wifi')) return DEVICE_ICONS.ap;
   if (t.includes('vm') || t.includes('virtual')) return DEVICE_ICONS.vm;
   if (t.includes('container') || t.includes('docker')) return DEVICE_ICONS.container;
   if (t.includes('database') || t.includes('db') || t.includes('sql')) return DEVICE_ICONS.database;

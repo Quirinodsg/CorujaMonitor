@@ -21,7 +21,7 @@ FACTORY_PROFILES = [
     {"asset_type": "physical_server", "sensor_type": "disk",        "enabled": True,  "alert_mode": "normal",      "threshold_warning": 80, "threshold_critical": 95},
     {"asset_type": "physical_server", "sensor_type": "network_in",  "enabled": True,  "alert_mode": "metric_only", "threshold_warning": 80, "threshold_critical": 95},
     {"asset_type": "physical_server", "sensor_type": "network_out", "enabled": True,  "alert_mode": "metric_only", "threshold_warning": 80, "threshold_critical": 95},
-    {"asset_type": "network_device",  "sensor_type": "ping",        "enabled": True,  "alert_mode": "normal",      "threshold_warning": 100, "threshold_critical": 200},
+    {"asset_type": "network_device",  "sensor_type": "ping",        "enabled": True,  "alert_mode": "normal",      "threshold_warning": None, "threshold_critical": None},
     {"asset_type": "network_device",  "sensor_type": "network_in",  "enabled": True,  "alert_mode": "metric_only", "threshold_warning": 80,  "threshold_critical": 95},
     {"asset_type": "network_device",  "sensor_type": "network_out", "enabled": True,  "alert_mode": "metric_only", "threshold_warning": 80,  "threshold_critical": 95},
 ]

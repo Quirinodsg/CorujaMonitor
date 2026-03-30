@@ -54,11 +54,11 @@ class PingCollector:
                 
                 packet_loss = 0  # Successful ping = 0% loss
             
-            # Determine status based on latency
+            # Determine status — PRTG/Zabbix style:
+            # Ping ONLY alerts on DOWN (no response / timeout).
+            # High latency is just a metric value, NEVER changes status.
             if not is_online:
                 status = "critical"
-            elif latency > 200:
-                status = "warning"
             else:
                 status = "ok"
             

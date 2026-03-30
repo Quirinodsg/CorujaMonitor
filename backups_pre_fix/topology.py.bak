@@ -105,7 +105,7 @@ def _detect_layer(server) -> int:
     os_type = (getattr(server, 'os_type', None) or '').lower()
     hostname = (getattr(server, 'hostname', None) or '').upper()
 
-    if device_type in ('switch', 'router', 'firewall', 'network', 'access_point', 'ap'):
+    if device_type in ('switch', 'router', 'firewall', 'network'):
         return 0
     if device_type in ('hypervisor',) or 'hv' in hostname or 'hyperv' in os_type:
         return 1
@@ -258,7 +258,7 @@ def _build_graph(rows, db: Session) -> tuple[list, list]:
                 status = status_map.get(sid, "unknown")
                 device_type = meta.get("device_type", "server").lower()
                 hostname = meta.get("hostname", "").upper()
-                if device_type in ("switch", "router", "firewall", "network", "access_point", "ap"):
+                if device_type in ("switch", "router", "firewall", "network"):
                     layer = 0
                 elif device_type == "hypervisor" or "HV" in hostname:
                     layer = 1
@@ -331,66 +331,6 @@ def _bfs(start: str, adjacency: dict) -> list:
     return list(visited)
 
 
-# ─── App/Service node generation ─────────────────────────────────────────────
-
-def _generate_app_nodes(server_ids: list, db: Session) -> tuple[list, list]:
-    """
-    Gera nós de aplicação/serviço a partir dos sensores HTTP e service dos servidores.
-    Retorna (app_nodes, app_edges) para adicionar ao grafo.
-    """
-    if not server_ids:
-        return [], []
-
-    app_nodes = []
-    app_edges = []
-    ids_str = ",".join(str(sid) for sid in server_ids)
-
-    try:
-        sensors = db.execute(text(f"""
-            SELECT id, server_id, sensor_type, name, config
-            FROM sensors
-            WHERE server_id IN ({ids_str})
-              AND sensor_type IN ('http', 'https', 'service', 'port', 'tcp')
-              AND is_active = true
-        """)).fetchall()
-
-        for s in sensors:
-            cfg = s.config or {}
-            app_name = s.name
-            app_type = "service"
-
-            if s.sensor_type in ('http', 'https'):
-                http_cfg = cfg.get("http", {}) if isinstance(cfg, dict) else {}
-                url = http_cfg.get("url") or cfg.get("http_url", "")
-                app_name = s.name or url or f"HTTP_{s.id}"
-                app_type = "application"
-
-            node_id = f"app_{s.id}"
-            app_nodes.append({
-                "id": node_id,
-                "type": app_type,
-                "name": app_name,
-                "status": "unknown",
-                "layer": 3,
-                "metadata": {
-                    "sensor_id": str(s.id),
-                    "sensor_type": s.sensor_type,
-                    "server_id": str(s.server_id),
-                },
-                "parent_id": str(s.server_id),
-            })
-            app_edges.append({
-                "source": str(s.server_id),
-                "target": node_id,
-                "type": "dependency",
-            })
-
-    except Exception as e:
-        logger.warning(f"_generate_app_nodes: {e}")
-
-    return app_nodes, app_edges
-
-
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
 @router.get("/graph")
@@ -402,19 +342,6 @@ async def get_topology_graph(db: Session = Depends(get_db)):
 
         if rows:
             nodes, edges = _build_graph(rows, db)
-            # Adicionar nós de aplicação/serviço (layer 3)
-            all_server_ids = []
-            for n in nodes:
-                sid = n.get("metadata", {}).get("server_id")
-                if sid:
-                    try:
-                        all_server_ids.append(int(sid))
-                    except Exception:
-                        pass
-            if all_server_ids:
-                app_nodes, app_edges = _generate_app_nodes(all_server_ids, db)
-                nodes.extend(app_nodes)
-                edges.extend(app_edges)
             return {"nodes": nodes, "edges": edges, "source": "topology_nodes"}
 
         # Fallback sem sync
@@ -448,11 +375,6 @@ async def get_topology_graph(db: Session = Depends(get_db)):
         if not edges and len(nodes) > 1:
             edges = _fallback_chain_edges(server_nodes)
 
-        # Adicionar nós de aplicação/serviço (layer 3)
-        app_nodes, app_edges = _generate_app_nodes(server_ids, db)
-        nodes.extend(app_nodes)
-        edges.extend(app_edges)
-
         return {"nodes": nodes, "edges": edges, "source": "servers_fallback"}
 
     except Exception as e:
@@ -478,7 +400,7 @@ async def get_impact(node_id: str, db: Session = Depends(get_db)):
             if sid:
                 device_type = meta.get("device_type", "server").lower()
                 hostname = meta.get("hostname", "").upper()
-                layer = 0 if device_type in ("switch", "router", "firewall", "access_point", "ap") else (1 if "HV" in hostname else 2)
+                layer = 0 if device_type in ("switch", "router", "firewall") else (1 if "HV" in hostname else 2)
                 server_nodes.append({"node_id": str(r.id), "server_id": int(sid), "layer": layer})
 
         edges = _load_persisted_edges(db)

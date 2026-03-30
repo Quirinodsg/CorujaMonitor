@@ -139,3 +139,63 @@ async def get_health_summary(
         "unknown": int(rows.unknown or 0),
         "acknowledged": int(rows.acknowledged or 0),
     }
+
+
+@router.get("/network-assets-status")
+async def get_network_assets_status(
+    ids: str = "",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Retorna status dos ativos de rede (switch, AP, router, etc.) baseado nos sensores."""
+    from sqlalchemy import text
+
+    if not ids:
+        return {}
+
+    server_ids = [int(x) for x in ids.split(",") if x.strip().isdigit()]
+    if not server_ids:
+        return {}
+
+    ids_str = ",".join(str(sid) for sid in server_ids)
+
+    try:
+        rows = db.execute(text(f"""
+            SELECT
+                sen.server_id,
+                COUNT(*) FILTER (WHERE m.status = 'critical') AS crit,
+                COUNT(*) FILTER (WHERE m.status = 'warning')  AS warn,
+                COUNT(*) FILTER (WHERE m.status = 'ok')       AS ok_count,
+                COUNT(sen.id) AS total
+            FROM sensors sen
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = sen.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
+            WHERE sen.server_id IN ({ids_str}) AND sen.is_active = true
+            GROUP BY sen.server_id
+        """)).fetchall()
+
+        result = {}
+        for r in rows:
+            if r.total == 0:
+                result[r.server_id] = "unknown"
+            elif r.crit > 0:
+                result[r.server_id] = "critical"
+            elif r.warn > 0:
+                result[r.server_id] = "warning"
+            elif r.ok_count > 0:
+                result[r.server_id] = "ok"
+            else:
+                result[r.server_id] = "unknown"
+
+        # Servidores sem sensores ficam como unknown
+        for sid in server_ids:
+            if sid not in result:
+                result[sid] = "unknown"
+
+        return result
+    except Exception:
+        return {sid: "unknown" for sid in server_ids}

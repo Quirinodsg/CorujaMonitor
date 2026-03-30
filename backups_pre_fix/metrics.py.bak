@@ -255,10 +255,8 @@ async def create_probe_metrics_bulk(
             
             # Customize thresholds for specific sensor types
             if metric_data.sensor_type == 'ping':
-                # PRTG/Zabbix style: ping não usa threshold de latência.
-                # Alerta apenas em DOWN (value=0). Latência alta é só métrica.
-                threshold_warning = None
-                threshold_critical = None
+                threshold_warning = 100.0  # 100ms
+                threshold_critical = 200.0  # 200ms
             elif metric_data.sensor_type in ('uptime', 'system'):
                 threshold_warning = None
                 threshold_critical = None
