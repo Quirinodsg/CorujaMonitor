@@ -585,21 +585,20 @@ class ProbeCore:
         try:
             from collectors.snmp_collector import SNMPCollector
             collector = SNMPCollector()
-            # Coleta básica: sysUpTime, sysDescr + OIDs UPS se disponíveis
-            result = collector.collect_device(ip, community, port)
-            if result and isinstance(result, list):
+            result = collector.collect_snmp_v2c(ip, community, port)
+            if result and isinstance(result, list) and len(result) > 0:
                 for metric in result:
                     metric['sensor_id'] = sensor['id']
                     metric['hostname'] = '__standalone__'
                     metric['timestamp'] = timestamp.isoformat()
-                    metric['metadata'] = {'sensor_id': sensor['id']}
+                    metric['metadata'] = metric.get('metadata') or {}
+                    metric['metadata']['sensor_id'] = sensor['id']
                     self.buffer.append(metric)
                 logger.info(f"SNMP {name} ({ip}): {len(result)} metrics")
             else:
                 # Fallback: ping SNMP para verificar se está online
                 self._snmp_ping_check(sensor, timestamp, ip, community, port)
         except ImportError:
-            # SNMPCollector não disponível, fazer check básico
             self._snmp_ping_check(sensor, timestamp, ip, community, port)
         except Exception as e:
             logger.warning(f"SNMP {name} ({ip}) failed: {e}")
