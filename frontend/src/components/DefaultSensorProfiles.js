@@ -122,22 +122,30 @@ export default function DefaultSensorProfiles() {
                       </select>
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        value={p.threshold_warning ?? ''}
-                        onChange={e => handleChange(p.id, 'threshold_warning', e.target.value ? Number(e.target.value) : null)}
-                        className="dsp-input-num"
-                        min={0} max={100}
-                      />
+                      {(p.sensor_type === 'ping' || p.sensor_type === 'system' || p.sensor_type === 'uptime') ? (
+                        <span className="dsp-na" title={p.sensor_type === 'ping' ? 'Ping alerta apenas se offline' : 'Uptime alerta apenas em reboot'}>—</span>
+                      ) : (
+                        <input
+                          type="number"
+                          value={p.threshold_warning ?? ''}
+                          onChange={e => handleChange(p.id, 'threshold_warning', e.target.value ? Number(e.target.value) : null)}
+                          className="dsp-input-num"
+                          min={0} max={100}
+                        />
+                      )}
                     </td>
                     <td>
-                      <input
-                        type="number"
-                        value={p.threshold_critical ?? ''}
-                        onChange={e => handleChange(p.id, 'threshold_critical', e.target.value ? Number(e.target.value) : null)}
-                        className="dsp-input-num"
-                        min={0} max={100}
-                      />
+                      {(p.sensor_type === 'ping' || p.sensor_type === 'system' || p.sensor_type === 'uptime') ? (
+                        <span className="dsp-na" title={p.sensor_type === 'ping' ? 'Ping alerta apenas se offline' : 'Uptime alerta apenas em reboot'}>—</span>
+                      ) : (
+                        <input
+                          type="number"
+                          value={p.threshold_critical ?? ''}
+                          onChange={e => handleChange(p.id, 'threshold_critical', e.target.value ? Number(e.target.value) : null)}
+                          className="dsp-input-num"
+                          min={0} max={100}
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}

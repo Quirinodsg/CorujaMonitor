@@ -262,6 +262,17 @@ function ThresholdConfig() {
               />
               <span className="threshold-unit">segundos ({formatDuration(config.ping_breach_duration)})</span>
             </div>
+            <span className="threshold-hint">🏓 Ping alerta apenas se offline (sem resposta). Latência alta é só métrica.</span>
+          </div>
+
+          <div className="threshold-item">
+            <label>
+              <span className="threshold-icon">⏱️</span>
+              Uptime
+            </label>
+            <div className="threshold-input-group">
+              <span className="threshold-unit">🔄 Uptime cria incidente informativo (já resolvido) apenas em reboot. Sem threshold configurável.</span>
+            </div>
           </div>
 
           <div className="threshold-item">

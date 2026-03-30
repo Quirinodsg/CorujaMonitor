@@ -344,3 +344,10 @@
     grid-template-columns: 1fr;
   }
 }
+
+.threshold-hint {
+  display: block;
+  font-size: 0.8em;
+  color: #8899aa;
+  margin-top: 4px;
+}
