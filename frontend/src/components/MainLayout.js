@@ -21,6 +21,7 @@ import CustomReports from './CustomReports';
 import ThresholdConfig from './ThresholdConfig';
 import Probes from './Probes';
 import NOCRealTime from './NOCRealTime';
+import NOCDatacenter from './NOCDatacenter';
 import AdvancedDashboard from './AdvancedDashboard';
 import AutoRemediation from './AutoRemediation';
 import MetricsViewer from './MetricsViewer';
@@ -128,6 +129,8 @@ function MainLayout({ user, onLogout }) {
         return <Probes />;
       case 'noc-realtime':
         return <NOCRealTime onExit={() => setCurrentPage('dashboard')} />;
+      case 'noc-datacenter':
+        return <NOCDatacenter onExit={() => setCurrentPage('dashboard')} />;
       case 'advanced-dashboard':
         return <AdvancedDashboard user={user} onNavigate={handleNavigate} />;
       case 'servers-grouped':
@@ -175,10 +178,12 @@ function MainLayout({ user, onLogout }) {
     }
   };
 
-  if (nocMode || currentPage === 'noc-realtime') {
+  if (nocMode || currentPage === 'noc-realtime' || currentPage === 'noc-datacenter') {
     return (
       currentPage === 'noc-realtime'
         ? <NOCRealTime onExit={() => setCurrentPage('dashboard')} />
+        : currentPage === 'noc-datacenter'
+        ? <NOCDatacenter onExit={() => setCurrentPage('dashboard')} />
         : <NOCMode onExit={() => setNocMode(false)} />
     );
   }

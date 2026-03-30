@@ -14,6 +14,7 @@ var CATS = [
     { id: "intelligent-alerts", icon: "🧠",  label: "Alertas Inteligentes" },
     { id: "events-timeline",    icon: "🕐",  label: "Timeline de Eventos" },
     { id: "noc-realtime",       icon: "🖥️",  label: "NOC" },
+    { id: "noc-datacenter",     icon: "🏢",  label: "NOC Datacenter" },
   ]},
   { id: "aiops", label: "AIOps", icon: "🧠", items: [
     { id: "aiops",         icon: "🔮", label: "AIOps" },
