@@ -186,7 +186,8 @@ class SensorUpdate(BaseModel):
     threshold_warning: Optional[float] = None
     threshold_critical: Optional[float] = None
     sensor_type: Optional[str] = None  # Para mover entre categorias
-    is_active: Optional[bool] = None  # CORRECAO 09MAR: Campo para ativar/desativar sensor via API
+    is_active: Optional[bool] = None
+    description: Optional[str] = None
 
 
 @router.put("/{sensor_id}", response_model=SensorResponse)
@@ -196,10 +197,14 @@ async def update_sensor(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    # Verify sensor belongs to user's tenant
-    sensor = db.query(Sensor).join(Server).filter(
+    # Verify sensor belongs to user's tenant (outerjoin para incluir standalone sem server_id)
+    from sqlalchemy import or_ as db_or
+    sensor = db.query(Sensor).outerjoin(Server).filter(
         Sensor.id == sensor_id,
-        Server.tenant_id == current_user.tenant_id
+        db_or(
+            Server.tenant_id == current_user.tenant_id,
+            Sensor.server_id.is_(None)  # Standalone sensors (biblioteca)
+        )
     ).first()
     
     if not sensor:
@@ -223,6 +228,8 @@ async def update_sensor(
     # CORRECAO 09MAR: Permite desativar sensor sem deletar do banco
     if sensor_update.is_active is not None:
         sensor.is_active = sensor_update.is_active
+    if sensor_update.description is not None:
+        sensor.description = sensor_update.description
     
     db.commit()
     db.refresh(sensor)
