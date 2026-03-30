@@ -25,12 +25,11 @@ def evaluate_thresholds(sensor, value: float) -> Tuple[bool, str]:
         return False, "ok"
 
     # ── UPTIME/System sensor (Zabbix style) ──
-    # Alert ONLY on reboot detection: uptime near 0.
-    # Uses a VERY tight window (< 2 minutes = 0.0014 days) to fire only ONCE.
-    # After 2 min uptime, it's OK and the incident auto-resolves.
-    # Combined with 30-min cooldown in tasks.py, this ensures 1 incident per reboot.
+    # Reboot = uptime perto de 0. Cria UM incidente informativo.
+    # O incidente é criado já resolvido em evaluate_all_thresholds (tratamento especial).
+    # Threshold apertado: < 0.0035 dias (~5 min) para disparar apenas 1x por reboot.
     if sensor.sensor_type == 'system':
-        if value <= 0.0014:  # ~2 minutes — just rebooted
+        if value <= 0.0035:  # ~5 minutes — just rebooted
             return True, "warning"
         return False, "ok"
     

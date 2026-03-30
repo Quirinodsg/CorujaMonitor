@@ -106,6 +106,7 @@ class Incident(Base):
     remediation_successful = Column(Boolean)
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     resolved_at = Column(DateTime)
+    resolution_notes = Column(Text)
 
 class RemediationLog(Base):
     __tablename__ = "remediation_logs"

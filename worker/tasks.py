@@ -112,15 +112,91 @@ def evaluate_all_thresholds():
             )
 
             if threshold_breached:
+                # ── SYSTEM/UPTIME: tratamento especial — incidente informativo de reboot ──
+                # Cria UM incidente já resolvido (apenas registro) e cooldown de 1h.
+                # Não fica "open" — é só notificação de que houve reboot.
+                if sensor.sensor_type == 'system':
+                    # Cooldown forte: 1 incidente por hora no máximo
+                    cooldown_key = f"cooldown:{sensor.id}"
+                    if redis_client is not None:
+                        try:
+                            if redis_client.exists(cooldown_key):
+                                logger.debug("Cooldown reboot ativo para sensor %s — skip", sensor.id)
+                                continue
+                        except Exception:
+                            pass
+
+                    # Dedup: já existe incidente de reboot nos últimos 60 min?
+                    recent_cutoff = now - timedelta(minutes=60)
+                    recent_reboot = db.query(Incident).filter(
+                        Incident.sensor_id == sensor.id,
+                        Incident.created_at >= recent_cutoff
+                    ).first()
+                    if recent_reboot:
+                        logger.debug("Dedup reboot: sensor %s já tem incidente na última hora — skip", sensor.id)
+                        continue
+
+                    uptime_minutes = round(latest_metric.value * 24 * 60, 1)
+                    server_name = ""
+                    if sensor.server_id:
+                        srv = db.query(Server).filter(Server.id == sensor.server_id).first()
+                        if srv:
+                            server_name = srv.hostname
+
+                    incident = Incident(
+                        sensor_id=sensor.id,
+                        severity="warning",
+                        status="resolved",  # Já nasce resolvido — é informativo
+                        title=f"{server_name or sensor.name} - Servidor reiniciado",
+                        description=f"Reboot detectado: uptime atual é {uptime_minutes} minutos. "
+                                    f"Incidente informativo — servidor já está online.",
+                        resolved_at=now,
+                        resolution_notes="Auto-resolvido: incidente informativo de reboot"
+                    )
+                    db.add(incident)
+                    db.commit()
+                    db.refresh(incident)
+
+                    # Cooldown de 1h
+                    if redis_client is not None:
+                        try:
+                            redis_client.setex(cooldown_key, 3600, "1")
+                        except Exception:
+                            pass
+
+                    logger.info(f"🔄 Reboot detectado: {incident.title} (ID: {incident.id}) — incidente informativo criado já resolvido")
+                    print(f"🔄 Reboot: {incident.title} (ID: {incident.id}) — informativo")
+
+                    # Resolver qualquer incidente PING aberto do mesmo servidor (o server voltou)
+                    if sensor.server_id:
+                        ping_sensor = db.query(Sensor).filter(
+                            Sensor.server_id == sensor.server_id,
+                            Sensor.sensor_type == 'ping',
+                            Sensor.is_active == True
+                        ).first()
+                        if ping_sensor:
+                            ping_incidents = db.query(Incident).filter(
+                                Incident.sensor_id == ping_sensor.id,
+                                Incident.status.in_(['open', 'acknowledged'])
+                            ).all()
+                            for pi in ping_incidents:
+                                pi.status = 'resolved'
+                                pi.resolved_at = now
+                                pi.resolution_notes = f"Auto-resolvido: servidor reiniciou (uptime: {uptime_minutes}min)"
+                                db.commit()
+                                logger.info(f"✅ Incidente PING {pi.id} resolvido após reboot detectado")
+
+                    continue  # Não precisa do fluxo normal de incidentes
+
                 # 5. Deduplicação: Incident aberto OU acknowledged já existe?
                 existing_incident = db.query(Incident).filter(
                     Incident.sensor_id == sensor.id,
                     Incident.status.in_(["open", "acknowledged"])
                 ).first()
 
-                # 5b. Para PING/Uptime: também verificar se já existe incidente
+                # 5b. Para PING: também verificar se já existe incidente
                 # criado nos últimos 30 min (mesmo que resolvido) — evita flood
-                if not existing_incident and sensor.sensor_type in ('ping', 'system'):
+                if not existing_incident and sensor.sensor_type == 'ping':
                     recent_cutoff = now - timedelta(minutes=30)
                     recent_incident = db.query(Incident).filter(
                         Incident.sensor_id == sensor.id,
@@ -157,8 +233,8 @@ def evaluate_all_thresholds():
 
                     # 7. Cooldown via Redis
                     cooldown_key = f"cooldown:{sensor.id}"
-                    # PING e Uptime: cooldown maior (30 min) para evitar flood de incidentes
-                    if sensor.sensor_type in ('ping', 'system'):
+                    # PING: cooldown maior (30 min) para evitar flood de incidentes
+                    if sensor.sensor_type == 'ping':
                         cooldown_secs = getattr(sensor, 'cooldown_seconds', None) or 1800  # 30 min
                     else:
                         cooldown_secs = getattr(sensor, 'cooldown_seconds', None) or 300  # 5 min
@@ -170,9 +246,9 @@ def evaluate_all_thresholds():
                         except Exception:
                             pass  # fail-open
 
-                    # 7b. PING/Uptime: exigir múltiplas falhas consecutivas antes de criar incidente
-                    # Evita flood de chamados por latência momentânea ou reboot rápido
-                    if sensor.sensor_type in ('ping', 'system'):
+                    # 7b. PING: exigir múltiplas falhas consecutivas antes de criar incidente
+                    # Evita flood de chamados por latência momentânea
+                    if sensor.sensor_type == 'ping':
                         consecutive_key = f"consecutive_fail:{sensor.id}"
                         required_fails = 3  # 3 ciclos consecutivos (~3 min)
                         if redis_client is not None:
@@ -181,7 +257,7 @@ def evaluate_all_thresholds():
                                 redis_client.expire(consecutive_key, 300)  # reset após 5 min sem falha
                                 if count < required_fails:
                                     logger.debug(
-                                        "PING/Uptime sensor %s: falha %d/%d — aguardando confirmação",
+                                        "PING sensor %s: falha %d/%d — aguardando confirmação",
                                         sensor.id, count, required_fails
                                     )
                                     continue
@@ -194,8 +270,6 @@ def evaluate_all_thresholds():
                     # Título específico por tipo de sensor
                     if sensor.sensor_type == 'ping':
                         inc_title = f"{sensor.name} - HOST DOWN (sem resposta)"
-                    elif sensor.sensor_type == 'system':
-                        inc_title = f"{sensor.name} - REBOOT detectado"
                     elif sensor.sensor_type == 'service':
                         inc_title = f"{sensor.name} - Serviço parado"
                     else:
@@ -250,7 +324,7 @@ def evaluate_all_thresholds():
                         print(f"⚠️ Incidente {existing_incident.id} atualizado para {severity}")
             else:
                 # Sensor OK — resetar contador de falhas consecutivas
-                if redis_client is not None and sensor.sensor_type in ('ping', 'system'):
+                if redis_client is not None and sensor.sensor_type == 'ping':
                     try:
                         redis_client.delete(f"consecutive_fail:{sensor.id}")
                     except Exception:
@@ -1430,11 +1504,6 @@ def ping_all_servers():
                 )
                 db.add(metric)
                 db.commit()
-
-                # Detectar reboot: servidor respondeu mas uptime é muito baixo (< 10 min)
-                # Isso captura o caso onde o servidor caiu e voltou entre ciclos de ping
-                if latency_ms > 0:
-                    _check_reboot_via_uptime(db, server, ping_sensor)
 
                 # NÃO criar incidentes aqui — evaluate_all_thresholds() já cuida disso.
                 # Duplicar a lógica aqui causava incidentes espúrios por latência.
