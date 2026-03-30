@@ -517,7 +517,7 @@ class ProbeCore:
         logger.info(f"⚠️ PING desabilitado na probe - feito pelo servidor central (worker)")
         return  # Não coleta PING
     def _collect_standalone_sensors(self):
-        """Coleta sensores standalone: HTTP, etc. (estilo PRTG - probe faz o request)"""
+        """Coleta sensores standalone: HTTP, SNMP, etc. (estilo PRTG - probe faz o request)"""
         try:
             with httpx.Client(timeout=10.0, verify=False) as client:
                 response = client.get(
@@ -536,6 +536,7 @@ class ProbeCore:
             timestamp = datetime.now()
 
             for sensor in sensors:
+                # ── HTTP sensors ──
                 if (sensor.get('sensor_type') == 'http' or sensor.get('http_url')) and sensor.get('http_url'):
                     try:
                         start = time.time()
@@ -564,8 +565,97 @@ class ProbeCore:
                         'metadata': {'sensor_id': sensor['id']}
                     })
 
+                # ── SNMP sensors (UPS, switches, APs, etc.) ──
+                elif sensor.get('sensor_type') in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch') and sensor.get('ip_address'):
+                    try:
+                        self._collect_snmp_standalone(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"SNMP {sensor['name']} error: {e}")
+
         except Exception as e:
             logger.error(f"Error collecting standalone sensors: {e}")
+
+    def _collect_snmp_standalone(self, sensor, timestamp):
+        """Coleta SNMP de sensor standalone (UPS, switch, AP, etc.)."""
+        ip = sensor.get('ip_address')
+        community = sensor.get('snmp_community') or 'public'
+        port = sensor.get('snmp_port') or 161
+        name = sensor.get('name', 'SNMP')
+
+        try:
+            from collectors.snmp_collector import SNMPCollector
+            collector = SNMPCollector()
+            # Coleta básica: sysUpTime, sysDescr + OIDs UPS se disponíveis
+            result = collector.collect_device(ip, community, port)
+            if result and isinstance(result, list):
+                for metric in result:
+                    metric['sensor_id'] = sensor['id']
+                    metric['hostname'] = '__standalone__'
+                    metric['timestamp'] = timestamp.isoformat()
+                    metric['metadata'] = {'sensor_id': sensor['id']}
+                    self.buffer.append(metric)
+                logger.info(f"SNMP {name} ({ip}): {len(result)} metrics")
+            else:
+                # Fallback: ping SNMP para verificar se está online
+                self._snmp_ping_check(sensor, timestamp, ip, community, port)
+        except ImportError:
+            # SNMPCollector não disponível, fazer check básico
+            self._snmp_ping_check(sensor, timestamp, ip, community, port)
+        except Exception as e:
+            logger.warning(f"SNMP {name} ({ip}) failed: {e}")
+            self.buffer.append({
+                'sensor_id': sensor['id'],
+                'sensor_type': sensor.get('sensor_type', 'snmp'),
+                'name': name,
+                'value': 0,
+                'unit': 'status',
+                'status': 'critical',
+                'timestamp': timestamp.isoformat(),
+                'hostname': '__standalone__',
+                'metadata': {'sensor_id': sensor['id'], 'error': str(e)}
+            })
+
+    def _snmp_ping_check(self, sensor, timestamp, ip, community, port):
+        """Check básico SNMP: tenta ler sysUpTime para verificar se dispositivo responde."""
+        import subprocess
+        name = sensor.get('name', 'SNMP')
+        try:
+            # Tenta ping TCP na porta SNMP como fallback
+            import socket
+            start = time.time()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.settimeout(3)
+            # Enviar SNMP GET sysUpTime.0 (OID 1.3.6.1.2.1.1.3.0)
+            # Simplificado: apenas verificar se a porta responde
+            sock.sendto(b'\x30\x26\x02\x01\x01\x04\x06public\xa0\x19\x02\x04\x00\x00\x00\x01\x02\x01\x00\x02\x01\x00\x30\x0b\x30\x09\x06\x05\x2b\x06\x01\x02\x01\x05\x00', (ip, port))
+            try:
+                data, addr = sock.recvfrom(1024)
+                elapsed_ms = (time.time() - start) * 1000
+                status = 'ok'
+                value = round(elapsed_ms, 2)
+                logger.info(f"SNMP {name} ({ip}): online ({elapsed_ms:.0f}ms)")
+            except socket.timeout:
+                status = 'critical'
+                value = 0
+                logger.warning(f"SNMP {name} ({ip}): timeout")
+            finally:
+                sock.close()
+        except Exception as e:
+            status = 'critical'
+            value = 0
+            logger.warning(f"SNMP {name} ({ip}): check failed: {e}")
+
+        self.buffer.append({
+            'sensor_id': sensor['id'],
+            'sensor_type': sensor.get('sensor_type', 'snmp'),
+            'name': name,
+            'value': value,
+            'unit': 'ms',
+            'status': status,
+            'timestamp': timestamp.isoformat(),
+            'hostname': '__standalone__',
+            'metadata': {'sensor_id': sensor['id']}
+        })
 
     def _collect_hyperv_hosts(self):
         """Collect Hyper-V metrics from configured hosts and send to API."""

@@ -473,12 +473,18 @@ async def list_standalone_sensors_by_probe(
         http_cfg = cfg.get("http") or {}
         http_url = http_cfg.get("url") or cfg.get("http_url")
         http_method = http_cfg.get("method") or cfg.get("http_method", "GET")
+        # SNMP config
+        snmp_cfg = cfg.get("snmp") or {}
         result.append({
             "id": s.id,
             "name": s.name,
             "sensor_type": s.sensor_type,
             "http_url": http_url,
             "http_method": http_method,
+            "ip_address": cfg.get("ip_address") or snmp_cfg.get("ip_address"),
+            "snmp_community": cfg.get("snmp_community") or snmp_cfg.get("community") or "public",
+            "snmp_port": cfg.get("snmp_port") or snmp_cfg.get("port") or 161,
+            "snmp_version": cfg.get("snmp_version") or snmp_cfg.get("version") or "v2c",
             "threshold_warning": s.threshold_warning,
             "threshold_critical": s.threshold_critical,
         })
