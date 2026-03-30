@@ -572,6 +572,13 @@ class ProbeCore:
                     except Exception as e:
                         logger.warning(f"SNMP {sensor['name']} error: {e}")
 
+                # ── Engetron UPS (HTTP scraping) ──
+                elif sensor.get('ip_address') and (sensor.get('name', '').lower().find('engetron') >= 0 or sensor.get('name', '').lower().find('nobreak') >= 0):
+                    try:
+                        self._collect_engetron(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"Engetron {sensor['name']} error: {e}")
+
         except Exception as e:
             logger.error(f"Error collecting standalone sensors: {e}")
 
@@ -605,6 +612,65 @@ class ProbeCore:
             self.buffer.append({
                 'sensor_id': sensor['id'],
                 'sensor_type': sensor.get('sensor_type', 'snmp'),
+                'name': name,
+                'value': 0,
+                'unit': 'status',
+                'status': 'critical',
+                'timestamp': timestamp.isoformat(),
+                'hostname': '__standalone__',
+                'metadata': {'sensor_id': sensor['id'], 'error': str(e)}
+            })
+
+    def _collect_engetron(self, sensor, timestamp):
+        """Coleta métricas de Nobreak Engetron via HTTP (WBRC)."""
+        ip = sensor.get('ip_address')
+        name = sensor.get('name', 'Engetron')
+        try:
+            from collectors.engetron_collector import EngetronCollector
+            collector = EngetronCollector(ip=ip)
+            metrics = collector.collect()
+            if metrics:
+                # Enviar a métrica principal (status) com o sensor_id
+                main_metric = None
+                for m in metrics:
+                    if m.get('name', '').endswith('status'):
+                        main_metric = m
+                        break
+                if not main_metric:
+                    main_metric = metrics[0]
+
+                self.buffer.append({
+                    'sensor_id': sensor['id'],
+                    'sensor_type': 'engetron',
+                    'name': name,
+                    'value': main_metric['value'],
+                    'unit': main_metric['unit'],
+                    'status': main_metric['status'],
+                    'timestamp': timestamp.isoformat(),
+                    'hostname': '__standalone__',
+                    'metadata': {
+                        'sensor_id': sensor['id'],
+                        'all_metrics': {m['name']: {'value': m['value'], 'unit': m['unit'], 'status': m['status']} for m in metrics}
+                    }
+                })
+                logger.info(f"Engetron {name} ({ip}): {len(metrics)} metrics, status={main_metric['status']}")
+            else:
+                self.buffer.append({
+                    'sensor_id': sensor['id'],
+                    'sensor_type': 'engetron',
+                    'name': name,
+                    'value': 0,
+                    'unit': 'status',
+                    'status': 'critical',
+                    'timestamp': timestamp.isoformat(),
+                    'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id']}
+                })
+        except Exception as e:
+            logger.warning(f"Engetron {name} ({ip}) error: {e}")
+            self.buffer.append({
+                'sensor_id': sensor['id'],
+                'sensor_type': 'engetron',
                 'name': name,
                 'value': 0,
                 'unit': 'status',
