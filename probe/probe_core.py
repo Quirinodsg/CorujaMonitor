@@ -565,8 +565,8 @@ class ProbeCore:
                         'metadata': {'sensor_id': sensor['id']}
                     })
 
-                # ── Engetron UPS (HTTP scraping) — antes do SNMP genérico ──
-                elif sensor.get('ip_address') and (sensor.get('name', '').lower().find('engetron') >= 0 or sensor.get('name', '').lower().find('nobreak') >= 0):
+                # ── Engetron UPS (HTTP scraping) — detecta pelo nome ──
+                elif sensor.get('ip_address') and sensor.get('name', '').lower().find('engetron') >= 0:
                     try:
                         self._collect_engetron(sensor, timestamp)
                     except Exception as e:
