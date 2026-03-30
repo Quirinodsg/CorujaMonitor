@@ -3590,34 +3590,34 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <div>
                   <h3 style={{ marginBottom: '15px', color: '#667eea' }}>📏 Requisitos SNMP</h3>
                   
-                  <div className="info-banner" style={{ background: '#e3f2fd', border: '1px solid #2196f3', marginBottom: '20px' }}>
-                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6' }}>
+                  <div className="info-banner" style={{ background: 'var(--surface-3)', border: '1px solid var(--primary)', marginBottom: '20px' }}>
+                    <p style={{ margin: 0, fontSize: '14px', lineHeight: '1.6', color: 'var(--text-primary)' }}>
                       <strong>ℹ️ Baseado em PRTG, SolarWinds, CheckMK e Zabbix</strong><br/>
                       SNMP (Simple Network Management Protocol) permite monitorar dispositivos de rede remotamente.
                     </p>
                   </div>
 
-                  <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0 }}>🔧 Configuração no Dispositivo:</h4>
-                    <ol style={{ lineHeight: '1.8', fontSize: '14px', paddingLeft: '20px' }}>
-                      <li><strong>Habilitar SNMP</strong> no dispositivo (v1, v2c ou v3)</li>
-                      <li><strong>Configurar Community String</strong> (padrão: "public" para leitura)</li>
-                      <li><strong>Porta SNMP</strong>: 161/UDP (padrão)</li>
-                      <li><strong>Permitir acesso</strong> do IP da probe no firewall</li>
+                  <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--border)' }}>
+                    <h4 style={{ marginTop: 0, color: 'var(--text-primary)' }}>🔧 Configuração no Dispositivo:</h4>
+                    <ol style={{ lineHeight: '1.8', fontSize: '14px', paddingLeft: '20px', color: 'var(--text-secondary)' }}>
+                      <li><strong style={{color:'var(--text-primary)'}}>Habilitar SNMP</strong> no dispositivo (v1, v2c ou v3)</li>
+                      <li><strong style={{color:'var(--text-primary)'}}>Configurar Community String</strong> (padrão: "public" para leitura)</li>
+                      <li><strong style={{color:'var(--text-primary)'}}>Porta SNMP</strong>: 161/UDP (padrão)</li>
+                      <li><strong style={{color:'var(--text-primary)'}}>Permitir acesso</strong> do IP da probe no firewall</li>
                     </ol>
 
                     {currentWizardType === 'ap' && (
-                      <div style={{ marginTop: '15px', padding: '12px', background: '#fff3cd', borderRadius: '6px' }}>
-                        <strong>📶 Access Points WiFi - Métricas Detalhadas:</strong>
-                        <div style={{ marginTop: '10px' }}>
+                      <div style={{ marginTop: '15px', padding: '12px', background: 'var(--surface-3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                        <strong style={{color:'var(--text-primary)'}}>📶 Access Points WiFi - Métricas Detalhadas:</strong>
+                        <div style={{ marginTop: '10px', color: 'var(--text-secondary)' }}>
                           <div style={{ marginBottom: '8px' }}>
-                            <strong style={{ color: '#2196f3' }}>1. Status:</strong>
+                            <strong style={{ color: '#818cf8' }}>1. Status:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
                               <li>Online/Offline, Uptime, Reboots, Firmware version</li>
                             </ul>
                           </div>
                           <div style={{ marginBottom: '8px' }}>
-                            <strong style={{ color: '#2196f3' }}>2. Carga:</strong>
+                            <strong style={{ color: '#818cf8' }}>2. Carga:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
                               <li>CPU % e Memória %</li>
                               <li>Número de clientes conectados (2.4GHz + 5GHz)</li>
@@ -3625,7 +3625,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             </ul>
                           </div>
                           <div style={{ marginBottom: '8px' }}>
-                            <strong style={{ color: '#2196f3' }}>3. Tráfego:</strong>
+                            <strong style={{ color: '#818cf8' }}>3. Tráfego:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
                               <li>TX/RX bytes e pacotes por interface</li>
                               <li>Erros, Drops, Retransmissões</li>
@@ -3633,7 +3633,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             </ul>
                           </div>
                           <div style={{ marginBottom: '8px' }}>
-                            <strong style={{ color: '#2196f3' }}>4. Sinais:</strong>
+                            <strong style={{ color: '#818cf8' }}>4. Sinais:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
                               <li>RSSI médio (dBm) - força do sinal</li>
                               <li>SNR (Signal-to-Noise Ratio)</li>
@@ -3642,7 +3642,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             </ul>
                           </div>
                           <div style={{ marginBottom: '8px' }}>
-                            <strong style={{ color: '#2196f3' }}>5. Acesso:</strong>
+                            <strong style={{ color: '#818cf8' }}>5. Acesso:</strong>
                             <ul style={{ marginTop: '4px', fontSize: '12px', marginLeft: '20px' }}>
                               <li>SSIDs ativos e seus status</li>
                               <li>Autenticações bem-sucedidas/falhadas</li>
@@ -3651,23 +3651,23 @@ function Servers({ selectedServerId, selectedSensorId }) {
                             </ul>
                           </div>
                         </div>
-                        <div style={{ marginTop: '12px', padding: '8px', background: '#e3f2fd', borderRadius: '4px' }}>
-                          <strong>🔧 Configuração por Fabricante:</strong>
-                          <ul style={{ marginTop: '5px', fontSize: '12px' }}>
-                            <li><strong>Ubiquiti UniFi:</strong> Settings → Services → SNMP → Enable</li>
-                            <li><strong>MikroTik:</strong> IP → SNMP → Communities → Add</li>
-                            <li><strong>Cisco Aironet:</strong> configure terminal → snmp-server community public RO</li>
-                            <li><strong>TP-Link EAP:</strong> Management → SNMP Settings → Enable v2c</li>
-                            <li><strong>Aruba:</strong> Configuration → System → SNMP</li>
+                        <div style={{ marginTop: '12px', padding: '8px', background: 'var(--surface-1)', borderRadius: '4px', border: '1px solid var(--border)' }}>
+                          <strong style={{color:'var(--text-primary)'}}>🔧 Configuração por Fabricante:</strong>
+                          <ul style={{ marginTop: '5px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                            <li><strong style={{color:'var(--text-primary)'}}>Ubiquiti UniFi:</strong> Settings → Services → SNMP → Enable</li>
+                            <li><strong style={{color:'var(--text-primary)'}}>MikroTik:</strong> IP → SNMP → Communities → Add</li>
+                            <li><strong style={{color:'var(--text-primary)'}}>Cisco Aironet:</strong> configure terminal → snmp-server community public RO</li>
+                            <li><strong style={{color:'var(--text-primary)'}}>TP-Link EAP:</strong> Management → SNMP Settings → Enable v2c</li>
+                            <li><strong style={{color:'var(--text-primary)'}}>Aruba:</strong> Configuration → System → SNMP</li>
                           </ul>
                         </div>
                       </div>
                     )}
 
                     {currentWizardType === 'printer' && (
-                      <div style={{ marginTop: '15px', padding: '12px', background: '#fff3cd', borderRadius: '6px' }}>
-                        <strong>🖨️ Impressoras:</strong>
-                        <ul style={{ marginTop: '8px', fontSize: '13px' }}>
+                      <div style={{ marginTop: '15px', padding: '12px', background: 'var(--surface-3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                        <strong style={{color:'var(--text-primary)'}}>🖨️ Impressoras:</strong>
+                        <ul style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                           <li>HP: Menu → Network → SNMP → Enable</li>
                           <li>Canon: Setup → Network → SNMP Settings</li>
                           <li>Epson: Network → SNMP → Enable</li>
@@ -3676,9 +3676,9 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     )}
 
                     {currentWizardType === 'ups' && (
-                      <div style={{ marginTop: '15px', padding: '12px', background: '#fff3cd', borderRadius: '6px' }}>
-                        <strong>🔋 UPS/Nobreak:</strong>
-                        <ul style={{ marginTop: '8px', fontSize: '13px' }}>
+                      <div style={{ marginTop: '15px', padding: '12px', background: 'var(--surface-3)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+                        <strong style={{color:'var(--text-primary)'}}>🔋 UPS/Nobreak:</strong>
+                        <ul style={{ marginTop: '8px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                           <li>APC: Network → SNMP → Access Control</li>
                           <li>SMS: Web Interface → SNMP Settings</li>
                           <li>Requer Network Management Card em alguns modelos</li>
@@ -3687,9 +3687,9 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     )}
                   </div>
 
-                  <div style={{ background: '#e8f5e9', padding: '15px', borderRadius: '8px', border: '1px solid #4caf50' }}>
-                    <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>✔ Métricas Monitoradas:</strong><br/>
+                  <div style={{ background: 'var(--surface-3)', padding: '15px', borderRadius: '8px', border: '1px solid var(--success)' }}>
+                    <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+                      <strong style={{color:'var(--success)'}}>✔ Métricas Monitoradas:</strong><br/>
                       {currentWizardType === 'snmp' && 'Status, Uptime, Interfaces, Tráfego, CPU, Memória'}
                       {currentWizardType === 'ap' && 'Status, Carga (CPU/Mem/Clientes), Tráfego (TX/RX), Sinais (RSSI/SNR), Acesso (SSIDs/Auth)'}
                       {currentWizardType === 'temp' && 'Temperatura, Umidade, Alarmes'}
@@ -3795,29 +3795,29 @@ function Servers({ selectedServerId, selectedSensorId }) {
                 <div>
                   <h3 style={{ marginBottom: '15px', color: '#667eea' }}>🔎 Testar Conexão SNMP</h3>
                   
-                  <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '8px', marginBottom: '20px' }}>
-                    <h4 style={{ marginTop: 0 }}>Configuração:</h4>
+                  <div style={{ background: 'var(--surface-2)', padding: '20px', borderRadius: '8px', marginBottom: '20px', border: '1px solid var(--border)' }}>
+                    <h4 style={{ marginTop: 0, color: 'var(--text-primary)' }}>Configuração:</h4>
                     <table style={{ width: '100%', fontSize: '13px' }}>
                       <tbody>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold', width: '150px' }}>Nome:</td>
-                          <td>{snmpConfig.name || '(não informado)'}</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold', width: '150px', color: 'var(--text-primary)' }}>Nome:</td>
+                          <td style={{color:'var(--text-secondary)'}}>{snmpConfig.name || '(não informado)'}</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>IP:</td>
-                          <td style={{ fontFamily: 'monospace' }}>{snmpConfig.ip_address || '(não informado)'}</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>IP:</td>
+                          <td style={{ fontFamily: 'monospace', color:'var(--text-secondary)' }}>{snmpConfig.ip_address || '(não informado)'}</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Versão:</td>
-                          <td>{snmpConfig.snmp_version}</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>Versão:</td>
+                          <td style={{color:'var(--text-secondary)'}}>{snmpConfig.snmp_version}</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Community:</td>
-                          <td>{snmpConfig.snmp_community}</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>Community:</td>
+                          <td style={{color:'var(--text-secondary)'}}>{snmpConfig.snmp_community}</td>
                         </tr>
                         <tr>
-                          <td style={{ padding: '8px 0', fontWeight: 'bold' }}>Porta:</td>
-                          <td>{snmpConfig.snmp_port}</td>
+                          <td style={{ padding: '8px 0', fontWeight: 'bold', color: 'var(--text-primary)' }}>Porta:</td>
+                          <td style={{color:'var(--text-secondary)'}}>{snmpConfig.snmp_port}</td>
                         </tr>
                       </tbody>
                     </table>
@@ -3843,12 +3843,12 @@ function Servers({ selectedServerId, selectedSensorId }) {
                     🔎 Testar Conexão SNMP
                   </button>
 
-                  <div className="info-banner" style={{ background: '#fff3cd', border: '1px solid #ffc107' }}>
-                    <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6' }}>
-                      <strong>⚠️ Troubleshooting:</strong><br/>
-                      ● <strong>Timeout:</strong> Verifique firewall e conectividade<br/>
-                      ● <strong>Auth Failed:</strong> Community string incorreto<br/>
-                      ● <strong>No Response:</strong> SNMP não habilitado no dispositivo
+                  <div className="info-banner" style={{ background: 'var(--surface-3)', border: '1px solid var(--warning)' }}>
+                    <p style={{ margin: 0, fontSize: '13px', lineHeight: '1.6', color: 'var(--text-secondary)' }}>
+                      <strong style={{color:'var(--warning)'}}>⚠️ Troubleshooting:</strong><br/>
+                      ● <strong style={{color:'var(--text-primary)'}}>Timeout:</strong> Verifique firewall e conectividade<br/>
+                      ● <strong style={{color:'var(--text-primary)'}}>Auth Failed:</strong> Community string incorreto<br/>
+                      ● <strong style={{color:'var(--text-primary)'}}>No Response:</strong> SNMP não habilitado no dispositivo
                     </p>
                   </div>
                 </div>

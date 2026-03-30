@@ -1709,11 +1709,12 @@
 
 /* Info Box */
 .info-box {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  background: var(--surface-3, rgba(245,158,11,0.06));
+  border: 1px solid var(--border, rgba(245,158,11,0.2));
   border-radius: 6px;
   padding: 15px;
   margin: 15px 0;
+  color: var(--text-secondary, #ccc);
 }
 
 .info-box p {
@@ -2508,11 +2509,12 @@
 }
 
 .info-box {
-  background: #fff3cd;
-  border: 1px solid #ffc107;
+  background: var(--surface-3, rgba(245,158,11,0.06));
+  border: 1px solid var(--border, rgba(245,158,11,0.2));
   border-radius: 6px;
   padding: 15px;
   margin: 20px 0;
+  color: var(--text-secondary, #ccc);
 }
 
 .info-box p {
