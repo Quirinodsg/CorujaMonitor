@@ -1380,6 +1380,8 @@ function Servers({ selectedServerId, selectedSensorId }) {
     setEditingServer({
       id: server.id,
       hostname: server.hostname,
+      ip_address: server.ip_address || '',
+      device_type: server.device_type || 'server',
       group_name: server.group_name || '',
       tags: server.tags || []
     });
@@ -1391,6 +1393,9 @@ function Servers({ selectedServerId, selectedSensorId }) {
 
     try {
       await api.put(`/servers/${editingServer.id}`, {
+        hostname: editingServer.hostname,
+        ip_address: editingServer.ip_address,
+        device_type: editingServer.device_type,
         group_name: editingServer.group_name,
         tags: editingServer.tags
       });
@@ -2383,7 +2388,42 @@ function Servers({ selectedServerId, selectedSensorId }) {
       {showEditServerModal && editingServer && (
         <div className="modal-overlay" onClick={() => setShowEditServerModal(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Editar Servidor: {editingServer.hostname}</h2>
+            <h2>Editar: {editingServer.hostname}</h2>
+            <div className="form-group">
+              <label>Nome / Hostname: *</label>
+              <input
+                type="text"
+                value={editingServer.hostname}
+                onChange={(e) => setEditingServer({...editingServer, hostname: e.target.value})}
+                placeholder="Ex: SRVHVSPRD010"
+              />
+            </div>
+            <div className="form-group">
+              <label>Endereço IP:</label>
+              <input
+                type="text"
+                value={editingServer.ip_address}
+                onChange={(e) => setEditingServer({...editingServer, ip_address: e.target.value})}
+                placeholder="Ex: 192.168.31.110"
+              />
+            </div>
+            <div className="form-group">
+              <label>Tipo de Dispositivo:</label>
+              <select
+                value={editingServer.device_type}
+                onChange={(e) => setEditingServer({...editingServer, device_type: e.target.value})}
+              >
+                <option value="server">🖥️ Servidor</option>
+                <option value="switch">🔀 Switch</option>
+                <option value="router">📡 Router / Gateway</option>
+                <option value="firewall">🔥 Firewall</option>
+                <option value="access_point">📶 Access Point</option>
+                <option value="hypervisor">🖥️ Hypervisor</option>
+                <option value="storage">🧠 Storage / NAS</option>
+                <option value="ups">🔋 UPS / Nobreak</option>
+                <option value="vm">💻 VM</option>
+              </select>
+            </div>
             <div className="form-group">
               <label>Grupo / Empresa:</label>
               <select

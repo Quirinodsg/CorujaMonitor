@@ -280,6 +280,7 @@ async def list_servers(
 
 
 class ServerUpdate(BaseModel):
+    hostname: Optional[str] = None
     group_name: Optional[str] = None
     tags: Optional[List[str]] = None
     ip_address: Optional[str] = None
@@ -307,6 +308,8 @@ async def update_server(
     if not server:
         raise HTTPException(status_code=404, detail="Server not found")
     
+    if server_update.hostname is not None:
+        server.hostname = server_update.hostname
     if server_update.group_name is not None:
         server.group_name = server_update.group_name
     if server_update.tags is not None:
