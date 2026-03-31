@@ -600,17 +600,36 @@ class ProbeCore:
             from collectors.snmp_collector import SNMPCollector
             collector = SNMPCollector()
             result = collector.collect_snmp_v2c(ip, community, port)
-            if result and isinstance(result, list) and len(result) > 0:
-                for metric in result:
-                    metric['sensor_id'] = sensor['id']
-                    metric['hostname'] = '__standalone__'
-                    metric['timestamp'] = timestamp.isoformat()
-                    metric['metadata'] = metric.get('metadata') or {}
-                    metric['metadata']['sensor_id'] = sensor['id']
-                    self.buffer.append(metric)
-                logger.info(f"SNMP {name} ({ip}): {len(result)} metrics")
+
+            if result and isinstance(result, dict) and result.get('status') == 'success' and result.get('data'):
+                # SNMP respondeu — dispositivo online
+                data = result['data']
+                self.buffer.append({
+                    'sensor_id': sensor['id'],
+                    'sensor_type': sensor.get('sensor_type', 'snmp'),
+                    'name': name,
+                    'value': 1,
+                    'unit': 'status',
+                    'status': 'ok',
+                    'timestamp': timestamp.isoformat(),
+                    'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id'], 'snmp_data': data}
+                })
+                logger.info(f"SNMP {name} ({ip}): online, {len(data)} OIDs")
+            elif result and isinstance(result, dict) and result.get('status') == 'error':
+                logger.warning(f"SNMP {name} ({ip}): {result.get('error', 'unknown error')}")
+                self.buffer.append({
+                    'sensor_id': sensor['id'],
+                    'sensor_type': sensor.get('sensor_type', 'snmp'),
+                    'name': name,
+                    'value': 0,
+                    'unit': 'status',
+                    'status': 'critical',
+                    'timestamp': timestamp.isoformat(),
+                    'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id'], 'error': result.get('error')}
+                })
             else:
-                # Fallback: ping SNMP para verificar se está online
                 self._snmp_ping_check(sensor, timestamp, ip, community, port)
         except ImportError:
             self._snmp_ping_check(sensor, timestamp, ip, community, port)
