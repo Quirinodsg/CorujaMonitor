@@ -75,23 +75,19 @@ class EngetronCollector:
         if faltas is not None:
             m.append(self._metric("faltas", faltas, "count", "ok"))
 
-        # Entrada — Tensão Fase A/B/C
-        tensoes_in = re.findall(r"Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html)
-        if len(tensoes_in) >= 3:
+        # Entrada — Tensão Fase A/B/C (3 valores consecutivos após "Tensão")
+        tensao_match = re.search(r"Entrada.*?Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html, re.DOTALL)
+        if tensao_match:
             for i, fase in enumerate(["A", "B", "C"]):
-                v = float(tensoes_in[i])
+                v = float(tensao_match.group(i + 1))
                 status = "critical" if v < 100 else "ok"
                 m.append(self._metric(f"tensao_entrada_fase{fase}", v, "V", status))
 
-        # Saída — Tensão, Corrente, Potência, Carga
-        # Encontrar seção de saída
-        saida_idx = html.find("Sa")
-        saida = html[saida_idx:] if saida_idx > 0 else ""
-
-        tensoes_out = re.findall(r"Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V", saida)
-        if len(tensoes_out) >= 3:
+        # Saída — Tensão Fase A/B/C
+        tensao_saida_match = re.search(r"Sa.*?Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html, re.DOTALL)
+        if tensao_saida_match:
             for i, fase in enumerate(["A", "B", "C"]):
-                m.append(self._metric(f"tensao_saida_fase{fase}", float(tensoes_out[i]), "V", "ok"))
+                m.append(self._metric(f"tensao_saida_fase{fase}", float(tensao_saida_match.group(i + 1)), "V", "ok"))
 
         cargas = re.findall(r"Carga Utilizada</td>\s*<td class=tdv>\s*(\d+)\s*%", html)
         if cargas:
