@@ -850,9 +850,18 @@ Data/Hora: {datetime.now(BRAZIL_TZ).strftime('%d/%m/%Y %H:%M:%S')}
     
     result = await send_twilio_notification(config, test_data)
     
+    # Também fazer ligação de teste
+    call_result = await send_datacenter_emergency_call(config, {
+        'device': 'teste',
+        'problem': 'Teste de ligação do sistema de monitoramento',
+        'sensor_name': 'Coruja Monitor',
+    })
+    
+    call_msg = f" | Ligação: {call_result.get('message', call_result.get('error', 'erro'))}"
+    
     if result.get('success'):
         return {
-            'message': result.get('message'),
+            'message': result.get('message') + call_msg,
             'channel': 'twilio',
             'errors': result.get('errors')
         }
