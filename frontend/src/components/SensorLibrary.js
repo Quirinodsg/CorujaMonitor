@@ -391,8 +391,15 @@ function SensorLibrary() {
               {metric.metadata['Engetron bateria_autonomia'] && <span>🔋 {metric.metadata['Engetron bateria_autonomia'].value} min</span>}
               {metric.metadata['Engetron carga_max'] && <span>⚡ Carga: {metric.metadata['Engetron carga_max'].value}%</span>}
               {metric.metadata['Engetron bateria_tensao'] && <span>🔌 {metric.metadata['Engetron bateria_tensao'].value}V</span>}
-              {metric.metadata['Engetron tensao_entrada_faseA'] && <span>📥 {metric.metadata['Engetron tensao_entrada_faseA'].value}V</span>}
-              {metric.metadata['Engetron tensao_saida_faseA'] && <span>📤 {metric.metadata['Engetron tensao_saida_faseA'].value}V</span>}
+              {metric.metadata['Engetron tensao_entrada_faseA'] && (
+                <span style={{gridColumn:'1/-1', color: [metric.metadata['Engetron tensao_entrada_faseA'], metric.metadata['Engetron tensao_entrada_faseB'], metric.metadata['Engetron tensao_entrada_faseC']].some(f => f && f.value < 100) ? '#ef4444' : '#22c55e'}}>
+                  📥 Entrada: {metric.metadata['Engetron tensao_entrada_faseA']?.value}V · {metric.metadata['Engetron tensao_entrada_faseB']?.value}V · {metric.metadata['Engetron tensao_entrada_faseC']?.value}V
+                  {[metric.metadata['Engetron tensao_entrada_faseA'], metric.metadata['Engetron tensao_entrada_faseB'], metric.metadata['Engetron tensao_entrada_faseC']].some(f => f && f.value < 100) && ' ⚠️ QUEDA DE FASE'}
+                </span>
+              )}
+              {metric.metadata['Engetron tensao_saida_faseA'] && (
+                <span style={{gridColumn:'1/-1'}}>📤 Saída: {metric.metadata['Engetron tensao_saida_faseA']?.value}V · {metric.metadata['Engetron tensao_saida_faseB']?.value}V · {metric.metadata['Engetron tensao_saida_faseC']?.value}V</span>
+              )}
             </div>
           )}
           {/* Conflex HVAC details */}

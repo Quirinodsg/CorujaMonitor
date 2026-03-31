@@ -549,14 +549,15 @@ function NOCRealTime({ onExit }) {
               ENERGIA
               <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 800, color: '#e2e8f0' }}>{dcEnergy.length}</span>
             </div>
-            {dcEnergy.map(s => { const m = dcMetrics[String(s.id)]; const md = m?.metadata||{}; const st = gs(m?.status); const temp = md['Engetron temperatura']?.value; const auto = md['Engetron bateria_autonomia']?.value; const carga = md['Engetron carga_max']?.value; const batV = md['Engetron bateria_tensao']?.value; return (
-              <div key={s.id} style={{ background: st.g, borderRadius: 12, padding: 16, border: `1px solid ${st.c}33`, boxShadow: st.glow }}>
+            {dcEnergy.map(s => { const m = dcMetrics[String(s.id)]; const md = m?.metadata||{}; const st = gs(m?.status); const temp = md['Engetron temperatura']?.value; const auto = md['Engetron bateria_autonomia']?.value; const carga = md['Engetron carga_max']?.value; const batV = md['Engetron bateria_tensao']?.value; const fA = md['Engetron tensao_entrada_faseA']?.value; const fB = md['Engetron tensao_entrada_faseB']?.value; const fC = md['Engetron tensao_entrada_faseC']?.value; const oA = md['Engetron tensao_saida_faseA']?.value; const oB = md['Engetron tensao_saida_faseB']?.value; const oC = md['Engetron tensao_saida_faseC']?.value; const quedaFase = [fA,fB,fC].some(v => v !== undefined && v < 100); return (
+              <div key={s.id} style={{ background: st.g, borderRadius: 12, padding: 16, border: `1px solid ${quedaFase ? '#ef4444' : st.c}33`, boxShadow: quedaFase ? '0 0 20px rgba(239,68,68,0.4)' : st.glow }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: st.c, boxShadow: `0 0 8px ${st.c}`, animation: st.pulse ? 'pulse 2s infinite' : 'none' }} />
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: quedaFase ? '#ef4444' : st.c, boxShadow: `0 0 8px ${quedaFase ? '#ef4444' : st.c}`, animation: 'pulse 2s infinite' }} />
                   <span style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>🔋 {s.name}</span>
+                  {quedaFase && <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: '#ef444430', color: '#ef4444', fontWeight: 700, animation: 'pulse 1s infinite' }}>⚠️ QUEDA DE FASE</span>}
                   <span style={{ marginLeft: 'auto', fontSize: 10, padding: '2px 8px', borderRadius: 6, background: `${st.c}20`, color: st.c, fontWeight: 700 }}>{st.l}</span>
                 </div>
-                {temp !== undefined && (
+                {temp !== undefined && (<>
                   <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
                     <Gauge value={temp || 0} max={50} color={temp > 38 ? '#ef4444' : temp > 35 ? '#f59e0b' : '#22c55e'} label="TEMP" unit="°C" />
                     <Gauge value={carga || 0} max={100} color={carga > 90 ? '#ef4444' : carga > 80 ? '#f59e0b' : '#22c55e'} label="CARGA" unit="%" />
@@ -566,7 +567,35 @@ function NOCRealTime({ onExit }) {
                       <div style={{ fontSize: 9, color: '#64748b' }}>BATERIA (V)</div>
                     </div>
                   </div>
-                )}
+                  {fA !== undefined && (
+                    <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: 12, padding: '8px 0', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                      <div style={{ textAlign: 'center' }}>
+                        <div style={{ fontSize: 9, color: '#64748b' }}>ENTRADA</div>
+                        <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                          {[{l:'A',v:fA},{l:'B',v:fB},{l:'C',v:fC}].map(f => (
+                            <div key={f.l} style={{ textAlign: 'center' }}>
+                              <div style={{ fontSize: 14, fontWeight: 700, color: f.v < 100 ? '#ef4444' : '#22c55e', textShadow: f.v < 100 ? '0 0 10px rgba(239,68,68,0.5)' : 'none' }}>{f.v}V</div>
+                              <div style={{ fontSize: 8, color: '#64748b' }}>Fase {f.l}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      {oA !== undefined && (
+                        <div style={{ textAlign: 'center' }}>
+                          <div style={{ fontSize: 9, color: '#64748b' }}>SAÍDA</div>
+                          <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
+                            {[{l:'A',v:oA},{l:'B',v:oB},{l:'C',v:oC}].map(f => (
+                              <div key={f.l} style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>{f.v}V</div>
+                                <div style={{ fontSize: 8, color: '#64748b' }}>Fase {f.l}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>)}
                 {!temp && <div style={{ fontSize: 12, color: '#64748b', textAlign: 'center', padding: 10 }}>Aguardando dados...</div>}
               </div>
             ); })}
