@@ -59,7 +59,7 @@ class EngetronCollector:
         val = lambda pattern, text: self._extract_value(pattern, text)
 
         # Informações gerais
-        temp = val(r"Temperatura interna.*?(\d+)\s*", html)
+        temp = val(r"Temperatura interna</td>\s*<td class=tdv>\s*(\d+)", html)
         if temp is not None:
             status = "critical" if temp > 38 else "warning" if temp > 35 else "ok"
             m.append(self._metric("temperatura", temp, "°C", status))
@@ -76,7 +76,7 @@ class EngetronCollector:
             m.append(self._metric("faltas", faltas, "count", "ok"))
 
         # Entrada — Tensão Fase A/B/C
-        tensoes_in = re.findall(r"Tens.*?o</td><td class=tdv>\s*([\d.]+)\s*V", html)
+        tensoes_in = re.findall(r"Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html)
         if len(tensoes_in) >= 3:
             for i, fase in enumerate(["A", "B", "C"]):
                 v = float(tensoes_in[i])
@@ -85,14 +85,15 @@ class EngetronCollector:
 
         # Saída — Tensão, Corrente, Potência, Carga
         # Encontrar seção de saída
-        saida = html.split("Sa")[1] if "Sa" in html else ""
+        saida_idx = html.find("Sa")
+        saida = html[saida_idx:] if saida_idx > 0 else ""
 
-        tensoes_out = re.findall(r"Tens.*?o</td><td class=tdv>\s*([\d.]+)\s*V", saida)
+        tensoes_out = re.findall(r"Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V", saida)
         if len(tensoes_out) >= 3:
             for i, fase in enumerate(["A", "B", "C"]):
                 m.append(self._metric(f"tensao_saida_fase{fase}", float(tensoes_out[i]), "V", "ok"))
 
-        cargas = re.findall(r"Carga Utilizada.*?(\d+)\s*%", html)
+        cargas = re.findall(r"Carga Utilizada</td>\s*<td class=tdv>\s*(\d+)\s*%", html)
         if cargas:
             for i, fase in enumerate(["A", "B", "C"][:len(cargas)]):
                 v = int(cargas[i])
@@ -103,7 +104,7 @@ class EngetronCollector:
             m.append(self._metric("carga_max", max_carga, "%",
                                   "critical" if max_carga > 90 else "warning" if max_carga > 80 else "ok"))
 
-        pot_ativa = re.findall(r"ncia Ativa.*?(\d+)\s*W", html)
+        pot_ativa = re.findall(r"ncia Ativa</td>\s*<td class=tdv>\s*(\d+)\s*W", html)
         if pot_ativa:
             total_w = sum(int(p) for p in pot_ativa)
             m.append(self._metric("potencia_ativa_total", total_w, "W", "ok"))
