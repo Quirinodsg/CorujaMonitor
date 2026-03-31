@@ -479,6 +479,7 @@ async def list_standalone_sensors_by_probe(
             "id": s.id,
             "name": s.name,
             "sensor_type": s.sensor_type,
+            "category": cfg.get("category", s.sensor_type),
             "http_url": http_url,
             "http_method": http_method,
             "ip_address": cfg.get("ip_address") or snmp_cfg.get("ip_address"),

@@ -587,11 +587,23 @@ class ProbeCore:
                         logger.warning(f"SNMP {sensor['name']} error: {e}")
 
                 # ── ICMP/Ping standalone (automatizadores, dispositivos simples) ──
-                elif sensor.get('sensor_type') in ('icmp', 'ping') and sensor.get('ip_address'):
+                elif sensor.get('ip_address') and (
+                    sensor.get('sensor_type') in ('icmp', 'ping')
+                    or sensor.get('category') == 'icmp'
+                    or sensor.get('name', '').lower().startswith('ping ')
+                ):
                     try:
                         self._collect_icmp_standalone(sensor, timestamp)
                     except Exception as e:
                         logger.warning(f"ICMP {sensor['name']} error: {e}")
+
+                # ── Fallback: qualquer sensor com IP que não foi tratado acima ──
+                elif sensor.get('ip_address') and sensor.get('sensor_type') not in ('http', 'https'):
+                    try:
+                        # Tentar SNMP genérico como fallback
+                        self._collect_snmp_standalone(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"Fallback {sensor['name']} error: {e}")
 
         except Exception as e:
             logger.error(f"Error collecting standalone sensors: {e}")
