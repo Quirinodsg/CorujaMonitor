@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./Topbar.css";
+import { API_URL } from "../config";
 
 const PAGE_LABELS = {
   dashboard: "Dashboard", observability: "Observabilidade", topology: "Topologia",
@@ -13,6 +14,8 @@ const PAGE_LABELS = {
 };
 
 const RESULT_ICONS = { server: "🖥️", sensor: "📡", default: "🔍" };
+
+const base = API_URL;
 
 let _cache = null;
 let _cacheTs = 0;
