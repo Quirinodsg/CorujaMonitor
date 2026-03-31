@@ -36,7 +36,8 @@ function App() {
       console.log('Azure AD login detected:', azureUser);
       const userData = {
         email: azureUser,
-        full_name: azureName || azureUser.split('@')[0],
+        full_name: decodeURIComponent(azureName || azureUser.split('@')[0]),
+        username: decodeURIComponent(azureName || azureUser.split('@')[0]),
         role: azureRole || 'viewer',
       };
       localStorage.setItem('token', azureToken);

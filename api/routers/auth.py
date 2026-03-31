@@ -226,8 +226,9 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
     coruja_token = create_access_token(data={"sub": str(user.id), "tenant_id": user.tenant_id})
     
     # Redirecionar para frontend com token
+    from urllib.parse import quote
     return RedirectResponse(
-        url=f"https://coruja.techbiz.com.br/?azure_token={coruja_token}&azure_user={email}&azure_name={full_name}&azure_role={role}"
+        url=f"https://coruja.techbiz.com.br/?azure_token={coruja_token}&azure_user={quote(email)}&azure_name={quote(full_name)}&azure_role={role}"
     )
 
 @router.post("/register")
