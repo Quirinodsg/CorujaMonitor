@@ -23,6 +23,7 @@ class NotificationConfig(BaseModel):
     topdesk: Optional[Dict[str, Any]] = None
     glpi: Optional[Dict[str, Any]] = None
     dynamics365: Optional[Dict[str, Any]] = None
+    azure_ad: Optional[Dict[str, Any]] = None
 
 
 class NotificationConfigResponse(BaseModel):
@@ -143,6 +144,17 @@ async def update_notification_config(
             'incident_type': config.dynamics365.get('incident_type', 'incident'),
             'priority': config.dynamics365.get('priority', 2),
             'owner_id': config.dynamics365.get('owner_id')
+        }
+    
+    if config.azure_ad:
+        notification_config['azure_ad'] = {
+            'enabled': config.azure_ad.get('enabled', False),
+            'tenant_id': config.azure_ad.get('tenant_id'),
+            'client_id': config.azure_ad.get('client_id'),
+            'client_secret': config.azure_ad.get('client_secret'),
+            'redirect_uri': config.azure_ad.get('redirect_uri', 'https://coruja.techbiz.com.br/api/v1/auth/azure/callback'),
+            'admin_group_id': config.azure_ad.get('admin_group_id'),
+            'user_group_id': config.azure_ad.get('user_group_id'),
         }
     
     tenant.notification_config = notification_config
