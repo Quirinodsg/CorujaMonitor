@@ -445,54 +445,153 @@ function NOCRealTime({ onExit }) {
   );
 
   const renderDatacenter = () => {
-    const getStatus = (s) => {
-      const c = s === 'ok' ? '#22C55E' : s === 'warning' ? '#F59E0B' : s === 'critical' ? '#EF4444' : '#6B7280';
-      const l = s === 'ok' ? 'ONLINE' : s === 'warning' ? 'AVISO' : s === 'critical' ? 'OFFLINE' : 'AGUARDANDO';
-      return { c, l };
+    const gs = (s) => {
+      if (s === 'ok') return { c: '#22C55E', g: 'linear-gradient(135deg, #065f46, #064e3b)', glow: '0 0 20px rgba(34,197,94,0.3)', l: 'ONLINE', pulse: true };
+      if (s === 'warning') return { c: '#F59E0B', g: 'linear-gradient(135deg, #78350f, #713f12)', glow: '0 0 20px rgba(245,158,11,0.3)', l: 'AVISO', pulse: true };
+      if (s === 'critical') return { c: '#EF4444', g: 'linear-gradient(135deg, #7f1d1d, #991b1b)', glow: '0 0 20px rgba(239,68,68,0.4)', l: 'OFFLINE', pulse: true };
+      return { c: '#6B7280', g: 'linear-gradient(135deg, #1f2937, #111827)', glow: 'none', l: 'AGUARDANDO', pulse: false };
     };
-    const card = (key, name, status, icon, sub, extra) => {
-      const { c, l } = getStatus(status);
+
+    // SVG gauge component
+    const Gauge = ({ value, max, color, label, unit, size = 80 }) => {
+      const pct = Math.min(100, Math.max(0, (value / max) * 100));
+      const r = (size - 10) / 2;
+      const circ = 2 * Math.PI * r;
+      const dashOffset = circ - (pct / 100) * circ * 0.75; // 270 degree arc
       return (
-        <div key={key} style={{ background: `${c}10`, border: `1px solid ${c}33`, borderLeft: `4px solid ${c}`, borderRadius: 12, padding: '14px 18px', minWidth: 170 }}>
-          <div style={{ marginBottom: 6 }}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700, background: c, color: '#fff' }}>
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#fff' }} />{l}
-            </span>
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 700, color: '#e2e8f0' }}>{icon} {name}</div>
-          {sub && <div style={{ fontSize: 11, color: '#94a3b8', fontFamily: 'monospace', marginTop: 2 }}>{sub}</div>}
-          {extra && <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 4 }}>{extra}</div>}
+        <div style={{ textAlign: 'center', width: size }}>
+          <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: 'rotate(-225deg)' }}>
+            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="#1e293b" strokeWidth="6" strokeDasharray={`${circ * 0.75} ${circ * 0.25}`} strokeLinecap="round" />
+            <circle cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth="6" strokeDasharray={`${circ * 0.75 - dashOffset + circ * 0.75 * (pct/100)} ${circ}`} strokeLinecap="round" style={{ filter: `drop-shadow(0 0 4px ${color})`, transition: 'stroke-dasharray 1s ease' }} />
+          </svg>
+          <div style={{ marginTop: -size * 0.55, fontSize: size * 0.22, fontWeight: 800, color: '#e2e8f0' }}>{value}{unit}</div>
+          <div style={{ fontSize: 9, color: '#64748b', marginTop: size * 0.15 }}>{label}</div>
         </div>
       );
     };
-    const icons = { switch: '🔀', router: '📡', firewall: '🔥', access_point: '📶', ap: '📶', gateway: '📡' };
-    const labels = { switch: 'Switch', router: 'Router', firewall: 'Firewall', access_point: 'AP', ap: 'AP', gateway: 'Gateway' };
+
+    const dcIcons = { switch: '🔀', router: '📡', firewall: '🔥', access_point: '📶', ap: '📶', gateway: '📡' };
+    const dcLabels = { switch: 'Switch', router: 'Router', firewall: 'Firewall', access_point: 'AP', ap: 'AP', gateway: 'Gateway' };
+
+    const totalOnline = dcSites.filter(s => dcMetrics[String(s.id)]?.status === 'ok').length
+      + Object.values(dcNetStatuses).filter(s => s === 'ok').length
+      + dcEnergy.filter(s => dcMetrics[String(s.id)]?.status === 'ok').length
+      + dcHvac.filter(s => dcMetrics[String(s.id)]?.status === 'ok').length;
+    const totalAll = dcSites.length + dcNetwork.length + dcEnergy.length + dcHvac.length;
+
     return (
-      <div style={{ padding: '8px 0' }}>
-        {dcSites.length > 0 && (<>
-          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>🌐 Sites Monitorados ({dcSites.length})</h3>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-            {dcSites.map(s => { const m = dcMetrics[String(s.id)]; return card(s.id, s.name, m?.status || 'unknown', '🌐', s.config?.http?.url || '', m ? `⏱️ ${Math.round(m.value||0)}ms` : null); })}
+      <div style={{ padding: '12px 8px', animation: 'fadeIn 0.5s ease' }}>
+        {/* Header stats */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24, padding: '16px 20px', background: 'linear-gradient(135deg, #0f172a, #1e1b4b)', borderRadius: 16, border: '1px solid #312e81' }}>
+          <div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: '#e2e8f0', letterSpacing: '-0.5px' }}>🏢 DATACENTER</div>
+            <div style={{ fontSize: 12, color: '#818cf8', marginTop: 2 }}>Monitoramento em tempo real</div>
           </div>
-        </>)}
-        {dcNetwork.length > 0 && (<>
-          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>🔀 Ativos de Rede ({dcNetwork.length})</h3>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-            {dcNetwork.map(a => { const dt = (a.device_type||'').toLowerCase(); return card('n'+a.id, a.hostname, dcNetStatuses[a.id]||'unknown', icons[dt]||'📦', a.ip_address, labels[dt]||dt); })}
+          <div style={{ display: 'flex', gap: 24 }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#22c55e', textShadow: '0 0 20px rgba(34,197,94,0.5)' }}>{totalOnline}</div>
+              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Online</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 800, color: '#94a3b8' }}>{totalAll}</div>
+              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Total</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: 28, fontWeight: 800, color: totalOnline === totalAll ? '#22c55e' : '#f59e0b', textShadow: totalOnline === totalAll ? '0 0 20px rgba(34,197,94,0.5)' : '0 0 20px rgba(245,158,11,0.5)' }}>{totalAll > 0 ? Math.round(totalOnline/totalAll*100) : 0}%</div>
+              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Uptime</div>
+            </div>
           </div>
-        </>)}
-        {dcEnergy.length > 0 && (<>
-          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>⚡ Energia ({dcEnergy.length})</h3>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-            {dcEnergy.map(s => { const m = dcMetrics[String(s.id)]; const md = m?.metadata||{}; const t = md['Engetron temperatura']?.value; const a = md['Engetron bateria_autonomia']?.value; return card(s.id, s.name, m?.status||'unknown', '🔋', s.config?.ip_address||'', t ? `🌡️ ${t}°C · 🔋 ${a||'?'} min` : null); })}
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+          {/* Sites */}
+          <div style={{ background: '#0f172a', borderRadius: 16, padding: 20, border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: 13, color: '#818cf8', fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#818cf8', boxShadow: '0 0 8px #818cf8' }} />
+              SITES MONITORADOS
+              <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 800, color: '#e2e8f0' }}>{dcSites.length}</span>
+            </div>
+            {dcSites.map(s => { const m = dcMetrics[String(s.id)]; const st = gs(m?.status); return (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', marginBottom: 6, background: st.g, borderRadius: 10, border: `1px solid ${st.c}33`, boxShadow: st.glow, transition: 'all 0.3s' }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: st.c, boxShadow: `0 0 8px ${st.c}`, animation: st.pulse ? 'pulse 2s infinite' : 'none', flexShrink: 0 }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>{s.name}</div>
+                  <div style={{ fontSize: 10, color: '#94a3b8' }}>{s.config?.http?.url || s.config?.http_url || ''}</div>
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 800, color: st.c, fontFamily: 'monospace' }}>{m ? Math.round(m.value||0) + 'ms' : '—'}</div>
+              </div>
+            ); })}
           </div>
-        </>)}
-        {dcHvac.length > 0 && (<>
-          <h3 style={{ fontSize: 14, color: '#64748b', marginBottom: 12 }}>❄️ Ar-Condicionado ({dcHvac.length})</h3>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', marginBottom: 24 }}>
-            {dcHvac.map(s => { const m = dcMetrics[String(s.id)]; return card(s.id, s.name, m?.status||'unknown', '❄️', s.config?.ip_address||'', m ? `📊 ${m.value?.toFixed(1)} ${m.unit}` : null); })}
+
+          {/* Ativos de Rede */}
+          <div style={{ background: '#0f172a', borderRadius: 16, padding: 20, border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: 13, color: '#f59e0b', fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }} />
+              ATIVOS DE REDE
+              <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 800, color: '#e2e8f0' }}>{dcNetwork.length}</span>
+            </div>
+            {dcNetwork.map(a => { const st = gs(dcNetStatuses[a.id]); const dt = (a.device_type||'').toLowerCase(); return (
+              <div key={'n'+a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', marginBottom: 6, background: st.g, borderRadius: 10, border: `1px solid ${st.c}33`, boxShadow: st.glow, transition: 'all 0.3s' }}>
+                <span style={{ fontSize: 18 }}>{dcIcons[dt] || '📦'}</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>{a.hostname}</div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{a.ip_address}</div>
+                </div>
+                <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: `${st.c}20`, color: st.c, fontWeight: 700 }}>{dcLabels[dt] || dt}</span>
+              </div>
+            ); })}
           </div>
-        </>)}
+
+          {/* Energia */}
+          <div style={{ background: '#0f172a', borderRadius: 16, padding: 20, border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: 13, color: '#22c55e', fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
+              ENERGIA
+              <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 800, color: '#e2e8f0' }}>{dcEnergy.length}</span>
+            </div>
+            {dcEnergy.map(s => { const m = dcMetrics[String(s.id)]; const md = m?.metadata||{}; const st = gs(m?.status); const temp = md['Engetron temperatura']?.value; const auto = md['Engetron bateria_autonomia']?.value; const carga = md['Engetron carga_max']?.value; const batV = md['Engetron bateria_tensao']?.value; return (
+              <div key={s.id} style={{ background: st.g, borderRadius: 12, padding: 16, border: `1px solid ${st.c}33`, boxShadow: st.glow }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: st.c, boxShadow: `0 0 8px ${st.c}`, animation: st.pulse ? 'pulse 2s infinite' : 'none' }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>🔋 {s.name}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 10, padding: '2px 8px', borderRadius: 6, background: `${st.c}20`, color: st.c, fontWeight: 700 }}>{st.l}</span>
+                </div>
+                {temp !== undefined && (
+                  <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+                    <Gauge value={temp || 0} max={50} color={temp > 38 ? '#ef4444' : temp > 35 ? '#f59e0b' : '#22c55e'} label="TEMP" unit="°C" />
+                    <Gauge value={carga || 0} max={100} color={carga > 90 ? '#ef4444' : carga > 80 ? '#f59e0b' : '#22c55e'} label="CARGA" unit="%" />
+                    <Gauge value={auto || 0} max={180} color={auto < 5 ? '#ef4444' : auto < 10 ? '#f59e0b' : '#22c55e'} label="AUTONOMIA" unit="m" />
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 22, fontWeight: 800, color: '#e2e8f0' }}>{batV || '—'}</div>
+                      <div style={{ fontSize: 9, color: '#64748b' }}>BATERIA (V)</div>
+                    </div>
+                  </div>
+                )}
+                {!temp && <div style={{ fontSize: 12, color: '#64748b', textAlign: 'center', padding: 10 }}>Aguardando dados...</div>}
+              </div>
+            ); })}
+          </div>
+
+          {/* Ar-Condicionado */}
+          <div style={{ background: '#0f172a', borderRadius: 16, padding: 20, border: '1px solid #1e293b' }}>
+            <div style={{ fontSize: 13, color: '#06b6d4', fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#06b6d4', boxShadow: '0 0 8px #06b6d4' }} />
+              AR-CONDICIONADO
+              <span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 800, color: '#e2e8f0' }}>{dcHvac.length}</span>
+            </div>
+            {dcHvac.length === 0 && <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', padding: 20 }}>Nenhum sensor configurado</div>}
+            {dcHvac.map(s => { const m = dcMetrics[String(s.id)]; const st = gs(m?.status); return (
+              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', marginBottom: 6, background: st.g, borderRadius: 10, border: `1px solid ${st.c}33`, boxShadow: st.glow }}>
+                <span style={{ fontSize: 18 }}>❄️</span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>{s.name}</div>
+                  <div style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{s.config?.ip_address || ''}</div>
+                </div>
+                <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: `${st.c}20`, color: st.c, fontWeight: 700 }}>{st.l}</span>
+              </div>
+            ); })}
+          </div>
+        </div>
       </div>
     );
   };
