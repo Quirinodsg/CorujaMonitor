@@ -21,6 +21,34 @@ function App() {
   useEffect(() => {
     console.log('App mounted, checking authentication...');
     
+    // Check for Azure AD callback token in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const azureToken = urlParams.get('azure_token');
+    const azureUser = urlParams.get('azure_user');
+    const azureName = urlParams.get('azure_name');
+    const azureRole = urlParams.get('azure_role');
+    const azureError = urlParams.get('azure_error');
+    
+    if (azureError) {
+      console.error('Azure AD error:', azureError);
+      window.history.replaceState({}, '', '/');
+    } else if (azureToken && azureUser) {
+      console.log('Azure AD login detected:', azureUser);
+      const userData = {
+        email: azureUser,
+        full_name: azureName || azureUser.split('@')[0],
+        role: azureRole || 'viewer',
+      };
+      localStorage.setItem('token', azureToken);
+      localStorage.setItem('user', JSON.stringify(userData));
+      api.defaults.headers.common['Authorization'] = `Bearer ${azureToken}`;
+      setUser(userData);
+      setIsAuthenticated(true);
+      setLoading(false);
+      window.history.replaceState({}, '', '/');
+      return;
+    }
+    
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     

@@ -221,6 +221,20 @@ function Login({ onLogin }) {
               </>
             )}
           </button>
+
+          <div style={{ textAlign: 'center', margin: '16px 0 8px', color: '#475569', fontSize: 12 }}>ou</div>
+
+          <button
+            type="button"
+            onClick={() => { window.location.href = `${API_URL}/auth/azure/login`; }}
+            className="login-button"
+            style={{ background: 'linear-gradient(135deg, #0078d4, #106ebe)', marginTop: 0 }}
+          >
+            <span className="button-icon" style={{ fontSize: 18 }}>
+              <svg width="18" height="18" viewBox="0 0 21 21" fill="white"><path d="M0 0h10v10H0z"/><path d="M11 0h10v10H11z"/><path d="M0 11h10v10H0z"/><path d="M11 11h10v10H11z"/></svg>
+            </span>
+            ENTRAR COM MICROSOFT
+          </button>
         </form>
 
         <div className="login-footer">
