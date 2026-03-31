@@ -61,6 +61,11 @@ export const sensorCategories = {
     name: 'Personalizado',
     icon: '⚙️',
     description: 'Crie seus próprios sensores customizados'
+  },
+  icmp: {
+    name: 'ICMP / Ping',
+    icon: '🏓',
+    description: 'Monitoramento via ping (automatizadores, dispositivos simples)'
   }
 };
 
@@ -1439,6 +1444,50 @@ export const sensorTemplates = {
         critical: 0,
         unit: 'value'
       }
+    }
+  ],
+  // ===== ICMP / PING =====
+  icmp: [
+    {
+      id: 'icmp-device',
+      name: 'Dispositivo ICMP',
+      icon: '🏓',
+      description: 'Monitorar disponibilidade via ping (automatizadores, câmeras, etc.)',
+      sensor_type: 'icmp',
+      category: 'icmp',
+      recommended: true,
+      default_name: 'Ping Device',
+      thresholds: { warning: 100, critical: 500 }
+    },
+    {
+      id: 'icmp-automacao',
+      name: 'Automatizador',
+      icon: '🤖',
+      description: 'Monitorar automatizador de rede/predial via ping',
+      sensor_type: 'icmp',
+      category: 'icmp',
+      default_name: 'Automatizador',
+      thresholds: { warning: 50, critical: 200 }
+    },
+    {
+      id: 'icmp-camera',
+      name: 'Câmera IP',
+      icon: '📷',
+      description: 'Monitorar câmera de segurança via ping',
+      sensor_type: 'icmp',
+      category: 'icmp',
+      default_name: 'Camera IP',
+      thresholds: { warning: 50, critical: 200 }
+    },
+    {
+      id: 'icmp-gateway',
+      name: 'Gateway / Roteador',
+      icon: '📡',
+      description: 'Monitorar gateway ou roteador via ping',
+      sensor_type: 'icmp',
+      category: 'icmp',
+      default_name: 'Gateway',
+      thresholds: { warning: 20, critical: 100 }
     }
   ]
 };

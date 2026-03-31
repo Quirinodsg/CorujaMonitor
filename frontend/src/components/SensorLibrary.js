@@ -619,7 +619,7 @@ function SensorLibrary() {
                   value={newSensor.category}
                   onChange={(e) => {
                     const cat = e.target.value;
-                    const typeMap = { network: 'http', azure: 'azure', snmp: 'snmp' };
+                    const typeMap = { network: 'http', azure: 'azure', snmp: 'snmp', icmp: 'icmp' };
                     setNewSensor({...newSensor, category: cat, sensor_type: typeMap[cat] || cat});
                   }}
                 >
@@ -643,15 +643,17 @@ function SensorLibrary() {
                     onClick={() => handleTemplateSelect(template)}
                     style={{
                       padding: '10px',
-                      border: '1px solid #ddd',
+                      border: '1px solid var(--border)',
                       borderRadius: '6px',
-                      background: '#f8f9fa',
+                      background: 'var(--surface-2)',
                       cursor: 'pointer',
-                      textAlign: 'left'
+                      textAlign: 'left',
+                      color: 'var(--text-primary)',
+                      transition: 'border-color 0.2s'
                     }}
                   >
                     <div style={{ fontSize: '20px', marginBottom: '5px' }}>{template.icon}</div>
-                    <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{template.name}</div>
+                    <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--text-primary)' }}>{template.name}</div>
                   </button>
                 ))}
               </div>
