@@ -492,16 +492,27 @@ def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
         'sensor_name': sensor_name,
     }
 
-    # Disparar ligação em background
+    # SMS inteligente com detalhes do problema
+    sms_body = (
+        f'🚨 DATACENTER TECHBIZ - ALERTA CRÍTICO\n\n'
+        f'Dispositivo: {sensor_name}\n'
+        f'Problema: {problem}\n\n'
+        f'Verifique o Datacenter imediatamente.'
+    )
+    sms_data = {'body': sms_body}
+
+    # Disparar SMS + Ligação em background
     import asyncio
-    from routers.notifications import send_datacenter_emergency_call
+    from routers.notifications import send_datacenter_emergency_call, send_twilio_notification
     try:
         loop = asyncio.get_event_loop()
         if loop.is_running():
+            loop.create_task(send_twilio_notification(twilio_config, sms_data))
             loop.create_task(send_datacenter_emergency_call(twilio_config, alert_data))
         else:
+            asyncio.run(send_twilio_notification(twilio_config, sms_data))
             asyncio.run(send_datacenter_emergency_call(twilio_config, alert_data))
     except Exception as e:
-        logger.warning(f"Emergency call dispatch error: {e}")
+        logger.warning(f"Emergency notification dispatch error: {e}")
 
-    logger.warning(f"🚨 DATACENTER EMERGENCY: {device} - {problem} - ligação disparada")
+    logger.warning(f"🚨 DATACENTER EMERGENCY: {device} - {problem} - SMS + ligação disparados")
