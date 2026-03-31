@@ -565,6 +565,16 @@ class ProbeCore:
                         'metadata': {'sensor_id': sensor['id']}
                     })
 
+                # ── ICMP/Ping standalone — PRIORIDADE por sensor_type/category ──
+                elif sensor.get('ip_address') and (
+                    sensor.get('sensor_type') in ('icmp', 'ping')
+                    or sensor.get('category') == 'icmp'
+                ):
+                    try:
+                        self._collect_icmp_standalone(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"ICMP {sensor['name']} error: {e}")
+
                 # ── Engetron UPS (HTTP scraping) — detecta pelo nome ──
                 elif sensor.get('ip_address') and sensor.get('name', '').lower().find('engetron') >= 0:
                     try:
@@ -585,17 +595,6 @@ class ProbeCore:
                         self._collect_snmp_standalone(sensor, timestamp)
                     except Exception as e:
                         logger.warning(f"SNMP {sensor['name']} error: {e}")
-
-                # ── ICMP/Ping standalone (automatizadores, dispositivos simples) ──
-                elif sensor.get('ip_address') and (
-                    sensor.get('sensor_type') in ('icmp', 'ping')
-                    or sensor.get('category') == 'icmp'
-                    or sensor.get('name', '').lower().startswith('ping ')
-                ):
-                    try:
-                        self._collect_icmp_standalone(sensor, timestamp)
-                    except Exception as e:
-                        logger.warning(f"ICMP {sensor['name']} error: {e}")
 
                 # ── Fallback: qualquer sensor com IP que não foi tratado acima ──
                 elif sensor.get('ip_address') and sensor.get('sensor_type') not in ('http', 'https'):
