@@ -801,12 +801,24 @@ async def send_twilio_notification(config: Dict[str, Any], message_data: Dict[st
         
         for to_number in to_numbers:
             try:
+                # SMS
                 message = client.messages.create(
                     body=message_body,
                     from_=from_number,
                     to=to_number
                 )
                 sent_count += 1
+
+                # Ligação telefônica (TTS - Text to Speech)
+                try:
+                    call_body = message_data.get('call_body', message_body[:160])
+                    call = client.calls.create(
+                        twiml=f'<Response><Say language="pt-BR" voice="alice">{call_body}</Say><Pause length="1"/><Say language="pt-BR" voice="alice">{call_body}</Say></Response>',
+                        from_=from_number,
+                        to=to_number
+                    )
+                except Exception as call_err:
+                    errors.append(f"Ligação {to_number}: {str(call_err)}")
             except Exception as e:
                 errors.append(f"{to_number}: {str(e)}")
         
@@ -843,7 +855,8 @@ Tenant: {tenant.name}
 Usuário: {current_user.email}
 Data/Hora: {datetime.now(BRAZIL_TZ).strftime('%d/%m/%Y %H:%M:%S')}
 
-✅ Se você recebeu este SMS, a integração está funcionando!'''
+✅ Se você recebeu este SMS, a integração está funcionando!''',
+        'call_body': f'Atenção. Teste do Coruja Monitor. Sistema de monitoramento ativo. Tenant {tenant.name}.'
     }
     
     result = await send_twilio_notification(config, test_data)
