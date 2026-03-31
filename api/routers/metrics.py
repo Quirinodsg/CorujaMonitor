@@ -142,6 +142,17 @@ async def create_probe_metrics_bulk(
                 )
                 db.add(metric)
                 metrics_created += 1
+
+                # ── DATACENTER EMERGENCY CALL ──
+                # Ligar se sensor de datacenter (engetron/conflex) ficou critical
+                if metric_data.status == 'critical' and sensor.sensor_type in ('engetron', 'conflex', 'snmp'):
+                    sensor_name_lower = (sensor.name or '').lower()
+                    is_datacenter = any(kw in sensor_name_lower for kw in ['nobreak', 'engetron', 'ups', 'ar-condicionado', 'conflex', 'hvac'])
+                    if is_datacenter:
+                        try:
+                            _trigger_datacenter_emergency(db, probe.tenant_id, sensor, metric_data)
+                        except Exception as call_err:
+                            logger.warning(f"Emergency call error: {call_err}")
             else:
                 logger.warning(f"Standalone sensor_id {direct_sensor_id} not found for probe {probe.id} (tenant {probe.tenant_id})")
             continue  # Não cria servidor para sensores standalone
@@ -411,3 +422,86 @@ async def get_latest_metrics_batch(
             entry["metadata"] = m.extra_metadata
         result[str(m.sensor_id)] = entry
     return result
+
+
+def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
+    """Dispara ligação de emergência para alertas críticos do datacenter."""
+    import redis as redis_lib
+    from models import Tenant
+
+    # Cooldown: 1 ligação por sensor a cada 30 min (evita flood)
+    try:
+        redis_client = redis_lib.Redis.from_url("redis://redis:6379", socket_connect_timeout=2)
+        cooldown_key = f"emergency_call:{sensor.id}"
+        if redis_client.exists(cooldown_key):
+            logger.info(f"Emergency call cooldown active for sensor {sensor.id}")
+            return
+        redis_client.setex(cooldown_key, 1800, "1")  # 30 min
+    except Exception:
+        pass  # fail-open
+
+    # Buscar config Twilio do tenant
+    tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+    if not tenant or not tenant.notification_config:
+        return
+    twilio_config = tenant.notification_config.get('twilio', {})
+    if not twilio_config.get('enabled') or not twilio_config.get('account_sid'):
+        return
+
+    # Identificar o problema
+    sensor_name = sensor.name or ''
+    metadata = metric_data.metadata or {}
+    name_lower = sensor_name.lower()
+
+    if 'nobreak' in name_lower or 'engetron' in name_lower or 'ups' in name_lower:
+        device = 'nobreak'
+        # Verificar queda de fase
+        problems = []
+        for fase in ['A', 'B', 'C']:
+            key = f'Engetron tensao_entrada_fase{fase}'
+            if key in metadata:
+                v = metadata[key].get('value', 999)
+                if v < 100:
+                    problems.append(f'Queda de Fase {fase}, tensão {v} volts')
+        if not problems:
+            problems.append('Alerta crítico detectado')
+        problem = '. '.join(problems)
+    elif 'condicionado' in name_lower or 'conflex' in name_lower or 'hvac' in name_lower:
+        device = 'ar-condicionado'
+        problems = []
+        if metadata.get('Conflex alarme_temp_alta', {}).get('value') == 1:
+            problems.append('Alarme de temperatura alta ativado')
+        if metadata.get('Conflex alarme_defeito', {}).get('value') == 1:
+            problems.append('Alarme de defeito de máquinas ativado')
+        if metadata.get('Conflex maquina_1', {}).get('value') == 0:
+            problems.append('Máquina 1 parada')
+        if metadata.get('Conflex maquina_2', {}).get('value') == 0:
+            problems.append('Máquina 2 parada')
+        if metadata.get('Conflex status_plc', {}).get('value') == 0:
+            problems.append('PLC offline')
+        if not problems:
+            problems.append('Alerta crítico detectado')
+        problem = '. '.join(problems)
+    else:
+        device = 'equipamento'
+        problem = 'Alerta crítico detectado'
+
+    alert_data = {
+        'device': device,
+        'problem': problem,
+        'sensor_name': sensor_name,
+    }
+
+    # Disparar ligação em background
+    import asyncio
+    from routers.notifications import send_datacenter_emergency_call
+    try:
+        loop = asyncio.get_event_loop()
+        if loop.is_running():
+            loop.create_task(send_datacenter_emergency_call(twilio_config, alert_data))
+        else:
+            asyncio.run(send_datacenter_emergency_call(twilio_config, alert_data))
+    except Exception as e:
+        logger.warning(f"Emergency call dispatch error: {e}")
+
+    logger.warning(f"🚨 DATACENTER EMERGENCY: {device} - {problem} - ligação disparada")

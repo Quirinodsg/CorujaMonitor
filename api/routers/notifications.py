@@ -808,17 +808,6 @@ async def send_twilio_notification(config: Dict[str, Any], message_data: Dict[st
                     to=to_number
                 )
                 sent_count += 1
-
-                # Ligação telefônica (TTS - Text to Speech)
-                try:
-                    call_body = message_data.get('call_body', message_body[:160])
-                    call = client.calls.create(
-                        twiml=f'<Response><Say language="pt-BR" voice="alice">{call_body}</Say><Pause length="1"/><Say language="pt-BR" voice="alice">{call_body}</Say></Response>',
-                        from_=from_number,
-                        to=to_number
-                    )
-                except Exception as call_err:
-                    errors.append(f"Ligação {to_number}: {str(call_err)}")
             except Exception as e:
                 errors.append(f"{to_number}: {str(e)}")
         
@@ -869,6 +858,81 @@ Data/Hora: {datetime.now(BRAZIL_TZ).strftime('%d/%m/%Y %H:%M:%S')}
         }
     else:
         raise HTTPException(status_code=500, detail=result.get('error'))
+
+
+async def send_datacenter_emergency_call(config: Dict[str, Any], alert_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Ligação telefônica de emergência para alertas críticos do Datacenter.
+    Só é chamada para: queda de fase no nobreak, ar-condicionado parado, temperatura alta.
+    
+    alert_data:
+        device: 'nobreak' ou 'ar-condicionado'
+        problem: descrição do problema (ex: 'Queda de Fase A - 85V')
+        sensor_name: nome do sensor
+    """
+    try:
+        from twilio.rest import Client
+        
+        account_sid = config.get('account_sid')
+        auth_token = config.get('auth_token')
+        from_number = config.get('from_number')
+        to_numbers = config.get('to_numbers', [])
+        
+        if not all([account_sid, auth_token, from_number, to_numbers]):
+            return {'success': False, 'error': 'Twilio não configurado'}
+        
+        client = Client(account_sid, auth_token)
+        
+        device = alert_data.get('device', 'equipamento')
+        problem = alert_data.get('problem', 'problema detectado')
+        sensor_name = alert_data.get('sensor_name', '')
+        
+        # Mensagem inteligente baseada no tipo de problema
+        if device == 'nobreak':
+            speech = (
+                f'Atenção. Alerta crítico no Datacenter Techbiz. '
+                f'O Nobreak {sensor_name} está com problema. '
+                f'{problem}. '
+                f'Verifique o Datacenter imediatamente. '
+                f'Repito. {problem}.'
+            )
+        elif device == 'ar-condicionado':
+            speech = (
+                f'Atenção. Alerta crítico no Datacenter Techbiz. '
+                f'O Ar Condicionado {sensor_name} está com problema. '
+                f'{problem}. '
+                f'Verifique o Datacenter imediatamente. '
+                f'Repito. {problem}.'
+            )
+        else:
+            speech = (
+                f'Atenção. Alerta crítico no Datacenter Techbiz. '
+                f'{problem}. '
+                f'Verifique o Datacenter imediatamente.'
+            )
+        
+        sent = 0
+        errors = []
+        for to_number in to_numbers:
+            try:
+                call = client.calls.create(
+                    twiml=f'<Response><Say language="pt-BR" voice="alice">{speech}</Say><Pause length="2"/><Say language="pt-BR" voice="alice">{speech}</Say></Response>',
+                    from_=from_number,
+                    to=to_number
+                )
+                sent += 1
+            except Exception as e:
+                errors.append(f"{to_number}: {str(e)}")
+        
+        return {
+            'success': sent > 0,
+            'message': f'Ligação de emergência para {sent} número(s)',
+            'errors': errors if errors else None
+        }
+    except ImportError:
+        return {'success': False, 'error': 'Twilio não instalado'}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
 
 
 # WhatsApp Integration
