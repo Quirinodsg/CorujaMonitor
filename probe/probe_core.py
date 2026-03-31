@@ -572,6 +572,13 @@ class ProbeCore:
                     except Exception as e:
                         logger.warning(f"Engetron {sensor['name']} error: {e}")
 
+                # ── Conflex HVAC (SNMP proprietário) — detecta pelo nome ──
+                elif sensor.get('ip_address') and (sensor.get('name', '').lower().find('conflex') >= 0 or sensor.get('name', '').lower().find('ar-condicionado') >= 0 or sensor.get('name', '').lower().find('ar condicionado') >= 0):
+                    try:
+                        self._collect_conflex(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"Conflex {sensor['name']} error: {e}")
+
                 # ── SNMP sensors (switches, APs, etc.) ──
                 elif sensor.get('sensor_type') in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch') and sensor.get('ip_address'):
                     try:
@@ -588,6 +595,54 @@ class ProbeCore:
 
         except Exception as e:
             logger.error(f"Error collecting standalone sensors: {e}")
+
+    def _collect_conflex(self, sensor, timestamp):
+        """Coleta métricas de Ar-Condicionado Conflex via SNMP."""
+        ip = sensor.get('ip_address')
+        community = sensor.get('snmp_community') or 'public'
+        port = sensor.get('snmp_port') or 161
+        name = sensor.get('name', 'Conflex')
+        try:
+            from collectors.conflex_collector import ConflexCollector
+            collector = ConflexCollector(ip=ip, community=community, port=port)
+            metrics = collector.collect()
+            if metrics:
+                all_data = {}
+                status = 'ok'
+                for m in metrics:
+                    all_data[m['name']] = {'value': m['value'], 'unit': m['unit'], 'status': m['status'], 'label': m.get('label', ''), 'icon': m.get('icon', '')}
+                    if m['status'] == 'critical':
+                        status = 'critical'
+                    elif m['status'] == 'warning' and status != 'critical':
+                        status = 'warning'
+
+                self.buffer.append({
+                    'sensor_id': sensor['id'],
+                    'sensor_type': 'conflex',
+                    'name': name,
+                    'value': 1 if status == 'ok' else 0,
+                    'unit': 'status',
+                    'status': status,
+                    'timestamp': timestamp.isoformat(),
+                    'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id'], **all_data}
+                })
+                logger.info(f"Conflex {name} ({ip}): {len(metrics)} metrics, status={status}")
+            else:
+                self.buffer.append({
+                    'sensor_id': sensor['id'], 'sensor_type': 'conflex', 'name': name,
+                    'value': 0, 'unit': 'status', 'status': 'critical',
+                    'timestamp': timestamp.isoformat(), 'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id']}
+                })
+        except Exception as e:
+            logger.warning(f"Conflex {name} ({ip}) error: {e}")
+            self.buffer.append({
+                'sensor_id': sensor['id'], 'sensor_type': 'conflex', 'name': name,
+                'value': 0, 'unit': 'status', 'status': 'critical',
+                'timestamp': timestamp.isoformat(), 'hostname': '__standalone__',
+                'metadata': {'sensor_id': sensor['id'], 'error': str(e)}
+            })
 
     def _collect_snmp_standalone(self, sensor, timestamp):
         """Coleta SNMP de sensor standalone (UPS, switch, AP, etc.)."""

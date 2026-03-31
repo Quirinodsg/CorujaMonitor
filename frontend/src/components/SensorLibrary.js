@@ -395,6 +395,16 @@ function SensorLibrary() {
               {metric.metadata['Engetron tensao_saida_faseA'] && <span>📤 {metric.metadata['Engetron tensao_saida_faseA'].value}V</span>}
             </div>
           )}
+          {/* Conflex HVAC details */}
+          {metric?.metadata && metric.metadata['Conflex status'] && (
+            <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 11, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px', color: 'var(--text-secondary)' }}>
+              {metric.metadata['Conflex alarme_temp_alta'] && <span style={{color: metric.metadata['Conflex alarme_temp_alta'].value === 1 ? '#ef4444' : '#22c55e'}}>🌡️ Temp: {metric.metadata['Conflex alarme_temp_alta'].value === 1 ? 'ALARME' : 'OK'}</span>}
+              {metric.metadata['Conflex alarme_defeito'] && <span style={{color: metric.metadata['Conflex alarme_defeito'].value === 1 ? '#ef4444' : '#22c55e'}}>⚠️ Defeito: {metric.metadata['Conflex alarme_defeito'].value === 1 ? 'ALARME' : 'OK'}</span>}
+              {metric.metadata['Conflex status_plc'] && <span style={{color: metric.metadata['Conflex status_plc'].value === 1 ? '#22c55e' : '#ef4444'}}>🔌 PLC: {metric.metadata['Conflex status_plc'].value === 1 ? 'ON' : 'OFF'}</span>}
+              {metric.metadata['Conflex maquina_1'] && <span style={{color: metric.metadata['Conflex maquina_1'].value === 1 ? '#22c55e' : '#f59e0b'}}>❄️ Máq 1: {metric.metadata['Conflex maquina_1'].value === 1 ? 'ON' : 'OFF'}</span>}
+              {metric.metadata['Conflex maquina_2'] && <span style={{color: metric.metadata['Conflex maquina_2'].value === 1 ? '#22c55e' : '#f59e0b'}}>❄️ Máq 2: {metric.metadata['Conflex maquina_2'].value === 1 ? 'ON' : 'OFF'}</span>}
+            </div>
+          )}
         </div>
       </div>
     );
