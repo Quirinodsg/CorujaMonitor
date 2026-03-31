@@ -30,7 +30,11 @@ function Sensors({ onNavigateToServer, initialFilter = 'all' }) {
 
   useEffect(() => {
     loadAllSensors();
-    const interval = setInterval(loadAllSensors, 30000); // Refresh every 30s
+    const interval = setInterval(() => {
+      // Não fazer refresh quando está na biblioteca (evita fechar modais)
+      if (document.querySelector('.modal-overlay')) return;
+      loadAllSensors();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 

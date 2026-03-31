@@ -78,7 +78,11 @@ function MainLayout({ user, onLogout }) {
       } catch (_) {}
     };
     fetchStatus();
-    const t = setInterval(fetchStatus, 30000);
+    const t = setInterval(() => {
+      // Não atualizar quando modal está aberto (evita fechar modais)
+      if (document.querySelector('.modal-overlay')) return;
+      fetchStatus();
+    }, 30000);
     return () => clearInterval(t);
   }, []);
 
