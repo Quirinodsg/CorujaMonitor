@@ -575,9 +575,16 @@ class ProbeCore:
                 # ── SNMP sensors (switches, APs, etc.) ──
                 elif sensor.get('sensor_type') in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch') and sensor.get('ip_address'):
                     try:
-                        self._collect_engetron(sensor, timestamp)
+                        self._collect_snmp_standalone(sensor, timestamp)
                     except Exception as e:
-                        logger.warning(f"Engetron {sensor['name']} error: {e}")
+                        logger.warning(f"SNMP {sensor['name']} error: {e}")
+
+                # ── ICMP/Ping standalone (automatizadores, dispositivos simples) ──
+                elif sensor.get('sensor_type') in ('icmp', 'ping') and sensor.get('ip_address'):
+                    try:
+                        self._collect_icmp_standalone(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"ICMP {sensor['name']} error: {e}")
 
         except Exception as e:
             logger.error(f"Error collecting standalone sensors: {e}")
@@ -686,6 +693,44 @@ class ProbeCore:
                 'hostname': '__standalone__',
                 'metadata': {'sensor_id': sensor['id'], 'error': str(e)}
             })
+
+    def _collect_icmp_standalone(self, sensor, timestamp):
+        """Coleta ICMP/Ping de sensor standalone (automatizadores, dispositivos simples)."""
+        import subprocess
+        ip = sensor.get('ip_address')
+        name = sensor.get('name', 'ICMP')
+        try:
+            result = subprocess.run(
+                ['ping', '-n', '1', '-w', '2000', ip],
+                capture_output=True, text=True, timeout=5
+            )
+            if result.returncode == 0 and 'time=' in result.stdout.lower():
+                # Extrair latência
+                import re
+                match = re.search(r'time[=<](\d+)', result.stdout, re.IGNORECASE)
+                latency = float(match.group(1)) if match else 1.0
+                status = 'ok'
+                logger.info(f"ICMP {name} ({ip}): {latency}ms")
+            else:
+                latency = 0
+                status = 'critical'
+                logger.warning(f"ICMP {name} ({ip}): unreachable")
+        except Exception as e:
+            latency = 0
+            status = 'critical'
+            logger.warning(f"ICMP {name} ({ip}): error: {e}")
+
+        self.buffer.append({
+            'sensor_id': sensor['id'],
+            'sensor_type': 'icmp',
+            'name': name,
+            'value': latency,
+            'unit': 'ms',
+            'status': status,
+            'timestamp': timestamp.isoformat(),
+            'hostname': '__standalone__',
+            'metadata': {'sensor_id': sensor['id']}
+        })
 
     def _snmp_ping_check(self, sensor, timestamp, ip, community, port):
         """Check básico SNMP: tenta ler sysUpTime para verificar se dispositivo responde."""
