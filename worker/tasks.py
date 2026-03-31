@@ -112,6 +112,11 @@ def evaluate_all_thresholds():
             )
 
             if threshold_breached:
+                # ── WARNING: não cria incidente, apenas registra métrica ──
+                # Incidentes e notificações APENAS para CRITICAL
+                if severity == 'warning' and sensor.sensor_type != 'system':
+                    continue
+
                 # ── SYSTEM/UPTIME: tratamento especial — incidente informativo de reboot ──
                 # Cria UM incidente já resolvido (apenas registro) e cooldown de 1h.
                 # Não fica "open" — é só notificação de que houve reboot.
