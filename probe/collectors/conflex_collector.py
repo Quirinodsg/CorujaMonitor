@@ -2,27 +2,59 @@
 Conflex HVAC/Ar-Condicionado Collector — Coruja Monitor
 Coleta métricas via SNMP de automação Conflex (enterprise OID 42588).
 
-OIDs:
-  .1.3.6.1.4.1.42588.3.1.1.X.0 = Nome da função
-  .1.3.6.1.4.1.42588.3.1.2.X.0 = Status (on/off)
-  .1.3.6.1.4.1.42588.3.1.3.X.0 = Valor numérico (0/1)
-  .1.3.6.1.4.1.42588.3.1.4.X.0 = Status combinado
+OIDs Temperatura (.3.4.4.X.0) — valores ×10:
+  0 = Temperatura Interna (sala)
+  6 = Temperatura Retorno Máq 1
+  7 = Temperatura Insuflamento Máq 1
+  8 = Temperatura Retorno Máq 2
+  9 = Temperatura Insuflamento Máq 2
+
+OIDs Status (.3.1.1/2/3.X.0):
+  0 = Alarme Temperatura Alta
+  1 = Alarme Defeito Máquinas
+  2 = Status PLC
+  4 = Habilita Máquina 1
+  5 = Habilita Máquina 2
+
+OIDs Info (.3.2.1.X.0):
+  0 = Sistema em Automático
+  2 = Falha Rede Geral
+  3 = Máquina em Automático Máq 1
+  4 = Máquina em Automático Máq 2
 """
 import logging
 import time
+import re
 from typing import Any, Dict, List
 
 logger = logging.getLogger(__name__)
 
-BASE_OID = "1.3.6.1.4.1.42588.3.1"
+ENT = "1.3.6.1.4.1.42588"
 
-# Mapeamento dos índices conhecidos
-CONFLEX_ITEMS = {
-    0: {"name": "alarme_temp_alta", "label": "Alarme Temperatura Alta", "icon": "🌡️", "alarm": True},
-    1: {"name": "alarme_defeito", "label": "Alarme Defeito Máquinas", "icon": "⚠️", "alarm": True},
-    2: {"name": "status_plc", "label": "Status PLC", "icon": "🔌", "alarm": False},
-    4: {"name": "maquina_1", "label": "Máquina 1", "icon": "❄️", "alarm": False},
-    5: {"name": "maquina_2", "label": "Máquina 2", "icon": "❄️", "alarm": False},
+# Temperatura OIDs (valores ×10)
+TEMP_OIDS = {
+    f"{ENT}.3.4.4.0.0": {"name": "temp_interna", "label": "Temperatura Interna", "icon": "🌡️"},
+    f"{ENT}.3.4.4.6.0": {"name": "temp_retorno_maq1", "label": "Retorno Máq 1", "icon": "❄️"},
+    f"{ENT}.3.4.4.7.0": {"name": "temp_insuf_maq1", "label": "Insuflamento Máq 1", "icon": "💨"},
+    f"{ENT}.3.4.4.8.0": {"name": "temp_retorno_maq2", "label": "Retorno Máq 2", "icon": "❄️"},
+    f"{ENT}.3.4.4.9.0": {"name": "temp_insuf_maq2", "label": "Insuflamento Máq 2", "icon": "💨"},
+}
+
+# Status ON/OFF OIDs
+STATUS_OIDS = {
+    f"{ENT}.3.1.2.0.0": {"name": "alarme_temp_alta", "label": "Alarme Temp Alta", "alarm": True},
+    f"{ENT}.3.1.2.1.0": {"name": "alarme_defeito", "label": "Alarme Defeito", "alarm": True},
+    f"{ENT}.3.1.2.2.0": {"name": "status_plc", "label": "Status PLC", "alarm": False},
+    f"{ENT}.3.1.2.4.0": {"name": "maquina_1", "label": "Máquina 1", "alarm": False},
+    f"{ENT}.3.1.2.5.0": {"name": "maquina_2", "label": "Máquina 2", "alarm": False},
+}
+
+# Info OIDs (texto)
+INFO_OIDS = {
+    f"{ENT}.3.2.1.0.0": {"name": "sistema_auto", "label": "Sistema Automático"},
+    f"{ENT}.3.2.1.2.0": {"name": "falha_rede", "label": "Falha Rede Geral"},
+    f"{ENT}.3.2.1.3.0": {"name": "maq1_auto", "label": "Máq 1 Automático"},
+    f"{ENT}.3.2.1.4.0": {"name": "maq2_auto", "label": "Máq 2 Automático"},
 }
 
 
@@ -33,112 +65,87 @@ class ConflexCollector:
         self.port = port
 
     def collect(self) -> List[Dict[str, Any]]:
-        """Coleta todas as métricas do Conflex via SNMP."""
         metrics = []
         start = time.time()
-
         try:
             from collectors.snmp_collector import SNMPCollector
             collector = SNMPCollector()
 
-            # Coletar status de cada item
-            oids_status = [f"{BASE_OID}.2.{i}.0" for i in range(12)]
-            oids_names = [f"{BASE_OID}.1.{i}.0" for i in range(12)]
-            all_oids = oids_status + oids_names
-
+            all_oids = list(TEMP_OIDS.keys()) + list(STATUS_OIDS.keys()) + list(INFO_OIDS.keys())
             result = collector.collect_snmp_v2c(self.ip, self.community, self.port, oids=all_oids)
 
             if not result or result.get('status') != 'success' or not result.get('data'):
                 logger.warning(f"Conflex {self.ip}: SNMP failed")
-                return [self._metric("status", 0, "status", "critical")]
+                return [self._m("status", 0, "status", "critical")]
 
             data = result['data']
             elapsed = (time.time() - start) * 1000
+            overall = "ok"
 
-            # Parse nomes e status
-            names = {}
-            statuses = {}
-            for oid, val in data.items():
-                oid_parts = oid.split('.')
-                if len(oid_parts) < 2:
-                    continue
-                idx_str = oid_parts[-2]  # penúltimo = índice
-                try:
-                    idx = int(idx_str)
-                except ValueError:
-                    continue
+            # ── Temperaturas (valor ×10) ──
+            for oid, info in TEMP_OIDS.items():
+                val_str = self._find_oid(data, oid)
+                if val_str:
+                    num = self._parse_temp(val_str)
+                    if num is not None:
+                        temp = round(num / 10.0, 1)
+                        st = "ok"
+                        if info["name"] == "temp_interna":
+                            if temp >= 30: st = "critical"; overall = "critical"
+                            elif temp >= 26: st = "warning"; overall = max(overall, "warning", key=lambda x: ["ok","warning","critical"].index(x))
+                        metrics.append(self._m(info["name"], temp, "°C", st, info["label"], info["icon"]))
 
-                # Detectar se é nome (.1.X.0) ou status (.2.X.0)
-                if f".1.{idx}.0" in oid:
-                    names[idx] = val.strip('"')
-                elif f".2.{idx}.0" in oid:
-                    statuses[idx] = val.strip('"').lower()
+            # ── Status ON/OFF ──
+            for oid, info in STATUS_OIDS.items():
+                val_str = self._find_oid(data, oid)
+                if val_str:
+                    is_on = val_str.strip('"').lower() in ("on", "1")
+                    if info["alarm"]:
+                        st = "critical" if is_on else "ok"
+                        if is_on: overall = "critical"
+                    else:
+                        st = "ok" if is_on else "warning"
+                        if not is_on and info["name"] in ("maquina_1", "maquina_2", "status_plc"):
+                            overall = max(overall, "warning", key=lambda x: ["ok","warning","critical"].index(x))
+                    metrics.append(self._m(info["name"], 1 if is_on else 0, "on/off", st, info["label"]))
 
-            # Gerar métricas para itens conhecidos
-            overall_status = "ok"
-            for idx, item in CONFLEX_ITEMS.items():
-                st = statuses.get(idx, "unknown")
-                is_on = st == "on" or st == '"on"'
-                name_label = names.get(idx, item["label"])
+            # ── Info (texto) ──
+            for oid, info in INFO_OIDS.items():
+                val_str = self._find_oid(data, oid)
+                if val_str:
+                    txt = val_str.strip('"')
+                    has_falha = "falha" in txt.lower()
+                    if has_falha: overall = "critical"
+                    metrics.append(self._m(info["name"], 1 if not has_falha else 0, "text", "critical" if has_falha else "ok", txt))
 
-                if item["alarm"]:
-                    # Alarmes: on = problema, off = ok
-                    sensor_status = "critical" if is_on else "ok"
-                    if is_on:
-                        overall_status = "critical"
-                else:
-                    # Funções: on = ok, off = problema
-                    sensor_status = "ok" if is_on else "warning"
-                    if not is_on and item["name"] in ("status_plc", "maquina_1", "maquina_2"):
-                        if overall_status != "critical":
-                            overall_status = "warning"
+            metrics.insert(0, self._m("status", 1 if overall != "critical" else 0, "status", overall))
+            metrics.append(self._m("latency", round(elapsed, 1), "ms", "ok"))
 
-                metrics.append(self._metric(
-                    item["name"],
-                    1 if is_on else 0,
-                    "on/off",
-                    sensor_status,
-                    label=name_label,
-                    icon=item["icon"]
-                ))
-
-            # Coletar todos os outros itens (3-11) que não são "Sem Funcao"
-            for idx in range(12):
-                if idx in CONFLEX_ITEMS:
-                    continue
-                name = names.get(idx, "")
-                if not name or "sem funcao" in name.lower():
-                    continue
-                st = statuses.get(idx, "off")
-                is_on = st == "on"
-                metrics.append(self._metric(
-                    f"funcao_{idx}",
-                    1 if is_on else 0,
-                    "on/off",
-                    "ok" if is_on else "warning",
-                    label=name,
-                    icon="📊"
-                ))
-
-            # Métrica geral
-            metrics.insert(0, self._metric("status", 1, "status", overall_status))
-            metrics.append(self._metric("latency", round(elapsed, 1), "ms", "ok"))
-
-            logger.info(f"Conflex {self.ip}: {len(metrics)} metrics, status={overall_status}, {elapsed:.0f}ms")
+            logger.info(f"Conflex {self.ip}: {len(metrics)} metrics, status={overall}, {elapsed:.0f}ms")
             return metrics
 
         except Exception as e:
             logger.warning(f"Conflex {self.ip} error: {e}")
-            return [self._metric("status", 0, "status", "critical")]
+            return [self._m("status", 0, "status", "critical")]
 
-    def _metric(self, name, value, unit, status, label=None, icon=None):
+    def _find_oid(self, data, target_oid):
+        """Find OID value in SNMP data (handles partial OID matching)."""
+        for oid, val in data.items():
+            # Match by last segments
+            target_tail = target_oid.split("42588.")[-1]
+            if target_tail in oid or oid.endswith(target_tail):
+                return val
+        return None
+
+    def _parse_temp(self, val_str):
+        """Extract numeric value from 'NNN - Description' format."""
+        val = val_str.strip('"')
+        match = re.match(r'(\d+)', val)
+        return int(match.group(1)) if match else None
+
+    def _m(self, name, value, unit, status, label=None, icon=None):
         return {
-            "sensor_type": "conflex",
-            "sensor_name": f"Conflex {name}",
-            "name": f"Conflex {name}",
-            "value": value,
-            "unit": unit,
-            "status": status,
-            "label": label or name,
-            "icon": icon or "📊",
+            "sensor_type": "conflex", "name": f"Conflex {name}",
+            "value": value, "unit": unit, "status": status,
+            "label": label or name, "icon": icon or "📊",
         }

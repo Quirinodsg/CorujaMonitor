@@ -404,12 +404,23 @@ function SensorLibrary() {
           )}
           {/* Conflex HVAC details */}
           {metric?.metadata && metric.metadata['Conflex status'] && (
-            <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 11, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px', color: 'var(--text-secondary)' }}>
-              {metric.metadata['Conflex alarme_temp_alta'] && <span style={{color: metric.metadata['Conflex alarme_temp_alta'].value === 1 ? '#ef4444' : '#22c55e'}}>🌡️ Temp: {metric.metadata['Conflex alarme_temp_alta'].value === 1 ? 'ALARME' : 'OK'}</span>}
-              {metric.metadata['Conflex alarme_defeito'] && <span style={{color: metric.metadata['Conflex alarme_defeito'].value === 1 ? '#ef4444' : '#22c55e'}}>⚠️ Defeito: {metric.metadata['Conflex alarme_defeito'].value === 1 ? 'ALARME' : 'OK'}</span>}
-              {metric.metadata['Conflex status_plc'] && <span style={{color: metric.metadata['Conflex status_plc'].value === 1 ? '#22c55e' : '#ef4444'}}>🔌 PLC: {metric.metadata['Conflex status_plc'].value === 1 ? 'ON' : 'OFF'}</span>}
-              {metric.metadata['Conflex maquina_1'] && <span style={{color: metric.metadata['Conflex maquina_1'].value === 1 ? '#22c55e' : '#f59e0b'}}>❄️ Máq 1: {metric.metadata['Conflex maquina_1'].value === 1 ? 'ON' : 'OFF'}</span>}
-              {metric.metadata['Conflex maquina_2'] && <span style={{color: metric.metadata['Conflex maquina_2'].value === 1 ? '#22c55e' : '#f59e0b'}}>❄️ Máq 2: {metric.metadata['Conflex maquina_2'].value === 1 ? 'ON' : 'OFF'}</span>}
+            <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text-secondary)' }}>
+              {metric.metadata['Conflex temp_interna'] && (
+                <div style={{ fontSize: 16, fontWeight: 700, color: metric.metadata['Conflex temp_interna'].value >= 26 ? '#ef4444' : '#22c55e', marginBottom: 4 }}>
+                  🌡️ {metric.metadata['Conflex temp_interna'].value}°C
+                  {metric.metadata['Conflex temp_interna'].value >= 26 && <span style={{fontSize:11, marginLeft:6}}>⚠️ ALTA</span>}
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px' }}>
+                {metric.metadata['Conflex alarme_temp_alta'] && <span style={{color: metric.metadata['Conflex alarme_temp_alta'].value === 1 ? '#ef4444' : '#22c55e'}}>🌡️ Temp: {metric.metadata['Conflex alarme_temp_alta'].value === 1 ? 'ALARME' : 'OK'}</span>}
+                {metric.metadata['Conflex alarme_defeito'] && <span style={{color: metric.metadata['Conflex alarme_defeito'].value === 1 ? '#ef4444' : '#22c55e'}}>⚠️ Defeito: {metric.metadata['Conflex alarme_defeito'].value === 1 ? 'ALARME' : 'OK'}</span>}
+                {metric.metadata['Conflex status_plc'] && <span style={{color: metric.metadata['Conflex status_plc'].value === 1 ? '#22c55e' : '#ef4444'}}>🔌 PLC: {metric.metadata['Conflex status_plc'].value === 1 ? 'ON' : 'OFF'}</span>}
+                {metric.metadata['Conflex maquina_1'] && <span style={{color: metric.metadata['Conflex maquina_1'].value === 1 ? '#22c55e' : '#f59e0b'}}>❄️ Máq 1: {metric.metadata['Conflex maquina_1'].value === 1 ? 'ON' : 'OFF'}</span>}
+                {metric.metadata['Conflex maquina_2'] && <span style={{color: metric.metadata['Conflex maquina_2'].value === 1 ? '#22c55e' : '#f59e0b'}}>❄️ Máq 2: {metric.metadata['Conflex maquina_2'].value === 1 ? 'ON' : 'OFF'}</span>}
+                {metric.metadata['Conflex temp_retorno_maq1'] && <span>🔄 Máq1: {metric.metadata['Conflex temp_retorno_maq1'].value}°C</span>}
+                {metric.metadata['Conflex temp_retorno_maq2'] && <span>🔄 Máq2: {metric.metadata['Conflex temp_retorno_maq2'].value}°C</span>}
+                {metric.metadata['Conflex falha_rede'] && metric.metadata['Conflex falha_rede'].value === 0 && <span style={{color:'#ef4444', gridColumn:'1/-1'}}>🔴 FALHA REDE GERAL</span>}
+              </div>
             </div>
           )}
         </div>
