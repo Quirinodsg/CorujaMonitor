@@ -272,6 +272,48 @@ async def get_alert_root_cause(alert_id: str, db: Session = Depends(get_db)):
     except Exception as e:
         return {"error": str(e), "alert_id": alert_id}
 
+
+@router.post("/alerts/intelligent/{alert_id}/resolve")
+async def resolve_intelligent_alert(alert_id: str, db: Session = Depends(get_db)):
+    """Resolve um alerta inteligente."""
+    try:
+        db.execute(text("""
+            UPDATE intelligent_alerts SET status = 'resolved', resolved_at = NOW()
+            WHERE id = :id
+        """), {"id": alert_id})
+        db.commit()
+        return {"status": "ok", "message": "Alerta resolvido"}
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}
+
+
+@router.post("/alerts/intelligent/{alert_id}/acknowledge")
+async def acknowledge_intelligent_alert(alert_id: str, db: Session = Depends(get_db)):
+    """Reconhece um alerta inteligente."""
+    try:
+        db.execute(text("""
+            UPDATE intelligent_alerts SET status = 'acknowledged'
+            WHERE id = :id
+        """), {"id": alert_id})
+        db.commit()
+        return {"status": "ok", "message": "Alerta reconhecido"}
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}
+
+
+@router.delete("/alerts/intelligent/{alert_id}")
+async def delete_intelligent_alert(alert_id: str, db: Session = Depends(get_db)):
+    """Exclui um alerta inteligente."""
+    try:
+        db.execute(text("DELETE FROM intelligent_alerts WHERE id = :id"), {"id": alert_id})
+        db.commit()
+        return {"status": "ok", "message": "Alerta excluído"}
+    except Exception as e:
+        db.rollback()
+        return {"error": str(e)}
+
 # ─── WebSocket — real-time observability ─────────────────────────────────────
 
 @router.websocket("/ws/observability")

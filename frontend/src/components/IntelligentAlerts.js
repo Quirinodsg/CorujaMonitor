@@ -158,6 +158,43 @@ export default function IntelligentAlerts() {
                   <span>Criado em</span>
                   <strong>{selected.created_at ? new Date(selected.created_at).toLocaleString('pt-BR') : '—'}</strong>
                 </div>
+                {selected.status !== 'resolved' && (
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    {selected.status === 'open' && (
+                      <button onClick={async () => {
+                        try {
+                          const token = localStorage.getItem('token');
+                          await fetch(`${API}/api/v1/alerts/intelligent/${selected.id}/acknowledge`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                          setSelected({ ...selected, status: 'acknowledged' });
+                          fetchAlerts();
+                        } catch (_) {}
+                      }} style={{ padding: '6px 16px', background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                        ✓ Reconhecer
+                      </button>
+                    )}
+                    <button onClick={async () => {
+                      try {
+                        const token = localStorage.getItem('token');
+                        await fetch(`${API}/api/v1/alerts/intelligent/${selected.id}/resolve`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                        setSelected({ ...selected, status: 'resolved' });
+                        fetchAlerts();
+                      } catch (_) {}
+                    }} style={{ padding: '6px 16px', background: '#22c55e', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                      ✅ Resolver
+                    </button>
+                    <button onClick={async () => {
+                      if (!window.confirm('Excluir este alerta?')) return;
+                      try {
+                        const token = localStorage.getItem('token');
+                        await fetch(`${API}/api/v1/alerts/intelligent/${selected.id}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+                        setSelected(null);
+                        fetchAlerts();
+                      } catch (_) {}
+                    }} style={{ padding: '6px 16px', background: '#ef4444', color: '#fff', border: 'none', borderRadius: 6, cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                      🗑️ Excluir
+                    </button>
+                  </div>
+                )}
               </div>
 
               {rootCause && (
