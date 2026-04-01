@@ -52,7 +52,7 @@ FUNCTION isBugCondition(X)
   OUTPUT: boolean
 
   cert_missing_san_ip     ← X.cert.san NOT CONTAINS "IP:192.168.31.161"
-  cert_missing_san_domain ← X.cert.san NOT CONTAINS "DNS:coruja.techbiz.com.br"
+  cert_missing_san_domain ← X.cert.san NOT CONTAINS "DNS:coruja.empresaxpto.com.br"
   config_js_stale         ← X.frontend_container.config_js.api_url IS absolute_url
                             AND X.access_port != 3000
   ws_hardcoded_port       ← X.dashboard_ws_url CONTAINS ":8000"
@@ -70,10 +70,10 @@ END FUNCTION
 ### Examples
 
 - **Certificado sem SAN IP**: Browser acessa `https://192.168.31.161` → Chrome exibe
-  `ERR_CERT_AUTHORITY_INVALID` porque o certificado atual tem apenas `DNS:coruja.techbiz.com.br`
+  `ERR_CERT_AUTHORITY_INVALID` porque o certificado atual tem apenas `DNS:coruja.empresaxpto.com.br`
   no SAN, sem `IP:192.168.31.161`.
 
-- **Certificado sem SAN domínio**: Browser acessa `https://coruja.techbiz.com.br` → aviso de
+- **Certificado sem SAN domínio**: Browser acessa `https://coruja.empresaxpto.com.br` → aviso de
   certificado não confiável porque o SAN não inclui o domínio (ou o certificado foi gerado sem
   `-addext subjectAltName`).
 
@@ -137,7 +137,7 @@ Com base na análise dos arquivos existentes:
 Property 1: Bug Condition — Certificado com SAN Completo
 
 _For any_ certificado gerado pelo `generate-ssl-cert.sh` corrigido, o certificado SHALL conter
-`IP:192.168.31.161` E `DNS:coruja.techbiz.com.br` E `DNS:localhost` no campo
+`IP:192.168.31.161` E `DNS:coruja.empresaxpto.com.br` E `DNS:localhost` no campo
 `subjectAltName`, e SHALL ter validade mínima de 365 dias a partir da data de geração.
 
 **Validates: Requirements 2.1, 2.2**
@@ -264,7 +264,7 @@ nginx:
   environment:
     - TZ=America/Sao_Paulo
     - CORUJA_SERVER_IP=192.168.31.161
-    - CORUJA_DOMAIN=coruja.techbiz.com.br
+    - CORUJA_DOMAIN=coruja.empresaxpto.com.br
 ```
 
 ---
@@ -323,7 +323,7 @@ o root cause, depois verificar que o fix resolve o bug e preserva os comportamen
 **Test Cases**:
 1. **test_cert_has_san_ip**: Verifica que `coruja.crt` contém `IP:192.168.31.161` no SAN
    (vai falhar no código atual — certificado não tem esse IP)
-2. **test_cert_has_san_domain**: Verifica que `coruja.crt` contém `DNS:coruja.techbiz.com.br`
+2. **test_cert_has_san_domain**: Verifica que `coruja.crt` contém `DNS:coruja.empresaxpto.com.br`
    (pode falhar se o certificado foi gerado sem o domínio)
 3. **test_dashboard_ws_url_no_hardcoded_port**: Verifica que `Dashboard.js` não usa `:8000`
    hardcoded na URL do WebSocket em contexto HTTPS (vai falhar no código atual)
@@ -331,7 +331,7 @@ o root cause, depois verificar que o fix resolve o bug e preserva os comportamen
    configura cron (vai falhar — arquivo não existe ainda)
 
 **Expected Counterexamples**:
-- `test_cert_has_san_ip` falha: SAN atual é `DNS:coruja.techbiz.com.br, DNS:localhost, IP:127.0.0.1`
+- `test_cert_has_san_ip` falha: SAN atual é `DNS:coruja.empresaxpto.com.br, DNS:localhost, IP:127.0.0.1`
 - `test_dashboard_ws_url_no_hardcoded_port` falha: código atual tem `:8000` hardcoded
 - `test_entrypoint_configures_cron` falha: arquivo não existe
 

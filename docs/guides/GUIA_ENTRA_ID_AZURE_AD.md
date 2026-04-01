@@ -18,7 +18,7 @@ probe/install_entraid.bat
 
 **Caminho completo**:
 ```
-C:\Users\andre.quirino\Coruja Monitor\probe\install_entraid.bat
+C:\Users\user\Coruja Monitor\probe\install_entraid.bat
 ```
 
 ---
@@ -82,7 +82,7 @@ DomainJoined : NO    ← Sem domínio local
 
 Copie a pasta `probe` para a máquina:
 ```
-De: C:\Users\andre.quirino\Coruja Monitor\probe\
+De: C:\Users\user\Coruja Monitor\probe\
 Para: C:\Coruja Monitor\probe\ (na máquina cliente)
 ```
 

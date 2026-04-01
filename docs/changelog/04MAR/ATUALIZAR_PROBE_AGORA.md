@@ -21,7 +21,7 @@ A probe precisa ser atualizada com o novo código que já está corrigido.
 ### Opção 1: Copiar Arquivos Manualmente (RECOMENDADO)
 
 1. **Localize a pasta da probe instalada:**
-   - Provavelmente em: `C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe`
+   - Provavelmente em: `C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe`
    - Ou onde você instalou a probe
 
 2. **Copie os arquivos atualizados:**

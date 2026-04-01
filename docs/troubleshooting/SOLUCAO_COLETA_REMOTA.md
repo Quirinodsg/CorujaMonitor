@@ -21,13 +21,13 @@ Criado `probe/debug_remote.bat` para diagnosticar problemas.
 1. Copie o arquivo `probe_core.py` atualizado para a pasta da sonda
 2. Execute como Administrador:
 ```cmd
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 atualizar_sonda.bat
 ```
 
 ### Opção 2: Reinstalar Serviço
 ```cmd
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 uninstall_service.bat
 install_service.bat
 ```
@@ -36,7 +36,7 @@ install_service.bat
 
 ### Passo 1: Verificar Logs da Sonda
 ```cmd
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 type probe.log | findstr /i "remote server"
 ```
 
@@ -50,7 +50,7 @@ INFO - Collected WMI metrics from 192.168.0.100
 
 ### Passo 2: Executar Debug
 ```cmd
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 debug_remote.bat
 ```
 

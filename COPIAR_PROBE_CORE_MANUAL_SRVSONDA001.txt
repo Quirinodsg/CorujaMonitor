@@ -106,8 +106,8 @@ Get-Content logs\probe.log -Tail 50 -Wait
    [INFO] Found 1 servers to monitor remotely
    [INFO] Collecting from remote server: SRVHVSPRD010 (192.168.31.110)
    [INFO] Using WMI for SRVHVSPRD010
-   [INFO] 🔐 Usando credencial: Techbiz (Nível: Empresa)
-   [DEBUG] Usuário: Techbiz\coruja.monitor
+   [INFO] 🔐 Usando credencial: EmpresaXPTO (Nível: Empresa)
+   [DEBUG] Usuário: DOMAIN\monitor.user
    [INFO] Collected WMI metrics from 192.168.31.110
    [INFO] Sent 7 metrics to API
 
@@ -166,7 +166,7 @@ Get-Content logs\probe.log -Tail 50 -Wait
 
 ❌ PROBLEMA: Logs mostram "⚠️ Nenhuma credencial WMI configurada"
 ✅ SOLUÇÃO:
-   1. Verificar se credencial "Techbiz" existe no dashboard
+   1. Verificar se credencial "EmpresaXPTO" existe no dashboard
    2. Ir em: Configurações → Credenciais
    3. Verificar se está marcada como PADRÃO
    4. Verificar se Nível = "Empresa (Tenant)"

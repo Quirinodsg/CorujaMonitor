@@ -35,7 +35,7 @@ Deve mostrar algo como: `git version 2.43.0.windows.1`
 2. Baixe e instale
 3. Faça login com sua conta GitHub
 4. Abra o repositório: `File > Add Local Repository`
-5. Selecione a pasta: `C:\Users\andre.quirino\Coruja Monitor`
+5. Selecione a pasta: `C:\Users\user\Coruja Monitor`
 
 ### Fazer Commit e Push
 1. Veja os arquivos modificados na aba "Changes"
@@ -49,7 +49,7 @@ Deve mostrar algo como: `git version 2.43.0.windows.1`
 
 ### 1. Inicializar Repositório
 ```powershell
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 git init
 ```
 

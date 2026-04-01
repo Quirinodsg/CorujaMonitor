@@ -3,7 +3,7 @@ TESTAR E COPIAR COLLECTOR ATUALIZADO
 ========================================
 
 SITUAÇÃO:
-✅ Usuário Domain Admin criado: Techbiz\coruja.monitor
+✅ Usuário Domain Admin criado: DOMAIN\monitor.user
 ✅ Collector atualizado com fallback Negotiate/CredSSP
 ✅ Credencial já está no banco
 
@@ -15,7 +15,7 @@ Na SRVSONDA001 (192.168.31.162), PowerShell como Admin:
 
 # Testar com Negotiate (deve funcionar com Domain Admin)
 $password = ConvertTo-SecureString 'Dj8SXoXie!o6Tkc@' -AsPlainText -Force
-$credential = New-Object System.Management.Automation.PSCredential('Techbiz\coruja.monitor', $password)
+$credential = New-Object System.Management.Automation.PSCredential('DOMAIN\monitor.user', $password)
 Invoke-Command -ComputerName 192.168.31.110 -Credential $credential -ScriptBlock { hostname }
 
 RESULTADO ESPERADO:
@@ -112,9 +112,9 @@ SE NÃO FUNCIONAR:
 ========================================
 
 Verificar credencial no banco:
-- Usuário: Techbiz\coruja.monitor
+- Usuário: DOMAIN\monitor.user
 - Senha: Coruja@2025
-- Domínio: Techbiz
+- Domínio: EmpresaXPTO
 
 Verificar TrustedHosts na SRVSONDA001:
 Get-Item WSMan:\localhost\Client\TrustedHosts

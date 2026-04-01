@@ -9,7 +9,7 @@
 ### Cole este comando no PowerShell:
 
 ```powershell
-cd "C:\Users\andre.quirino\Coruja Monitor" ; powershell -ExecutionPolicy Bypass -File popular_dashboard_aiops.ps1
+cd "C:\Users\user\Coruja Monitor" ; powershell -ExecutionPolicy Bypass -File popular_dashboard_aiops.ps1
 ```
 
 **OU se estiver no diretório api:**
@@ -106,7 +106,7 @@ powershell -ExecutionPolicy Bypass -File popular_dashboard_aiops.ps1
 ### Erro: "File does not exist"
 **Solução:** Use caminho completo
 ```powershell
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 powershell -ExecutionPolicy Bypass -File popular_dashboard_aiops.ps1
 ```
 

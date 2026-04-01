@@ -89,12 +89,12 @@ class WMIConnectionPool:
 
     Uso:
         pool = WMIConnectionPool()
-        conn = pool.acquire("SRVHVSPRD010.ad.techbiz.com.br", username, password, domain)
+        conn = pool.acquire("SERVER01.ad.empresaxpto.com.br", username, password, domain)
         try:
             engine = WMIEngine(conn)
             metrics = engine.collect_all()
         finally:
-            pool.release("SRVHVSPRD010.ad.techbiz.com.br", conn)
+            pool.release("SERVER01.ad.empresaxpto.com.br", conn)
     """
 
     def __init__(self, max_per_host: int = MAX_CONNECTIONS_PER_HOST):

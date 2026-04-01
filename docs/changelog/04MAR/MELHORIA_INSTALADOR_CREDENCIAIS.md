@@ -32,7 +32,7 @@ Permitir que o usuário digite manualmente o usuário, senha e domínio durante 
 ### Passo 1: Detecção Automática
 ```
 [2/12] Detectando informacoes do sistema...
-[OK] Usuario detectado: andre.quirino
+[OK] Usuario detectado: user
 [OK] Computador: DESKTOP-ABC123
 ```
 
@@ -42,24 +42,24 @@ Permitir que o usuário digite manualmente o usuário, senha e domínio durante 
   CREDENCIAIS PARA MONITORAMENTO WMI
 ========================================
 
-Usuario detectado: andre.quirino
+Usuario detectado: user
 Computador: DESKTOP-ABC123
 
 Voce pode:
 1. Pressionar ENTER para usar o usuario detectado
 2. Digitar um usuario diferente
 
-Usuario (ENTER para usar 'andre.quirino'): _
+Usuario (ENTER para usar 'user'): _
 ```
 
 **Opções**:
-- Pressionar ENTER → Usa `andre.quirino`
+- Pressionar ENTER → Usa `user`
 - Digitar `administrador` → Usa `administrador`
 - Digitar `EMPRESA\admin` → Usa `EMPRESA\admin`
 
 ### Passo 3: Senha
 ```
-Senha do usuario andre.quirino: ********
+Senha do usuario user: ********
 ```
 
 ### Passo 4: Domínio
@@ -81,7 +81,7 @@ Dominio (ENTER para 'DESKTOP-ABC123'): _
 ========================================
   RESUMO DAS CREDENCIAIS
 ========================================
-Usuario: andre.quirino
+Usuario: user
 Dominio: DESKTOP-ABC123
 Senha: ********
 ========================================
@@ -95,12 +95,12 @@ Pressione qualquer tecla para continuar...
 
 ### Exemplo 1: Usuário Local (Padrão)
 ```
-Usuario: [ENTER]           → andre.quirino
+Usuario: [ENTER]           → user
 Senha: minhasenha123
 Dominio: [ENTER]           → DESKTOP-ABC123
 
 Resultado:
-  Usuario: andre.quirino
+  Usuario: user
   Dominio: DESKTOP-ABC123
 ```
 
@@ -158,7 +158,7 @@ O instalador cria `wmi_credentials.json`:
 ```json
 {
   "DESKTOP-ABC123": {
-    "username": "andre.quirino",
+    "username": "user",
     "password": "minhasenha123",
     "domain": "DESKTOP-ABC123"
   }
@@ -199,7 +199,7 @@ O instalador cria `wmi_credentials.json`:
 
 ### Caso 1: Ambiente Entra ID (Seu Caso)
 ```
-Usuario: andre.quirino       (usuário local com permissões)
+Usuario: user       (usuário local com permissões)
 Senha: [sua senha]
 Dominio: [ENTER]             (computador local)
 ```
@@ -246,7 +246,7 @@ probe/install_completo_com_servico.bat
 
 **Para seu ambiente (Entra ID)**:
 ```
-Usuario: [ENTER]              → Usa andre.quirino
+Usuario: [ENTER]              → Usa user
 Senha: [sua senha]
 Dominio: [ENTER]              → Usa DESKTOP-ABC123
 ```
@@ -270,7 +270,7 @@ Dominio: [ENTER]              → Computador local
 ========================================
   RESUMO DAS CREDENCIAIS
 ========================================
-Usuario: andre.quirino
+Usuario: user
 Dominio: DESKTOP-ABC123
 Senha: ********
 ========================================
@@ -301,7 +301,7 @@ Deve mostrar:
 ```json
 {
   "DESKTOP-ABC123": {
-    "username": "andre.quirino",
+    "username": "user",
     "password": "suasenha",
     "domain": "DESKTOP-ABC123"
   }

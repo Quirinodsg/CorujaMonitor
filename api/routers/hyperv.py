@@ -523,7 +523,7 @@ async def ingest_hyperv_data(
 def _generate_finops_recommendations(db: Session, host, vms_data):
     """Generate FinOps recommendations based on current VM metrics.
     Custos lidos da tabela hyperv_cost_config (editáveis via API).
-    Fallback para valores padrão Techbiz se tabela não existir.
+    Fallback para valores padrão EmpresaXPTO se tabela não existir.
     """
     from routers.hyperv_cost_config import get_cost_map
     cost_map = get_cost_map(db)

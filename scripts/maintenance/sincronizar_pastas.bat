@@ -4,8 +4,8 @@ echo Sincronizando Pastas Coruja Monitor
 echo ========================================
 echo.
 
-set "PASTA1=C:\Users\andre.quirino\Coruja Monitor"
-set "PASTA2=C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor"
+set "PASTA1=C:\Users\user\Coruja Monitor"
+set "PASTA2=C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor"
 
 echo Origem: %PASTA1%
 echo Destino: %PASTA2%

@@ -55,6 +55,10 @@ htmlcov/
 nginx/ssl/*.key
 nginx/ssl/ca/
 
+# Backups — contêm dados sensíveis
+worker/backups/
+api/backups/
+
 # Archive — arquivos temporários de sessões anteriores
 _archive/
 

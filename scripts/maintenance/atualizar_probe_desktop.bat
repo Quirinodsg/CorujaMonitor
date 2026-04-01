@@ -11,7 +11,7 @@ timeout /t 2 /nobreak >nul
 
 REM Copiar arquivo corrigido
 echo Copiando probe_core.py corrigido...
-copy /Y "probe\probe_core.py" "%USERPROFILE%\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe\probe_core.py"
+copy /Y "probe\probe_core.py" "%USERPROFILE%\OneDrive - EmpresaXPTO\Desktop\probe\probe_core.py"
 
 echo.
 echo ========================================
@@ -19,7 +19,7 @@ echo Probe atualizada com sucesso!
 echo ========================================
 echo.
 echo Agora execute manualmente:
-echo cd "%USERPROFILE%\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe"
+echo cd "%USERPROFILE%\OneDrive - EmpresaXPTO\Desktop\probe"
 echo python probe_core.py
 echo.
 pause

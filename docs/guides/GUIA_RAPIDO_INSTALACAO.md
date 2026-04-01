@@ -21,7 +21,7 @@
 
 Da sua máquina (192.168.0.9), copie a pasta:
 ```
-C:\Users\andre.quirino\Coruja Monitor\probe\
+C:\Users\user\Coruja Monitor\probe\
 ```
 
 Para a outra máquina:

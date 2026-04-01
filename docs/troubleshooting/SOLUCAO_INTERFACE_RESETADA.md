@@ -19,7 +19,7 @@ Confirmado que os arquivos locais têm todas as alterações:
 
 ```bash
 # Na pasta raiz do projeto
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # Reiniciar frontend
 docker-compose restart frontend
@@ -33,7 +33,7 @@ docker-compose restart frontend
 
 ```bash
 # Na pasta raiz
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # Parar frontend
 docker-compose stop frontend

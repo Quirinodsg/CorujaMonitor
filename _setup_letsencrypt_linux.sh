@@ -2,7 +2,7 @@
 # =============================================================================
 # Deploy Let's Encrypt no servidor Linux
 # Executa no servidor: bash _setup_letsencrypt_linux.sh
-# Pré-requisito: porta 80 liberada externamente para coruja.techbiz.com.br
+# Pré-requisito: porta 80 liberada externamente para coruja.empresaxpto.com.br
 # =============================================================================
 set -e
 

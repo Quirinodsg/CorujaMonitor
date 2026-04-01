@@ -48,7 +48,7 @@ Inicia a probe de forma limpa:
 
 ### Passo 1: Parar Todas as Probes
 ```cmd
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe
 ```
 
 **Clique com botão direito em `parar_todas_probes.bat`** e selecione **"Executar como administrador"**

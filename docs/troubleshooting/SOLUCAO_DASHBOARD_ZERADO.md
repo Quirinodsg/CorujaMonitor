@@ -69,7 +69,7 @@ Execute análises quando precisar:
 ### Opção 2: Script
 Execute periodicamente:
 ```powershell
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 powershell -ExecutionPolicy Bypass -File popular_dashboard_aiops.ps1
 ```
 

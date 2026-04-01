@@ -14,13 +14,13 @@ copiar_probe_atualizada.bat
 ### 2. Atualizar a Sonda
 Abra CMD como Administrador e execute:
 ```cmd
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 atualizar_sonda.bat
 ```
 
 ### 3. Verificar Logs
 ```cmd
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 debug_remote.bat
 ```
 

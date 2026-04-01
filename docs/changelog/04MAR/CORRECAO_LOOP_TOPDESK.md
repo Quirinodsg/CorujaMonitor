@@ -132,7 +132,7 @@ Adicionado asterisco vermelho (*) nos campos obrigatórios:
 Atualizado o placeholder da URL com o exemplo real do usuário:
 
 ```jsx
-placeholder="https://grupotechbiz.topdesk.net"
+placeholder="https://empresa.topdesk.net"
 ```
 
 ## 📝 Passo a Passo para o Usuário
@@ -162,7 +162,7 @@ coruja.monitor (requisitante) → Abre chamado → Infraestrutura (operadores) �
    - Marque o toggle "TOPdesk" como ativado
 
 2. **Preencher Campos Obrigatórios** (marcados com *)
-   - **URL**: `https://grupotechbiz.topdesk.net`
+   - **URL**: `https://empresa.topdesk.net`
    - **Usuário**: `coruja.monitor` (este é o REQUISITANTE, não operador!)
    - **Senha**: Sua senha do TOPdesk
 
@@ -224,8 +224,8 @@ Próximo passo:
 Usuário ou senha incorretos.
 
 Verifique:
-✓ URL: https://grupotechbiz.topdesk.net
-✓ Usuário: coruja.monitor
+✓ URL: https://empresa.topdesk.net
+✓ Usuário: monitor.user
 ✓ Senha está correta?
 ```
 
@@ -236,7 +236,7 @@ Verifique:
 Não foi possível conectar ao TOPdesk.
 
 Verifique:
-✓ URL está correta? https://grupotechbiz.topdesk.net
+✓ URL está correta? https://empresa.topdesk.net
 ✓ O servidor está acessível?
 ✓ Firewall bloqueando?
 ```
@@ -246,7 +246,7 @@ Verifique:
 Se o erro persistir após seguir todos os passos:
 
 1. **Verificar URL**
-   - Acesse `https://grupotechbiz.topdesk.net` no navegador
+   - Acesse `https://empresa.topdesk.net` no navegador
    - Confirme que a URL está correta e acessível
 
 2. **Verificar Credenciais**

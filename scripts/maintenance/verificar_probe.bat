@@ -4,7 +4,7 @@ echo Diagnostico da Probe
 echo ========================================
 echo.
 
-set "PROBE_PATH=C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe"
+set "PROBE_PATH=C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe"
 
 echo [1] Verificando status do servico...
 sc query CorujaProbe

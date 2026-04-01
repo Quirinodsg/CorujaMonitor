@@ -130,8 +130,8 @@ docker exec coruja-db pg_dump -U coruja coruja > backup_antes_topdesk.sql
 
 ### Testar login no TOPdesk (PowerShell)
 ```powershell
-$url = "https://grupotechbiz.topdesk.net/tas/api/incidents"
-$user = "coruja.monitor"
+$url = "https://empresa.topdesk.net/tas/api/incidents"
+$user = "monitor.user"
 $pass = "SUA_SENHA_AQUI"
 $base64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${user}:${pass}"))
 $headers = @{
@@ -143,7 +143,7 @@ Invoke-RestMethod -Uri $url -Method Get -Headers $headers
 
 ### Testar login no TOPdesk (curl)
 ```bash
-curl -u coruja.monitor:SUA_SENHA https://grupotechbiz.topdesk.net/tas/api/incidents
+curl -u monitor.user:SUA_SENHA https://empresa.topdesk.net/tas/api/incidents
 ```
 
 ## 📝 Logs Específicos

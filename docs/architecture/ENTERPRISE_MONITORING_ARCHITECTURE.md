@@ -83,7 +83,7 @@ SELECT Name,ProcessId,WorkingSetSize FROM Win32_Process
 ## Connection Pool WMI
 
 ```
-Host: SRVHVSPRD010.ad.techbiz.com.br
+Host: SRVHVSPRD010.ad.empresaxpto.com.br
   ├── Conexão 1 [em uso]     → coletando CPU
   ├── Conexão 2 [ociosa]     → disponível
   └── Conexão 3 [ociosa]     → disponível (max=3)

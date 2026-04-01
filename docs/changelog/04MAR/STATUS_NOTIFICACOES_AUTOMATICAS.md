@@ -25,7 +25,7 @@ Enviar notificações automaticamente para TOPdesk, Teams e Email quando um sens
 {
   "topdesk": {
     "enabled": true,
-    "url": "https://grupotechbiz.topdesk.net",
+    "url": "https://empresa.topdesk.net",
     "username": "coruja.monitor",
     "password": "ijsnz-cluur-lsr7i-lka62-3lwwp",
     "operator_group": "Analista de Infraestrutura",
@@ -34,7 +34,7 @@ Enviar notificações automaticamente para TOPdesk, Teams e Email quando um sens
   },
   "teams": {
     "enabled": true,
-    "webhook_url": "https://techbizfd.webhook.office.com/webhookb2/..."
+    "webhook_url": "https://empresa.webhook.office.com/webhookb2/..."
   },
   "email": {
     "enabled": false
@@ -56,7 +56,7 @@ Enviar notificações automaticamente para TOPdesk, Teams e Email quando um sens
 
 ### 2. Verificação Manual
 **PRÓXIMO PASSO:** Verificar manualmente se:
-- [ ] Chamado foi criado no TOPdesk: https://grupotechbiz.topdesk.net
+- [ ] Chamado foi criado no TOPdesk: https://empresa.topdesk.net
 - [ ] Mensagem foi enviada no Teams
 - [ ] Incidentes 14 e 15 existem no banco
 

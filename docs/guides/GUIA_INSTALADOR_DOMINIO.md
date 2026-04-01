@@ -8,7 +8,7 @@ probe/install_automated.bat
 
 **Caminho completo**:
 ```
-C:\Users\andre.quirino\Coruja Monitor\probe\install_automated.bat
+C:\Users\user\Coruja Monitor\probe\install_automated.bat
 ```
 
 ---
@@ -28,7 +28,7 @@ Use este instalador se a máquina:
 
 Copie a pasta `probe` para a máquina cliente:
 ```
-De: C:\Users\andre.quirino\Coruja Monitor\probe\
+De: C:\Users\user\Coruja Monitor\probe\
 Para: C:\Coruja Monitor\probe\ (na máquina cliente)
 ```
 

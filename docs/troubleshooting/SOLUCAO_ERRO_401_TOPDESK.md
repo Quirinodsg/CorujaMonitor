@@ -12,8 +12,8 @@ The request has not been applied because it lacks valid authentication credentia
 ## 🔍 Causas Possíveis
 
 ### 1. Credenciais Incorretas
-- Usuário: `coruja.monitor`
-- Senha: `adminOpLwqa!0`
+- Usuário: `monitor.user`
+- Senha: `[SENHA_TOPDESK]`
 - Um deles pode estar incorreto
 
 ### 2. Usuário Sem Permissão de API
@@ -34,19 +34,19 @@ The request has not been applied because it lacks valid authentication credentia
 ### Solução 1: Verificar Credenciais Manualmente
 
 **Teste 1 - Login no Navegador:**
-1. Abra: `https://grupotechbiz.topdesk.net`
+1. Abra: `https://empresa.topdesk.net`
 2. Faça login com:
-   - Usuário: `coruja.monitor`
-   - Senha: `adminOpLwqa!0`
+   - Usuário: `monitor.user`
+   - Senha: `[SENHA_TOPDESK]`
 3. Se NÃO conseguir fazer login:
    - ❌ Credenciais estão incorretas
    - Corrija usuário ou senha
 
 **Teste 2 - Testar API Diretamente (PowerShell):**
 ```powershell
-$url = "https://grupotechbiz.topdesk.net/tas/api/incidents"
-$user = "coruja.monitor"
-$pass = "adminOpLwqa!0"
+$url = "https://empresa.topdesk.net/tas/api/incidents"
+$user = "monitor.user"
+$pass = "[SENHA_TOPDESK]"
 $base64 = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("${user}:${pass}"))
 $headers = @{
     "Authorization" = "Basic $base64"
@@ -113,7 +113,7 @@ Se o `coruja.monitor` não funcionar, crie um usuário específico:
 3. Preencha:
    - Nome: `Coruja Monitor API`
    - Login: `coruja.api`
-   - Email: `coruja.api@grupotechbiz.com.br`
+   - Email: `api@empresaxpto.com.br`
    - Senha: [senha forte]
    - Status: Ativo
 
@@ -133,9 +133,9 @@ Execute este comando para testar a autenticação:
 
 ```powershell
 # Salve como: testar_auth_topdesk.ps1
-$url = "https://grupotechbiz.topdesk.net/tas/api/incidents"
-$user = "coruja.monitor"
-$pass = "adminOpLwqa!0"
+$url = "https://empresa.topdesk.net/tas/api/incidents"
+$user = "monitor.user"
+$pass = "[SENHA_TOPDESK]"
 
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host " Testando Autenticação TOPdesk" -ForegroundColor Cyan
@@ -182,7 +182,7 @@ try {
         Write-Host ""
         Write-Host "Soluções:" -ForegroundColor Cyan
         Write-Host "1. Verifique se usuário e senha estão corretos"
-        Write-Host "2. Tente fazer login manual em: https://grupotechbiz.topdesk.net"
+        Write-Host "2. Tente fazer login manual em: https://empresa.topdesk.net"
         Write-Host "3. Verifique se o usuário tem permissão de API no TOPdesk"
         Write-Host "4. Verifique se precisa de 'Application Password'"
     } elseif ($_.Exception.Message -like "*404*") {
@@ -190,7 +190,7 @@ try {
         Write-Host ""
         Write-Host "Soluções:" -ForegroundColor Cyan
         Write-Host "1. Verifique se a URL está correta"
-        Write-Host "2. Teste acessar: https://grupotechbiz.topdesk.net no navegador"
+        Write-Host "2. Teste acessar: https://empresa.topdesk.net no navegador"
     } else {
         Write-Host "Causa: Erro de conexão ou outro problema" -ForegroundColor Red
         Write-Host ""
@@ -230,12 +230,12 @@ pause
 ## 📞 Informações Importantes
 
 **Suas credenciais:**
-- URL: `https://grupotechbiz.topdesk.net`
-- Usuário: `coruja.monitor`
-- Senha: `adminOpLwqa!0`
+- URL: `https://empresa.topdesk.net`
+- Usuário: `monitor.user`
+- Senha: `[SENHA_TOPDESK]`
 
 **Teste manual:**
-1. Abra `https://grupotechbiz.topdesk.net` no navegador
+1. Abra `https://empresa.topdesk.net` no navegador
 2. Faça login com as credenciais acima
 3. Se funcionar → Problema é permissão de API
 4. Se não funcionar → Problema é credencial incorreta

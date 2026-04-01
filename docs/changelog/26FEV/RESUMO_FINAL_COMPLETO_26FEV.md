@@ -54,14 +54,14 @@
 **Problema Atual**: Há uma probe rodando do diretório OneDrive com configuração antiga.
 
 **Detalhes**:
-- **Localização Errada**: `C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe\`
+- **Localização Errada**: `C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe\`
 - **IP Antigo**: Tentando conectar em 192.168.30.189
 - **Impacto**: Sensores não atualizam (última atualização: ontem 14:25)
 - **Consequência**: Incidentes não podem ser auto-resolvidos sem métricas novas
 
 **Solução Necessária**:
 1. Parar TODOS os processos Python
-2. Iniciar probe do diretório correto: `C:\Users\andre.quirino\Coruja Monitor\`
+2. Iniciar probe do diretório correto: `C:\Users\user\Coruja Monitor\`
 3. Verificar que conecta em http://192.168.0.41:8000
 
 ### 6. Incidente de PING Ainda Aberto ⚠️

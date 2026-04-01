@@ -13,7 +13,7 @@ Você configurou a probe com a URL **errada**:
 Abra o CMD como **Administrador** e execute:
 
 ```batch
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 corrigir_url.bat
 ```
 
@@ -36,7 +36,7 @@ O serviço vai reiniciar e começar a enviar dados.
 
 Execute o diagnóstico:
 ```batch
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 diagnostico_probe.bat
 ```
 

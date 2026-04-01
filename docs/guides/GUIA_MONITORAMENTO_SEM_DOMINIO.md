@@ -65,7 +65,7 @@ http://localhost:3000
 #### 1. Copie a Pasta `probe` para Máquina B
 
 ```
-\\192.168.0.100\C$\Users\andre.quirino\Coruja Monitor\probe
+\\192.168.0.100\C$\Users\user\Coruja Monitor\probe
 ```
 
 Copie para:

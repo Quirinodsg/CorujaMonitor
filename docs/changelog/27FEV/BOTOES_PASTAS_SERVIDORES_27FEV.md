@@ -32,9 +32,9 @@ Adicionados botões de ação nas pastas de servidores (sistema antigo - `group_
 
 **Exemplo:**
 ```
-📁 Empresa Techbiz
-  └─ 📁 Empresa Techbiz / Datacenter SP
-      └─ 📁 Empresa Techbiz / Datacenter SP / Rack 01
+📁 Empresa EmpresaXPTO
+  └─ 📁 Empresa EmpresaXPTO / Datacenter SP
+      └─ 📁 Empresa EmpresaXPTO / Datacenter SP / Rack 01
 ```
 
 ### 3. 🗑️ Excluir Pasta
@@ -64,7 +64,7 @@ Adicionados botões de ação nas pastas de servidores (sistema antigo - `group_
 
 ### Sistema Antigo (Pastas - group_name)
 ```
-📁 Empresa Techbiz (1)
+📁 Empresa EmpresaXPTO (1)
   ├─ DESKTOP-P9VGN04
   └─ [Botões: ✏️ ➕ 🗑️]
 ```

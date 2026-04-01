@@ -3,7 +3,7 @@
 ## Diagnóstico Completo
 
 ### Problema 1: Probe Errada Rodando
-- **Localização**: `C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe\`
+- **Localização**: `C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe\`
 - **IP Tentando Conectar**: 192.168.30.189 (ANTIGO)
 - **Status**: Falhando ao enviar métricas
 - **Impacto**: Sensores não atualizam desde ontem 14:25
@@ -14,7 +14,7 @@
 - **Worker**: Não pode auto-resolver sem métricas novas
 
 ### Problema 3: Configuração Correta Não Sendo Usada
-- **Diretório Correto**: `C:\Users\andre.quirino\Coruja Monitor\`
+- **Diretório Correto**: `C:\Users\user\Coruja Monitor\`
 - **Config Correta**: `probe/probe_config.json` com IP 192.168.0.41
 - **Problema**: Probe errada está rodando
 
@@ -186,7 +186,7 @@ Marque cada item após validar:
 
 ### ✅ CORRETO (Use este)
 ```
-C:\Users\andre.quirino\Coruja Monitor\
+C:\Users\user\Coruja Monitor\
 ├── probe\
 │   ├── probe_core.py
 │   └── probe_config.json (IP: 192.168.0.41)
@@ -197,7 +197,7 @@ C:\Users\andre.quirino\Coruja Monitor\
 
 ### ❌ ERRADO (Não use este)
 ```
-C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\
+C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\
 └── probe\
     ├── probe_core.py
     └── probe_config.json (IP: 192.168.30.189)

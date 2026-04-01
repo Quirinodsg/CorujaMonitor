@@ -510,7 +510,7 @@ CorujaMonitor/
 **Sonda Windows:**
 - Windows Server 2012 R2+
 - Python 3.11+
-- Conta de serviço com permissões WMI (`TECHBIZ\coruja.monitor`)
+- Conta de serviço com permissões WMI (`DOMAIN\monitor.user`)
 - NSSM para gerenciamento do serviço
 
 ### Deploy no Servidor (Linux)

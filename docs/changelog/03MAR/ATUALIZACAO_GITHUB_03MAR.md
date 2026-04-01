@@ -257,7 +257,7 @@ feat: Instaladores MSI profissionais + Documentação completa
 ### Autor
 - Nome: André Quirino
 - GitHub: @Quirinodsg
-- Email: andre.quirino@example.com
+- Email: user@example.com
 
 ## 🎉 Conclusão
 

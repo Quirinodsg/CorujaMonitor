@@ -37,13 +37,13 @@ Get-Service winmgmt
 
 O usuário precisa ser membro do grupo **Administrators** local ou do domínio, ou ter permissão explícita no WMI (DCOM).
 
-No ambiente Techbiz, a credencial `Techbiz\coruja.monitor` já está configurada no portal — nenhuma ação adicional é necessária no servidor além de habilitar o WMI.
+No ambiente EmpresaXPTO, a credencial `DOMAIN\monitor.user` já está configurada no portal — nenhuma ação adicional é necessária no servidor além de habilitar o WMI.
 
 ### Verificação rápida (testar WMI remotamente da sonda)
 
 ```powershell
 # Executar na SRVSONDA001, substituindo IP e credenciais
-$cred = Get-Credential "Techbiz\coruja.monitor"
+$cred = Get-Credential "DOMAIN\monitor.user"
 Get-WmiObject -Class Win32_OperatingSystem -ComputerName "192.168.31.111" -Credential $cred
 ```
 
@@ -153,6 +153,6 @@ Se retornar dados do sistema (sysDescr, sysUpTime, etc.), o SNMP está funcionan
 2. Vá em **Servidores → Adicionar Servidor**
 3. Preencha hostname e IP
 4. Selecione o protocolo: **WMI** (Windows) ou **SNMP** (Linux)
-5. A credencial WMI é herdada automaticamente do tenant (Techbiz)
+5. A credencial WMI é herdada automaticamente do tenant (EmpresaXPTO)
 6. Para SNMP, informe a community string configurada (ex: `public`)
 7. Aguarde o próximo ciclo da sonda (~60 segundos) — os sensores começarão a mostrar dados

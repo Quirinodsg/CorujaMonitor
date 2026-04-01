@@ -100,11 +100,11 @@ class RegisterRequest(BaseModel):
 # ── Azure AD (Microsoft Entra ID) OAuth2 ──────────────────────────────────────
 
 AZURE_ADMIN_EMAILS = [
-    'andre.quirino@techbiz.com.br',
-    'bruno.nascimento@techbiz.com.br',
-    'cristiano.mascarenhas@techbiz.com.br',
-    'frederico.lima@techbiz.com.br',
-    'vinicius.xavier@techbiz.com.br',
+    'andre.quirino@empresaxpto.com.br',
+    'bruno.nascimento@empresaxpto.com.br',
+    'cristiano.mascarenhas@empresaxpto.com.br',
+    'frederico.lima@empresaxpto.com.br',
+    'vinicius.xavier@empresaxpto.com.br',
 ]
 
 @router.get("/azure/login")
@@ -121,7 +121,7 @@ async def azure_login(db: Session = Depends(get_db)):
     
     tenant_id = azure_cfg['tenant_id']
     client_id = azure_cfg['client_id']
-    redirect_uri = azure_cfg.get('redirect_uri', 'https://coruja.techbiz.com.br/api/v1/auth/azure/callback')
+    redirect_uri = azure_cfg.get('redirect_uri', 'https://coruja.empresaxpto.com.br/api/v1/auth/azure/callback')
     
     auth_url = (
         f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize"
@@ -143,10 +143,10 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
     import httpx
     
     if error:
-        return RedirectResponse(url=f"https://coruja.techbiz.com.br/?azure_error={error}")
+        return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error={error}")
     
     if not code:
-        return RedirectResponse(url="https://coruja.techbiz.com.br/?azure_error=no_code")
+        return RedirectResponse(url="https://coruja.empresaxpto.com.br/?azure_error=no_code")
     
     from models import Tenant
     tenant = db.query(Tenant).first()
@@ -155,7 +155,7 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
     tenant_id = azure_cfg['tenant_id']
     client_id = azure_cfg['client_id']
     client_secret = azure_cfg['client_secret']
-    redirect_uri = azure_cfg.get('redirect_uri', 'https://coruja.techbiz.com.br/api/v1/auth/azure/callback')
+    redirect_uri = azure_cfg.get('redirect_uri', 'https://coruja.empresaxpto.com.br/api/v1/auth/azure/callback')
     
     # Trocar code por token
     try:
@@ -173,7 +173,7 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
             )
             
             if token_resp.status_code != 200:
-                return RedirectResponse(url=f"https://coruja.techbiz.com.br/?azure_error=token_failed")
+                return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=token_failed")
             
             tokens = token_resp.json()
             access_token = tokens.get('access_token')
@@ -185,17 +185,17 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
             )
             
             if profile_resp.status_code != 200:
-                return RedirectResponse(url=f"https://coruja.techbiz.com.br/?azure_error=profile_failed")
+                return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=profile_failed")
             
             profile = profile_resp.json()
     except Exception as e:
-        return RedirectResponse(url=f"https://coruja.techbiz.com.br/?azure_error=request_failed")
+        return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=request_failed")
     
     email = (profile.get('mail') or profile.get('userPrincipalName', '')).lower()
     full_name = profile.get('displayName', email.split('@')[0])
     
     if not email:
-        return RedirectResponse(url=f"https://coruja.techbiz.com.br/?azure_error=no_email")
+        return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=no_email")
     
     # Determinar role baseado no email
     is_admin = email in AZURE_ADMIN_EMAILS
@@ -228,7 +228,7 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
     # Redirecionar para frontend com token
     from urllib.parse import quote
     return RedirectResponse(
-        url=f"https://coruja.techbiz.com.br/?azure_token={coruja_token}&azure_user={quote(email)}&azure_name={quote(full_name)}&azure_role={role}"
+        url=f"https://coruja.empresaxpto.com.br/?azure_token={coruja_token}&azure_user={quote(email)}&azure_name={quote(full_name)}&azure_role={role}"
     )
 
 @router.post("/register")

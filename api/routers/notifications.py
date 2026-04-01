@@ -152,7 +152,7 @@ async def update_notification_config(
             'tenant_id': config.azure_ad.get('tenant_id'),
             'client_id': config.azure_ad.get('client_id'),
             'client_secret': config.azure_ad.get('client_secret'),
-            'redirect_uri': config.azure_ad.get('redirect_uri', 'https://coruja.techbiz.com.br/api/v1/auth/azure/callback'),
+            'redirect_uri': config.azure_ad.get('redirect_uri', 'https://coruja.empresaxpto.com.br/api/v1/auth/azure/callback'),
             'admin_group_id': config.azure_ad.get('admin_group_id'),
             'user_group_id': config.azure_ad.get('user_group_id'),
         }
@@ -911,7 +911,7 @@ async def send_datacenter_emergency_call(config: Dict[str, Any], alert_data: Dic
         # Mensagem inteligente baseada no tipo de problema
         if device == 'nobreak':
             speech = (
-                f'Atenção. Alerta crítico no Datacenter Techbiz. '
+                f'Atenção. Alerta crítico no Datacenter EmpresaXPTO. '
                 f'O Nobreak {sensor_name} está com problema. '
                 f'{problem}. '
                 f'Verifique o Datacenter imediatamente. '
@@ -919,7 +919,7 @@ async def send_datacenter_emergency_call(config: Dict[str, Any], alert_data: Dic
             )
         elif device == 'ar-condicionado':
             speech = (
-                f'Atenção. Alerta crítico no Datacenter Techbiz. '
+                f'Atenção. Alerta crítico no Datacenter EmpresaXPTO. '
                 f'O Ar Condicionado {sensor_name} está com problema. '
                 f'{problem}. '
                 f'Verifique o Datacenter imediatamente. '
@@ -927,7 +927,7 @@ async def send_datacenter_emergency_call(config: Dict[str, Any], alert_data: Dic
             )
         else:
             speech = (
-                f'Atenção. Alerta crítico no Datacenter Techbiz. '
+                f'Atenção. Alerta crítico no Datacenter EmpresaXPTO. '
                 f'{problem}. '
                 f'Verifique o Datacenter imediatamente.'
             )

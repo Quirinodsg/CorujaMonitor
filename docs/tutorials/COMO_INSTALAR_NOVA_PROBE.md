@@ -90,7 +90,7 @@ Antes de instalar, pegue o token:
 
 **Da sua máquina (192.168.0.9)**:
 ```
-C:\Users\andre.quirino\Coruja Monitor\probe\
+C:\Users\user\Coruja Monitor\probe\
 ```
 
 **Para a máquina nova**:

@@ -17,7 +17,7 @@ SELECT id, name FROM tenants;
 -- Resultado:
 --  id |  name   
 -- ----+---------
---   7 | Techbiz
+--   7 | EmpresaXPTO
 --   1 | Default
 ```
 
@@ -40,7 +40,7 @@ SELECT id, email, tenant_id FROM users WHERE email LIKE '%admin%';
 ```
 
 ## 🎯 Causa Raiz
-As entradas da Base de Conhecimento foram criadas para o **tenant_id = 7 (Techbiz)**, mas o usuário admin está logado no **tenant_id = 1 (Default)**.
+As entradas da Base de Conhecimento foram criadas para o **tenant_id = 7 (EmpresaXPTO)**, mas o usuário admin está logado no **tenant_id = 1 (Default)**.
 
 O endpoint `/api/v1/knowledge-base/` filtra por `tenant_id` do usuário logado, então as entradas não apareciam.
 

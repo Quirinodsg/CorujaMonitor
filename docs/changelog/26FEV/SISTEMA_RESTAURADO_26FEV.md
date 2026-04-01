@@ -11,7 +11,7 @@ O sistema estava mostrando dados zerados após o restart. O problema foi resolvi
 - ✅ **31 Sensores** ativos
 - ✅ **87 Incidentes** históricos
 - ✅ **189 Itens** na Base de Conhecimento
-- ✅ **2 Empresas** (Techbiz + outra)
+- ✅ **2 Empresas** (EmpresaXPTO + outra)
 - ✅ **1 Usuário** admin
 
 ### Backup Restaurado

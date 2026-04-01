@@ -62,7 +62,7 @@ A função `groupServersByCompany()` agora:
 
 ### Antes (Problema)
 ```
-📁 Empresa Techbiz (1)
+📁 Empresa EmpresaXPTO (1)
   └─ DESKTOP-P9VGN04
 
 [Cria subpasta "Datacenter SP"]
@@ -71,16 +71,16 @@ A função `groupServersByCompany()` agora:
 
 ### Depois (Corrigido)
 ```
-📁 Empresa Techbiz (1)
+📁 Empresa EmpresaXPTO (1)
   └─ DESKTOP-P9VGN04
 
 [Cria subpasta "Datacenter SP" - Opção CANCELAR]
 
-📁 Empresa Techbiz (1)
+📁 Empresa EmpresaXPTO (1)
   └─ DESKTOP-P9VGN04
-📁 Empresa Techbiz / Datacenter SP (0)
+📁 Empresa EmpresaXPTO / Datacenter SP (0)
   └─ 📭 Pasta vazia
-     Edite um servidor e defina o grupo como: Empresa Techbiz / Datacenter SP
+     Edite um servidor e defina o grupo como: Empresa EmpresaXPTO / Datacenter SP
 ```
 
 ## 🔧 Implementação Técnica
@@ -130,10 +130,10 @@ Frontend reiniciado. Teste agora criando subpastas!
 
 Para criar hierarquia profunda:
 ```
-📁 Empresa Techbiz
-  └─ 📁 Empresa Techbiz / Datacenter SP
-      └─ 📁 Empresa Techbiz / Datacenter SP / Rack 01
-          └─ 📁 Empresa Techbiz / Datacenter SP / Rack 01 / Blade 01
+📁 Empresa EmpresaXPTO
+  └─ 📁 Empresa EmpresaXPTO / Datacenter SP
+      └─ 📁 Empresa EmpresaXPTO / Datacenter SP / Rack 01
+          └─ 📁 Empresa EmpresaXPTO / Datacenter SP / Rack 01 / Blade 01
 ```
 
 Cada nível usa o padrão "Pai / Filho".

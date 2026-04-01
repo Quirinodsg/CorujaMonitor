@@ -51,8 +51,8 @@ probe/INSTALAR_AQUI.bat
 
 **Execute**: `sincronizar_pastas.bat`  
 **Sincroniza**:
-- `C:\Users\andre.quirino\Coruja Monitor`
-- `C:\Users\andre.quirino\OneDrive - ...\Coruja Monitor`
+- `C:\Users\user\Coruja Monitor`
+- `C:\Users\user\OneDrive - ...\Coruja Monitor`
 
 ---
 
@@ -97,8 +97,8 @@ Probe Token: W_YxHARNTlE3G8bxoXhWt0FknTPysGnKFX_visaP_G4
 
 ### Pastas do Projeto
 ```
-Pasta 1: C:\Users\andre.quirino\Coruja Monitor
-Pasta 2: C:\Users\andre.quirino\OneDrive - ...\Coruja Monitor
+Pasta 1: C:\Users\user\Coruja Monitor
+Pasta 2: C:\Users\user\OneDrive - ...\Coruja Monitor
 ```
 
 ---

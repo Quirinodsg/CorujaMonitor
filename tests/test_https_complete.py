@@ -30,7 +30,7 @@ def test_cert_has_san_ip():
     """
     Bug Condition: O script generate-ssl-cert.sh NÃO inclui IP:192.168.31.161 no SAN.
     Browsers modernos (Chrome 58+) exigem SAN com IP para aceitar o certificado.
-    FALHA no código atual: SAN atual é DNS:coruja.techbiz.com.br,DNS:localhost,IP:127.0.0.1
+    FALHA no código atual: SAN atual é DNS:coruja.empresaxpto.com.br,DNS:localhost,IP:127.0.0.1
     """
     with open(GENERATE_SSL_SCRIPT) as f:
         content = f.read()
@@ -48,13 +48,13 @@ def test_cert_has_san_ip():
 
 def test_cert_has_san_domain():
     """
-    Bug Condition: O certificado deve incluir DNS:coruja.techbiz.com.br no SAN.
+    Bug Condition: O certificado deve incluir DNS:coruja.empresaxpto.com.br no SAN.
     """
     with open(GENERATE_SSL_SCRIPT) as f:
         content = f.read()
 
     has_domain_var  = "DOMAIN" in content and "DNS:$DOMAIN" in content
-    has_literal_dom = "DNS:coruja.techbiz.com.br" in content
+    has_literal_dom = "DNS:coruja.empresaxpto.com.br" in content
 
     assert has_domain_var or has_literal_dom, (
         "BUG CONFIRMADO: scripts/generate-ssl-cert.sh não inclui DNS do domínio no SAN."

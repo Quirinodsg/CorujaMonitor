@@ -30,7 +30,7 @@ A categoria **"Atendimento ao Usuário"** não existe no TOPdesk ou está escrit
 
 ### Opção 2: Descobrir Nomes Corretos no TOPdesk
 
-1. Faça login no TOPdesk: `https://grupotechbiz.topdesk.net`
+1. Faça login no TOPdesk: `https://empresa.topdesk.net`
 2. Vá em **Configurações** > **Chamados** > **Categorias**
 3. Veja a lista de categorias disponíveis
 4. Copie o nome EXATAMENTE como aparece (maiúsculas/minúsculas importam!)
@@ -122,9 +122,9 @@ Copie a mensagem completa e verifique qual campo está causando o problema.
 Para garantir que funcione, use APENAS os campos obrigatórios:
 
 ```
-✅ URL: https://grupotechbiz.topdesk.net
-✅ Usuário: coruja.monitor
-✅ Senha: adminOpLwqa!0
+✅ URL: https://empresa.topdesk.net
+✅ Usuário: monitor.user
+✅ Senha: [SENHA_TOPDESK]
 ❌ Categoria: [VAZIO]
 ❌ Subcategoria: [VAZIO]
 ❌ Grupo de Operadores: [VAZIO]

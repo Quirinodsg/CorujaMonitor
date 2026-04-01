@@ -4,7 +4,7 @@ echo Iniciando Probe Coruja Monitor
 echo ========================================
 echo.
 
-cd "C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe"
+cd "C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe"
 
 echo Verificando configuracao...
 if not exist probe_config.json (

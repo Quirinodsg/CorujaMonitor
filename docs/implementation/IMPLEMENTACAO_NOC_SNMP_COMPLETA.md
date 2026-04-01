@@ -307,7 +307,7 @@ pip install -r requirements.txt
 
 ```bash
 # Na pasta raiz do projeto
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # Reiniciar API (novos endpoints NOC)
 docker-compose restart api

@@ -4,7 +4,7 @@ echo  Reiniciando Frontend - Coruja Monitor
 echo ========================================
 echo.
 
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 echo [1/5] Parando frontend...
 docker-compose stop frontend

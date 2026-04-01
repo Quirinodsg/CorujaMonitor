@@ -18,7 +18,7 @@
 #### Passo 1: Rebuild do Frontend
 ```powershell
 # Abra o PowerShell como Administrador
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # Rebuild do frontend (sem cache)
 docker-compose build --no-cache frontend

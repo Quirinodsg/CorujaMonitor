@@ -60,7 +60,7 @@ echo.
 echo IMPORTANTE: O servico rodara com conta de dominio
 echo Isso permite WMI usar Kerberos automaticamente
 echo.
-set /p DOMAIN_USER="Digite o usuario (ex: TECHBIZ\coruja.monitor): "
+set /p DOMAIN_USER="Digite o usuario (ex: DOMAIN\monitor.user): "
 set /p DOMAIN_PASS="Digite a senha: "
 echo.
 

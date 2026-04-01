@@ -8,8 +8,8 @@
   - **GOAL**: Surfaçar contraexemplos que demonstram o bug
   - **Scoped PBT Approach**: Para bugs determinísticos, escopar a propriedade aos casos concretos de falha
   - Criar `tests/test_https_complete.py` com os seguintes casos:
-    - `test_cert_has_san_ip`: Ler `nginx/ssl/coruja.crt` (se existir) ou parsear `scripts/generate-ssl-cert.sh` e verificar que `IP:192.168.31.161` está no SAN — FALHA no código atual (SAN atual: `DNS:coruja.techbiz.com.br, DNS:localhost, IP:127.0.0.1`)
-    - `test_cert_has_san_domain`: Verificar que `DNS:coruja.techbiz.com.br` está no SAN do script — pode falhar se o cert foi gerado sem o domínio
+    - `test_cert_has_san_ip`: Ler `nginx/ssl/coruja.crt` (se existir) ou parsear `scripts/generate-ssl-cert.sh` e verificar que `IP:192.168.31.161` está no SAN — FALHA no código atual (SAN atual: `DNS:coruja.empresaxpto.com.br, DNS:localhost, IP:127.0.0.1`)
+    - `test_cert_has_san_domain`: Verificar que `DNS:coruja.empresaxpto.com.br` está no SAN do script — pode falhar se o cert foi gerado sem o domínio
     - `test_dashboard_ws_url_no_hardcoded_port`: Ler `frontend/src/components/Dashboard.js` e verificar que a constante `WS_URL` NÃO contém `:8000` hardcoded — FALHA no código atual (linha: `${proto}//${window.location.hostname}:8000/api/v1/ws/dashboard`)
     - `test_entrypoint_configures_cron`: Verificar que `nginx/docker-entrypoint-ssl.sh` existe e contém `crond` — FALHA no código atual (arquivo não existe)
     - `test_generate_ssl_script_has_server_ip`: Usar Hypothesis para gerar diferentes IPs e verificar que o script sempre inclui o IP do servidor no SAN
@@ -50,7 +50,7 @@
     - Adicionar variável `SERVER_IP="${CORUJA_SERVER_IP:-192.168.31.161}"` antes do comando openssl
     - Alterar `-addext "subjectAltName=DNS:$DOMAIN,DNS:localhost,IP:127.0.0.1"` para `-addext "subjectAltName=DNS:$DOMAIN,DNS:localhost,IP:$SERVER_IP,IP:127.0.0.1"`
     - _Bug_Condition: isBugCondition(X) onde X.cert.san NOT CONTAINS "IP:192.168.31.161"_
-    - _Expected_Behavior: certificado gerado contém IP:192.168.31.161 E DNS:coruja.techbiz.com.br no SAN_
+    - _Expected_Behavior: certificado gerado contém IP:192.168.31.161 E DNS:coruja.empresaxpto.com.br no SAN_
     - _Preservation: script continua gerando certificado com DNS:$DOMAIN, DNS:localhost, IP:127.0.0.1_
     - _Requirements: 2.1, 2.2_
 
@@ -139,7 +139,7 @@
       - `./scripts:/scripts:ro`
     - Adicionar variáveis de ambiente:
       - `CORUJA_SERVER_IP=192.168.31.161`
-      - `CORUJA_DOMAIN=coruja.techbiz.com.br`
+      - `CORUJA_DOMAIN=coruja.empresaxpto.com.br`
     - **NÃO reiniciar postgres ou redis**
     - **NÃO usar docker-compose --force-recreate** (bug no docker-compose 1.29.2)
     - _Requirements: 2.5, 3.5_

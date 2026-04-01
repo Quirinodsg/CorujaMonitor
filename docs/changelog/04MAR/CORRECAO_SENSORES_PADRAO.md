@@ -67,7 +67,7 @@ Os sensores de serviço (W3SVC, MSSQLSERVER, etc.) foram removidos dos sensores 
 
 Execute como Administrador:
 ```batch
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 atualizar_sensores.bat
 ```
 
@@ -81,7 +81,7 @@ Este script vai:
 
 Se preferir começar do zero:
 ```batch
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 uninstall_service.bat
 setup_wizard.bat
 ```
@@ -150,7 +150,7 @@ Se você quiser monitorar serviços específicos:
 Para verificar se está funcionando:
 
 ```batch
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 type probe.log
 ```
 

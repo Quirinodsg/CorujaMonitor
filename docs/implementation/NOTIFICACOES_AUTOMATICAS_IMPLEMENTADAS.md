@@ -46,7 +46,7 @@ Envia para TODOS os canais ativos:
 - Servidor: srv-app-01
 - Sensor: Ping
 - Severidade: critical
-- Requisitante: coruja.monitor
+- Requisitante: monitor.user
 - Grupo: Analista de Infraestrutura (se configurado)
 
 **Teams:**
@@ -126,8 +126,8 @@ Para receber notificações, configure em **Configurações > Integrações e No
 
 ### TOPdesk (Obrigatório para chamados)
 - ✅ Ativado
-- URL: `https://grupotechbiz.topdesk.net`
-- Usuário: `coruja.monitor`
+- URL: `https://empresa.topdesk.net`
+- Usuário: `monitor.user`
 - Senha: [sua senha]
 - Grupo de Operadores: `Analista de Infraestrutura` (opcional)
 - Categoria: (opcional - deixe vazio se não souber)

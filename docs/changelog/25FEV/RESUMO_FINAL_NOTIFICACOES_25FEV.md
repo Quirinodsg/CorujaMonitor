@@ -43,7 +43,7 @@
 
 **O usuário DEVE verificar manualmente:**
 
-1. **TOPdesk**: https://grupotechbiz.topdesk.net
+1. **TOPdesk**: https://empresa.topdesk.net
    - Procurar por chamados criados entre 17:26 e 17:31
    - Títulos esperados:
      - "PING - Limite critical ultrapassado"

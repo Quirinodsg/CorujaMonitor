@@ -39,7 +39,7 @@ Verificar se está habilitado:
 
 ### Passo 1: Verificar Logs da Probe
 ```bash
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 type probe.log | findstr "remote"
 ```
 

@@ -1,11 +1,11 @@
 #!/bin/bash
 # =============================================================================
-# Deploy do certificado A2Hosting (*.techbiz.com.br) no servidor Linux
+# Deploy do certificado A2Hosting (*.empresaxpto.com.br) no servidor Linux
 # Executa na sua máquina local: bash _deploy_cert_linux.sh
-# Requer: acesso SSH ao servidor 192.168.31.161
+# Requer: acesso SSH ao servidor 192.168.1.100
 # =============================================================================
 
-SERVER="192.168.31.161"
+SERVER="192.168.1.100"
 SERVER_USER="administrador"
 REMOTE_DIR="/home/administrador/CorujaMonitor"
 
@@ -27,12 +27,12 @@ ssh ${SERVER_USER}@${SERVER} "
 
 echo "[3/3] Verificando certificado ativo..."
 ssh ${SERVER_USER}@${SERVER} "
-    echo | openssl s_client -connect localhost:443 -servername coruja.techbiz.com.br 2>/dev/null \
+    echo | openssl s_client -connect localhost:443 -servername coruja.empresaxpto.com.br 2>/dev/null \
         | openssl x509 -noout -subject -dates -issuer 2>/dev/null \
         && echo '✅ Certificado válido ativo no nginx'
 "
 
 echo ""
 echo "=== Concluído ==="
-echo "Acesse: https://coruja.techbiz.com.br"
+echo "Acesse: https://coruja.empresaxpto.com.br"
 echo "Resultado esperado: 🔒 cadeado verde, sem aviso"

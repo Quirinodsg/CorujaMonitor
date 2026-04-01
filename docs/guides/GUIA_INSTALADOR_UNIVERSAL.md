@@ -14,7 +14,7 @@ probe/install.bat
 
 **Caminho completo**:
 ```
-C:\Users\andre.quirino\Coruja Monitor\probe\install.bat
+C:\Users\user\Coruja Monitor\probe\install.bat
 ```
 
 ---

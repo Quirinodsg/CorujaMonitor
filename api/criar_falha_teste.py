@@ -80,7 +80,7 @@ if __name__ == "__main__":
         print()
         print("✅ Falha de teste criada com sucesso!")
         print("   Aguarde até 60 segundos e verifique:")
-        print("   - TOPdesk: https://grupotechbiz.topdesk.net")
+        print("   - TOPdesk: https://empresa.topdesk.net")
         print("   - Teams: Canal configurado")
         print("   - Email: Caixa de entrada")
     else:

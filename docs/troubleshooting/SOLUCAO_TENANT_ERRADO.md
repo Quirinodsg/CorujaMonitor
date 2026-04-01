@@ -8,7 +8,7 @@ Os sensores mostravam "Aguardando dados..." mesmo com a probe enviando métricas
 
 **Incompatibilidade de Tenant:**
 - Admin estava logado no tenant_id=1 (Default)
-- Probe, servidores e sensores estavam no tenant_id=7 (Techbiz)
+- Probe, servidores e sensores estavam no tenant_id=7 (EmpresaXPTO)
 - O endpoint `/api/v1/metrics/` verifica se o sensor pertence ao tenant do usuário
 - Como os sensores estavam em tenant diferente, retornava 404 Not Found
 
@@ -19,7 +19,7 @@ Os sensores mostravam "Aguardando dados..." mesmo com a probe enviando métricas
 SELECT id, email, tenant_id FROM users WHERE email = 'admin@coruja.com';
 -- Resultado: tenant_id = 1
 
--- Probe no tenant Techbiz
+-- Probe no tenant EmpresaXPTO
 SELECT id, name, tenant_id FROM probes WHERE id = 3;
 -- Resultado: tenant_id = 7
 
@@ -91,7 +91,7 @@ Após a migração:
 
 ## POR QUE ACONTECEU?
 
-Quando você criou a probe na interface, selecionou a empresa "Techbiz" em vez de "Default". A probe foi criada corretamente na empresa selecionada, mas você estava logado como admin no tenant Default.
+Quando você criou a probe na interface, selecionou a empresa "EmpresaXPTO" em vez de "Default". A probe foi criada corretamente na empresa selecionada, mas você estava logado como admin no tenant Default.
 
 ## COMO EVITAR NO FUTURO
 

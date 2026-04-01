@@ -90,7 +90,7 @@ Se você executou `docker-compose down` e perdeu as alterações:
 
 ```bash
 # Ir para a pasta raiz do projeto
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # Reiniciar apenas o frontend
 docker-compose restart frontend
@@ -103,7 +103,7 @@ docker-compose restart frontend
 
 ```bash
 # Ir para a pasta raiz
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # Reconstruir e reiniciar frontend
 docker-compose up -d --build frontend
@@ -157,7 +157,7 @@ docker system prune -a --volumes
 
 ```bash
 # 1. Ir para pasta raiz
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # 2. Parar frontend
 docker-compose stop frontend
@@ -195,7 +195,7 @@ Criar arquivo `restart_frontend.bat`:
 ```batch
 @echo off
 echo Reiniciando Frontend do Coruja Monitor...
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 docker-compose stop frontend
 docker rm coruja-frontend
 docker-compose build --no-cache frontend

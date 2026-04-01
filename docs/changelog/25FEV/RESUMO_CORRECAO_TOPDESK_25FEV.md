@@ -47,7 +47,7 @@ if (channel === 'topdesk') {
 - Aviso no topo da seção TOPdesk
 - Passo a passo antes do botão de teste
 - Asterisco vermelho (*) em campos obrigatórios
-- Placeholder com exemplo real: `https://grupotechbiz.topdesk.net`
+- Placeholder com exemplo real: `https://empresa.topdesk.net`
 
 ### 2. Backend (notifications.py)
 
@@ -160,18 +160,18 @@ Cmd + Shift + R (Mac)
 1. Configurações > Integrações e Notificações
 2. Ativar TOPdesk
 3. Preencher:
-   - URL: `https://grupotechbiz.topdesk.net`
-   - Usuário: `coruja.monitor`
+   - URL: `https://empresa.topdesk.net`
+   - Usuário: `monitor.user`
    - Senha: [senha do usuário]
    - Grupo de Operadores: `Infraestrutura` (opcional mas recomendado)
 4. Salvar Configurações
 5. Testar Criação de Chamado
 
 ### Passo 4: Verificar no TOPdesk
-1. Acessar `https://grupotechbiz.topdesk.net`
+1. Acessar `https://empresa.topdesk.net`
 2. Procurar "Teste de Integração - Coruja Monitor"
 3. Verificar:
-   - ✅ Requisitante: coruja.monitor
+   - ✅ Requisitante: monitor.user
    - ✅ Grupo: Infraestrutura (se configurado)
    - ✅ Status: Novo/Em Andamento
    - ✅ Prioridade: P2
@@ -234,14 +234,14 @@ Se houver problemas:
 
 Chamado de teste criado com sucesso no TOPdesk!
 Incident ID: INC-12345
-URL: https://grupotechbiz.topdesk.net/tas/secure/incident?unid=...
+URL: https://empresa.topdesk.net/tas/secure/incident?unid=...
 ```
 
 No TOPdesk:
 ```
 Chamado: INC-12345
 Título: Teste de Integração - Coruja Monitor
-Requisitante: coruja.monitor
+Requisitante: monitor.user
 Grupo: Infraestrutura
 Status: Novo
 Prioridade: P2 - Normal

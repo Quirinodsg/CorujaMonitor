@@ -4,7 +4,7 @@
 
 Há uma probe rodando em outro diretório que está poluindo os logs:
 ```
-C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe\
+C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe\
 ```
 
 Esta probe está tentando conectar no IP antigo (192.168.30.189) e precisa ser parada.
@@ -123,7 +123,7 @@ http://192.168.30.189:8000
 
 **Solução**:
 1. Mate TODOS os processos Python: `Get-Process python | Stop-Process -Force`
-2. Navegue para: `C:\Users\andre.quirino\Coruja Monitor`
+2. Navegue para: `C:\Users\user\Coruja Monitor`
 3. Execute: `.\iniciar_probe.bat`
 
 ### Problema: Incidente não fecha
@@ -174,7 +174,7 @@ http://192.168.30.189:8000
 
 ### Configuração da Probe
 ```
-C:\Users\andre.quirino\Coruja Monitor\probe\probe_config.json
+C:\Users\user\Coruja Monitor\probe\probe_config.json
 ```
 
 Deve conter:
@@ -187,12 +187,12 @@ Deve conter:
 
 ### Script de Inicialização
 ```
-C:\Users\andre.quirino\Coruja Monitor\iniciar_probe.bat
+C:\Users\user\Coruja Monitor\iniciar_probe.bat
 ```
 
 ### Script de Correção
 ```
-C:\Users\andre.quirino\Coruja Monitor\api\fechar_incidentes_resolvidos.py
+C:\Users\user\Coruja Monitor\api\fechar_incidentes_resolvidos.py
 ```
 
 ---

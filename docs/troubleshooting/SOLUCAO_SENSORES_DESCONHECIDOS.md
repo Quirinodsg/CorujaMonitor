@@ -36,7 +36,7 @@ iniciar_probe.bat
 
 Ou manualmente:
 ```bash
-cd "C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe"
+cd "C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe"
 python probe_core.py
 ```
 
@@ -76,7 +76,7 @@ Após 1-2 minutos, os sensores devem mudar de "Desconhecido" para seus status re
 
 ### Localização
 ```
-C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe\
+C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe\
 ```
 
 ---

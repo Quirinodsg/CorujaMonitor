@@ -7,7 +7,7 @@ echo ========================================
 echo.
 
 REM Detectar pasta da probe instalada
-set "PROBE_PATH=C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe"
+set "PROBE_PATH=C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe"
 
 echo Pasta da probe detectada: %PROBE_PATH%
 echo.

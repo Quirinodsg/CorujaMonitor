@@ -8,7 +8,7 @@
 
 ### Kerberos não funciona com IP
 - Kerberos usa SPN (Service Principal Name) baseado em hostname
-- Formato do SPN: `HOST/SRVHVSPRD010.ad.techbiz.com.br`
+- Formato do SPN: `HOST/SRVHVSPRD010.ad.empresaxpto.com.br`
 - Não existe SPN para endereços IP
 - Quando usa IP, Windows tenta NTLM como fallback
 - Se NTLM está bloqueado via GPO → "Access Denied"
@@ -28,7 +28,7 @@
 Ao adicionar servidor Windows:
 
 ```
-Hostname: SRVHVSPRD010.ad.techbiz.com.br  ✅ CORRETO
+Hostname: SRVHVSPRD010.ad.empresaxpto.com.br  ✅ CORRETO
 IP: 192.168.31.110                         ✅ Pode preencher também
 
 OU
@@ -49,18 +49,18 @@ Antes de adicionar, verificar se hostname resolve:
 
 ```powershell
 # Windows
-nslookup SRVHVSPRD010.ad.techbiz.com.br
-ping SRVHVSPRD010.ad.techbiz.com.br
+nslookup SRVHVSPRD010.ad.empresaxpto.com.br
+ping SRVHVSPRD010.ad.empresaxpto.com.br
 
 # Linux
-nslookup SRVHVSPRD010.ad.techbiz.com.br
-ping -c 4 SRVHVSPRD010.ad.techbiz.com.br
+nslookup SRVHVSPRD010.ad.empresaxpto.com.br
+ping -c 4 SRVHVSPRD010.ad.empresaxpto.com.br
 ```
 
 ### 3. Formato do Hostname
 
 Aceitos:
-- `SRVHVSPRD010.ad.techbiz.com.br` (FQDN completo - RECOMENDADO)
+- `SRVHVSPRD010.ad.empresaxpto.com.br` (FQDN completo - RECOMENDADO)
 - `SRVHVSPRD010` (nome curto - se DNS resolver)
 
 Não aceitos:
@@ -109,7 +109,7 @@ auth_methods = ['Kerberos', 'Negotiate', 'CredSSP']
 psql -U postgres -d coruja -c "SELECT id, hostname, ip_address FROM servers WHERE ip_address = '192.168.31.110';"
 
 # Atualizar se necessário
-psql -U postgres -d coruja -c "UPDATE servers SET hostname = 'SRVHVSPRD010.ad.techbiz.com.br' WHERE ip_address = '192.168.31.110';"
+psql -U postgres -d coruja -c "UPDATE servers SET hostname = 'SRVHVSPRD010.ad.empresaxpto.com.br' WHERE ip_address = '192.168.31.110';"
 ```
 
 ### Erro: "Hostname não resolve"
@@ -123,12 +123,12 @@ psql -U postgres -d coruja -c "UPDATE servers SET hostname = 'SRVHVSPRD010.ad.te
 
 ```powershell
 # Windows (temporário)
-Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.31.110    SRVHVSPRD010.ad.techbiz.com.br"
+Add-Content -Path C:\Windows\System32\drivers\etc\hosts -Value "`n192.168.31.110    SRVHVSPRD010.ad.empresaxpto.com.br"
 ```
 
 ```bash
 # Linux (temporário)
-echo "192.168.31.110    SRVHVSPRD010.ad.techbiz.com.br" >> /etc/hosts
+echo "192.168.31.110    SRVHVSPRD010.ad.empresaxpto.com.br" >> /etc/hosts
 ```
 
 ## Checklist para Novas Máquinas

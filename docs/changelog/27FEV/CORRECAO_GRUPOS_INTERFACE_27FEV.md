@@ -96,7 +96,7 @@ Sistema de grupos totalmente funcional e intuitivo:
 
 ## 📝 Observações
 
-- O grupo "Empresa Techbiz" que você vê é do campo `group_name` dos servidores (sistema antigo)
+- O grupo "Empresa EmpresaXPTO" que você vê é do campo `group_name` dos servidores (sistema antigo)
 - Os novos grupos hierárquicos são da tabela `sensor_groups` (sistema novo)
 - Ambos coexistem, mas o novo sistema é mais poderoso (hierarquia ilimitada)
 

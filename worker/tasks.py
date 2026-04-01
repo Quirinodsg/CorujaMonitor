@@ -763,7 +763,7 @@ def get_system_token():
         with httpx.Client(timeout=10.0) as client:
             response = client.post(
                 "http://coruja-api:8000/api/v1/auth/login",
-                json={"email": "admin@coruja.com", "password": "admin123"}
+                json={"email": "admin@example.com", "password": "REPLACE_WITH_SYSTEM_TOKEN"}  # Use env var in production
             )
             if response.status_code == 200:
                 return response.json().get('access_token')

@@ -36,7 +36,7 @@ echo Passo 3: Configurando probe
 echo ========================================
 echo.
 
-cd "C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe"
+cd "C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe"
 
 echo Criando probe_config.json...
 (
@@ -67,7 +67,7 @@ echo Proximo passo: Iniciar a probe
 echo Execute: iniciar_probe.bat
 echo.
 echo Ou manualmente:
-echo cd "C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor\probe"
+echo cd "C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor\probe"
 echo python probe_core.py
 echo.
 pause

@@ -20,7 +20,7 @@ could not translate host name "postgres" to address
 
 ```powershell
 # Volte ao diretório raiz
-cd "C:\Users\andre.quirino\Coruja Monitor"
+cd "C:\Users\user\Coruja Monitor"
 
 # Inicie o Docker Compose
 docker-compose up -d db

@@ -37,7 +37,7 @@ Criar uma interface discreta para gerenciar grupos hierárquicos, mantendo o foc
 2. Botões de visualização (🌳 📋)
 3. Gerenciar grupos (colapsado)
 
-**Empresa Techbiz:**
+**Empresa EmpresaXPTO:**
 - Aparece como pasta de servidores (sistema antigo)
 - Não confunde com grupos hierárquicos (sistema novo)
 - Ambos coexistem sem conflito
@@ -85,7 +85,7 @@ Criar uma interface discreta para gerenciar grupos hierárquicos, mantendo o foc
 
 ### Sistema Antigo (group_name)
 ```
-📁 Empresa Techbiz (1)
+📁 Empresa EmpresaXPTO (1)
   └─ DESKTOP-P9VGN04
 ```
 - Pasta simples
@@ -130,5 +130,5 @@ Frontend reiniciado. Acesse http://localhost:3000 e vá em Servidores para ver a
 - A seção inicia **fechada** por padrão
 - Clique em "⚙️ Gerenciar Grupos" para abrir
 - Os servidores ficam sempre visíveis
-- "Empresa Techbiz" é uma pasta de servidores (sistema antigo)
+- "Empresa EmpresaXPTO" é uma pasta de servidores (sistema antigo)
 - Grupos hierárquicos ficam na seção colapsável (sistema novo)

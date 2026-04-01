@@ -49,8 +49,8 @@ Pressione: `Ctrl + Shift + R`
 3. Preencha:
 
 **Campos Obrigatórios (*):**
-- URL: `https://grupotechbiz.topdesk.net`
-- Usuário: `coruja.monitor`
+- URL: `https://empresa.topdesk.net`
+- Usuário: `monitor.user`
 - Senha: [sua senha]
 
 **Campos Opcionais (recomendado preencher):**
@@ -66,12 +66,12 @@ Pressione: `Ctrl + Shift + R`
 
 ### 4️⃣ Verificar no TOPdesk
 
-Acesse: `https://grupotechbiz.topdesk.net`
+Acesse: `https://empresa.topdesk.net`
 
 Procure: "Teste de Integração - Coruja Monitor"
 
 Deve mostrar:
-- ✅ Requisitante: **coruja.monitor**
+- ✅ Requisitante: **monitor.user**
 - ✅ Grupo: **Infraestrutura**
 - ✅ Status: Novo
 - ✅ Prioridade: P2
@@ -88,7 +88,7 @@ Se quiser entender todos os detalhes:
 
 ### Erro de Autenticação
 - Verifique usuário e senha no TOPdesk
-- Tente fazer login manual em `https://grupotechbiz.topdesk.net`
+- Tente fazer login manual em `https://empresa.topdesk.net`
 
 ### Erro de Conexão
 - Verifique se a URL está correta
@@ -128,7 +128,7 @@ Chamado de teste criado com sucesso no TOPdesk!
 ```
 
 E no TOPdesk o chamado estará criado com:
-- Requisitante: coruja.monitor
+- Requisitante: monitor.user
 - Grupo: Infraestrutura
 - Status: Novo
 

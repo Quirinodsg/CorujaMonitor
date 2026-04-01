@@ -916,9 +916,9 @@ function Settings({ onNavigate }) {
                     ...notificationConfig,
                     topdesk: { ...notificationConfig.topdesk, url: e.target.value }
                   })}
-                  placeholder="https://grupotechbiz.topdesk.net"
+                  placeholder="https://empresa.topdesk.net"
                 />
-                <small>URL base da sua instância TOPdesk (exemplo: https://grupotechbiz.topdesk.net)</small>
+                <small>URL base da sua instância TOPdesk (exemplo: https://empresa.topdesk.net)</small>
               </div>
             </div>
             <div className="form-row">

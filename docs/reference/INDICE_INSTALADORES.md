@@ -165,8 +165,8 @@ reinstalar_servidor_completo.bat
 sincronizar_pastas.bat
 ```
 - Sincroniza entre:
-  - `C:\Users\andre.quirino\Coruja Monitor`
-  - `C:\Users\andre.quirino\OneDrive - ...\Coruja Monitor`
+  - `C:\Users\user\Coruja Monitor`
+  - `C:\Users\user\OneDrive - ...\Coruja Monitor`
 
 ---
 
@@ -249,8 +249,8 @@ INDICE_INSTALADORES.md
 - Cada probe tem seu próprio token
 
 ### Pastas
-- **Pasta 1**: `C:\Users\andre.quirino\Coruja Monitor`
-- **Pasta 2**: `C:\Users\andre.quirino\OneDrive - ...\Coruja Monitor`
+- **Pasta 1**: `C:\Users\user\Coruja Monitor`
+- **Pasta 2**: `C:\Users\user\OneDrive - ...\Coruja Monitor`
 - Use `sincronizar_pastas.bat` para manter sincronizadas
 
 ---

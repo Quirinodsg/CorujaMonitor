@@ -148,7 +148,7 @@ Se a probe estiver em outra máquina, certifique-se de que o firewall permite:
 
 Execute agora:
 ```batch
-cd C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\probe
+cd C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\probe
 corrigir_url.bat
 ```
 

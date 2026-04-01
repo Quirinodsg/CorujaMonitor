@@ -2,7 +2,7 @@
 
 ## Introduction
 
-O HTTPS do Coruja Monitor (servidor 192.168.31.161, domínio coruja.techbiz.com.br) está completamente inoperante. O certificado SSL self-signed foi gerado sem `subjectAltName` (SAN) incluindo o IP do servidor, fazendo browsers modernos (Chrome 58+) rejeitarem a conexão com `ERR_CERT_AUTHORITY_INVALID`. Como consequência, o login falha, o dashboard não carrega dados, a seção "Empresa" não aparece e as conexões WebSocket (wss://) não se estabelecem. Adicionalmente, o `config.js` do frontend com a URL relativa correta não foi propagado para o container, e o script de renovação automática do certificado não está configurado como cron job.
+O HTTPS do Coruja Monitor (servidor 192.168.31.161, domínio coruja.empresaxpto.com.br) está completamente inoperante. O certificado SSL self-signed foi gerado sem `subjectAltName` (SAN) incluindo o IP do servidor, fazendo browsers modernos (Chrome 58+) rejeitarem a conexão com `ERR_CERT_AUTHORITY_INVALID`. Como consequência, o login falha, o dashboard não carrega dados, a seção "Empresa" não aparece e as conexões WebSocket (wss://) não se estabelecem. Adicionalmente, o `config.js` do frontend com a URL relativa correta não foi propagado para o container, e o script de renovação automática do certificado não está configurado como cron job.
 
 ## Bug Analysis
 
@@ -10,7 +10,7 @@ O HTTPS do Coruja Monitor (servidor 192.168.31.161, domínio coruja.techbiz.com.
 
 1.1 WHEN o browser acessa `https://192.168.31.161` THEN o sistema exibe `ERR_CERT_AUTHORITY_INVALID` porque o certificado não possui SAN para o IP `192.168.31.161`
 
-1.2 WHEN o browser acessa `https://coruja.techbiz.com.br` THEN o sistema exibe aviso de certificado não confiável porque o certificado não possui SAN para o domínio `coruja.techbiz.com.br`
+1.2 WHEN o browser acessa `https://coruja.empresaxpto.com.br` THEN o sistema exibe aviso de certificado não confiável porque o certificado não possui SAN para o domínio `coruja.empresaxpto.com.br`
 
 1.3 WHEN o usuário tenta fazer login via HTTPS THEN o sistema falha na autenticação porque o container frontend ainda usa a versão antiga do `config.js` com URL absoluta em vez de URL relativa `/api/v1`
 
@@ -22,7 +22,7 @@ O HTTPS do Coruja Monitor (servidor 192.168.31.161, domínio coruja.techbiz.com.
 
 2.1 WHEN o browser acessa `https://192.168.31.161` THEN o sistema SHALL estabelecer conexão TLS sem erros de certificado, pois o certificado contém SAN com `IP:192.168.31.161`
 
-2.2 WHEN o browser acessa `https://coruja.techbiz.com.br` THEN o sistema SHALL estabelecer conexão TLS sem erros de certificado, pois o certificado contém SAN com `DNS:coruja.techbiz.com.br`
+2.2 WHEN o browser acessa `https://coruja.empresaxpto.com.br` THEN o sistema SHALL estabelecer conexão TLS sem erros de certificado, pois o certificado contém SAN com `DNS:coruja.empresaxpto.com.br`
 
 2.3 WHEN o usuário submete credenciais de login via HTTPS THEN o sistema SHALL autenticar com sucesso e retornar JWT token, pois o frontend usa URL relativa `/api/v1` que é roteada corretamente pelo nginx
 

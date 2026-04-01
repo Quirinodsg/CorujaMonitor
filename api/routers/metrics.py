@@ -494,7 +494,7 @@ def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
 
     # SMS inteligente com detalhes do problema
     sms_body = (
-        f'🚨 DATACENTER TECHBIZ - ALERTA CRÍTICO\n\n'
+        f'🚨 DATACENTER - ALERTA CRÍTICO\n\n'
         f'Dispositivo: {sensor_name}\n'
         f'Problema: {problem}\n\n'
         f'Verifique o Datacenter imediatamente.'

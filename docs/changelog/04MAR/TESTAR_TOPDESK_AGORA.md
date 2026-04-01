@@ -60,7 +60,7 @@ npm start
 
 **URL do TOPdesk:**
 ```
-https://grupotechbiz.topdesk.net
+https://empresa.topdesk.net
 ```
 
 **Usuário (Login):**
@@ -158,13 +158,13 @@ Próximo passo:
 Usuário ou senha incorretos.
 
 Verifique:
-✓ URL: https://grupotechbiz.topdesk.net
-✓ Usuário: coruja.monitor
+✓ URL: https://empresa.topdesk.net
+✓ Usuário: monitor.user
 ✓ Senha está correta?
 ```
 
 **O que fazer:**
-1. Abra `https://grupotechbiz.topdesk.net` no navegador
+1. Abra `https://empresa.topdesk.net` no navegador
 2. Tente fazer login com as mesmas credenciais
 3. Se funcionar no navegador mas não na integração:
    - Verifique se o usuário tem permissão de API
@@ -180,7 +180,7 @@ Verifique:
 Não foi possível conectar ao TOPdesk.
 
 Verifique:
-✓ URL está correta? https://grupotechbiz.topdesk.net
+✓ URL está correta? https://empresa.topdesk.net
 ✓ O servidor está acessível?
 ✓ Firewall bloqueando?
 ```
@@ -226,7 +226,7 @@ Verifique:
 - [ ] Aguardou 10 segundos
 - [ ] Frontend recarregado (Ctrl+Shift+R)
 - [ ] TOPdesk ativado (toggle ligado)
-- [ ] URL preenchida: `https://grupotechbiz.topdesk.net`
+- [ ] URL preenchida: `https://empresa.topdesk.net`
 - [ ] Usuário preenchido: `coruja.monitor` (requisitante)
 - [ ] Senha preenchida
 - [ ] Grupo de Operadores preenchido (opcional mas recomendado)
@@ -238,7 +238,7 @@ Verifique:
 - [ ] Verificou resultado
 - [ ] Verificou no TOPdesk:
   - [ ] Chamado criado
-  - [ ] Requisitante: coruja.monitor
+  - [ ] Requisitante: monitor.user
   - [ ] Grupo: Infraestrutura (se configurado)
   - [ ] Status: Novo/Em Andamento
 
@@ -253,7 +253,7 @@ Se tudo funcionou:
 
 ### Verifique no TOPdesk
 
-Acesse: `https://grupotechbiz.topdesk.net`
+Acesse: `https://empresa.topdesk.net`
 
 Procure por: "Teste de Integração - Coruja Monitor"
 

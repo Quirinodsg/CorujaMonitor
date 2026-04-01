@@ -71,7 +71,7 @@ abc123def456ghi789jkl012mno345pqr678stu901vwx234yz
 **Na sua máquina (192.168.0.9)**:
 
 1. Abra o Windows Explorer
-2. Vá para: `C:\Users\andre.quirino\Coruja Monitor\probe\`
+2. Vá para: `C:\Users\user\Coruja Monitor\probe\`
 3. Copie a pasta inteira `probe`
 
 **Opções para copiar:**
@@ -340,7 +340,7 @@ http://192.168.0.9:3000 → Servidores
 
 ### Instalador
 ```
-C:\Users\andre.quirino\Coruja Monitor\probe\install_workgroup.bat
+C:\Users\user\Coruja Monitor\probe\install_workgroup.bat
 ```
 
 ### Configuração (criada pelo instalador)

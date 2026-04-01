@@ -137,7 +137,7 @@
 ## 🗂️ Estrutura de Pastas
 
 ```
-C:\Users\andre.quirino\Coruja Monitor\
+C:\Users\user\Coruja Monitor\
 ├── api/
 │   ├── routers/
 │   │   ├── dashboard.py ✓ MODIFICADO
@@ -222,8 +222,8 @@ install_workgroup.bat
 - **Token**: W_YxHARNTlE3G8bxoXhWt0FknTPysGnKFX_visaP_G4
 
 ### Pastas
-- **Pasta 1**: C:\Users\andre.quirino\Coruja Monitor
-- **Pasta 2**: C:\Users\andre.quirino\OneDrive - Techbiz Forense Digital Ltda\Desktop\Coruja Monitor
+- **Pasta 1**: C:\Users\user\Coruja Monitor
+- **Pasta 2**: C:\Users\user\OneDrive - EmpresaXPTO Ltda\Desktop\Coruja Monitor
 
 ---
 

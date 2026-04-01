@@ -92,7 +92,7 @@ if config.get('operator_group'):
 
 ### Campos Obrigatórios
 
-1. **URL do TOPdesk**: `https://grupotechbiz.topdesk.net`
+1. **URL do TOPdesk**: `https://empresa.topdesk.net`
 2. **Usuário (Login)**: `coruja.monitor`
    - Este é o REQUISITANTE
    - Não precisa ser operador
@@ -154,8 +154,8 @@ docker restart coruja-api
 1. Vá em Configurações > Integrações e Notificações
 2. Ative o TOPdesk
 3. Preencha:
-   - URL: `https://grupotechbiz.topdesk.net`
-   - Usuário: `coruja.monitor`
+   - URL: `https://empresa.topdesk.net`
+   - Usuário: `monitor.user`
    - Senha: [sua senha]
    - Grupo de Operadores: `Infraestrutura` (opcional mas recomendado)
 4. Clique em "Salvar Configurações"
@@ -163,11 +163,11 @@ docker restart coruja-api
 
 ### Passo 3: Verificar no TOPdesk
 
-1. Acesse `https://grupotechbiz.topdesk.net`
+1. Acesse `https://empresa.topdesk.net`
 2. Vá em "Chamados" ou "Incidents"
 3. Procure por "Teste de Integração - Coruja Monitor"
 4. Verifique:
-   - ✅ Requisitante: coruja.monitor
+   - ✅ Requisitante: monitor.user
    - ✅ Grupo: Infraestrutura (se configurado)
    - ✅ Status: Novo/Em Andamento
    - ✅ Prioridade: P2
@@ -205,7 +205,7 @@ Ao testar a integração, você deve ver:
 
 Chamado de teste criado com sucesso no TOPdesk!
 Incident ID: INC-12345
-URL: https://grupotechbiz.topdesk.net/tas/secure/incident?unid=...
+URL: https://empresa.topdesk.net/tas/secure/incident?unid=...
 ```
 
 E no TOPdesk:
@@ -213,7 +213,7 @@ E no TOPdesk:
 ```
 Chamado: INC-12345
 Título: Teste de Integração - Coruja Monitor
-Requisitante: coruja.monitor
+Requisitante: monitor.user
 Grupo: Infraestrutura
 Status: Novo
 Prioridade: P2 - Normal
