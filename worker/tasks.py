@@ -112,9 +112,20 @@ def evaluate_all_thresholds():
             )
 
             if threshold_breached:
-                # ── WARNING: não cria incidente, apenas registra métrica ──
-                # Incidentes e notificações APENAS para CRITICAL
+                # ── WARNING: não cria incidente, mas auto-resolve incidentes antigos se sensor melhorou ──
                 if severity == 'warning' and sensor.sensor_type != 'system':
+                    # Auto-resolve incidentes CRITICAL que agora são apenas WARNING (sensor melhorou)
+                    open_incidents = db.query(Incident).filter(
+                        Incident.sensor_id == sensor.id,
+                        Incident.status.in_(['open', 'acknowledged']),
+                        Incident.severity == 'critical'
+                    ).all()
+                    for inc in open_incidents:
+                        inc.status = "resolved"
+                        inc.resolved_at = datetime.now(timezone.utc)
+                        inc.resolution_notes = "Auto-resolvido: sensor melhorou de critical para warning"
+                        db.commit()
+                        logger.info(f"✅ Incidente {inc.id} auto-resolvido (sensor {sensor.name} melhorou para warning)")
                     continue
 
                 # ── SYSTEM/UPTIME: tratamento especial — incidente informativo de reboot ──
