@@ -51,7 +51,8 @@ class PrinterCollector:
             vals = {}
             for oid, name in PRINTER_OIDS.items():
                 for k, v in data.items():
-                    if oid in k or k.endswith(oid.split('.')[-1]):
+                    # Match exato pelo OID completo
+                    if oid in k:
                         vals[name] = v
                         break
 
@@ -61,14 +62,18 @@ class PrinterCollector:
             printer_status = self._int(vals.get("printer_status"))
             model = str(vals.get("model", "")).strip('"')
 
-            toner_pct = round(toner_level / toner_max * 100) if toner_max and toner_max > 0 else 0
+            toner_pct = round(toner_level / toner_max * 100) if toner_max and toner_max > 0 and toner_level is not None else 0
+            logger.info(f"Printer {self.ip}: toner_level={toner_level}, toner_max={toner_max}, pct={toner_pct}%")
             toner_st = "critical" if toner_pct <= 10 else "warning" if toner_pct <= 20 else "ok"
             overall = toner_st
 
             metrics.append(self._m("toner", toner_pct, "%", toner_st, f"Toner: {toner_pct}%"))
-            metrics.append(self._m("toner_level", toner_level or 0, "units", "ok"))
-            metrics.append(self._m("toner_max", toner_max or 0, "units", "ok"))
-            metrics.append(self._m("total_pages", total_pages or 0, "pages", "ok"))
+            if toner_level is not None:
+                metrics.append(self._m("toner_level", toner_level, "units", "ok"))
+            if toner_max is not None:
+                metrics.append(self._m("toner_max", toner_max, "units", "ok"))
+            if total_pages is not None:
+                metrics.append(self._m("total_pages", total_pages, "pages", "ok"))
             metrics.append(self._m("printer_status", printer_status or 0, "status", "ok", STATUS_MAP.get(printer_status, "unknown")))
             if model:
                 metrics.append(self._m("model", 0, "text", "ok", model))
