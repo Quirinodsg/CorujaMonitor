@@ -304,11 +304,35 @@ function NOCMode({ onExit }) {
           <div style={{ background: '#0f172a', borderRadius: 16, padding: 20, border: '1px solid #1e293b' }}>
             <div style={{ fontSize: 13, color: '#06b6d4', fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#06b6d4', boxShadow: '0 0 8px #06b6d4' }} />AR-CONDICIONADO<span style={{ marginLeft: 'auto', fontSize: 20, fontWeight: 800, color: '#e2e8f0' }}>{dcHvac.length}</span></div>
             {dcHvac.length === 0 && <div style={{ fontSize: 12, color: '#475569', textAlign: 'center', padding: 20 }}>Nenhum sensor configurado</div>}
-            {dcHvac.map(s => { const m = dcMetrics[String(s.id)]; const st = gs(m?.status); return (
-              <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', marginBottom: 6, background: st.g, borderRadius: 10, border: `1px solid ${st.c}33`, boxShadow: st.glow }}>
-                <span style={{ fontSize: 18 }}>❄️</span>
-                <div style={{ flex: 1 }}><div style={{ fontSize: 13, fontWeight: 700, color: '#e2e8f0' }}>{s.name}</div><div style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{s.config?.ip_address||''}</div></div>
-                <span style={{ fontSize: 10, padding: '2px 8px', borderRadius: 6, background: `${st.c}20`, color: st.c, fontWeight: 700 }}>{st.l}</span>
+            {dcHvac.map(s => { const m = dcMetrics[String(s.id)]; const md = m?.metadata||{}; const st = gs(m?.status); const tempInterna = md['Conflex temp_interna']?.value; const tempMaq1 = md['Conflex temp_retorno_maq1']?.value; const tempMaq2 = md['Conflex temp_retorno_maq2']?.value; const maq1 = md['Conflex maquina_1']?.value; const maq2 = md['Conflex maquina_2']?.value; const plc = md['Conflex status_plc']?.value; return (
+              <div key={s.id} style={{ background: st.g, borderRadius: 12, padding: 16, border: `1px solid ${st.c}33`, boxShadow: st.glow }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '50%', background: st.c, boxShadow: `0 0 8px ${st.c}`, animation: 'nocPulse 2s infinite' }} />
+                  <span style={{ fontSize: 14, fontWeight: 700, color: '#e2e8f0' }}>❄️ {s.name}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 10, padding: '2px 8px', borderRadius: 6, background: `${st.c}20`, color: st.c, fontWeight: 700 }}>{st.l}</span>
+                </div>
+                {tempInterna !== undefined ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, fontWeight: 800, color: tempInterna >= 26 ? '#ef4444' : '#22c55e', textShadow: `0 0 20px ${tempInterna >= 26 ? 'rgba(239,68,68,0.5)' : 'rgba(34,197,94,0.3)'}` }}>{tempInterna}°C</div>
+                      <div style={{ fontSize: 9, color: '#64748b' }}>SALA</div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#94a3b8' }}>
+                        <span>❄️ Máq 1: <span style={{color: maq1 === 1 ? '#22c55e' : '#ef4444', fontWeight: 700}}>{maq1 === 1 ? 'ON' : 'OFF'}</span>{tempMaq1 !== undefined && ` · ${tempMaq1}°C`}</span>
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#94a3b8' }}>
+                        <span>❄️ Máq 2: <span style={{color: maq2 === 1 ? '#22c55e' : '#ef4444', fontWeight: 700}}>{maq2 === 1 ? 'ON' : 'OFF'}</span>{tempMaq2 !== undefined && ` · ${tempMaq2}°C`}</span>
+                      </div>
+                      <div style={{ fontSize: 11, color: '#94a3b8' }}>🔌 PLC: <span style={{color: plc === 1 ? '#22c55e' : '#ef4444', fontWeight: 700}}>{plc === 1 ? 'ON' : 'OFF'}</span></div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <span style={{ fontSize: 18 }}>❄️</span>
+                    <div style={{ flex: 1 }}><div style={{ fontSize: 10, color: '#94a3b8', fontFamily: 'monospace' }}>{s.config?.ip_address||''}</div></div>
+                  </div>
+                )}
               </div>); })}
           </div>
         </div>
