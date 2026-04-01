@@ -91,8 +91,7 @@ class ConflexCollector:
                         temp = round(num / 10.0, 1)
                         st = "ok"
                         if info["name"] == "temp_interna":
-                            if temp >= 30: st = "critical"; overall = "critical"
-                            elif temp >= 26: st = "warning"; overall = max(overall, "warning", key=lambda x: ["ok","warning","critical"].index(x))
+                            if temp >= 26: st = "critical"; overall = "critical"
                         metrics.append(self._m(info["name"], temp, "°C", st, info["label"], info["icon"]))
 
             # ── Status ON/OFF ──
