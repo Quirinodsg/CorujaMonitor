@@ -48,11 +48,20 @@ class PrinterCollector:
 
             data = result['data']
             elapsed = (time.time() - start) * 1000
+            
+            # Map OID values by matching the unique tail of each OID
             vals = {}
-            for oid, name in PRINTER_OIDS.items():
-                for k, v in data.items():
-                    # Match exato pelo OID completo
-                    if oid in k:
+            oid_tails = {
+                "43.11.1.1.9.1.1": "toner_level",
+                "43.11.1.1.8.1.1": "toner_max",
+                "43.10.2.1.4.1.1": "total_pages",
+                "25.3.5.1.1.1": "printer_status",
+                "25.3.2.1.3.1": "model",
+                "1.3.0": "uptime",
+            }
+            for k, v in data.items():
+                for tail, name in oid_tails.items():
+                    if k.endswith(tail):
                         vals[name] = v
                         break
 
@@ -63,7 +72,6 @@ class PrinterCollector:
             model = str(vals.get("model", "")).strip('"')
 
             toner_pct = round(toner_level / toner_max * 100) if toner_max and toner_max > 0 and toner_level is not None else 0
-            logger.info(f"Printer {self.ip}: toner_level={toner_level}, toner_max={toner_max}, pct={toner_pct}%")
             toner_st = "critical" if toner_pct <= 10 else "warning" if toner_pct <= 20 else "ok"
             overall = toner_st
 
