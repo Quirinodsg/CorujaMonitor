@@ -113,9 +113,9 @@ class ConflexCollector:
                 val_str = self._find_oid(data, oid)
                 if val_str:
                     txt = val_str.strip('"')
-                    has_falha = "falha" in txt.lower()
-                    if has_falha: overall = "critical"
-                    metrics.append(self._m(info["name"], 1 if not has_falha else 0, "text", "critical" if has_falha else "ok", txt))
+                    # Info OIDs retornam o nome/descrição, não indicam falha pelo texto
+                    # "Falha Rede Geral" é o NOME do item, não significa que há falha
+                    metrics.append(self._m(info["name"], 1, "text", "ok", txt))
 
             metrics.insert(0, self._m("status", 1 if overall != "critical" else 0, "status", overall))
             metrics.append(self._m("latency", round(elapsed, 1), "ms", "ok"))
