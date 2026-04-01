@@ -68,6 +68,7 @@ function HyperVDashboard() {
   const [period, setPeriod] = useState('24h');
   const [filterHost, setFilterHost] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [allHosts, setAllHosts] = useState([]);
 
   // Cost section
   const [showCostBreakdown, setShowCostBreakdown] = useState(false);
@@ -113,7 +114,12 @@ function HyperVDashboard() {
       ]);
 
       if (ovRes.status === 'fulfilled') setOverview(ovRes.value.data);
-      if (hostRes.status === 'fulfilled') setHosts(Array.isArray(hostRes.value.data) ? hostRes.value.data : []);
+      if (hostRes.status === 'fulfilled') {
+        var hostData = Array.isArray(hostRes.value.data) ? hostRes.value.data : [];
+        setHosts(hostData);
+        // Manter lista completa de hosts para o dropdown (não filtrada)
+        if (!filterHost && hostData.length > 0) setAllHosts(hostData);
+      }
       if (vmRes.status === 'fulfilled') setVms(Array.isArray(vmRes.value.data) ? vmRes.value.data : []);
       if (finRes.status === 'fulfilled') {
         var finData = finRes.value.data;
@@ -303,7 +309,7 @@ function HyperVDashboard() {
             <label>Host</label>
             <select value={filterHost} onChange={e => setFilterHost(e.target.value)}>
               <option value="">Todos os hosts</option>
-              {hosts.map(h => <option key={h.id} value={h.hostname}>{h.hostname}</option>)}
+              {(allHosts.length > 0 ? allHosts : hosts).map(h => <option key={h.id} value={h.hostname}>{h.hostname}</option>)}
             </select>
           </div>
           <div>
