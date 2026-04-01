@@ -575,6 +575,13 @@ class ProbeCore:
                     except Exception as e:
                         logger.warning(f"ICMP {sensor['name']} error: {e}")
 
+                # ── Impressora SNMP (Printer MIB) — detecta pelo nome ──
+                elif sensor.get('ip_address') and any(kw in (sensor.get('name', '') or '').lower() for kw in ['impressora', 'printer', 'samsung', 'hp laserjet', 'canon']):
+                    try:
+                        self._collect_printer(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"Printer {sensor['name']} error: {e}")
+
                 # ── Engetron UPS (HTTP scraping) — detecta pelo nome ──
                 elif sensor.get('ip_address') and sensor.get('name', '').lower().find('engetron') >= 0:
                     try:
@@ -606,6 +613,37 @@ class ProbeCore:
 
         except Exception as e:
             logger.error(f"Error collecting standalone sensors: {e}")
+
+    def _collect_printer(self, sensor, timestamp):
+        """Coleta métricas de impressora via SNMP (Printer MIB)."""
+        ip = sensor.get('ip_address')
+        community = sensor.get('snmp_community') or 'public'
+        port = sensor.get('snmp_port') or 161
+        name = sensor.get('name', 'Printer')
+        try:
+            from collectors.printer_collector import PrinterCollector
+            collector = PrinterCollector(ip=ip, community=community, port=port)
+            metrics = collector.collect()
+            if metrics:
+                all_data = {}
+                status = 'ok'
+                for m in metrics:
+                    all_data[m['name']] = {'value': m['value'], 'unit': m['unit'], 'status': m['status'], 'label': m.get('label', '')}
+                    if m['status'] == 'critical': status = 'critical'
+                    elif m['status'] == 'warning' and status != 'critical': status = 'warning'
+                toner = all_data.get('Printer toner', {}).get('value', 0)
+                self.buffer.append({
+                    'sensor_id': sensor['id'], 'sensor_type': 'printer', 'name': name,
+                    'value': toner, 'unit': '%', 'status': status,
+                    'timestamp': timestamp.isoformat(), 'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id'], **all_data}
+                })
+                logger.info(f"Printer {name} ({ip}): toner={toner}%, status={status}")
+            else:
+                self.buffer.append({'sensor_id': sensor['id'], 'sensor_type': 'printer', 'name': name, 'value': 0, 'unit': 'status', 'status': 'critical', 'timestamp': timestamp.isoformat(), 'hostname': '__standalone__', 'metadata': {'sensor_id': sensor['id']}})
+        except Exception as e:
+            logger.warning(f"Printer {name} ({ip}) error: {e}")
+            self.buffer.append({'sensor_id': sensor['id'], 'sensor_type': 'printer', 'name': name, 'value': 0, 'unit': 'status', 'status': 'critical', 'timestamp': timestamp.isoformat(), 'hostname': '__standalone__', 'metadata': {'sensor_id': sensor['id'], 'error': str(e)}})
 
     def _collect_conflex(self, sensor, timestamp):
         """Coleta métricas de Ar-Condicionado Conflex via SNMP."""

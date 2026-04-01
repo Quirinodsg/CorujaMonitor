@@ -402,6 +402,21 @@ function SensorLibrary() {
               )}
             </div>
           )}
+          {/* Printer details */}
+          {metric?.metadata && metric.metadata['Printer toner'] && (
+            <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text-secondary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, color: metric.metadata['Printer toner'].value <= 10 ? '#ef4444' : metric.metadata['Printer toner'].value <= 20 ? '#f59e0b' : '#22c55e' }}>
+                  🖨️ Toner: {metric.metadata['Printer toner'].value}%
+                </span>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px' }}>
+                {metric.metadata['Printer total_pages'] && <span>📄 {metric.metadata['Printer total_pages'].value.toLocaleString()} páginas</span>}
+                {metric.metadata['Printer printer_status'] && <span>📊 {metric.metadata['Printer printer_status'].label}</span>}
+                {metric.metadata['Printer model'] && <span style={{gridColumn:'1/-1'}}>🏷️ {metric.metadata['Printer model'].label}</span>}
+              </div>
+            </div>
+          )}
           {/* Conflex HVAC details */}
           {metric?.metadata && metric.metadata['Conflex status'] && (
             <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 11, color: 'var(--text-secondary)' }}>
