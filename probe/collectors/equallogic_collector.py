@@ -161,6 +161,15 @@ class EqualLogicCollector:
     def _parse_member_storage(self, data: Dict[str, str]) -> List[Dict[str, Any]]:
         """Parse member storage OIDs into metrics."""
         metrics = []
+
+        # Debug: log raw data
+        if data:
+            logger.info(f"EqualLogic member WALK: {len(data)} OIDs returned")
+            for oid, val in list(data.items())[:20]:
+                logger.info(f"  OID: {oid} = {val}")
+        else:
+            logger.warning("EqualLogic member WALK: NO DATA returned")
+
         # Extrair valores por suffix (member index)
         total_mb = used_mb = snap_mb = repl_mb = 0
         model = serial = svc_tag = fw_ver = ""
