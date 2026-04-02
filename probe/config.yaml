@@ -15,6 +15,14 @@ token: "V-PTetiHvbNsZgrkY14PFGRfyv6jPBZxdTb76Z2M7YY"
 probe:
   name: "SRVSONDA001"
   location: ""
+  # ── Coleta Paralela (feature flag) ──
+  # Ativar para coleta estilo PRTG (ThreadPoolExecutor)
+  # false = modo sequencial (atual, seguro)
+  # true = modo paralelo (mais rápido)
+  parallel_enabled: false
+  max_workers: 8
+  timeout_seconds: 30
+  dispatch_mode: "bulk"  # bulk ou incremental
 
 # Intervalo de coleta (segundos)
 collection_interval: 60

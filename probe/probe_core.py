@@ -34,6 +34,13 @@ from collectors.docker_collector import DockerCollector
 from collectors.kubernetes_collector import KubernetesCollector
 from config import ProbeConfig
 
+# Parallel engine (feature flag)
+try:
+    from parallel_engine import ProbeOrchestrator
+    PARALLEL_AVAILABLE = True
+except ImportError:
+    PARALLEL_AVAILABLE = False
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -53,11 +60,43 @@ class ProbeCore:
         self.buffer = []
         self.max_buffer_size = 1000
         
+        # Parallel engine (feature flag via config.yaml)
+        self._parallel_config = self._load_parallel_config()
+        self._orchestrator = None
+        if PARALLEL_AVAILABLE and self._parallel_config.get("parallel_enabled", False):
+            self._orchestrator = ProbeOrchestrator(self, self._parallel_config)
+            logger.info(f"⚡ Parallel engine ENABLED (workers={self._parallel_config.get('max_workers', 8)})")
+        else:
+            logger.info("🔄 Sequential mode (parallel_enabled=false)")
+
         # Initialize Kubernetes collector
         self.kubernetes_collector = None
         
         # Initialize collectors
         self._init_collectors()
+
+    def _load_parallel_config(self) -> Dict[str, Any]:
+        """Load parallel engine config from config.yaml."""
+        defaults = {
+            "parallel_enabled": False,
+            "max_workers": 8,
+            "timeout_seconds": 30,
+            "dispatch_mode": "bulk",
+            "canary_hosts": [],
+        }
+        try:
+            import yaml
+            for path in ["config.yaml", "probe_config.yaml"]:
+                p = Path(path)
+                if p.exists():
+                    with open(p) as f:
+                        cfg = yaml.safe_load(f) or {}
+                    probe_cfg = cfg.get("probe", {})
+                    defaults.update({k: v for k, v in probe_cfg.items() if k in defaults})
+                    break
+        except Exception as e:
+            logger.debug(f"Parallel config load: {e}")
+        return defaults
     
     def _init_collectors(self):
         """Initialize all metric collectors"""
@@ -170,7 +209,16 @@ class ProbeCore:
             return None
     
     def _collect_metrics(self):
-        """Collect metrics from all collectors"""
+        """Collect metrics — parallel or sequential based on feature flag."""
+        if self._orchestrator:
+            # ⚡ PARALLEL MODE
+            self._orchestrator.collect_all()
+        else:
+            # 🔄 SEQUENTIAL MODE (original)
+            self._collect_metrics_sequential()
+
+    def _collect_metrics_sequential(self):
+        """Original sequential collection (preserved for safety)."""
         timestamp = datetime.now()
         
         # Collect from local machine (where probe is installed)
