@@ -28,6 +28,8 @@ pysnmp==4.4.12
 # HTTP requests
 requests==2.31.0
 semver==3.0.2
+# Twilio (ligações de alerta)
+twilio>=8.0.0
 # Kubernetes
 kubernetes==29.0.0
 pyyaml==6.0.1
