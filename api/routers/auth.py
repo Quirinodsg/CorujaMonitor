@@ -99,30 +99,35 @@ class RegisterRequest(BaseModel):
 
 # ── Azure AD (Microsoft Entra ID) OAuth2 ──────────────────────────────────────
 
-AZURE_ADMIN_EMAILS = [
-    'andre.quirino@empresaxpto.com.br',
-    'bruno.nascimento@empresaxpto.com.br',
-    'cristiano.mascarenhas@empresaxpto.com.br',
-    'frederico.lima@empresaxpto.com.br',
-    'vinicius.xavier@empresaxpto.com.br',
-]
+FRONTEND_URL = "https://coruja.techbiz.com.br"
+DEFAULT_REDIRECT_URI = f"{FRONTEND_URL}/api/v1/auth/azure/callback"
+
+
+def _get_azure_config(db: Session) -> dict:
+    """Lê config Azure AD da tabela AuthenticationConfig (salva pela UI)."""
+    from models import AuthenticationConfig, Tenant
+    tenant = db.query(Tenant).first()
+    if not tenant:
+        return {}
+    config = db.query(AuthenticationConfig).filter(
+        AuthenticationConfig.tenant_id == tenant.id
+    ).first()
+    if not config or not config.azure_ad_config:
+        return {}
+    return config.azure_ad_config
+
 
 @router.get("/azure/login")
 async def azure_login(db: Session = Depends(get_db)):
     """Redireciona para login Microsoft Azure AD."""
-    from models import Tenant
-    tenant = db.query(Tenant).first()
-    if not tenant or not tenant.notification_config:
-        raise HTTPException(status_code=400, detail="Azure AD não configurado")
-    
-    azure_cfg = tenant.notification_config.get('azure_ad', {})
+    azure_cfg = _get_azure_config(db)
     if not azure_cfg.get('enabled') or not azure_cfg.get('client_id'):
-        raise HTTPException(status_code=400, detail="Azure AD não habilitado")
-    
+        raise HTTPException(status_code=400, detail="Azure AD não configurado")
+
     tenant_id = azure_cfg['tenant_id']
     client_id = azure_cfg['client_id']
-    redirect_uri = azure_cfg.get('redirect_uri', 'https://coruja.empresaxpto.com.br/api/v1/auth/azure/callback')
-    
+    redirect_uri = azure_cfg.get('redirect_uri') or DEFAULT_REDIRECT_URI
+
     auth_url = (
         f"https://login.microsoftonline.com/{tenant_id}/oauth2/v2.0/authorize"
         f"?client_id={client_id}"
@@ -131,7 +136,7 @@ async def azure_login(db: Session = Depends(get_db)):
         f"&response_mode=query"
         f"&scope=openid+profile+email+User.Read"
     )
-    
+
     from fastapi.responses import RedirectResponse
     return RedirectResponse(url=auth_url)
 
@@ -141,22 +146,23 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
     """Callback do Azure AD após autenticação."""
     from fastapi.responses import RedirectResponse
     import httpx
-    
+
     if error:
-        return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error={error}")
-    
+        return RedirectResponse(url=f"{FRONTEND_URL}/?azure_error={error}")
+
     if not code:
-        return RedirectResponse(url="https://coruja.empresaxpto.com.br/?azure_error=no_code")
-    
-    from models import Tenant
-    tenant = db.query(Tenant).first()
-    azure_cfg = tenant.notification_config.get('azure_ad', {})
-    
+        return RedirectResponse(url=f"{FRONTEND_URL}/?azure_error=no_code")
+
+    azure_cfg = _get_azure_config(db)
+    if not azure_cfg.get('client_id'):
+        return RedirectResponse(url=f"{FRONTEND_URL}/?azure_error=not_configured")
+
     tenant_id = azure_cfg['tenant_id']
     client_id = azure_cfg['client_id']
     client_secret = azure_cfg['client_secret']
-    redirect_uri = azure_cfg.get('redirect_uri', 'https://coruja.empresaxpto.com.br/api/v1/auth/azure/callback')
-    
+    redirect_uri = azure_cfg.get('redirect_uri') or DEFAULT_REDIRECT_URI
+    admin_group_id = azure_cfg.get('admin_group_id', '')
+
     # Trocar code por token
     try:
         async with httpx.AsyncClient() as client:
@@ -171,37 +177,53 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
                     'scope': 'openid profile email User.Read',
                 }
             )
-            
+
             if token_resp.status_code != 200:
-                return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=token_failed")
-            
+                return RedirectResponse(url=f"{FRONTEND_URL}/?azure_error=token_failed")
+
             tokens = token_resp.json()
             access_token = tokens.get('access_token')
-            
+
             # Buscar perfil do usuário
             profile_resp = await client.get(
                 'https://graph.microsoft.com/v1.0/me',
                 headers={'Authorization': f'Bearer {access_token}'}
             )
-            
+
             if profile_resp.status_code != 200:
-                return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=profile_failed")
-            
+                return RedirectResponse(url=f"{FRONTEND_URL}/?azure_error=profile_failed")
+
             profile = profile_resp.json()
+
+            # Verificar grupos do usuário para determinar role
+            is_admin = False
+            if admin_group_id:
+                try:
+                    groups_resp = await client.post(
+                        'https://graph.microsoft.com/v1.0/me/checkMemberObjects',
+                        headers={'Authorization': f'Bearer {access_token}', 'Content-Type': 'application/json'},
+                        json={'ids': [admin_group_id]}
+                    )
+                    if groups_resp.status_code == 200:
+                        member_ids = groups_resp.json().get('value', [])
+                        is_admin = admin_group_id in member_ids
+                except Exception:
+                    pass
+
     except Exception as e:
-        return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=request_failed")
-    
+        return RedirectResponse(url=f"{FRONTEND_URL}/?azure_error=request_failed")
+
     email = (profile.get('mail') or profile.get('userPrincipalName', '')).lower()
     full_name = profile.get('displayName', email.split('@')[0])
-    
+
     if not email:
-        return RedirectResponse(url=f"https://coruja.empresaxpto.com.br/?azure_error=no_email")
-    
-    # Determinar role baseado no email
-    is_admin = email in AZURE_ADMIN_EMAILS
+        return RedirectResponse(url=f"{FRONTEND_URL}/?azure_error=no_email")
+
     role = 'admin' if is_admin else 'viewer'
-    
+
     # Buscar ou criar usuário
+    from models import Tenant
+    tenant = db.query(Tenant).first()
     user = db.query(User).filter(User.email == email).first()
     if not user:
         user = User(
@@ -216,19 +238,18 @@ async def azure_callback(code: str = None, error: str = None, db: Session = Depe
         db.commit()
         db.refresh(user)
     else:
-        # Atualizar nome e role se mudou
         user.full_name = full_name
         if is_admin and user.role != 'admin':
             user.role = 'admin'
         db.commit()
-    
+
     # Gerar JWT do Coruja
     coruja_token = create_access_token(data={"sub": str(user.id), "tenant_id": user.tenant_id})
-    
+
     # Redirecionar para frontend com token
     from urllib.parse import quote
     return RedirectResponse(
-        url=f"https://coruja.empresaxpto.com.br/?azure_token={coruja_token}&azure_user={quote(email)}&azure_name={quote(full_name)}&azure_role={role}"
+        url=f"{FRONTEND_URL}/?azure_token={coruja_token}&azure_user={quote(email)}&azure_name={quote(full_name)}&azure_role={role}"
     )
 
 @router.post("/register")
