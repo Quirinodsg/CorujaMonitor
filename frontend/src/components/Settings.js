@@ -16,7 +16,7 @@ function Settings({ onNavigate }) {
     email: { enabled: false, smtp_server: '', smtp_port: 587, smtp_user: '', smtp_password: '', from_email: '', to_emails: [], use_tls: true },
     twilio: { enabled: false, account_sid: '', auth_token: '', from_number: '', to_numbers: [] },
     teams: { enabled: false, webhook_url: '' },
-    whatsapp: { enabled: false, api_key: '', phone_numbers: [] },
+    whatsapp: { enabled: false, account_sid: '', auth_token: '', from_number: '', phone_numbers: [] },
     telegram: { enabled: false, bot_token: '', chat_ids: [] },
     topdesk: { enabled: false, url: '', username: '', password: '', operator_group: '', category: '', subcategory: '' },
     glpi: { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
@@ -171,7 +171,7 @@ function Settings({ onNavigate }) {
           email: notifResponse.data.notification_config.email || { enabled: false, smtp_server: '', smtp_port: 587, smtp_user: '', smtp_password: '', from_email: '', to_emails: [], use_tls: true },
           twilio: notifResponse.data.notification_config.twilio || { enabled: false, account_sid: '', auth_token: '', from_number: '', to_numbers: [] },
           teams: notifResponse.data.notification_config.teams || { enabled: false, webhook_url: '' },
-          whatsapp: notifResponse.data.notification_config.whatsapp || { enabled: false, api_key: '', phone_numbers: [] },
+          whatsapp: notifResponse.data.notification_config.whatsapp || { enabled: false, account_sid: '', auth_token: '', from_number: '', phone_numbers: [] },
           telegram: notifResponse.data.notification_config.telegram || { enabled: false, bot_token: '', chat_ids: [] },
           topdesk: notifResponse.data.notification_config.topdesk || { enabled: false, url: '', username: '', password: '', operator_group: '', category: '', subcategory: '' },
           glpi: notifResponse.data.notification_config.glpi || { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
@@ -766,7 +766,7 @@ function Settings({ onNavigate }) {
         <div className="integration-header">
           <div className="integration-title">
             <span className="integration-icon">📱</span>
-            <h3>WhatsApp</h3>
+            <h3>WhatsApp (via Twilio)</h3>
           </div>
           <label className="toggle-switch">
             <input
@@ -785,19 +785,45 @@ function Settings({ onNavigate }) {
           <div className="integration-config">
             <div className="form-row">
               <div className="form-group">
-                <label>API Key:</label>
+                <label>Account SID (Twilio):</label>
                 <input
-                  type="password"
-                  value={notificationConfig.whatsapp.api_key}
+                  type="text"
+                  value={notificationConfig.whatsapp.account_sid || ''}
                   onChange={(e) => setNotificationConfig({
                     ...notificationConfig,
-                    whatsapp: { ...notificationConfig.whatsapp, api_key: e.target.value }
+                    whatsapp: { ...notificationConfig.whatsapp, account_sid: e.target.value }
+                  })}
+                  placeholder="ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                />
+              </div>
+              <div className="form-group">
+                <label>Auth Token (Twilio):</label>
+                <input
+                  type="password"
+                  value={notificationConfig.whatsapp.auth_token || ''}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    whatsapp: { ...notificationConfig.whatsapp, auth_token: e.target.value }
                   })}
                   placeholder="••••••••••••••••"
                 />
               </div>
+            </div>
+            <div className="form-row">
               <div className="form-group">
-                <label>Números (separados por vírgula):</label>
+                <label>Número de Origem (Twilio WhatsApp):</label>
+                <input
+                  type="text"
+                  value={notificationConfig.whatsapp.from_number || ''}
+                  onChange={(e) => setNotificationConfig({
+                    ...notificationConfig,
+                    whatsapp: { ...notificationConfig.whatsapp, from_number: e.target.value }
+                  })}
+                  placeholder="+14155238886"
+                />
+              </div>
+              <div className="form-group">
+                <label>Números Destino (separados por vírgula):</label>
                 <input
                   type="text"
                   value={notificationConfig.whatsapp.phone_numbers?.join(', ') || ''}
@@ -808,7 +834,7 @@ function Settings({ onNavigate }) {
                       phone_numbers: e.target.value.split(',').map(n => n.trim()).filter(n => n)
                     }
                   })}
-                  placeholder="+5511999999999, +5511888888888"
+                  placeholder="+5531991888803, +5531999999999"
                 />
               </div>
             </div>
