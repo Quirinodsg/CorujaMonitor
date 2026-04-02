@@ -134,10 +134,21 @@ class EqualLogicCollector:
             # Latência SNMP
             metrics.append(self._metric("latency", round(elapsed, 1), "ms", "ok"))
 
-            # Status geral
+            # Status geral: ok se conseguiu coletar métricas básicas (uptime, interfaces)
+            has_data = len(metrics) > 2  # mais que só uptime e connections
             has_storage = any(m["name"].startswith("EqualLogic storage") for m in metrics)
-            metrics.append(self._metric("status", 1 if has_storage else 0, "status",
-                                        "ok" if has_storage else "warning"))
+            has_critical = any(m["status"] == "critical" and m["name"] != "EqualLogic status" for m in metrics)
+
+            if has_critical:
+                overall = "critical"
+            elif has_storage:
+                overall = "ok"
+            elif has_data:
+                overall = "ok"  # Sem MIBs proprietárias mas SNMP respondeu
+            else:
+                overall = "warning"
+
+            metrics.append(self._metric("status", 1 if overall == "ok" else 0, "status", overall))
 
             logger.info(f"EqualLogic {self.ip}: {len(metrics)} metrics, {elapsed:.0f}ms")
 
@@ -295,7 +306,7 @@ class EqualLogicCollector:
                 if status == 1:  # up
                     s = "ok"
                 elif status == 2:  # down
-                    s = "critical"
+                    s = "warning"  # Interface down pode ser normal (não usada)
                 else:
                     s = "warning"
                 metrics.append(self._metric(f"iface_{name}_status", status, "status", s))
