@@ -991,7 +991,7 @@ async def send_whatsapp_notification(config: Dict[str, Any], message_data: Dict[
 async def test_whatsapp_internal(config: Dict[str, Any], tenant: Tenant, current_user: User) -> Dict[str, Any]:
     """Internal function to test WhatsApp integration"""
     test_data = {
-        'text': f'''🦉 *Coruja Monitor* - Teste de Integração
+        'body': f'''🦉 *Coruja Monitor* - Teste de Integração
 
 *Tenant:* {tenant.name}
 *Usuário:* {current_user.email}
@@ -1330,7 +1330,7 @@ async def send_twilio_whatsapp(config: Dict[str, Any], message_data: Dict[str, A
         account_sid = config.get('account_sid')
         auth_token = config.get('auth_token')
         from_number = config.get('from_number')  # Format: whatsapp:+14155238886
-        to_numbers = config.get('to_numbers', [])  # Format: whatsapp:+5511999999999
+        to_numbers = config.get('to_numbers') or config.get('phone_numbers', [])  # Accept both field names
         
         if not all([account_sid, auth_token, from_number, to_numbers]):
             raise ValueError("Twilio WhatsApp configuration incomplete")
