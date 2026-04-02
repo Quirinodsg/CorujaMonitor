@@ -394,19 +394,48 @@ async def get_latest_metrics_batch(
     ).all()
     valid_ids = {s.id for s in sensors}
 
-    # Get latest metric per sensor using a subquery
-    from sqlalchemy import func
+    # Get latest metric per sensor — prefer metrics with extra_metadata
+    from sqlalchemy import func, case
     subq = (
-        db.query(Metric.sensor_id, func.max(Metric.id).label('max_id'))
+        db.query(
+            Metric.sensor_id,
+            func.max(Metric.id).label('max_id')
+        )
         .filter(Metric.sensor_id.in_(valid_ids))
         .group_by(Metric.sensor_id)
         .subquery()
     )
+
     latest_metrics = (
         db.query(Metric)
         .join(subq, Metric.id == subq.c.max_id)
         .all()
     )
+
+    # For sensors with metadata-rich collectors (equallogic, conflex, printer, engetron),
+    # prefer the most recent metric that HAS extra_metadata
+    metadata_sensor_ids = set()
+    for m in latest_metrics:
+        if not m.extra_metadata or m.extra_metadata == {} or (
+            isinstance(m.extra_metadata, dict) and 'sensor_id' in m.extra_metadata and len(m.extra_metadata) <= 1
+        ):
+            metadata_sensor_ids.add(m.sensor_id)
+
+    # Re-query for sensors that got a "bare" metric — find the latest WITH metadata
+    if metadata_sensor_ids:
+        for sid in metadata_sensor_ids:
+            better = (
+                db.query(Metric)
+                .filter(
+                    Metric.sensor_id == sid,
+                    Metric.extra_metadata != None,
+                )
+                .order_by(Metric.id.desc())
+                .first()
+            )
+            if better and better.extra_metadata and len(better.extra_metadata) > 1:
+                # Replace in latest_metrics
+                latest_metrics = [m if m.sensor_id != sid else better for m in latest_metrics]
 
     result = {}
     for m in latest_metrics:
