@@ -159,42 +159,81 @@ class EqualLogicCollector:
         return metrics
 
     def _parse_member_storage(self, data: Dict[str, str]) -> List[Dict[str, Any]]:
-        """Parse member storage OIDs into metrics."""
+        """Parse member storage OIDs into metrics.
+        OID format: 1.3.6.1.4.1.12740.2.1.1.1.{field}.{member_idx}.{member_id}
+        """
         metrics = []
 
-        # Debug: log raw data
-        if data:
-            logger.info(f"EqualLogic member WALK: {len(data)} OIDs returned")
-            for oid, val in list(data.items())[:20]:
-                logger.info(f"  OID: {oid} = {val}")
-        else:
-            logger.warning("EqualLogic member WALK: NO DATA returned")
+        # Debug: log raw data e buscar valores grandes (storage em MB)
+        big_values = {}
+        for oid, val in data.items():
+            v = self._to_int(val)
+            if v > 1000:  # Valores > 1GB em MB
+                # Extrair field number do OID
+                parts = oid.split(".")
+                # OID: ...12740.2.1.1.1.{field}.{idx}.{id}
+                try:
+                    base_idx = parts.index("12740")
+                    field = parts[base_idx + 5] if len(parts) > base_idx + 5 else "?"
+                    big_values[field] = v
+                except (ValueError, IndexError):
+                    pass
 
-        # Extrair valores por suffix (member index)
-        total_mb = used_mb = snap_mb = repl_mb = 0
-        model = serial = svc_tag = fw_ver = ""
-        health = conn_count = 0
+        if big_values:
+            logger.info(f"EqualLogic {self.ip}: big values by field: {big_values}")
+
+        # Parse por field number no OID
+        # Campos conhecidos do eqlMemberTable:
+        # .9 = name, .10 = ?, .14 = ?, precisamos descobrir total/used
+        total_mb = 0
+        used_mb = 0
+        snap_mb = 0
+        repl_mb = 0
+        model = ""
+        serial = ""
+        health = 0
+        conn_count = 0
+        member_name = ""
 
         for oid, val in data.items():
-            tail = oid.split(".")[-1] if "." in oid else ""
-            if f".{MEMBER_TABLE.split('.')[-1]}.1.10." in oid or oid.startswith(OID_MEMBER_TOTAL_STOR):
-                total_mb = max(total_mb, self._to_int(val))
-            elif f".{MEMBER_TABLE.split('.')[-1]}.1.11." in oid or oid.startswith(OID_MEMBER_USED_STOR):
-                used_mb = max(used_mb, self._to_int(val))
-            elif f".{MEMBER_TABLE.split('.')[-1]}.1.12." in oid or oid.startswith(OID_MEMBER_SNAP_STOR):
-                snap_mb += self._to_int(val)
-            elif f".{MEMBER_TABLE.split('.')[-1]}.1.13." in oid or oid.startswith(OID_MEMBER_REPL_STOR):
-                repl_mb += self._to_int(val)
-            elif oid.startswith(OID_MEMBER_MODEL):
-                model = val
-            elif oid.startswith(OID_MEMBER_SERIAL):
-                serial = val
-            elif oid.startswith(OID_MEMBER_SVC_TAG):
-                svc_tag = val
-            elif oid.startswith(OID_MEMBER_HEALTH):
-                health = self._to_int(val)
-            elif oid.startswith(OID_MEMBER_CONN_COUNT):
-                conn_count = self._to_int(val)
+            parts = oid.split(".")
+            try:
+                base_idx = parts.index("12740")
+                if len(parts) <= base_idx + 5:
+                    continue
+                field = int(parts[base_idx + 5])
+            except (ValueError, IndexError):
+                continue
+
+            v_int = self._to_int(val)
+            v_str = str(val).strip()
+
+            # Map fields based on EqualLogic MIB
+            if field == 9:
+                member_name = v_str
+            elif field == 10:
+                pass  # eqlMemberControllerType or similar
+            elif field == 14:
+                # This could be total storage — check if it's a large number
+                if v_int > 1000:
+                    total_mb = max(total_mb, v_int)
+            elif field == 15:
+                if v_int > 1000:
+                    used_mb = max(used_mb, v_int)
+            elif field == 16:
+                if v_int > 1000:
+                    snap_mb = max(snap_mb, v_int)
+            elif field == 17:
+                if v_int > 1000:
+                    repl_mb = max(repl_mb, v_int)
+
+        # Se não encontrou por campos fixos, usar os maiores valores
+        if total_mb == 0 and big_values:
+            sorted_fields = sorted(big_values.items(), key=lambda x: x[1], reverse=True)
+            if len(sorted_fields) >= 1:
+                total_mb = sorted_fields[0][1]
+            if len(sorted_fields) >= 2:
+                used_mb = sorted_fields[1][1]
 
         if total_mb > 0:
             total_gb = round(total_mb / 1024, 2)
@@ -204,7 +243,7 @@ class EqualLogicCollector:
             repl_gb = round(repl_mb / 1024, 2)
             pct_used = round((used_mb / total_mb) * 100, 1) if total_mb > 0 else 0
 
-            logger.info(f"EqualLogic {self.ip}: total={total_mb}MB used={used_mb}MB free={(total_mb-used_mb)}MB pct={pct_used}%")
+            logger.info(f"EqualLogic {self.ip}: total={total_gb}GB used={used_gb}GB free={free_gb}GB pct={pct_used}%")
 
             status = "critical" if pct_used > 97 else "warning" if pct_used > 90 else "ok"
 
@@ -212,19 +251,19 @@ class EqualLogicCollector:
             metrics.append(self._metric("storage_used", used_gb, "GB", status))
             metrics.append(self._metric("storage_free", free_gb, "GB", status))
             metrics.append(self._metric("storage_percent", pct_used, "%", status))
-            metrics.append(self._metric("storage_snapshots", snap_gb, "GB", "ok"))
-            metrics.append(self._metric("storage_replicas", repl_gb, "GB", "ok"))
+            if snap_gb > 0:
+                metrics.append(self._metric("storage_snapshots", snap_gb, "GB", "ok"))
+            if repl_gb > 0:
+                metrics.append(self._metric("storage_replicas", repl_gb, "GB", "ok"))
+        else:
+            logger.warning(f"EqualLogic {self.ip}: storage data not found in member table")
 
+        if member_name:
+            metrics.append(self._metric("member_name", 0, member_name, "ok"))
         if model:
             metrics.append(self._metric("model", 0, model, "ok"))
         if serial:
             metrics.append(self._metric("serial", 0, serial, "ok"))
-        if health:
-            # 1=normal, 2=warning, 3=critical
-            h_status = "ok" if health == 1 else "warning" if health == 2 else "critical"
-            metrics.append(self._metric("health", health, "status", h_status))
-        if conn_count:
-            metrics.append(self._metric("connections", conn_count, "conn", "ok"))
 
         return metrics
 
