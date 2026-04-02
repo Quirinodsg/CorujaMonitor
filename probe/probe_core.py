@@ -596,6 +596,13 @@ class ProbeCore:
                     except Exception as e:
                         logger.warning(f"Conflex {sensor['name']} error: {e}")
 
+                # ── Dell EqualLogic Storage (SNMP proprietário) — detecta pelo nome ──
+                elif sensor.get('ip_address') and any(kw in (sensor.get('name', '') or '').lower() for kw in ['equallogic', 'storage', 'dell storage', 'san', 'iscsi storage']):
+                    try:
+                        self._collect_equallogic(sensor, timestamp)
+                    except Exception as e:
+                        logger.warning(f"EqualLogic {sensor['name']} error: {e}")
+
                 # ── SNMP sensors (switches, APs, etc.) ──
                 elif sensor.get('sensor_type') in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch') and sensor.get('ip_address'):
                     try:
@@ -688,6 +695,54 @@ class ProbeCore:
             logger.warning(f"Conflex {name} ({ip}) error: {e}")
             self.buffer.append({
                 'sensor_id': sensor['id'], 'sensor_type': 'conflex', 'name': name,
+                'value': 0, 'unit': 'status', 'status': 'critical',
+                'timestamp': timestamp.isoformat(), 'hostname': '__standalone__',
+                'metadata': {'sensor_id': sensor['id'], 'error': str(e)}
+            })
+
+    def _collect_equallogic(self, sensor, timestamp):
+        """Coleta métricas de Dell EqualLogic Storage via SNMP."""
+        ip = sensor.get('ip_address')
+        community = sensor.get('snmp_community') or 'public'
+        port = sensor.get('snmp_port') or 161
+        name = sensor.get('name', 'EqualLogic')
+        try:
+            from collectors.equallogic_collector import EqualLogicCollector
+            collector = EqualLogicCollector(ip=ip, community=community, port=port)
+            metrics = collector.collect()
+            if metrics:
+                all_data = {}
+                status = 'ok'
+                for m in metrics:
+                    all_data[m['name']] = {'value': m['value'], 'unit': m['unit'], 'status': m['status']}
+                    if m['status'] == 'critical':
+                        status = 'critical'
+                    elif m['status'] == 'warning' and status != 'critical':
+                        status = 'warning'
+
+                self.buffer.append({
+                    'sensor_id': sensor['id'],
+                    'sensor_type': 'equallogic',
+                    'name': name,
+                    'value': 1 if status == 'ok' else 0,
+                    'unit': 'status',
+                    'status': status,
+                    'timestamp': timestamp.isoformat(),
+                    'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id'], **all_data}
+                })
+                logger.info(f"EqualLogic {name} ({ip}): {len(metrics)} metrics, status={status}")
+            else:
+                self.buffer.append({
+                    'sensor_id': sensor['id'], 'sensor_type': 'equallogic', 'name': name,
+                    'value': 0, 'unit': 'status', 'status': 'critical',
+                    'timestamp': timestamp.isoformat(), 'hostname': '__standalone__',
+                    'metadata': {'sensor_id': sensor['id']}
+                })
+        except Exception as e:
+            logger.warning(f"EqualLogic {name} ({ip}) error: {e}")
+            self.buffer.append({
+                'sensor_id': sensor['id'], 'sensor_type': 'equallogic', 'name': name,
                 'value': 0, 'unit': 'status', 'status': 'critical',
                 'timestamp': timestamp.isoformat(), 'hostname': '__standalone__',
                 'metadata': {'sensor_id': sensor['id'], 'error': str(e)}
