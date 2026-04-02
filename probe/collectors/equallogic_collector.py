@@ -141,9 +141,6 @@ class EqualLogicCollector:
 
             if has_critical:
                 overall = "critical"
-                # Log quais métricas estão critical para debug
-                critical_items = [m["name"] for m in metrics if m["status"] == "critical" and m["name"] != "EqualLogic status"]
-                logger.warning(f"EqualLogic {self.ip}: métricas critical: {critical_items}")
             elif has_storage:
                 overall = "ok"
             elif has_data:
@@ -198,7 +195,7 @@ class EqualLogicCollector:
             repl_gb = round(repl_mb / 1024, 2)
             pct_used = round((used_mb / total_mb) * 100, 1) if total_mb > 0 else 0
 
-            status = "critical" if pct_used > 90 else "warning" if pct_used > 80 else "ok"
+            status = "critical" if pct_used > 95 else "warning" if pct_used > 85 else "ok"
 
             metrics.append(self._metric("storage_total", total_gb, "GB", "ok"))
             metrics.append(self._metric("storage_used", used_gb, "GB", status))
@@ -316,7 +313,7 @@ class EqualLogicCollector:
                 if in_err + out_err > 0:
                     metrics.append(self._metric(f"iface_{name}_errors",
                                                 in_err + out_err, "erros",
-                                                "warning" if in_err + out_err < 100 else "critical"))
+                                                "warning" if in_err + out_err < 1000 else "critical"))
         except Exception as e:
             logger.debug(f"EqualLogic interfaces error: {e}")
         return metrics
