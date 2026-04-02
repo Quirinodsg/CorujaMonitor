@@ -36,7 +36,7 @@ openssl req -x509 -nodes -days 365 \
     -newkey rsa:2048 \
     -keyout "$PROJ/nginx/ssl/coruja.key" \
     -out "$PROJ/nginx/ssl/coruja.crt" \
-    -subj "/C=BR/ST=SP/L=SaoPaulo/O=EmpresaXPTO/OU=IT/CN=coruja.empresaxpto.com.br" 2>/dev/null
+    -subj "/C=BR/ST=MG/L=BeloHorizonte/O=Techbiz/OU=IT/CN=coruja.techbiz.com.br" 2>/dev/null
 echo "Certificado gerado."
 
 echo "=== 6. Subir serviço nginx ==="
@@ -52,6 +52,6 @@ docker logs coruja-worker --tail 20
 
 echo ""
 echo "✅ Deploy v3.5 Enterprise Hardening concluído!"
-echo "   - API: http://192.168.1.100:8000"
-echo "   - HTTPS: https://coruja.empresaxpto.com.br (ou https://192.168.1.100)"
+echo "   - API: http://192.168.31.161:8000"
+echo "   - HTTPS: https://coruja.techbiz.com.br (ou https://192.168.31.161)"
 echo "   - HTTP redireciona para HTTPS automaticamente"

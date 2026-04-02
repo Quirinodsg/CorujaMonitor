@@ -1152,7 +1152,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
     if (ipPattern.test(newServer.hostname)) {
       alert('✖ ERRO: Hostname não pode ser um endereço IP!\n\n' +
             '⚠️ Para autenticação Kerberos funcionar, você DEVE usar:\n' +
-            '✔ Hostname completo (FQDN): SRVHVSPRD010.ad.empresaxpto.com.br\n' +
+            '✔ Hostname completo (FQDN): SRVHVSPRD010.dominio.local\n' +
             '✔ Hostname curto: SRVHVSPRD010\n\n' +
             '✖ NÃO use IP no campo Hostname: ' + newServer.hostname + '\n\n' +
             'O IP deve ser preenchido no campo "Endereço IP" separadamente.');

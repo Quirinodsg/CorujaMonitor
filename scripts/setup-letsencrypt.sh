@@ -1,13 +1,13 @@
 #!/bin/bash
 # =============================================================================
-# Let's Encrypt - Certbot via webroot para coruja.empresaxpto.com.br
-# Pré-requisito: porta 80 acessível externamente (http://coruja.empresaxpto.com.br)
+# Let's Encrypt - Certbot via webroot para coruja.techbiz.com.br
+# Pré-requisito: porta 80 acessível externamente (http://coruja.techbiz.com.br)
 # Uso: bash scripts/setup-letsencrypt.sh
 # =============================================================================
 set -e
 
-DOMAIN="${CORUJA_DOMAIN:-coruja.empresaxpto.com.br}"
-EMAIL="${CERTBOT_EMAIL:-admin@empresaxpto.com.br}"
+DOMAIN="${CORUJA_DOMAIN:-coruja.techbiz.com.br}"
+EMAIL="${CERTBOT_EMAIL:-admin@techbiz.com.br}"
 WEBROOT="/var/www/certbot"
 CERT_DIR="/etc/letsencrypt/live/$DOMAIN"
 NGINX_SSL_DIR="./nginx/ssl"
@@ -90,7 +90,7 @@ RENEW_SCRIPT="/home/administrador/CorujaMonitor/scripts/renew-letsencrypt.sh"
 cat > "$RENEW_SCRIPT" <<'RENEW_EOF'
 #!/bin/bash
 # Renovação automática Let's Encrypt
-DOMAIN="${CORUJA_DOMAIN:-coruja.empresaxpto.com.br}"
+DOMAIN="${CORUJA_DOMAIN:-coruja.techbiz.com.br}"
 NGINX_SSL_DIR="/home/administrador/CorujaMonitor/nginx/ssl"
 CERT_DIR="/etc/letsencrypt/live/$DOMAIN"
 LOG="/var/log/letsencrypt-renew.log"

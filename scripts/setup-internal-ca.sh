@@ -1,10 +1,10 @@
 #!/bin/bash
-# Cria CA privada EmpresaXPTO e emite certificado para coruja.empresaxpto.com.br
+# Cria CA privada e emite certificado para coruja.techbiz.com.br
 # Uso: bash scripts/setup-internal-ca.sh
 set -e
 
-DOMAIN="${CORUJA_DOMAIN:-coruja.empresaxpto.com.br}"
-SERVER_IP="${CORUJA_SERVER_IP:-192.168.1.100}"
+DOMAIN="${CORUJA_DOMAIN:-coruja.techbiz.com.br}"
+SERVER_IP="${CORUJA_SERVER_IP:-192.168.31.161}"
 SSL_DIR="/etc/nginx/ssl"
 CA_DIR="$SSL_DIR/ca"
 DAYS_CA=3650    # CA válida por 10 anos
@@ -12,7 +12,7 @@ DAYS_CERT=730   # Cert válido por 2 anos
 
 mkdir -p "$CA_DIR"
 
-echo "=== [1/4] Gerando CA privada EmpresaXPTO ==="
+echo "=== [1/4] Gerando CA privada ==="
 # Gerar chave da CA
 openssl genrsa -out "$CA_DIR/ca.key" 4096
 
@@ -22,7 +22,7 @@ openssl req -x509 -new -nodes \
     -sha256 \
     -days $DAYS_CA \
     -out "$CA_DIR/ca.crt" \
-    -subj "/C=BR/ST=SP/L=SaoPaulo/O=EmpresaXPTO/OU=IT/CN=EmpresaXPTO Internal CA"
+    -subj "/C=BR/ST=MG/L=BeloHorizonte/O=Techbiz/OU=IT/CN=Coruja Internal CA"
 
 echo "✅ CA gerada: $CA_DIR/ca.crt"
 
@@ -40,9 +40,9 @@ req_extensions     = req_ext
 
 [dn]
 C  = BR
-ST = SP
-L  = SaoPaulo
-O  = EmpresaXPTO
+ST = MG
+L  = BeloHorizonte
+O  = Techbiz
 OU = IT
 CN = $DOMAIN
 
@@ -61,7 +61,7 @@ openssl req -new \
     -out /tmp/coruja.csr \
     -config /tmp/coruja-csr.conf
 
-echo "=== [3/4] Assinando certificado com a CA EmpresaXPTO ==="
+echo "=== [3/4] Assinando certificado com a CA ==="
 cat > /tmp/coruja-ext.conf <<EOF
 authorityKeyIdentifier = keyid,issuer
 basicConstraints       = CA:FALSE
@@ -96,7 +96,7 @@ rm -f /tmp/coruja-csr.conf /tmp/coruja.csr /tmp/coruja-ext.conf
 
 echo "=== [4/4] Verificando certificado ==="
 openssl x509 -in "$SSL_DIR/coruja.crt" -text -noout | grep -A4 "Subject Alternative Name"
-openssl verify -CAfile "$CA_DIR/ca.crt" "$SSL_DIR/coruja.crt" && echo "✅ Certificado válido pela CA EmpresaXPTO"
+openssl verify -CAfile "$CA_DIR/ca.crt" "$SSL_DIR/coruja.crt" && echo "✅ Certificado válido pela CA"
 
 echo ""
 echo "=== CONCLUÍDO ==="

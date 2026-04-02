@@ -17,8 +17,8 @@ from datetime import datetime
 # ── Simulated sensor data (as returned by /sensors/standalone/by-probe) ──
 
 SENSOR_HTTP = {
-    "id": 1001, "name": "Site EmpresaXPTO", "sensor_type": "http",
-    "category": "network", "http_url": "https://empresaxpto.com.br",
+    "id": 1001, "name": "Site Exemplo", "sensor_type": "http",
+    "category": "network", "http_url": "https://exemplo.com.br",
     "http_method": "GET", "ip_address": None,
     "snmp_community": "public", "snmp_port": 161, "snmp_version": "v2c",
     "threshold_warning": 80.0, "threshold_critical": 95.0,
@@ -183,7 +183,7 @@ class TestScenarios:
         """Scenario: User adds a new HTTP site monitor."""
         sensor = {
             "name": "Site CRM", "sensor_type": "http", "category": "network",
-            "http_url": "https://crm.empresaxpto.com.br", "ip_address": None,
+            "http_url": "https://crm.exemplo.com.br", "ip_address": None,
         }
         route = detect_collection_route(sensor)
         assert route == 'http', "HTTP site should route to http collector"

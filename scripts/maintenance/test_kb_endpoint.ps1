@@ -4,7 +4,7 @@ $API_URL = "http://192.168.30.189:8000"
 
 # Login para pegar token
 $loginBody = @{
-    username = "admin@empresaxpto.com.br"
+    username = "admin@coruja.com"
     password = "admin123"
 } | ConvertTo-Json
 

@@ -139,17 +139,7 @@ async def azure_login(db: Session = Depends(get_db)):
     """Redireciona para login Microsoft Azure AD."""
     azure_cfg = _get_azure_config(db)
     if not azure_cfg.get('enabled') or not azure_cfg.get('client_id'):
-        # Debug info
-        from models import AuthenticationConfig, Tenant
-        tenants = db.query(Tenant).all()
-        configs = db.query(AuthenticationConfig).all()
-        debug = {
-            "tenants": [{"id": t.id, "name": t.name, "has_notif_azure": bool(
-                t.notification_config and isinstance(t.notification_config, dict) and t.notification_config.get('azure_ad')
-            )} for t in tenants],
-            "auth_configs": [{"id": c.id, "tenant_id": c.tenant_id, "has_azure": bool(c.azure_ad_config), "azure_keys": list(c.azure_ad_config.keys()) if c.azure_ad_config and isinstance(c.azure_ad_config, dict) else None} for c in configs],
-        }
-        raise HTTPException(status_code=400, detail={"error": "Azure AD não configurado", "debug": debug})
+        raise HTTPException(status_code=400, detail="Azure AD não configurado")
 
     tenant_id = azure_cfg['tenant_id']
     client_id = azure_cfg['client_id']
