@@ -195,7 +195,7 @@ class EqualLogicCollector:
             repl_gb = round(repl_mb / 1024, 2)
             pct_used = round((used_mb / total_mb) * 100, 1) if total_mb > 0 else 0
 
-            status = "critical" if pct_used > 95 else "warning" if pct_used > 85 else "ok"
+            status = "critical" if pct_used > 97 else "warning" if pct_used > 90 else "ok"
 
             metrics.append(self._metric("storage_total", total_gb, "GB", "ok"))
             metrics.append(self._metric("storage_used", used_gb, "GB", status))
