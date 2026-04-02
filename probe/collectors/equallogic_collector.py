@@ -141,6 +141,9 @@ class EqualLogicCollector:
 
             if has_critical:
                 overall = "critical"
+                # Log quais métricas estão critical para debug
+                critical_items = [m["name"] for m in metrics if m["status"] == "critical" and m["name"] != "EqualLogic status"]
+                logger.warning(f"EqualLogic {self.ip}: métricas critical: {critical_items}")
             elif has_storage:
                 overall = "ok"
             elif has_data:
