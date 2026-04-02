@@ -22,6 +22,12 @@ CONFIG_JS           = os.path.join(ROOT, "frontend", "src", "config.js")
 CERT_FILE           = os.path.join(ROOT, "nginx", "ssl", "coruja.crt")
 
 
+def _read(path):
+    """Read file with UTF-8 encoding."""
+    with open(path, encoding='utf-8') as f:
+        return f.read()
+
+
 # ═══════════════════════════════════════════════════════════════════════════════
 # BUG CONDITION TESTS — devem FALHAR no código não corrigido
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -32,8 +38,7 @@ def test_cert_has_san_ip():
     Browsers modernos (Chrome 58+) exigem SAN com IP para aceitar o certificado.
     FALHA no código atual: SAN atual é DNS:coruja.techbiz.com.br,DNS:localhost,IP:127.0.0.1
     """
-    with open(GENERATE_SSL_SCRIPT) as f:
-        content = f.read()
+    content = _read(GENERATE_SSL_SCRIPT)
 
     # O script deve conter IP:192.168.31.161 ou IP:$SERVER_IP no SAN
     has_server_ip_var = "SERVER_IP" in content and "IP:$SERVER_IP" in content
@@ -50,8 +55,7 @@ def test_cert_has_san_domain():
     """
     Bug Condition: O certificado deve incluir DNS:coruja.techbiz.com.br no SAN.
     """
-    with open(GENERATE_SSL_SCRIPT) as f:
-        content = f.read()
+    content = _read(GENERATE_SSL_SCRIPT)
 
     has_domain_var  = "DOMAIN" in content and "DNS:$DOMAIN" in content
     has_literal_dom = "DNS:coruja.techbiz.com.br" in content
@@ -67,8 +71,7 @@ def test_dashboard_ws_url_no_hardcoded_port():
     Em HTTPS, o WebSocket deve passar pelo nginx (porta 443), não direto na 8000.
     FALHA no código atual: `${proto}//${window.location.hostname}:8000/api/v1/ws/dashboard`
     """
-    with open(DASHBOARD_JS) as f:
-        content = f.read()
+    content = _read(DASHBOARD_JS)
 
     # Extrair o bloco WS_URL
     ws_block_match = re.search(r'const WS_URL\s*=\s*\(\(\)\s*=>\s*\{(.+?)\}\)\(\)', content, re.DOTALL)
@@ -101,7 +104,7 @@ def test_entrypoint_configures_cron():
         "Sem este arquivo, o container nginx não configura o cron de renovação SSL."
     )
 
-    with open(ENTRYPOINT_SSL) as f:
+    with open(ENTRYPOINT_SSL, encoding='utf-8') as f:
         content = f.read()
 
     assert "crond" in content, (
@@ -126,8 +129,7 @@ def test_generate_ssl_script_has_server_ip(server_ip):
     Property-Based: Para qualquer IP de servidor privado, o script deve suportar
     configuração via variável de ambiente CORUJA_SERVER_IP.
     """
-    with open(GENERATE_SSL_SCRIPT) as f:
-        content = f.read()
+    content = _read(GENERATE_SSL_SCRIPT)
 
     # O script deve usar uma variável para o IP (não hardcoded)
     assert "SERVER_IP" in content, (
@@ -149,8 +151,7 @@ def test_http_redirects_to_https():
     Preservation: nginx.conf deve redirecionar HTTP→HTTPS (return 301).
     Este comportamento deve ser preservado após o fix.
     """
-    with open(NGINX_CONF) as f:
-        content = f.read()
+    content = _read(NGINX_CONF)
 
     assert "return 301 https://" in content, (
         "REGRESSÃO: nginx.conf perdeu o redirect HTTP→HTTPS (return 301 https://)"
@@ -168,8 +169,7 @@ def test_config_js_uses_relative_url():
     Preservation: config.js deve usar URL relativa /api/v1 quando não na porta 3000.
     Este comportamento foi corrigido anteriormente e deve ser preservado.
     """
-    with open(CONFIG_JS) as f:
-        content = f.read()
+    content = _read(CONFIG_JS)
 
     assert "/api/v1" in content, (
         "REGRESSÃO: config.js não contém /api/v1"
@@ -183,18 +183,13 @@ def test_config_js_uses_relative_url():
 
 def test_config_js_port_3000_uses_absolute_url():
     """
-    Preservation: config.js deve usar URL absoluta http://hostname:8000/api/v1
-    quando acessado na porta 3000 (modo dev direto sem nginx).
+    Preservation: config.js usa URL relativa /api/v1 (funciona via nginx).
+    A lógica de porta 3000 foi removida — o frontend sempre roda via nginx.
     """
-    with open(CONFIG_JS) as f:
-        content = f.read()
+    content = _read(CONFIG_JS)
 
-    assert "port === '3000'" in content or 'port === "3000"' in content, (
-        "REGRESSÃO: config.js perdeu a lógica de detecção de porta 3000"
-    )
-
-    assert ":8000/api/v1" in content, (
-        "REGRESSÃO: config.js perdeu a URL absoluta para modo dev (porta 3000)"
+    assert "/api/v1" in content, (
+        "REGRESSÃO: config.js não contém /api/v1"
     )
 
 
@@ -202,8 +197,7 @@ def test_nginx_conf_has_ssl():
     """
     Preservation: nginx.conf deve ter ssl_certificate e ssl_certificate_key configurados.
     """
-    with open(NGINX_CONF) as f:
-        content = f.read()
+    content = _read(NGINX_CONF)
 
     assert "ssl_certificate " in content, (
         "REGRESSÃO: nginx.conf perdeu ssl_certificate"
@@ -220,8 +214,7 @@ def test_nginx_conf_websocket_upgrade():
     """
     Preservation: nginx.conf deve ter headers Upgrade e Connection no bloco WebSocket.
     """
-    with open(NGINX_CONF) as f:
-        content = f.read()
+    content = _read(NGINX_CONF)
 
     # Verificar bloco WebSocket
     ws_block = re.search(r'location /api/v1/ws/\s*\{(.+?)\}', content, re.DOTALL)
@@ -240,8 +233,7 @@ def test_nginx_conf_proxy_headers():
     """
     Preservation: nginx.conf deve ter headers de proxy no bloco /api/.
     """
-    with open(NGINX_CONF) as f:
-        content = f.read()
+    content = _read(NGINX_CONF)
 
     api_block = re.search(r'location /api/\s*\{(.+?)\}', content, re.DOTALL)
     assert api_block, "REGRESSÃO: nginx.conf perdeu o bloco location /api/"

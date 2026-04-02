@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\ai_agents\root_cause.py
+# hypothesis_version: 6.151.9
+
+[0.5, 'affected_nodes', 'affected_nodes_count', 'application', 'applications', 'confidence', 'correlation_groups', 'description', 'estimated_impact', 'reasoning', 'root_cause_results', 'root_node_id', 'service', 'services', 'type', 'unknown']

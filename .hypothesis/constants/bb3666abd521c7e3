@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\ai_agents\auto_healing_engine.py
+# hypothesis_version: 6.151.9
+
+[0.1, 0.85, 1.0, 120, 1000, 'action', 'actions', 'attempts', 'backoff_seconds', 'clear_logs', 'clear_temp_files', 'condition', 'config', 'cpu', 'critical', 'description', 'disk', 'disk_full', 'duration_ms', 'error', 'evaluated_at', 'flush_dns_cache', 'high_cpu', 'high_memory', 'host_offline', 'id', 'last_attempt', 'max_retries', 'max_retries_exceeded', 'memory', 'ping', 'reason', 'reconnect_probe', 'restart_service', 'rule_id', 'sensor_id', 'sensor_type', 'server', 'server_hostname', 'server_id', 'service', 'service_down', 'service_name', 'skipped', 'status', 'success', 'timestamp', 'unknown', 'value']

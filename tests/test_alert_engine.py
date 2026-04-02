@@ -315,7 +315,7 @@ class TestAlertConsolidation:
 
 class TestAlertEngineMetrics:
     def test_metrics_track_suppressed(self):
-        engine = AlertEngine()
+        engine = AlertEngine(cooldown_seconds=0)
         host_id = uuid4()
         event = make_event(host_id=host_id)
 

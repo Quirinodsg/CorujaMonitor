@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\metrics_pipeline\stream_consumer.py
+# hypothesis_version: 6.151.9
+
+[1.0, 500, 1000, '0', '>', 'StreamConsumer', 'coruja-consumers', 'errors', 'ok', 'probe-consumer-1', 'processed', 'running', 'sensor_id', 'sensor_type', 'server_id', 'status', 'timestamp', 'unit', 'value']

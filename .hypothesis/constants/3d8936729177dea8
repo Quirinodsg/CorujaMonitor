@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\topology_engine\service_map.py
+# hypothesis_version: 6.151.9
+
+['ServiceMap', 'critical', 'database', 'depends_on', 'edges', 'generated_at', 'group', 'hosts', 'http', 'id', 'ip', 'label', 'metadata', 'monitors', 'name', 'nodes', 'ok', 'os', 'probe_id', 'sensor_id', 'server', 'server_id', 'service', 'source', 'stats', 'status', 'target', 'total_edges', 'total_nodes', 'type', 'unknown', 'updated_at', 'warning']

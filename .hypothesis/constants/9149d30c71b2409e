@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\ai_agents\pipeline_orchestrator.py
+# hypothesis_version: 6.151.9
+
+[0.5, 120, 'AutoRemediation', 'AutoRemediationAgent', '_', '__dict__', 'action', 'action_type', 'actions_executed', 'affected_hosts', 'affected_nodes', 'agent', 'agent_name', 'agents_run', 'agents_success', 'alert_id', 'confidence', 'critical', 'decision_confidence', 'description', 'dict', 'error', 'event_ids', 'events_processed', 'host_id', 'input', 'isoformat', 'lower', 'meta', 'model_dump', 'output', 'output_keys', 'pending', 'reasoning', 'result', 'results', 'root_cause', 'root_cause_results', 'root_node_id', 'run_id', 'severity', 'should_alert', 'status', 'success', 'target_host', 'threshold_breach', 'title', 'unknown', 'value', 'warning', '{}']

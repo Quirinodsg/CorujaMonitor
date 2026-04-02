@@ -89,7 +89,7 @@ def test_alert_engine_throughput():
         for sensor_idx in range(SENSORS_PER_HOST):
             ev = Event(
                 id=str(uuid.uuid4()),
-                host_id=f"host-{host_idx:04d}",
+                host_id=uuid.UUID(int=(host_idx % 1000) + 1),
                 type=["cpu_high", "memory_high", "disk_full", "host_down", "service_down"][sensor_idx % 5],
                 severity=EventSeverity.WARNING if sensor_idx % 3 != 0 else EventSeverity.CRITICAL,
                 timestamp=time.time(),
@@ -122,7 +122,7 @@ def test_topology_suppression_at_scale():
     topology = {}
     for host_idx in range(HOSTS):
         switch_id = f"switch-{host_idx // 100:02d}"
-        topology[f"host-{host_idx:04d}"] = switch_id
+        topology[str(uuid.UUID(int=host_idx + 1))] = switch_id
     engine.set_topology(topology)
 
     # Marcar 5 switches como falhos
@@ -133,7 +133,7 @@ def test_topology_suppression_at_scale():
     events = [
         Event(
             id=str(uuid.uuid4()),
-            host_id=f"host-{i:04d}",
+            host_id=uuid.UUID(int=i + 1),
             type="host_down",
             severity=EventSeverity.CRITICAL,
             timestamp=time.time(),

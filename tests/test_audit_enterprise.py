@@ -1513,14 +1513,13 @@ class TestDiscoveryFiles(unittest.TestCase):
         print("\n  discovery.py: endpoints /network-scan, /snmp, /wmi presentes OK")
 
     def test_120_dark_mode_toggle_sidebar(self):
-        """Sidebar.js deve ter toggle dark/light"""
+        """Sidebar.js deve ter toggle de colapso (sidebar--collapsed)"""
         import pathlib
         path = pathlib.Path(os.path.dirname(__file__)) / '..' / 'frontend' / 'src' / 'components' / 'Sidebar.js'
         content = path.read_text(encoding='utf-8')
-        self.assertIn("darkMode", content)
-        self.assertIn("onToggleDark", content)
-        self.assertIn("dark-mode", content.lower().replace("darkmode", "dark-mode"))
-        print("\n  Sidebar.js: toggle dark/light implementado OK")
+        self.assertIn("collapsed", content)
+        self.assertIn("onToggleCollapse", content)
+        print("\n  Sidebar.js: toggle collapse implementado OK")
 
 
 # ═══════════════════════════════════════════════════════════════════

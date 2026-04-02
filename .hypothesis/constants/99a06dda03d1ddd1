@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\wmi_pool.py
+# hypothesis_version: 6.151.9
+
+[300, 600, 1800, '-2147024891', 'Access denied', 'Access is denied', '\\', 'count', 'idle', 'in_use', 'last_failure', 'root/cimv2', 'total']
