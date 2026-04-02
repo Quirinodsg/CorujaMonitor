@@ -997,7 +997,7 @@ async def test_whatsapp_internal(config: Dict[str, Any], tenant: Tenant, current
 ✅ Se você recebeu esta mensagem, a integração está funcionando!'''
     }
     
-    result = await send_whatsapp_notification(config, test_data)
+    result = await send_whatsapp_notification_enhanced(config, test_data)
     
     if result.get('success'):
         return {
