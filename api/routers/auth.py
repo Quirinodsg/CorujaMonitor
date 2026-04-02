@@ -104,40 +104,33 @@ DEFAULT_REDIRECT_URI = f"{FRONTEND_URL}/api/v1/auth/azure/callback"
 
 
 def _get_azure_config(db: Session) -> dict:
-    """Lê config Azure AD da tabela AuthenticationConfig (salva pela UI).
-    Fallback: tenta notification_config do Tenant (formato antigo).
+    """Lê config Azure AD da tabela AuthenticationConfig.
+    Busca qualquer registro que tenha azure_ad_config preenchido,
+    pois o login Azure AD é pré-autenticação (sem user/tenant context).
     """
     import logging
     logger = logging.getLogger("auth.azure")
 
     from models import AuthenticationConfig, Tenant
-    tenant = db.query(Tenant).first()
-    if not tenant:
-        logger.warning("Azure AD: nenhum tenant encontrado")
-        return {}
 
-    # Fonte primária: tabela authentication_config
-    config = db.query(AuthenticationConfig).filter(
-        AuthenticationConfig.tenant_id == tenant.id
-    ).first()
+    # Buscar qualquer AuthenticationConfig que tenha azure_ad_config
+    configs = db.query(AuthenticationConfig).all()
+    for config in configs:
+        if config.azure_ad_config and isinstance(config.azure_ad_config, dict):
+            if config.azure_ad_config.get('client_id'):
+                logger.info("Azure AD: config encontrada em AuthenticationConfig (tenant_id=%s)", config.tenant_id)
+                return config.azure_ad_config
 
-    if config and config.azure_ad_config:
-        logger.info("Azure AD: config encontrada em AuthenticationConfig (tenant_id=%s)", tenant.id)
-        return config.azure_ad_config
+    # Fallback: notification_config de qualquer tenant
+    tenants = db.query(Tenant).all()
+    for tenant in tenants:
+        if tenant.notification_config and isinstance(tenant.notification_config, dict):
+            azure_cfg = tenant.notification_config.get('azure_ad', {})
+            if azure_cfg.get('client_id'):
+                logger.info("Azure AD: config encontrada em tenant.notification_config (tenant_id=%s)", tenant.id)
+                return azure_cfg
 
-    # Fallback: notification_config do tenant (formato antigo)
-    if tenant.notification_config and isinstance(tenant.notification_config, dict):
-        azure_cfg = tenant.notification_config.get('azure_ad', {})
-        if azure_cfg.get('client_id'):
-            logger.info("Azure AD: config encontrada em tenant.notification_config (fallback)")
-            return azure_cfg
-
-    logger.warning(
-        "Azure AD: config NÃO encontrada. tenant_id=%s, auth_config_exists=%s, notification_config_keys=%s",
-        tenant.id,
-        config is not None,
-        list(tenant.notification_config.keys()) if isinstance(tenant.notification_config, dict) else None,
-    )
+    logger.warning("Azure AD: config NÃO encontrada em nenhum tenant/auth_config")
     return {}
 
 
@@ -146,25 +139,16 @@ async def azure_login(db: Session = Depends(get_db)):
     """Redireciona para login Microsoft Azure AD."""
     azure_cfg = _get_azure_config(db)
     if not azure_cfg.get('enabled') or not azure_cfg.get('client_id'):
-        # Retornar info de debug para diagnosticar
+        # Debug info
         from models import AuthenticationConfig, Tenant
-        tenant = db.query(Tenant).first()
+        tenants = db.query(Tenant).all()
+        configs = db.query(AuthenticationConfig).all()
         debug = {
-            "tenant_exists": tenant is not None,
-            "tenant_id": tenant.id if tenant else None,
+            "tenants": [{"id": t.id, "name": t.name, "has_notif_azure": bool(
+                t.notification_config and isinstance(t.notification_config, dict) and t.notification_config.get('azure_ad')
+            )} for t in tenants],
+            "auth_configs": [{"id": c.id, "tenant_id": c.tenant_id, "has_azure": bool(c.azure_ad_config), "azure_keys": list(c.azure_ad_config.keys()) if c.azure_ad_config and isinstance(c.azure_ad_config, dict) else None} for c in configs],
         }
-        if tenant:
-            ac = db.query(AuthenticationConfig).filter(
-                AuthenticationConfig.tenant_id == tenant.id
-            ).first()
-            debug["auth_config_exists"] = ac is not None
-            if ac:
-                debug["azure_ad_config_keys"] = list(ac.azure_ad_config.keys()) if ac.azure_ad_config else None
-                debug["azure_ad_enabled"] = ac.azure_ad_config.get('enabled') if ac.azure_ad_config else None
-            debug["notification_config_has_azure"] = bool(
-                tenant.notification_config and isinstance(tenant.notification_config, dict)
-                and tenant.notification_config.get('azure_ad')
-            )
         raise HTTPException(status_code=400, detail={"error": "Azure AD não configurado", "debug": debug})
 
     tenant_id = azure_cfg['tenant_id']
