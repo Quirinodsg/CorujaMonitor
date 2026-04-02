@@ -159,111 +159,79 @@ class EqualLogicCollector:
         return metrics
 
     def _parse_member_storage(self, data: Dict[str, str]) -> List[Dict[str, Any]]:
-        """Parse member storage OIDs into metrics.
-        OID format: 1.3.6.1.4.1.12740.2.1.1.1.{field}.{member_idx}.{member_id}
+        """Parse member storage from WALK data.
+        EqualLogic OID: 12740.2.1.{subtable}.1.{field}.{member_idx}.{member_id}
+        Storage stats in subtable 10 (eqlMemberStorageStatus):
+          field 1=TotalStorage(MB), 2=UsedStorage(MB), 3=SnapStorage(MB), 4=ReplStorage(MB)
         """
         metrics = []
 
-        # Debug: log raw data e buscar valores grandes (storage em MB)
-        big_values = {}
-        for oid, val in data.items():
-            v = self._to_int(val)
-            if v > 1000:  # Valores > 1GB em MB
-                # Extrair field number do OID
-                parts = oid.split(".")
-                # OID: ...12740.2.1.1.1.{field}.{idx}.{id}
-                try:
-                    base_idx = parts.index("12740")
-                    field = parts[base_idx + 5] if len(parts) > base_idx + 5 else "?"
-                    big_values[field] = v
-                except (ValueError, IndexError):
-                    pass
-
-        if big_values:
-            logger.info(f"EqualLogic {self.ip}: big values by field: {big_values}")
-
-        # Parse por field number no OID
-        # Campos conhecidos do eqlMemberTable:
-        # .9 = name, .10 = ?, .14 = ?, precisamos descobrir total/used
-        total_mb = 0
-        used_mb = 0
-        snap_mb = 0
-        repl_mb = 0
-        model = ""
-        serial = ""
-        health = 0
-        conn_count = 0
-        member_name = ""
-
+        # Organizar por subtable.field
+        by_subtable = {}
         for oid, val in data.items():
             parts = oid.split(".")
             try:
                 base_idx = parts.index("12740")
-                if len(parts) <= base_idx + 5:
-                    continue
+                # 12740.2.1.{subtable}.1.{field}.{idx}.{id}
+                subtable = int(parts[base_idx + 3])
                 field = int(parts[base_idx + 5])
+                by_subtable.setdefault(subtable, {})[field] = val
             except (ValueError, IndexError):
                 continue
 
-            v_int = self._to_int(val)
-            v_str = str(val).strip()
+        logger.info(f"EqualLogic {self.ip}: subtables: {sorted(by_subtable.keys())}")
 
-            # Map fields based on EqualLogic MIB
-            if field == 9:
-                member_name = v_str
-            elif field == 10:
-                pass  # eqlMemberControllerType or similar
-            elif field == 14:
-                # This could be total storage — check if it's a large number
-                if v_int > 1000:
-                    total_mb = max(total_mb, v_int)
-            elif field == 15:
-                if v_int > 1000:
-                    used_mb = max(used_mb, v_int)
-            elif field == 16:
-                if v_int > 1000:
-                    snap_mb = max(snap_mb, v_int)
-            elif field == 17:
-                if v_int > 1000:
-                    repl_mb = max(repl_mb, v_int)
+        # Subtable 1 = eqlMemberEntry (info)
+        info = by_subtable.get(1, {})
+        member_name = str(info.get(9, "")).strip()
+        if member_name:
+            metrics.append(self._metric("member_name", 0, member_name, "ok"))
 
-        # Se não encontrou por campos fixos, usar os maiores valores
-        if total_mb == 0 and big_values:
-            sorted_fields = sorted(big_values.items(), key=lambda x: x[1], reverse=True)
-            if len(sorted_fields) >= 1:
-                total_mb = sorted_fields[0][1]
-            if len(sorted_fields) >= 2:
-                used_mb = sorted_fields[1][1]
+        # Subtable 10 = eqlMemberStorageStatus
+        st10 = by_subtable.get(10, {})
+        total_mb = self._to_int(st10.get(1, 0))
+        used_mb = self._to_int(st10.get(2, 0))
+        snap_mb = self._to_int(st10.get(3, 0))
+        repl_mb = self._to_int(st10.get(4, 0))
+
+        # Fallback: subtable 12
+        if total_mb == 0:
+            st12 = by_subtable.get(12, {})
+            total_mb = self._to_int(st12.get(1, 0))
+            used_mb = self._to_int(st12.get(2, 0))
+
+        # Fallback: scan all subtables for plausible MB values (1TB-20TB range)
+        if total_mb == 0:
+            for st_num in sorted(by_subtable.keys()):
+                fields = by_subtable[st_num]
+                for f_num in sorted(fields.keys()):
+                    v = self._to_int(fields[f_num])
+                    if 500000 < v < 30000000:  # 500GB to 30TB in MB
+                        logger.info(f"EqualLogic: candidate subtable={st_num} field={f_num} val={v}MB ({round(v/1024)}GB)")
+                        if total_mb == 0:
+                            total_mb = v
+                        elif used_mb == 0 and v <= total_mb:
+                            used_mb = v
 
         if total_mb > 0:
             total_gb = round(total_mb / 1024, 2)
             used_gb = round(used_mb / 1024, 2)
-            free_gb = round((total_mb - used_mb) / 1024, 2)
-            snap_gb = round(snap_mb / 1024, 2)
-            repl_gb = round(repl_mb / 1024, 2)
-            pct_used = round((used_mb / total_mb) * 100, 1) if total_mb > 0 else 0
+            free_gb = round(max(0, total_mb - used_mb) / 1024, 2)
+            pct_used = round((used_mb / total_mb) * 100, 1)
 
             logger.info(f"EqualLogic {self.ip}: total={total_gb}GB used={used_gb}GB free={free_gb}GB pct={pct_used}%")
 
             status = "critical" if pct_used > 97 else "warning" if pct_used > 90 else "ok"
-
             metrics.append(self._metric("storage_total", total_gb, "GB", "ok"))
             metrics.append(self._metric("storage_used", used_gb, "GB", status))
             metrics.append(self._metric("storage_free", free_gb, "GB", status))
             metrics.append(self._metric("storage_percent", pct_used, "%", status))
-            if snap_gb > 0:
-                metrics.append(self._metric("storage_snapshots", snap_gb, "GB", "ok"))
-            if repl_gb > 0:
-                metrics.append(self._metric("storage_replicas", repl_gb, "GB", "ok"))
+            if snap_mb > 0:
+                metrics.append(self._metric("storage_snapshots", round(snap_mb / 1024, 2), "GB", "ok"))
+            if repl_mb > 0:
+                metrics.append(self._metric("storage_replicas", round(repl_mb / 1024, 2), "GB", "ok"))
         else:
-            logger.warning(f"EqualLogic {self.ip}: storage data not found in member table")
-
-        if member_name:
-            metrics.append(self._metric("member_name", 0, member_name, "ok"))
-        if model:
-            metrics.append(self._metric("model", 0, model, "ok"))
-        if serial:
-            metrics.append(self._metric("serial", 0, serial, "ok"))
+            logger.warning(f"EqualLogic {self.ip}: no storage data. Subtable sizes: {[(k, len(v)) for k, v in by_subtable.items()]}")
 
         return metrics
 
