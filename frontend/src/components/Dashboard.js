@@ -358,7 +358,9 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
       {(() => {
         const energySensors = (allStandaloneSensors || []).filter(s => (s.name || '').toLowerCase().match(/nobreak|ups|gerador|energia|battery|power|engetron/));
         const hvacSensors = (allStandaloneSensors || []).filter(s => (s.name || '').toLowerCase().match(/ar.condicionado|hvac|temperatura|cooling|climate|chiller|conflex/));
-        if (energySensors.length === 0 && hvacSensors.length === 0) return null;
+        const storageSensors = (allStandaloneSensors || []).filter(s => (s.name || '').toLowerCase().match(/storage|equallogic|san|iscsi/));
+        const printerSensors = (allStandaloneSensors || []).filter(s => (s.name || '').toLowerCase().match(/impressora|printer|samsung|hp laserjet|canon/));
+        if (energySensors.length === 0 && hvacSensors.length === 0 && storageSensors.length === 0 && printerSensors.length === 0) return null;
         return (
           <div className="dash-section">
             <div className="dash-section-header">
@@ -402,6 +404,58 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                     </div>
                     <div className="dash-site-name">❄️ {s.name}</div>
                     {m && <div className="dash-site-url">📊 {m.value?.toFixed(1)} {m.unit}</div>}
+                  </div>
+                );
+              })}
+              {storageSensors.map(s => {
+                const m = httpMetrics[String(s.id)];
+                const status = m?.status || 'unknown';
+                const color = status === 'ok' ? '#22C55E' : status === 'warning' ? '#F59E0B' : status === 'critical' ? '#EF4444' : '#6B7280';
+                const label = status === 'ok' ? 'ONLINE' : status === 'warning' ? 'AVISO' : status === 'critical' ? 'CRÍTICO' : 'Aguardando';
+                const md = m?.metadata || {};
+                const pct = md['EqualLogic storage_percent']?.value;
+                const totalGb = md['EqualLogic storage_total']?.value;
+                const freeGb = md['EqualLogic storage_free']?.value;
+                const disksTotal = md['EqualLogic disks_total']?.value;
+                const disksOnline = md['EqualLogic disks_online']?.value;
+                const conns = md['EqualLogic iscsi_connections']?.value || md['EqualLogic connections']?.value;
+                const uptime = md['EqualLogic uptime']?.value;
+                return (
+                  <div key={s.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => onNavigate('sensor-library')}>
+                    <div className="dash-site-status">
+                      <span className="dash-site-badge"><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'white' }} />{label}</span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>💾 Storage</span>
+                    </div>
+                    <div className="dash-site-name">💾 {s.name}</div>
+                    {pct != null && (
+                      <div className="dash-site-url">📊 Uso: {pct}% · Total: {totalGb} GB · Livre: {freeGb} GB</div>
+                    )}
+                    {disksTotal != null && (
+                      <div className="dash-site-url">💿 Discos: {disksOnline}/{disksTotal} online{conns ? ` · 🔗 ${conns} iSCSI` : ''}{uptime ? ` · ⏱️ ${uptime}d` : ''}</div>
+                    )}
+                    {!pct && !disksTotal && m && (
+                      <div className="dash-site-url">⏱️ Uptime: {uptime || '?'}d · 🔗 {conns || '?'} conexões</div>
+                    )}
+                  </div>
+                );
+              })}
+              {printerSensors.map(s => {
+                const m = httpMetrics[String(s.id)];
+                const status = m?.status || 'unknown';
+                const color = status === 'ok' ? '#22C55E' : status === 'warning' ? '#F59E0B' : status === 'critical' ? '#EF4444' : '#6B7280';
+                const label = status === 'ok' ? 'ONLINE' : status === 'warning' ? 'AVISO' : status === 'critical' ? 'OFFLINE' : 'Aguardando';
+                const md = m?.metadata || {};
+                const toner = md['Printer toner_level']?.value ?? md['Printer toner']?.value;
+                const pages = md['Printer page_count']?.value ?? md['Printer pages']?.value;
+                return (
+                  <div key={s.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => onNavigate('sensor-library')}>
+                    <div className="dash-site-status">
+                      <span className="dash-site-badge"><span style={{ width: 5, height: 5, borderRadius: '50%', background: 'white' }} />{label}</span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>🖨️ Impressora</span>
+                    </div>
+                    <div className="dash-site-name">🖨️ {s.name}</div>
+                    {toner != null && <div className="dash-site-url">🖨️ Toner: {toner}%{pages ? ` · 📄 ${Number(pages).toLocaleString('pt-BR')} páginas` : ''}</div>}
+                    {toner == null && m && <div className="dash-site-url">📊 {m.value?.toFixed(1)} {m.unit}</div>}
                   </div>
                 );
               })}
