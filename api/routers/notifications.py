@@ -98,6 +98,9 @@ async def update_notification_config(
     if config.whatsapp:
         notification_config['whatsapp'] = {
             'enabled': config.whatsapp.get('enabled', False),
+            'account_sid': config.whatsapp.get('account_sid'),
+            'auth_token': config.whatsapp.get('auth_token'),
+            'from_number': config.whatsapp.get('from_number'),
             'api_key': config.whatsapp.get('api_key'),
             'phone_numbers': config.whatsapp.get('phone_numbers', [])
         }
