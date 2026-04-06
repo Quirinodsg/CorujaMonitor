@@ -212,13 +212,12 @@ function EscalationConfig() {
   // ─────────────────────────────────────────────────────────
   const searchResources = async (query) => {
     setResourceSearch(query);
-    if (query.length < 2) { setSearchResults([]); return; }
+    if (query.length < 1) { setSearchResults([]); return; }
     try {
       const res = await api.get(`/escalation/resources/search?q=${encodeURIComponent(query)}`);
       const items = res.data || [];
-      // Filter out already added
       const existingIds = new Set(resources.map(r => `${r.type}:${r.id}`));
-      setSearchResults(items.filter(r => !existingIds.has(`${r.type}:${r.id}`)).slice(0, 15));
+      setSearchResults(items.filter(r => !existingIds.has(`${r.type}:${r.id}`)).slice(0, 20));
     } catch (e) {
       console.error('Erro ao buscar recursos:', e);
       setSearchResults([]);
@@ -422,13 +421,18 @@ function EscalationConfig() {
       {/* ── 3. Recursos Monitorados ── */}
       <div className="esc-section">
         <h3>🖥️ Recursos Monitorados para Escalação ({resources.length})</h3>
-        <div className="esc-resource-search">
+        <div className="esc-resource-search" style={{ display: 'flex', gap: 8 }}>
           <input
             type="text"
             placeholder="Buscar servidor ou sensor por nome..."
             value={resourceSearch}
             onChange={e => searchResources(e.target.value)}
+            onFocus={() => { if (!resourceSearch) searchResources(' '); }}
+            style={{ flex: 1 }}
           />
+          <button className="ds-btn ds-btn--primary" style={{ whiteSpace: 'nowrap' }} onClick={() => searchResources(' ')}>
+            📋 Mostrar Todos
+          </button>
         </div>
         {searchResults.length > 0 && (
           <div className="esc-resource-results">

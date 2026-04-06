@@ -356,7 +356,7 @@ async def search_available_resources(
         if not query_lower or query_lower in (s.name or '').lower():
             results.append({"type": "sensor", "id": s.id, "name": s.name or f"Sensor #{s.id}"})
 
-    return results[:30]
+    return results[:50]
 
 
 @router.put("/resources")
