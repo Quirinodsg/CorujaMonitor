@@ -339,7 +339,7 @@ async def search_available_resources(
         if not query_lower or query_lower in (s.hostname or '').lower():
             results.append({"type": "server", "id": s.id, "name": s.hostname or f"Server #{s.id}"})
 
-    # Buscar sensores standalone (sem server_id) e sensores com server_id do tenant
+    # Buscar TODOS os sensores acessíveis pelo tenant (standalone + com server)
     from sqlalchemy import or_
     from models import Probe
     sensors = db.query(Sensor).outerjoin(Server, Sensor.server_id == Server.id).outerjoin(
@@ -349,7 +349,7 @@ async def search_available_resources(
         or_(
             Server.tenant_id == current_user.tenant_id,
             Probe.tenant_id == current_user.tenant_id,
-            (Sensor.server_id == None) & (Sensor.probe_id == None),
+            Sensor.server_id == None,  # Standalone sensors (com ou sem probe_id)
         )
     ).all()
     for s in sensors:
