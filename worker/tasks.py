@@ -126,6 +126,13 @@ def evaluate_all_thresholds():
                         inc.resolution_notes = "Auto-resolvido: sensor melhorou de critical para warning"
                         db.commit()
                         logger.info(f"✅ Incidente {inc.id} auto-resolvido (sensor {sensor.name} melhorou para warning)")
+
+                        # Parar escalação ativa para o sensor (se houver)
+                        try:
+                            from escalation import stop_escalation
+                            stop_escalation(sensor.id, reason="resolved")
+                        except Exception:
+                            pass  # fail-open
                     continue
 
                 # ── SYSTEM/UPTIME: tratamento especial — incidente informativo de reboot ──
@@ -365,6 +372,13 @@ def evaluate_all_thresholds():
                     db.commit()
                     logger.info(f"✅ Incidente {incident.id} auto-resolvido (sensor {sensor.name} voltou ao normal)")
                     print(f"✅ Incidente {incident.id} auto-resolvido")
+
+                    # Parar escalação ativa para o sensor (se houver)
+                    try:
+                        from escalation import stop_escalation
+                        stop_escalation(sensor.id, reason="resolved")
+                    except Exception:
+                        pass  # fail-open
 
     except Exception as e:
         print(f"❌ Erro ao avaliar thresholds: {e}")
@@ -1789,3 +1803,456 @@ def send_external_notification(incident_id: int):
         logger.error("send_external_notification: erro geral: %s", e, exc_info=True)
     finally:
         db.close()
+
+
+# ─── Escalação Contínua de Alarmes ──────────────────────────────────────────
+
+@app.task(bind=True, max_retries=3, default_retry_delay=30)
+def escalation_cycle(self, sensor_id: int):
+    """Executa um ciclo de escalação para o sensor.
+
+    Adquire lock distribuído, lê estado do Redis, verifica se foi
+    reconhecido/expirado, executa chamadas (simultâneo ou sequencial),
+    registra call_history, incrementa attempt_count e agenda próximo ciclo
+    ou marca como expirado.
+
+    Requisitos: 1.2, 1.3, 1.4, 1.5, 3.1, 3.2, 3.3, 3.5, 7.1, 7.2, 7.4, 7.5
+    """
+    import redis as redis_lib
+    from escalation import (
+        deserialize_state,
+        serialize_state,
+        _redis_key,
+        _lock_key,
+        _log_to_incident_history,
+        stop_escalation,
+    )
+
+    logger.info("🔔 escalation_cycle: iniciando ciclo para sensor %d", sensor_id)
+
+    # ── 1. Conectar ao Redis ────────────────────────────────────────────────
+    try:
+        r = redis_lib.Redis.from_url(
+            settings.CELERY_BROKER_URL, decode_responses=True, socket_connect_timeout=2
+        )
+        r.ping()
+    except Exception as e:
+        logger.error(
+            "escalation_cycle: Redis indisponível para sensor %d — %s. "
+            "Tentando fallback de ligação única.",
+            sensor_id, e,
+        )
+        _escalation_fallback_single_call(sensor_id)
+        return
+
+    # ── 2. Adquirir lock distribuído ────────────────────────────────────────
+    lock_key = _lock_key(sensor_id)
+    lock_acquired = False
+    try:
+        # Lock com TTL para auto-liberação em caso de crash
+        lock_acquired = r.set(lock_key, "locked", nx=True, ex=300)
+        if not lock_acquired:
+            logger.warning(
+                "escalation_cycle: lock não adquirido para sensor %d — outro worker processando",
+                sensor_id,
+            )
+            return
+    except Exception as e:
+        logger.error("escalation_cycle: erro ao adquirir lock: %s", e)
+        return
+
+    try:
+        # ── 3. Ler estado de escalação do Redis ─────────────────────────────
+        key = _redis_key(sensor_id)
+        raw = r.get(key)
+        if not raw:
+            logger.warning(
+                "escalation_cycle: nenhum estado encontrado para sensor %d — abortando",
+                sensor_id,
+            )
+            return
+
+        try:
+            state = deserialize_state(raw)
+        except ValueError as e:
+            logger.error(
+                "escalation_cycle: estado corrompido para sensor %d — %s", sensor_id, e
+            )
+            r.delete(key)
+            return
+
+        # ── 4. Verificar se foi reconhecido ou expirado ────────────────────
+        if state.get("status") != "active":
+            logger.info(
+                "escalation_cycle: sensor %d status='%s' — parando ciclo",
+                sensor_id, state.get("status"),
+            )
+            return
+
+        # ── 5. Verificar max_attempts atingido ─────────────────────────────
+        if state["attempt_count"] >= state["max_attempts"]:
+            logger.info(
+                "escalation_cycle: sensor %d atingiu max_attempts (%d) — expirando",
+                sensor_id, state["max_attempts"],
+            )
+            state["status"] = "expired"
+            serialized = serialize_state(state)
+            r.setex(key, 3600, serialized)  # Manter 1h para consulta
+
+            # Registrar expiração no histórico do incidente
+            try:
+                from database import SessionLocal
+                db = SessionLocal()
+                try:
+                    _log_to_incident_history(db, state["incident_id"], "escalation_expired", {
+                        "sensor_id": sensor_id,
+                        "attempt_count": state["attempt_count"],
+                        "max_attempts": state["max_attempts"],
+                    })
+                finally:
+                    db.close()
+            except Exception as log_err:
+                logger.warning("escalation_cycle: erro ao registrar expiração: %s", log_err)
+
+            return
+
+        # ── 6. Executar chamadas conforme modo ─────────────────────────────
+        now = datetime.now(timezone.utc)
+        mode = state.get("mode", "sequential")
+        phone_numbers = state.get("phone_numbers", [])
+        call_duration = state.get("call_duration_seconds", 30)
+        new_calls = []
+
+        if not phone_numbers:
+            logger.error(
+                "escalation_cycle: cadeia de escalação vazia para sensor %d — parando",
+                sensor_id,
+            )
+            stop_escalation(sensor_id, reason="expired")
+            return
+
+        if mode == "simultaneous":
+            # Ligar para todos os números ao mesmo tempo
+            for entry in phone_numbers:
+                number = entry.get("number", "") if isinstance(entry, dict) else str(entry)
+                result = _make_escalation_call(state, number, call_duration)
+                new_calls.append({
+                    "number": number,
+                    "timestamp": now.isoformat(),
+                    "result": result,
+                })
+        else:
+            # Modo sequencial: ligar para o número no current_number_index
+            idx = state.get("current_number_index", 0) % len(phone_numbers)
+            entry = phone_numbers[idx]
+            number = entry.get("number", "") if isinstance(entry, dict) else str(entry)
+            result = _make_escalation_call(state, number, call_duration)
+            new_calls.append({
+                "number": number,
+                "timestamp": now.isoformat(),
+                "result": result,
+            })
+            # Avançar índice com wrap-around
+            state["current_number_index"] = (idx + 1) % len(phone_numbers)
+
+        # ── 7. Registrar chamadas no call_history ──────────────────────────
+        state["call_history"].extend(new_calls)
+        state["attempt_count"] += 1
+        state["last_attempt_at"] = now.isoformat()
+
+        # ── 8. Verificar se atingiu max_attempts após incremento ───────────
+        if state["attempt_count"] >= state["max_attempts"]:
+            logger.info(
+                "escalation_cycle: sensor %d atingiu max_attempts (%d) após ciclo — expirando",
+                sensor_id, state["max_attempts"],
+            )
+            state["status"] = "expired"
+            serialized = serialize_state(state)
+            r.setex(key, 3600, serialized)
+
+            try:
+                from database import SessionLocal
+                db = SessionLocal()
+                try:
+                    _log_to_incident_history(db, state["incident_id"], "escalation_expired", {
+                        "sensor_id": sensor_id,
+                        "attempt_count": state["attempt_count"],
+                        "max_attempts": state["max_attempts"],
+                    })
+                finally:
+                    db.close()
+            except Exception as log_err:
+                logger.warning("escalation_cycle: erro ao registrar expiração: %s", log_err)
+
+            return
+
+        # ── 9. Agendar próximo ciclo ───────────────────────────────────────
+        interval = state.get("interval_minutes", 5)
+        next_attempt = now + timedelta(minutes=interval)
+        state["next_attempt_at"] = next_attempt.isoformat()
+
+        # Persistir estado atualizado no Redis
+        ttl = state["max_attempts"] * state["interval_minutes"] * 60 + 3600
+        serialized = serialize_state(state)
+        r.setex(key, ttl, serialized)
+
+        # Agendar próximo ciclo
+        try:
+            self.apply_async(args=[sensor_id], eta=next_attempt)
+            logger.info(
+                "escalation_cycle: sensor %d — ciclo %d/%d concluído, próximo em %s",
+                sensor_id, state["attempt_count"], state["max_attempts"],
+                next_attempt.isoformat(),
+            )
+        except Exception as sched_err:
+            logger.error(
+                "escalation_cycle: erro ao agendar próximo ciclo para sensor %d: %s",
+                sensor_id, sched_err,
+            )
+
+    except Exception as e:
+        logger.error(
+            "escalation_cycle: erro inesperado para sensor %d: %s",
+            sensor_id, e, exc_info=True,
+        )
+        try:
+            self.retry(exc=e)
+        except self.MaxRetriesExceededError:
+            logger.error(
+                "escalation_cycle: max retries excedido para sensor %d", sensor_id
+            )
+    finally:
+        # Liberar lock
+        try:
+            r.delete(lock_key)
+        except Exception:
+            pass
+
+
+def _make_escalation_call(state: dict, number: str, call_duration: int) -> str:
+    """Executa uma ligação de escalação via Twilio.
+
+    Returns:
+        Resultado da chamada: 'completed', 'no-answer', 'failed', 'rate-limited'.
+    """
+    try:
+        from database import SessionLocal
+        from models import Tenant
+        db = SessionLocal()
+        try:
+            tenant = db.query(Tenant).filter(Tenant.id == state.get("tenant_id")).first()
+            if not tenant or not tenant.notification_config:
+                logger.warning("_make_escalation_call: tenant %d sem config", state.get("tenant_id"))
+                return "failed"
+
+            twilio_config = tenant.notification_config.get("twilio", {})
+            account_sid = twilio_config.get("account_sid")
+            auth_token = twilio_config.get("auth_token")
+            from_number = twilio_config.get("from_number")
+
+            if not all([account_sid, auth_token, from_number]):
+                logger.warning("_make_escalation_call: Twilio não configurado")
+                return "failed"
+
+            from twilio.rest import Client
+            client = Client(account_sid, auth_token)
+
+            device = state.get("device_type", "equipamento")
+            problem = state.get("problem_description", "problema detectado")
+
+            speech = (
+                f'Atenção. Alerta crítico. '
+                f'{problem}. '
+                f'Verifique imediatamente. '
+                f'Repito. {problem}.'
+            )
+
+            call = client.calls.create(
+                twiml=(
+                    f'<Response>'
+                    f'<Say language="pt-BR" voice="alice">{speech}</Say>'
+                    f'<Pause length="2"/>'
+                    f'<Say language="pt-BR" voice="alice">{speech}</Say>'
+                    f'</Response>'
+                ),
+                from_=from_number,
+                to=number,
+                timeout=call_duration,
+            )
+            logger.info("_make_escalation_call: chamada para %s — SID %s", number, call.sid)
+            return "completed"
+
+        finally:
+            db.close()
+
+    except ImportError:
+        logger.warning("_make_escalation_call: Twilio não instalado")
+        return "failed"
+    except Exception as e:
+        error_str = str(e).lower()
+        if "429" in error_str or "rate" in error_str:
+            logger.warning(
+                "_make_escalation_call: rate-limit do Twilio para %s — aguardando 60s", number
+            )
+            import time
+            time.sleep(60)
+            return "rate-limited"
+        logger.error("_make_escalation_call: erro para %s — %s", number, e)
+        return "failed"
+
+
+def _escalation_fallback_single_call(sensor_id: int):
+    """Fallback quando Redis está indisponível: tenta uma única ligação.
+
+    Busca dados do incidente/tenant e dispara ligação direta via Twilio.
+    """
+    logger.warning(
+        "escalation_fallback: Redis indisponível, tentando ligação única para sensor %d",
+        sensor_id,
+    )
+    try:
+        from database import SessionLocal
+        from models import Incident, Sensor, Tenant
+
+        db = SessionLocal()
+        try:
+            sensor = db.query(Sensor).filter(Sensor.id == sensor_id).first()
+            if not sensor:
+                return
+
+            incident = db.query(Incident).filter(
+                Incident.sensor_id == sensor_id,
+                Incident.status.in_(["open", "acknowledged"]),
+            ).order_by(Incident.created_at.desc()).first()
+
+            server = None
+            tenant = None
+            if sensor.server_id:
+                from models import Server
+                server = db.query(Server).filter(Server.id == sensor.server_id).first()
+                if server:
+                    tenant = db.query(Tenant).filter(Tenant.id == server.tenant_id).first()
+
+            if not tenant or not tenant.notification_config:
+                logger.warning("escalation_fallback: sem configuração de notificação")
+                return
+
+            twilio_config = tenant.notification_config.get("twilio", {})
+            if not twilio_config.get("account_sid"):
+                return
+
+            from twilio.rest import Client
+            client = Client(
+                twilio_config["account_sid"], twilio_config["auth_token"]
+            )
+            from_number = twilio_config.get("from_number")
+            to_numbers = twilio_config.get("to_numbers", [])
+
+            speech = (
+                f'Atenção. Alerta crítico. Sensor {sensor.name}. '
+                f'Verifique imediatamente.'
+            )
+
+            for to_number in to_numbers:
+                try:
+                    client.calls.create(
+                        twiml=f'<Response><Say language="pt-BR" voice="alice">{speech}</Say></Response>',
+                        from_=from_number,
+                        to=to_number,
+                    )
+                except Exception as call_err:
+                    logger.error("escalation_fallback: erro chamada %s: %s", to_number, call_err)
+
+        finally:
+            db.close()
+    except Exception as e:
+        logger.error("escalation_fallback: erro geral: %s", e)
+
+
+@app.task
+def recover_active_escalations():
+    """Task de recuperação: busca escalações ativas no Redis sem tasks agendadas e reagenda.
+
+    Deve ser chamada no startup do worker para retomar escalações pendentes
+    após crash ou reinício.
+
+    Requisitos: 7.3
+    """
+    import redis as redis_lib
+
+    logger.info("🔄 recover_active_escalations: buscando escalações ativas no Redis...")
+
+    try:
+        r = redis_lib.Redis.from_url(
+            settings.CELERY_BROKER_URL, decode_responses=True, socket_connect_timeout=2
+        )
+        r.ping()
+    except Exception as e:
+        logger.error("recover_active_escalations: Redis indisponível — %s", e)
+        return
+
+    from escalation import deserialize_state, _redis_key
+
+    recovered = 0
+    cursor = 0
+    while True:
+        cursor, keys = r.scan(cursor, match="escalation:*", count=100)
+        for key in keys:
+            key_str = key if isinstance(key, str) else key.decode("utf-8")
+            # Filtrar apenas chaves numéricas (excluir locks)
+            suffix = key_str.split(":")[-1]
+            if not suffix.isdigit():
+                continue
+
+            sensor_id = int(suffix)
+            raw = r.get(key_str)
+            if not raw:
+                continue
+
+            try:
+                state = deserialize_state(raw)
+            except ValueError:
+                logger.warning(
+                    "recover_active_escalations: estado corrompido para %s — removendo",
+                    key_str,
+                )
+                r.delete(key_str)
+                continue
+
+            if state.get("status") != "active":
+                continue
+
+            # Reagendar ciclo de escalação
+            next_attempt_str = state.get("next_attempt_at")
+            if next_attempt_str:
+                try:
+                    next_attempt = datetime.fromisoformat(next_attempt_str)
+                except (ValueError, TypeError):
+                    next_attempt = datetime.now(timezone.utc) + timedelta(seconds=30)
+            else:
+                next_attempt = datetime.now(timezone.utc) + timedelta(seconds=30)
+
+            # Se next_attempt já passou, agendar para agora + 10s
+            now = datetime.now(timezone.utc)
+            if next_attempt <= now:
+                next_attempt = now + timedelta(seconds=10)
+
+            try:
+                escalation_cycle.apply_async(args=[sensor_id], eta=next_attempt)
+                recovered += 1
+                logger.info(
+                    "recover_active_escalations: reagendado sensor %d para %s",
+                    sensor_id, next_attempt.isoformat(),
+                )
+            except Exception as sched_err:
+                logger.error(
+                    "recover_active_escalations: erro ao reagendar sensor %d: %s",
+                    sensor_id, sched_err,
+                )
+
+        if cursor == 0:
+            break
+
+    logger.info(
+        "🔄 recover_active_escalations: %d escalação(ões) recuperada(s)", recovered
+    )

@@ -202,6 +202,17 @@ async def acknowledge_incident(
     db.commit()
     db.refresh(incident)
     
+    # Parar escalação ativa para o sensor associado (se houver)
+    try:
+        import sys, os
+        worker_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "worker")
+        if worker_dir not in sys.path:
+            sys.path.insert(0, worker_dir)
+        from escalation import stop_escalation
+        stop_escalation(incident.sensor_id, reason="acknowledged")
+    except Exception:
+        pass  # fail-open: não impedir reconhecimento se escalação falhar
+    
     return {
         "success": True,
         "message": "Incident acknowledged successfully",

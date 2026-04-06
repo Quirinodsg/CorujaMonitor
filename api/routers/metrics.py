@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from database import get_db
-from models import Metric, Sensor, Server, Probe, User
+from models import Metric, Sensor, Server, Probe, User, Incident, Tenant
 from auth import get_current_active_user
 
 router = APIRouter()
@@ -465,29 +465,39 @@ async def get_latest_metrics_batch(
     return result
 
 
+def _is_resource_in_escalation_list(tenant, sensor):
+    """Verifica se o sensor/servidor está na lista de recursos de escalação do tenant."""
+    notification_config = tenant.notification_config or {}
+    escalation_config = notification_config.get('escalation', {})
+    resources = escalation_config.get('escalation_resources', [])
+
+    for res in resources:
+        if res.get('type') == 'sensor' and res.get('id') == sensor.id:
+            return True
+        if res.get('type') == 'server' and sensor.server_id and res.get('id') == sensor.server_id:
+            return True
+    return False
+
+
+def _is_default_datacenter_sensor(sensor):
+    """Verifica se é sensor padrão de datacenter (nobreak/gerador ou ar-condicionado/HVAC)."""
+    sensor_name_lower = (sensor.name or '').lower()
+    return any(kw in sensor_name_lower for kw in ['nobreak', 'engetron', 'ups', 'ar-condicionado', 'conflex', 'hvac'])
+
+
 def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
-    """Dispara ligação de emergência para alertas críticos do datacenter."""
+    """Dispara escalação contínua ou ligação de emergência para alertas críticos do datacenter."""
     import redis as redis_lib
     from models import Tenant
 
-    # Cooldown: 1 ligação por sensor a cada 30 min (evita flood)
-    try:
-        redis_client = redis_lib.Redis.from_url("redis://redis:6379", socket_connect_timeout=2)
-        cooldown_key = f"emergency_call:{sensor.id}"
-        if redis_client.exists(cooldown_key):
-            logger.info(f"Emergency call cooldown active for sensor {sensor.id}")
-            return
-        redis_client.setex(cooldown_key, 1800, "1")  # 30 min
-    except Exception:
-        pass  # fail-open
-
-    # Buscar config Twilio do tenant
+    # Buscar config do tenant
     tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
     if not tenant or not tenant.notification_config:
         return
-    twilio_config = tenant.notification_config.get('twilio', {})
-    if not twilio_config.get('enabled') or not twilio_config.get('account_sid'):
-        return
+
+    # Verificar se recurso deve acionar escalação contínua:
+    # (a) está na lista escalation_resources, OU (b) é sensor padrão de datacenter
+    should_escalate = _is_resource_in_escalation_list(tenant, sensor) or _is_default_datacenter_sensor(sensor)
 
     # Identificar o problema
     sensor_name = sensor.name or ''
@@ -496,7 +506,6 @@ def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
 
     if 'nobreak' in name_lower or 'engetron' in name_lower or 'ups' in name_lower:
         device = 'nobreak'
-        # Verificar queda de fase
         problems = []
         for fase in ['A', 'B', 'C']:
             key = f'Engetron tensao_entrada_fase{fase}'
@@ -527,13 +536,79 @@ def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
         device = 'equipamento'
         problem = 'Alerta crítico detectado'
 
+    # ── Tentar escalação contínua se recurso qualifica ──
+    if should_escalate:
+        notification_config = tenant.notification_config or {}
+        escalation_config = notification_config.get('escalation', {})
+
+        if escalation_config.get('enabled', False):
+            phone_chain = escalation_config.get('phone_chain', [])
+
+            # Fallback: usar to_numbers do Twilio se phone_chain vazia
+            if not phone_chain:
+                twilio_config = notification_config.get('twilio', {})
+                to_numbers = twilio_config.get('to_numbers', [])
+                phone_chain = [{"name": f"Contato {i+1}", "number": n} for i, n in enumerate(to_numbers)]
+
+            if phone_chain:
+                # Buscar incidente aberto para este sensor
+                incident = db.query(Incident).filter(
+                    Incident.sensor_id == sensor.id,
+                    Incident.status.in_(['open', 'acknowledged'])
+                ).order_by(Incident.created_at.desc()).first()
+
+                incident_id = incident.id if incident else 0
+
+                alert_data_esc = {
+                    'device_type': device,
+                    'problem_description': problem,
+                    'phone_chain': phone_chain,
+                    'mode': escalation_config.get('mode', 'sequential'),
+                    'interval_minutes': escalation_config.get('interval_minutes', 5),
+                    'max_attempts': escalation_config.get('max_attempts', 10),
+                    'call_duration_seconds': escalation_config.get('call_duration_seconds', 30),
+                }
+
+                try:
+                    import sys, os
+                    worker_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "worker")
+                    if worker_dir not in sys.path:
+                        sys.path.insert(0, worker_dir)
+                    from escalation import start_escalation
+
+                    result = start_escalation(sensor.id, incident_id, tenant_id, alert_data_esc)
+                    if result:
+                        logger.warning(f"🚨 ESCALAÇÃO CONTÍNUA INICIADA: {device} - {problem} - sensor {sensor.id}")
+                        return  # Escalação iniciada com sucesso — não disparar ligação única
+                    else:
+                        logger.info(f"Escalação não iniciada para sensor {sensor.id} (duplicata ou reconhecido)")
+                        return  # Já existe escalação ativa ou sensor reconhecido
+                except Exception as e:
+                    logger.warning(f"Falha ao iniciar escalação contínua: {e} — fallback para ligação única")
+                    # Fallback: continuar com ligação única abaixo
+
+    # ── Fallback: ligação única (comportamento original) ──
+    twilio_config = tenant.notification_config.get('twilio', {})
+    if not twilio_config.get('enabled') or not twilio_config.get('account_sid'):
+        return
+
+    # Cooldown: 1 ligação por sensor a cada 30 min (evita flood)
+    try:
+        redis_client = redis_lib.Redis.from_url("redis://redis:6379", socket_connect_timeout=2)
+        cooldown_key = f"emergency_call:{sensor.id}"
+        if redis_client.exists(cooldown_key):
+            logger.info(f"Emergency call cooldown active for sensor {sensor.id}")
+            return
+        redis_client.setex(cooldown_key, 1800, "1")  # 30 min
+    except Exception:
+        pass  # fail-open
+
     alert_data = {
         'device': device,
         'problem': problem,
         'sensor_name': sensor_name,
     }
 
-    # SMS inteligente com detalhes do problema
     sms_body = (
         f'🚨 DATACENTER - ALERTA CRÍTICO\n\n'
         f'Dispositivo: {sensor_name}\n'
@@ -542,7 +617,6 @@ def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
     )
     sms_data = {'body': sms_body}
 
-    # Disparar SMS + Ligação em background
     import asyncio
     from routers.notifications import send_datacenter_emergency_call, send_twilio_notification
     try:

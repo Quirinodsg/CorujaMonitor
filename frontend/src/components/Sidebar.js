@@ -12,6 +12,7 @@ var CATS = [
   { id: "operations", label: "Operação", icon: "🚨", items: [
     { id: "incidents",          icon: "⚠️",  label: "Incidentes" },
     { id: "intelligent-alerts", icon: "🧠",  label: "Alertas Inteligentes" },
+    { id: "escalation",         icon: "📞",  label: "Escalação" },
     { id: "events-timeline",    icon: "🕐",  label: "Timeline de Eventos" },
     { id: "noc-realtime",       icon: "🖥️",  label: "NOC" },
   ]},

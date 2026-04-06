@@ -40,6 +40,7 @@ import Predictions from './Predictions';
 import AuditLogView from './AuditLogView';
 import ServiceMonitor from './ServiceMonitor';
 import HyperVDashboard from './HyperVDashboard';
+import EscalationConfig from './EscalationConfig';
 import '../styles/design-system.css';
 import './MainLayout.css';
 
@@ -173,6 +174,8 @@ function MainLayout({ user, onLogout }) {
         return <ServiceMonitor />;
       case 'hyperv':
         return <HyperVDashboard />;
+      case 'escalation':
+        return <EscalationConfig />;
       case 'users':
         return <Users />;
       case 'settings':
