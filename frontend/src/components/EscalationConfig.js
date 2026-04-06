@@ -176,7 +176,6 @@ function EscalationConfig() {
       setTestCallLoading(null);
     }
   };
-  };
 
   // ─────────────────────────────────────────────────────────
   // Resources management
