@@ -379,11 +379,45 @@ function SensorLibrary() {
         <div className="sensor-details" style={{ fontSize: 13, color: 'var(--text-secondary)', marginTop: 8 }}>
           {isHttp && sensor.config?.http_url && <p style={{ wordBreak: 'break-all', fontSize: 12, color: '#818cf8' }}>🔗 {sensor.config.http_url}</p>}
           {sensor.config?.ip_address && <p>📍 {sensor.config.ip_address}</p>}
-          {metric && (
-            <p style={{ color: statusColor, fontWeight: 600 }}>
-              {isHttp ? `⏱️ ${metric.value ? Math.round(metric.value) + ' ms' : '-'}` : `📊 ${metric.value?.toFixed(1) || '-'} ${metric.unit || ''}`}
-            </p>
-          )}
+          {metric && (() => {
+            const md = metric.metadata || {};
+            const nameL = (sensor.name || '').toLowerCase();
+            // Storage (EqualLogic) — mostrar uso/total/livre
+            if (nameL.includes('storage') || nameL.includes('equallogic') || nameL.includes('san')) {
+              const pct = md['EqualLogic storage_percent']?.value;
+              const totalGb = md['EqualLogic storage_total']?.value;
+              const freeGb = md['EqualLogic storage_free']?.value;
+              const disksTotal = md['EqualLogic disks_total']?.value;
+              const disksOnline = md['EqualLogic disks_online']?.value;
+              const conns = md['EqualLogic iscsi_connections']?.value || md['EqualLogic connections']?.value;
+              if (pct != null) {
+                return (
+                  <div style={{ color: statusColor, fontWeight: 600 }}>
+                    <p>💾 Uso: {pct}% · Total: {totalGb} GB · Livre: {freeGb} GB</p>
+                    {disksTotal != null && <p style={{ fontWeight: 400, fontSize: 11 }}>💿 Discos: {disksOnline}/{disksTotal} online{conns ? ` · 🔗 ${conns} iSCSI` : ''}</p>}
+                  </div>
+                );
+              }
+            }
+            // Printer — mostrar toner
+            if (nameL.includes('impressora') || nameL.includes('printer')) {
+              const toner = md['Printer toner_level']?.value ?? md['Printer toner']?.value;
+              const pages = md['Printer total_pages']?.value ?? md['Printer page_count']?.value ?? md['Printer pages']?.value;
+              if (toner != null) {
+                return (
+                  <p style={{ color: toner <= 10 ? '#ef4444' : toner <= 20 ? '#f59e0b' : '#22c55e', fontWeight: 600 }}>
+                    🖨️ Toner: {toner}%{pages ? ` · 📄 ${Number(pages).toLocaleString('pt-BR')} páginas` : ''}
+                  </p>
+                );
+              }
+            }
+            // Generic
+            return (
+              <p style={{ color: statusColor, fontWeight: 600 }}>
+                {isHttp ? `⏱️ ${metric.value ? Math.round(metric.value) + ' ms' : '-'}` : `📊 ${metric.value?.toFixed(1) || '-'} ${metric.unit || ''}`}
+              </p>
+            );
+          })()}
           {metric?.timestamp && <p style={{ fontSize: 11, color: 'var(--text-secondary)' }}>🕐 {new Date(metric.timestamp).toLocaleString('pt-BR')}</p>}
           {metric?.metadata && metric.metadata['Engetron temperatura'] && (
             <div style={{ marginTop: 6, padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: 11, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 8px', color: 'var(--text-secondary)' }}>
@@ -607,10 +641,11 @@ function SensorLibrary() {
         )}
         {(showSection('all') ? sensorsByGroup.outros : []).map(sensor => {
           const metric = sensorMetrics[String(sensor.id)];
-          const isOnline = metric?.status === 'ok';
-          const statusColor = !metric ? '#6b7280' : isOnline ? '#10b981' : '#ef4444';
-          const statusLabel = !metric ? 'Aguardando' : isOnline ? 'ONLINE' : 'OFFLINE';
-          const statusBg = !metric ? '#6b728015' : isOnline ? '#10b98115' : '#ef444415';
+          const st = metric?.status;
+          const isOnline = st === 'ok' || st === 'warning';
+          const statusColor = !metric ? '#6b7280' : st === 'ok' ? '#10b981' : st === 'warning' ? '#f59e0b' : '#ef4444';
+          const statusLabel = !metric ? 'Aguardando' : st === 'ok' ? 'ONLINE' : st === 'warning' ? 'AVISO' : 'OFFLINE';
+          const statusBg = !metric ? '#6b728015' : st === 'ok' ? '#10b98115' : st === 'warning' ? '#f59e0b15' : '#ef444415';
           return renderSensorCard(sensor, metric, statusColor, statusLabel, statusBg);
         })}
 
