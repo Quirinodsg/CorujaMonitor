@@ -594,7 +594,8 @@ class ProbeOrchestrator:
 
     def _collect_one_server_safe(self, server: Dict, timestamp: datetime) -> None:
         """Coleta um servidor individual com isolamento de falhas e telemetria.
-        Inicializa COM apartment para WMI funcionar em worker threads."""
+        Inicializa COM apartment para WMI funcionar em worker threads.
+        Invalida conexões WMI do pool para forçar criação na thread atual."""
         hostname = server.get("hostname", "unknown")
         t0 = time.monotonic()
         count = 0
@@ -610,6 +611,23 @@ class ProbeOrchestrator:
                 pass  # Linux ou pythoncom não disponível — OK, não usa WMI
             except Exception:
                 pass
+
+            # Invalidar conexões WMI existentes no pool para este host
+            # Conexões COM criadas em outra thread não podem ser reutilizadas
+            protocol = server.get("monitoring_protocol", "wmi")
+            if protocol != "snmp":
+                try:
+                    from engine.wmi_pool import get_pool
+                    pool = get_pool()
+                    host_key = hostname.upper()
+                    with pool._lock:
+                        if host_key in pool._pools:
+                            # Remover todas as conexões ociosas deste host
+                            pool._pools[host_key] = [
+                                pc for pc in pool._pools[host_key] if pc.in_use
+                            ]
+                except Exception:
+                    pass  # Pool não disponível — OK
 
             metrics = self.executor.collect_server(server)
             count = len(metrics)
