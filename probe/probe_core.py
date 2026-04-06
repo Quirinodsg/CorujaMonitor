@@ -36,7 +36,7 @@ from config import ProbeConfig
 
 # Parallel engine (feature flag)
 try:
-    from parallel_engine import ProbeOrchestrator
+    from parallel_engine import ProbeOrchestrator, MetricsComparator
     PARALLEL_AVAILABLE = True
 except ImportError:
     PARALLEL_AVAILABLE = False
@@ -63,9 +63,13 @@ class ProbeCore:
         # Parallel engine (feature flag via config.yaml)
         self._parallel_config = self._load_parallel_config()
         self._orchestrator = None
-        if PARALLEL_AVAILABLE and self._parallel_config.get("parallel_enabled", False):
+        self._shadow_mode = self._parallel_config.get("shadow_mode", False)
+        if PARALLEL_AVAILABLE and (self._parallel_config.get("parallel_enabled", False) or self._shadow_mode):
             self._orchestrator = ProbeOrchestrator(self, self._parallel_config)
-            logger.info(f"⚡ Parallel engine ENABLED (workers={self._parallel_config.get('max_workers', 8)})")
+            if self._shadow_mode:
+                logger.info("🔍 Shadow mode ENABLED — running sequential + parallel, comparing results")
+            else:
+                logger.info(f"⚡ Parallel engine ENABLED (workers={self._parallel_config.get('max_workers', 8)})")
         else:
             logger.info("🔄 Sequential mode (parallel_enabled=false)")
 
@@ -83,6 +87,7 @@ class ProbeCore:
             "timeout_seconds": 30,
             "dispatch_mode": "bulk",
             "canary_hosts": [],
+            "shadow_mode": False,
         }
         try:
             import yaml
@@ -209,13 +214,97 @@ class ProbeCore:
             return None
     
     def _collect_metrics(self):
-        """Collect metrics — parallel or sequential based on feature flag."""
-        if self._orchestrator:
+        """Collect metrics — parallel, sequential, or shadow mode based on config."""
+        if self._shadow_mode and self._orchestrator:
+            # 🔍 SHADOW MODE: run both, compare, send only sequential
+            self._collect_metrics_shadow()
+        elif self._orchestrator:
             # ⚡ PARALLEL MODE
             self._orchestrator.collect_all()
         else:
             # 🔄 SEQUENTIAL MODE (original)
             self._collect_metrics_sequential()
+
+    def _collect_metrics_shadow(self):
+        """Shadow mode: execute sequential AND parallel, compare results, send only sequential."""
+        logger.info("🔍 Shadow mode cycle: running sequential + parallel collection")
+
+        # ── Phase 1: Sequential collection (these results will be sent to API) ──
+        buffer_before_seq = len(self.buffer)
+        self._collect_metrics_sequential()
+        sequential_metrics = list(self.buffer[buffer_before_seq:])
+        logger.info(f"🔍 Shadow sequential: {len(sequential_metrics)} metrics collected")
+
+        # ── Phase 2: Parallel collection (results are discarded, only used for comparison) ──
+        # Save current buffer state — parallel should NOT add to the real buffer
+        saved_buffer = list(self.buffer)
+        self.buffer.clear()
+
+        try:
+            self._orchestrator.collect_all()
+        except Exception as e:
+            logger.error(f"🔍 Shadow parallel collection error: {e}")
+
+        parallel_metrics = list(self.buffer)
+        logger.info(f"🔍 Shadow parallel: {len(parallel_metrics)} metrics collected")
+
+        # ── Phase 3: Restore sequential buffer (only sequential results are sent) ──
+        self.buffer.clear()
+        self.buffer.extend(saved_buffer)
+
+        # ── Phase 4: Compare results via MetricsComparator ──
+        self._compare_shadow_results(sequential_metrics, parallel_metrics)
+
+    def _compare_shadow_results(self, sequential_metrics: list, parallel_metrics: list):
+        """Compare sequential vs parallel metrics and log the MCT summary."""
+        comparator = MetricsComparator()
+
+        # Build lookup: (hostname, sensor_name) → value for parallel metrics
+        parallel_lookup: Dict[tuple, float] = {}
+        for m in parallel_metrics:
+            key = (
+                m.get("hostname", ""),
+                m.get("name", m.get("sensor_name", "")),
+            )
+            try:
+                parallel_lookup[key] = float(m.get("value", 0))
+            except (TypeError, ValueError):
+                parallel_lookup[key] = 0.0
+
+        # Compare each sequential metric against its parallel counterpart
+        matched = 0
+        for m in sequential_metrics:
+            key = (
+                m.get("hostname", ""),
+                m.get("name", m.get("sensor_name", "")),
+            )
+            if key in parallel_lookup:
+                try:
+                    seq_val = float(m.get("value", 0))
+                except (TypeError, ValueError):
+                    seq_val = 0.0
+                par_val = parallel_lookup[key]
+                comparator.compare(key[0], key[1], seq_val, par_val)
+                matched += 1
+
+        summary = comparator.summary
+        unmatched_seq = len(sequential_metrics) - matched
+        unmatched_par = len(parallel_lookup) - matched
+
+        # Log structured summary
+        logger.info(
+            f"🔍 MCT Shadow Summary: {summary['total']} compared | "
+            f"{summary['ok']} OK | {summary['drifts']} DRIFT | "
+            f"pass={summary['pass']}"
+        )
+        if unmatched_seq > 0:
+            logger.info(f"🔍 MCT: {unmatched_seq} sequential metrics without parallel match")
+        if unmatched_par > 0:
+            logger.info(f"🔍 MCT: {unmatched_par} parallel metrics without sequential match")
+        if not summary["pass"]:
+            logger.warning(
+                f"🔍 MCT FAIL: {summary['drifts']} metric(s) drifted beyond {MetricsComparator.TOLERANCE_PCT}% tolerance"
+            )
 
     def _collect_metrics_sequential(self):
         """Original sequential collection (preserved for safety)."""

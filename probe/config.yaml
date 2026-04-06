@@ -15,14 +15,52 @@ token: "V-PTetiHvbNsZgrkY14PFGRfyv6jPBZxdTb76Z2M7YY"
 probe:
   name: "SRVSONDA001"
   location: ""
-  # ── Coleta Paralela (feature flag) ──
-  # Ativar para coleta estilo PRTG (ThreadPoolExecutor)
-  # false = modo sequencial (atual, seguro)
-  # true = modo paralelo (mais rápido)
+  # ── Coleta Paralela (feature flag) ──────────────────────────────────
+  #
+  # Controla o modo de coleta de métricas da sonda.
+  # Quando desativado (false), a sonda opera no modo sequencial original.
+  # Quando ativado (true), utiliza ThreadPoolExecutor para coleta paralela,
+  # reduzindo o ciclo de ~3min para <30s em ambientes com muitos servidores.
+  #
+  # ROLLOUT SEGURO (ordem recomendada):
+  #   1. shadow_mode: true  → valida equivalência sem risco
+  #   2. canary_hosts: ["srv-a", "srv-b"]  → paralelo em poucos hosts
+  #   3. parallel_enabled: true, canary_hosts: []  → paralelo em todos
+  #
+  # Para reverter: basta setar parallel_enabled: false (efeito imediato no próximo ciclo)
+  #
+  # parallel_enabled: Ativa/desativa o modo paralelo (default: false)
   parallel_enabled: false
+
+  # max_workers: Número de threads no ThreadPoolExecutor (default: 8)
+  #   Recomendado: 1 thread por servidor remoto, até o limite de I/O da rede.
+  #   Valores típicos: 4 (poucos servidores) a 16 (muitos servidores).
   max_workers: 8
+
+  # timeout_seconds: Timeout máximo por servidor remoto em segundos (default: 30)
+  #   Se um servidor não responder dentro deste tempo, a coleta é cancelada
+  #   e os demais servidores não são afetados (isolamento de falhas).
   timeout_seconds: 30
-  dispatch_mode: "bulk"  # bulk ou incremental
+
+  # dispatch_mode: Modo de envio de métricas à API (default: "bulk")
+  #   "bulk"        → acumula todas as métricas e envia ao final do ciclo
+  #   "incremental" → envia métricas em micro-batches de 50 conforme são coletadas
+  #                   (NOC vê dados mais rápido, sem esperar ciclo completo)
+  dispatch_mode: "bulk"
+
+  # canary_hosts: Lista de hostnames para canary release (default: [])
+  #   Quando não vazio, apenas estes hosts usam coleta paralela;
+  #   os demais continuam em modo sequencial.
+  #   Relido a cada ciclo (hot-reload sem restart da sonda).
+  #   Exemplo: ["SRV-WEB-01", "SRV-DB-01"]
+  canary_hosts: []
+
+  # shadow_mode: Modo de validação MCT (default: false)
+  #   Quando ativo, executa AMBOS os modos (sequencial + paralelo) no mesmo ciclo,
+  #   compara resultados via MetricsComparator (tolerância de 5%),
+  #   e envia APENAS os resultados do modo sequencial à API.
+  #   Útil para validar equivalência antes de migrar para paralelo.
+  shadow_mode: false
 
 # Intervalo de coleta (segundos)
 collection_interval: 60
