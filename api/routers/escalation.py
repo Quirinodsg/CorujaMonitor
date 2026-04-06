@@ -339,20 +339,35 @@ async def search_available_resources(
         if not query_lower or query_lower in (s.hostname or '').lower():
             results.append({"type": "server", "id": s.id, "name": s.hostname or f"Server #{s.id}"})
 
-    # Buscar TODOS os sensores acessíveis pelo tenant (standalone + com server)
+    # Buscar TODOS os sensores acessíveis pelo tenant
+    # Query separada para evitar que outerjoin filtre standalone
     from sqlalchemy import or_
     from models import Probe
-    sensors = db.query(Sensor).outerjoin(Server, Sensor.server_id == Server.id).outerjoin(
-        Probe, Sensor.probe_id == Probe.id
-    ).filter(
+
+    # Sensores com server do tenant
+    sensors_with_server = db.query(Sensor).join(Server, Sensor.server_id == Server.id).filter(
         Sensor.is_active == True,
-        or_(
-            Server.tenant_id == current_user.tenant_id,
-            Probe.tenant_id == current_user.tenant_id,
-            Sensor.server_id == None,  # Standalone sensors (com ou sem probe_id)
-        )
+        Server.tenant_id == current_user.tenant_id,
     ).all()
-    for s in sensors:
+
+    # Sensores standalone (sem server_id) — via probe do tenant ou sem probe
+    sensors_standalone = db.query(Sensor).filter(
+        Sensor.is_active == True,
+        Sensor.server_id == None,
+    ).all()
+
+    # Filtrar standalone por tenant via probe_id
+    standalone_filtered = []
+    for s in sensors_standalone:
+        if s.probe_id:
+            probe = db.query(Probe).filter(Probe.id == s.probe_id).first()
+            if probe and probe.tenant_id == current_user.tenant_id:
+                standalone_filtered.append(s)
+        else:
+            standalone_filtered.append(s)  # Sem probe = acessível
+
+    all_sensors = sensors_with_server + standalone_filtered
+    for s in all_sensors:
         if not query_lower or query_lower in (s.name or '').lower():
             results.append({"type": "sensor", "id": s.id, "name": s.name or f"Sensor #{s.id}"})
 
