@@ -210,6 +210,7 @@ class SensorExecutor:
         Roteia para WMI ou SNMP baseado em monitoring_protocol.
         Retorna lista de métricas coletadas (isolada do buffer global).
         Thread-safe: usa _buffer_lock para proteger acesso ao ProbeCore.buffer.
+        Nota: COM init é feito pelo caller (_collect_one_server_safe) para WMI.
         """
         hostname = server.get("hostname", "unknown")
         metrics: List[Dict] = []
@@ -592,12 +593,24 @@ class ProbeOrchestrator:
                     future.cancel()
 
     def _collect_one_server_safe(self, server: Dict, timestamp: datetime) -> None:
-        """Coleta um servidor individual com isolamento de falhas e telemetria."""
+        """Coleta um servidor individual com isolamento de falhas e telemetria.
+        Inicializa COM apartment para WMI funcionar em worker threads."""
         hostname = server.get("hostname", "unknown")
         t0 = time.monotonic()
         count = 0
         error = None
+        com_initialized = False
         try:
+            # COM init necessário para WMI em worker threads do ThreadPoolExecutor
+            try:
+                import pythoncom
+                pythoncom.CoInitialize()
+                com_initialized = True
+            except ImportError:
+                pass  # Linux ou pythoncom não disponível — OK, não usa WMI
+            except Exception:
+                pass
+
             metrics = self.executor.collect_server(server)
             count = len(metrics)
 
@@ -607,6 +620,12 @@ class ProbeOrchestrator:
         except Exception as e:
             error = str(e)
             logger.error(f"Collection failed for {hostname}: {e}")
+        finally:
+            if com_initialized:
+                try:
+                    pythoncom.CoUninitialize()
+                except Exception:
+                    pass
 
         elapsed = (time.monotonic() - t0) * 1000
         self.telemetry.record_host(hostname, elapsed, count, error)
