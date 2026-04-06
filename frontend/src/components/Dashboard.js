@@ -403,7 +403,12 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                       <span style={{ fontSize: 11, color: '#94a3b8' }}>❄️ HVAC</span>
                     </div>
                     <div className="dash-site-name">❄️ {s.name}</div>
-                    {m && <div className="dash-site-url">📊 {m.value?.toFixed(1)} {m.unit}</div>}
+                    {(() => {
+                      const temp = md['Conflex temp_interna']?.value;
+                      if (temp != null) return <div className="dash-site-url">🌡️ {temp}°C</div>;
+                      if (m) return <div className="dash-site-url">📊 {m.value?.toFixed(1)} {m.unit}</div>;
+                      return null;
+                    })()}
                   </div>
                 );
               })}
@@ -428,7 +433,10 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                     </div>
                     <div className="dash-site-name">💾 {s.name}</div>
                     {pct != null && (
-                      <div className="dash-site-url">📊 Uso: {pct}% · Total: {totalGb >= 1024 ? (totalGb/1024).toFixed(2) + ' TB' : totalGb + ' GB'} · Livre: {freeGb >= 1024 ? (freeGb/1024).toFixed(2) + ' TB' : freeGb + ' GB'}</div>
+                      <>
+                        <div className="dash-site-url">📊 Uso: {pct}% · Total: {totalGb >= 1024 ? (totalGb/1024).toFixed(1) + ' TB' : totalGb + ' GB'}</div>
+                        <div className="dash-site-url">💿 Livre: {freeGb >= 1024 ? (freeGb/1024).toFixed(2) + ' TB' : freeGb + ' GB'}</div>
+                      </>
                     )}
                     {disksTotal != null && (
                       <div className="dash-site-url">💿 Discos: {disksOnline}/{disksTotal} online{conns ? ` · 🔗 ${conns} iSCSI` : ''}{uptime ? ` · ⏱️ ${uptime}d` : ''}</div>
@@ -445,8 +453,8 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                 const color = status === 'ok' ? '#22C55E' : status === 'warning' ? '#F59E0B' : status === 'critical' ? '#EF4444' : '#6B7280';
                 const label = status === 'ok' ? 'ONLINE' : status === 'warning' ? 'AVISO' : status === 'critical' ? 'OFFLINE' : 'Aguardando';
                 const md = m?.metadata || {};
-                const toner = md['Printer toner_level']?.value ?? md['Printer toner']?.value;
-                const pages = md['Printer page_count']?.value ?? md['Printer pages']?.value;
+                const toner = md['Printer toner']?.value;
+                const pages = md['Printer total_pages']?.value ?? md['Printer page_count']?.value;
                 return (
                   <div key={s.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => onNavigate('sensor-library')}>
                     <div className="dash-site-status">
