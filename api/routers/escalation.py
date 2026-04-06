@@ -330,17 +330,7 @@ async def search_available_resources(
     results = []
     query_lower = q.lower().strip()
 
-    # Buscar servidores do tenant
-    servers = db.query(Server).filter(
-        Server.tenant_id == current_user.tenant_id,
-        Server.is_active == True,
-    ).all()
-    for s in servers:
-        if not query_lower or query_lower in (s.hostname or '').lower():
-            results.append({"type": "server", "id": s.id, "name": s.hostname or f"Server #{s.id}"})
-
-    # Buscar TODOS os sensores acessíveis pelo tenant
-    # Query separada para evitar que outerjoin filtre standalone
+    # 1. Buscar sensores PRIMEIRO (prioridade para datacenter: nobreak, ar-condicionado, etc.)
     from sqlalchemy import or_
     from models import Probe
 
@@ -350,7 +340,7 @@ async def search_available_resources(
         Server.tenant_id == current_user.tenant_id,
     ).all()
 
-    # Sensores standalone (sem server_id) — via probe do tenant ou sem probe
+    # Sensores standalone (sem server_id)
     sensors_standalone = db.query(Sensor).filter(
         Sensor.is_active == True,
         Sensor.server_id == None,
@@ -364,14 +354,23 @@ async def search_available_resources(
             if probe and probe.tenant_id == current_user.tenant_id:
                 standalone_filtered.append(s)
         else:
-            standalone_filtered.append(s)  # Sem probe = acessível
+            standalone_filtered.append(s)
 
-    all_sensors = sensors_with_server + standalone_filtered
+    all_sensors = standalone_filtered + sensors_with_server
     for s in all_sensors:
         if not query_lower or query_lower in (s.name or '').lower():
             results.append({"type": "sensor", "id": s.id, "name": s.name or f"Sensor #{s.id}"})
 
-    return results[:50]
+    # 2. Buscar servidores do tenant
+    servers = db.query(Server).filter(
+        Server.tenant_id == current_user.tenant_id,
+        Server.is_active == True,
+    ).all()
+    for s in servers:
+        if not query_lower or query_lower in (s.hostname or '').lower():
+            results.append({"type": "server", "id": s.id, "name": s.hostname or f"Server #{s.id}"})
+
+    return results[:100]
 
 
 @router.put("/resources")
