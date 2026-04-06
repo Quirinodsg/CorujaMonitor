@@ -391,18 +391,22 @@ function SensorLibrary() {
               const disksOnline = md['EqualLogic disks_online']?.value;
               const conns = md['EqualLogic iscsi_connections']?.value || md['EqualLogic connections']?.value;
               if (pct != null) {
+                const totalTb = totalGb ? (totalGb / 1024).toFixed(2) : null;
+                const freeTb = freeGb ? (freeGb / 1024).toFixed(2) : null;
+                const totalLabel = totalGb >= 1024 ? `${totalTb} TB` : `${totalGb} GB`;
+                const freeLabel = freeGb >= 1024 ? `${freeTb} TB` : `${freeGb} GB`;
                 return (
                   <div style={{ color: statusColor, fontWeight: 600 }}>
-                    <p>💾 Uso: {pct}% · Total: {totalGb} GB · Livre: {freeGb} GB</p>
+                    <p>💾 Uso: {pct}% · Total: {totalLabel} · Livre: {freeLabel}</p>
                     {disksTotal != null && <p style={{ fontWeight: 400, fontSize: 11 }}>💿 Discos: {disksOnline}/{disksTotal} online{conns ? ` · 🔗 ${conns} iSCSI` : ''}</p>}
                   </div>
                 );
               }
             }
-            // Printer — mostrar toner
+            // Printer — mostrar toner (usar 'Printer toner' não 'Printer toner_level')
             if (nameL.includes('impressora') || nameL.includes('printer')) {
-              const toner = md['Printer toner_level']?.value ?? md['Printer toner']?.value;
-              const pages = md['Printer total_pages']?.value ?? md['Printer page_count']?.value ?? md['Printer pages']?.value;
+              const toner = md['Printer toner']?.value;
+              const pages = md['Printer total_pages']?.value ?? md['Printer page_count']?.value;
               if (toner != null) {
                 return (
                   <p style={{ color: toner <= 10 ? '#ef4444' : toner <= 20 ? '#f59e0b' : '#22c55e', fontWeight: 600 }}>

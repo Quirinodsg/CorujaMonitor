@@ -428,7 +428,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                     </div>
                     <div className="dash-site-name">💾 {s.name}</div>
                     {pct != null && (
-                      <div className="dash-site-url">📊 Uso: {pct}% · Total: {totalGb} GB · Livre: {freeGb} GB</div>
+                      <div className="dash-site-url">📊 Uso: {pct}% · Total: {totalGb >= 1024 ? (totalGb/1024).toFixed(2) + ' TB' : totalGb + ' GB'} · Livre: {freeGb >= 1024 ? (freeGb/1024).toFixed(2) + ' TB' : freeGb + ' GB'}</div>
                     )}
                     {disksTotal != null && (
                       <div className="dash-site-url">💿 Discos: {disksOnline}/{disksTotal} online{conns ? ` · 🔗 ${conns} iSCSI` : ''}{uptime ? ` · ⏱️ ${uptime}d` : ''}</div>

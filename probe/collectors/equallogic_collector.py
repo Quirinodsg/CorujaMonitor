@@ -221,7 +221,7 @@ class EqualLogicCollector:
 
             logger.info(f"EqualLogic {self.ip}: total={total_gb}GB used={used_gb}GB free={free_gb}GB pct={pct_used}%")
 
-            status = "critical" if pct_used > 97 else "warning" if pct_used > 90 else "ok"
+            status = "critical" if pct_used > 97 else "warning" if pct_used > 95 else "ok"
             metrics.append(self._metric("storage_total", total_gb, "GB", "ok"))
             metrics.append(self._metric("storage_used", used_gb, "GB", status))
             metrics.append(self._metric("storage_free", free_gb, "GB", status))
