@@ -21,6 +21,8 @@ function EscalationConfig() {
   const [newName, setNewName] = useState('');
   const [newNumber, setNewNumber] = useState('');
   const [phoneError, setPhoneError] = useState('');
+  const [testCallLoading, setTestCallLoading] = useState(null);
+  const [testCallMsg, setTestCallMsg] = useState({ text: '', type: '' });
 
   // ── Resources state ──
   const [resources, setResources] = useState([]);
@@ -158,6 +160,22 @@ function EscalationConfig() {
     if (newIndex < 0 || newIndex >= arr.length) return;
     [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
     setConfig({ ...config, phone_chain: arr.map((p, i) => ({ ...p, order: i + 1 })) });
+  };
+
+  const testCall = async (number) => {
+    setTestCallLoading(number);
+    setTestCallMsg({ text: '', type: '' });
+    try {
+      await api.post('/escalation/test-call', { number });
+      setTestCallMsg({ text: `Ligação de teste enviada para ${number}`, type: 'success' });
+      setTimeout(() => setTestCallMsg({ text: '', type: '' }), 5000);
+    } catch (e) {
+      const detail = e.response?.data?.detail || 'Erro ao fazer ligação de teste';
+      setTestCallMsg({ text: detail, type: 'error' });
+    } finally {
+      setTestCallLoading(null);
+    }
+  };
   };
 
   // ─────────────────────────────────────────────────────────
@@ -327,6 +345,9 @@ function EscalationConfig() {
                   <span className="esc-phone-number">{phone.number}</span>
                 </div>
                 <div className="esc-phone-actions">
+                  <button onClick={() => testCall(phone.number)} disabled={testCallLoading === phone.number} title="Testar ligação">
+                    {testCallLoading === phone.number ? '⏳' : '📞'}
+                  </button>
                   <button onClick={() => movePhone(i, -1)} disabled={i === 0} title="Mover para cima">▲</button>
                   <button onClick={() => movePhone(i, 1)} disabled={i === config.phone_chain.length - 1} title="Mover para baixo">▼</button>
                   <button className="remove" onClick={() => removePhone(i)} title="Remover">✕</button>
@@ -359,6 +380,7 @@ function EscalationConfig() {
           <button className="ds-btn ds-btn--primary" onClick={addPhone}>+ Adicionar</button>
         </div>
         {phoneError && <span className="esc-msg error" style={{ marginTop: 8, display: 'block' }}>{phoneError}</span>}
+        {testCallMsg.text && <span className={`esc-msg ${testCallMsg.type}`} style={{ marginTop: 8, display: 'block' }}>{testCallMsg.text}</span>}
       </div>
 
       {/* ── 3. Recursos Monitorados ── */}

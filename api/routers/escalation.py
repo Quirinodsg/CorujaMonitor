@@ -176,14 +176,26 @@ async def get_escalation_config(
     notification_config = tenant.notification_config or {}
     escalation_config = notification_config.get("escalation", {})
 
-    # Retornar com defaults
+    # Pré-popular phone_chain com números do Twilio se estiver vazia
+    phone_chain = escalation_config.get("phone_chain", [])
+    if not phone_chain:
+        twilio_config = notification_config.get("twilio", {})
+        to_numbers = twilio_config.get("to_numbers", [])
+        if isinstance(to_numbers, str):
+            to_numbers = [n.strip() for n in to_numbers.split(",") if n.strip()]
+        if to_numbers:
+            phone_chain = [
+                {"name": f"Contato {i+1}", "number": n.strip(), "order": i+1}
+                for i, n in enumerate(to_numbers)
+            ]
+
     return {
         "enabled": escalation_config.get("enabled", False),
         "mode": escalation_config.get("mode", "sequential"),
         "interval_minutes": escalation_config.get("interval_minutes", 5),
         "max_attempts": escalation_config.get("max_attempts", 10),
         "call_duration_seconds": escalation_config.get("call_duration_seconds", 30),
-        "phone_chain": escalation_config.get("phone_chain", []),
+        "phone_chain": phone_chain,
     }
 
 
@@ -417,6 +429,64 @@ async def get_escalation_history(
             break
 
     return history
+
+
+# ─── POST /test-call — Teste de ligação de escalação ────────────────────────
+
+
+class TestCallRequest(BaseModel):
+    number: str
+
+
+@router.post("/test-call")
+async def test_escalation_call(
+    request: TestCallRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Faz uma ligação de teste para validar a configuração de escalação."""
+    esc = _get_escalation_module()
+
+    if not esc.validate_phone_number(request.number):
+        raise HTTPException(status_code=400, detail="Número inválido. Use formato E.164: +5511999999999")
+
+    tenant = db.query(Tenant).filter(Tenant.id == current_user.tenant_id).first()
+    if not tenant or not tenant.notification_config:
+        raise HTTPException(status_code=400, detail="Configuração de notificação não encontrada")
+
+    twilio_config = tenant.notification_config.get("twilio", {})
+    account_sid = twilio_config.get("account_sid")
+    auth_token = twilio_config.get("auth_token")
+    from_number = twilio_config.get("from_number")
+
+    if not all([account_sid, auth_token, from_number]):
+        raise HTTPException(status_code=400, detail="Twilio não configurado")
+
+    try:
+        from twilio.rest import Client
+        client = Client(account_sid, auth_token)
+
+        call = client.calls.create(
+            twiml=(
+                '<Response>'
+                '<Say language="pt-BR" voice="alice">'
+                'Teste de escalação do Coruja Monitor. '
+                'Se você está ouvindo esta mensagem, a configuração de ligação está funcionando corretamente. '
+                'Obrigado.'
+                '</Say>'
+                '</Response>'
+            ),
+            from_=from_number,
+            to=request.number,
+            timeout=30,
+        )
+        return {
+            "success": True,
+            "message": f"Ligação de teste enviada para {request.number}",
+            "call_sid": call.sid,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao fazer ligação: {str(e)}")
 
 
 # ─── 6.7 Limpeza automática de recursos removidos ───────────────────────────
