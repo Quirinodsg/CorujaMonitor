@@ -414,6 +414,7 @@ async def get_latest_metrics_batch(
 
     # For sensors with metadata-rich collectors (equallogic, conflex, printer, engetron),
     # prefer the most recent metric that HAS extra_metadata
+    # Optimized: single batch query instead of N+1 individual queries
     metadata_sensor_ids = set()
     for m in latest_metrics:
         if not m.extra_metadata or m.extra_metadata == {} or (
@@ -421,21 +422,32 @@ async def get_latest_metrics_batch(
         ):
             metadata_sensor_ids.add(m.sensor_id)
 
-    # Re-query for sensors that got a "bare" metric — find the latest WITH metadata
     if metadata_sensor_ids:
-        for sid in metadata_sensor_ids:
-            better = (
-                db.query(Metric)
-                .filter(
-                    Metric.sensor_id == sid,
-                    Metric.extra_metadata != None,
-                )
-                .order_by(Metric.id.desc())
-                .first()
+        # Single query to get the latest metric WITH metadata for all bare sensors
+        metadata_subq = (
+            db.query(
+                Metric.sensor_id,
+                func.max(Metric.id).label('max_id')
             )
-            if better and better.extra_metadata and len(better.extra_metadata) > 1:
-                # Replace in latest_metrics
-                latest_metrics = [m if m.sensor_id != sid else better for m in latest_metrics]
+            .filter(
+                Metric.sensor_id.in_(metadata_sensor_ids),
+                Metric.extra_metadata != None,
+            )
+            .group_by(Metric.sensor_id)
+            .subquery()
+        )
+        better_metrics = (
+            db.query(Metric)
+            .join(metadata_subq, Metric.id == metadata_subq.c.max_id)
+            .all()
+        )
+        # Build lookup and replace
+        better_lookup = {}
+        for bm in better_metrics:
+            if bm.extra_metadata and len(bm.extra_metadata) > 1:
+                better_lookup[bm.sensor_id] = bm
+        if better_lookup:
+            latest_metrics = [better_lookup.get(m.sensor_id, m) for m in latest_metrics]
 
     result = {}
     for m in latest_metrics:
