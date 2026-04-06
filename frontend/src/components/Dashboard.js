@@ -404,7 +404,8 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                     </div>
                     <div className="dash-site-name">❄️ {s.name}</div>
                     {(() => {
-                      const temp = md['Conflex temp_interna']?.value;
+                      const md2 = m?.metadata || {};
+                      const temp = md2['Conflex temp_interna']?.value;
                       if (temp != null) return <div className="dash-site-url">🌡️ {temp}°C</div>;
                       if (m) return <div className="dash-site-url">📊 {m.value?.toFixed(1)} {m.unit}</div>;
                       return null;
