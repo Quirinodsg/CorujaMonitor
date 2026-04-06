@@ -60,11 +60,38 @@ class ResourcesUpdate(BaseModel):
 
 def _get_escalation_module():
     """Importa worker/escalation.py adicionando o path do worker ao sys.path."""
-    worker_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "worker")
-    if worker_dir not in sys.path:
-        sys.path.insert(0, worker_dir)
+    # Tentar múltiplos paths possíveis (dev local e Docker)
+    possible_dirs = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "worker"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "worker"),
+        "/app/worker",
+        os.path.join(os.getcwd(), "worker"),
+    ]
+    for d in possible_dirs:
+        if os.path.isdir(d) and d not in sys.path:
+            sys.path.insert(0, d)
     import escalation
     return escalation
+
+
+# ─── Funções de validação inline (fallback se import falhar) ────────────────
+
+def _validate_escalation_config_inline(config):
+    """Validação inline caso o módulo escalation não esteja disponível."""
+    limits = {"interval_minutes": (1, 60), "max_attempts": (1, 100), "call_duration_seconds": (10, 120)}
+    errors = []
+    for field, (mn, mx) in limits.items():
+        if field in config:
+            v = config[field]
+            if not isinstance(v, int) or v < mn or v > mx:
+                errors.append(f"{field}: valor {v} fora dos limites [{mn}, {mx}]")
+    return errors
+
+
+def _validate_phone_inline(number):
+    """Validação E.164 inline."""
+    import re
+    return bool(re.match(r'^\+\d{1,15}$', str(number))) if isinstance(number, str) else False
 
 
 # ─── 5.1 GET /active — lista escalações ativas do tenant ────────────────────
@@ -79,8 +106,9 @@ async def list_active_escalations(
         esc = _get_escalation_module()
         active = esc.get_active_escalations(current_user.tenant_id)
     except Exception as e:
-        logger.error("Erro ao buscar escalações ativas: %s", e)
-        raise HTTPException(status_code=503, detail="Redis indisponível")
+        logger.warning("Erro ao buscar escalações ativas (Redis pode estar indisponível): %s", e)
+        # Retornar lista vazia em vez de 503 — Redis indisponível não é erro fatal
+        return []
 
     # Enriquecer com sensor_name do banco
     result = []
@@ -206,7 +234,13 @@ async def update_escalation_config(
     current_user: User = Depends(get_current_active_user),
 ):
     """Atualiza configuração de escalação do tenant."""
-    esc = _get_escalation_module()
+    try:
+        esc = _get_escalation_module()
+        validate_config = esc.validate_escalation_config
+        validate_phone = esc.validate_phone_number
+    except Exception:
+        validate_config = _validate_escalation_config_inline
+        validate_phone = _validate_phone_inline
 
     tenant = db.query(Tenant).filter(Tenant.id == current_user.tenant_id).first()
     if not tenant:
@@ -222,7 +256,7 @@ async def update_escalation_config(
         params_to_validate["call_duration_seconds"] = config.call_duration_seconds
 
     if params_to_validate:
-        errors = esc.validate_escalation_config(params_to_validate)
+        errors = validate_config(params_to_validate)
         if errors:
             raise HTTPException(status_code=400, detail="; ".join(errors))
 
@@ -230,7 +264,7 @@ async def update_escalation_config(
     if config.phone_chain is not None:
         for i, entry in enumerate(config.phone_chain):
             number = entry.get("number", "")
-            if number and not esc.validate_phone_number(number):
+            if number and not validate_phone(number):
                 raise HTTPException(
                     status_code=400,
                     detail=f"Número inválido na posição {i + 1}: '{number}' não está no formato E.164"
