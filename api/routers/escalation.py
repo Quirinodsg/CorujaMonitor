@@ -330,35 +330,30 @@ async def search_available_resources(
     results = []
     query_lower = q.lower().strip()
 
-    # 1. Buscar sensores PRIMEIRO (prioridade para datacenter: nobreak, ar-condicionado, etc.)
-    from sqlalchemy import or_
+    # 1. Buscar TODOS os sensores do tenant (qualquer tipo)
     from models import Probe
 
-    # Sensores com server do tenant
-    sensors_with_server = db.query(Sensor).join(Server, Sensor.server_id == Server.id).filter(
+    all_sensors = db.query(Sensor).outerjoin(Server, Sensor.server_id == Server.id).outerjoin(
+        Probe, Sensor.probe_id == Probe.id
+    ).filter(
         Sensor.is_active == True,
-        Server.tenant_id == current_user.tenant_id,
     ).all()
 
-    # Sensores standalone (sem server_id)
-    sensors_standalone = db.query(Sensor).filter(
-        Sensor.is_active == True,
-        Sensor.server_id == None,
-    ).all()
-
-    # Filtrar standalone por tenant via probe_id
-    standalone_filtered = []
-    for s in sensors_standalone:
-        if s.probe_id:
+    for s in all_sensors:
+        # Verificar tenant: via server ou via probe
+        belongs = False
+        if s.server_id:
+            srv = db.query(Server).filter(Server.id == s.server_id).first()
+            if srv and srv.tenant_id == current_user.tenant_id:
+                belongs = True
+        elif s.probe_id:
             probe = db.query(Probe).filter(Probe.id == s.probe_id).first()
             if probe and probe.tenant_id == current_user.tenant_id:
-                standalone_filtered.append(s)
+                belongs = True
         else:
-            standalone_filtered.append(s)
+            belongs = True  # Sem server nem probe = acessível
 
-    all_sensors = standalone_filtered + sensors_with_server
-    for s in all_sensors:
-        if not query_lower or query_lower in (s.name or '').lower():
+        if belongs and (not query_lower or query_lower in (s.name or '').lower()):
             results.append({"type": "sensor", "id": s.id, "name": s.name or f"Sensor #{s.id}"})
 
     # 2. Buscar servidores do tenant
@@ -370,7 +365,7 @@ async def search_available_resources(
         if not query_lower or query_lower in (s.hostname or '').lower():
             results.append({"type": "server", "id": s.id, "name": s.hostname or f"Server #{s.id}"})
 
-    return results[:100]
+    return results[:200]
 
 
 @router.put("/resources")
