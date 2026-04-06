@@ -320,6 +320,45 @@ async def get_escalation_resources(
     return {"resources": resources}
 
 
+@router.get("/resources/search")
+async def search_available_resources(
+    q: str = "",
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Busca servidores e sensores disponíveis para adicionar à escalação."""
+    results = []
+    query_lower = q.lower().strip()
+
+    # Buscar servidores do tenant
+    servers = db.query(Server).filter(
+        Server.tenant_id == current_user.tenant_id,
+        Server.is_active == True,
+    ).all()
+    for s in servers:
+        if not query_lower or query_lower in (s.hostname or '').lower():
+            results.append({"type": "server", "id": s.id, "name": s.hostname or f"Server #{s.id}"})
+
+    # Buscar sensores standalone (sem server_id) e sensores com server_id do tenant
+    from sqlalchemy import or_
+    from models import Probe
+    sensors = db.query(Sensor).outerjoin(Server, Sensor.server_id == Server.id).outerjoin(
+        Probe, Sensor.probe_id == Probe.id
+    ).filter(
+        Sensor.is_active == True,
+        or_(
+            Server.tenant_id == current_user.tenant_id,
+            Probe.tenant_id == current_user.tenant_id,
+            (Sensor.server_id == None) & (Sensor.probe_id == None),
+        )
+    ).all()
+    for s in sensors:
+        if not query_lower or query_lower in (s.name or '').lower():
+            results.append({"type": "sensor", "id": s.id, "name": s.name or f"Sensor #{s.id}"})
+
+    return results[:30]
+
+
 @router.put("/resources")
 async def update_escalation_resources(
     data: ResourcesUpdate,
@@ -479,9 +518,13 @@ async def test_escalation_call(
     current_user: User = Depends(get_current_active_user),
 ):
     """Faz uma ligação de teste para validar a configuração de escalação."""
-    esc = _get_escalation_module()
+    try:
+        esc = _get_escalation_module()
+        validate_phone = esc.validate_phone_number
+    except Exception:
+        validate_phone = _validate_phone_inline
 
-    if not esc.validate_phone_number(request.number):
+    if not validate_phone(request.number):
         raise HTTPException(status_code=400, detail="Número inválido. Use formato E.164: +5511999999999")
 
     tenant = db.query(Tenant).filter(Tenant.id == current_user.tenant_id).first()
@@ -497,28 +540,40 @@ async def test_escalation_call(
         raise HTTPException(status_code=400, detail="Twilio não configurado")
 
     try:
-        from twilio.rest import Client
-        client = Client(account_sid, auth_token)
-
-        call = client.calls.create(
-            twiml=(
-                '<Response>'
-                '<Say language="pt-BR" voice="alice">'
-                'Teste de escalação do Coruja Monitor. '
-                'Se você está ouvindo esta mensagem, a configuração de ligação está funcionando corretamente. '
-                'Obrigado.'
-                '</Say>'
-                '</Response>'
-            ),
-            from_=from_number,
-            to=request.number,
-            timeout=30,
+        import httpx
+        # Usar API REST do Twilio diretamente (sem SDK) — funciona em qualquer container
+        twiml = (
+            '<Response>'
+            '<Say language="pt-BR" voice="alice">'
+            'Teste de escalação do Coruja Monitor. '
+            'Se você está ouvindo esta mensagem, a configuração de ligação está funcionando corretamente. '
+            'Obrigado.'
+            '</Say>'
+            '</Response>'
         )
-        return {
-            "success": True,
-            "message": f"Ligação de teste enviada para {request.number}",
-            "call_sid": call.sid,
-        }
+        with httpx.Client(timeout=30.0) as http:
+            resp = http.post(
+                f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Calls.json",
+                auth=(account_sid, auth_token),
+                data={
+                    "Twiml": twiml,
+                    "From": from_number,
+                    "To": request.number,
+                    "Timeout": "30",
+                },
+            )
+            if resp.status_code in (200, 201):
+                call_data = resp.json()
+                return {
+                    "success": True,
+                    "message": f"Ligação de teste enviada para {request.number}",
+                    "call_sid": call_data.get("sid", ""),
+                }
+            else:
+                detail = resp.json().get("message", resp.text) if resp.headers.get("content-type", "").startswith("application/json") else resp.text
+                raise HTTPException(status_code=500, detail=f"Twilio erro: {detail}")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao fazer ligação: {str(e)}")
 

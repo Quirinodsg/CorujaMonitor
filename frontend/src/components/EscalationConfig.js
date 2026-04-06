@@ -214,23 +214,14 @@ function EscalationConfig() {
     setResourceSearch(query);
     if (query.length < 2) { setSearchResults([]); return; }
     try {
-      const [serversRes, sensorsRes] = await Promise.all([
-        api.get('/servers'),
-        api.get('/sensors/standalone'),
-      ]);
-      const servers = (serversRes.data || [])
-        .filter(s => s.is_active !== false)
-        .filter(s => (s.hostname || '').toLowerCase().includes(query.toLowerCase()))
-        .map(s => ({ type: 'server', id: s.id, name: s.hostname }));
-      const sensors = (sensorsRes.data || [])
-        .filter(s => s.is_active !== false)
-        .filter(s => (s.name || '').toLowerCase().includes(query.toLowerCase()))
-        .map(s => ({ type: 'sensor', id: s.id, name: s.name }));
+      const res = await api.get(`/escalation/resources/search?q=${encodeURIComponent(query)}`);
+      const items = res.data || [];
       // Filter out already added
       const existingIds = new Set(resources.map(r => `${r.type}:${r.id}`));
-      setSearchResults([...servers, ...sensors].filter(r => !existingIds.has(`${r.type}:${r.id}`)).slice(0, 15));
+      setSearchResults(items.filter(r => !existingIds.has(`${r.type}:${r.id}`)).slice(0, 15));
     } catch (e) {
       console.error('Erro ao buscar recursos:', e);
+      setSearchResults([]);
     }
   };
 
