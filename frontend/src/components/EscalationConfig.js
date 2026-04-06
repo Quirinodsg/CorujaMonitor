@@ -23,6 +23,9 @@ function EscalationConfig() {
   const [phoneError, setPhoneError] = useState('');
   const [testCallLoading, setTestCallLoading] = useState(null);
   const [testCallMsg, setTestCallMsg] = useState({ text: '', type: '' });
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editNumber, setEditNumber] = useState('');
 
   // ── Resources state ──
   const [resources, setResources] = useState([]);
@@ -160,6 +163,33 @@ function EscalationConfig() {
     if (newIndex < 0 || newIndex >= arr.length) return;
     [arr[index], arr[newIndex]] = [arr[newIndex], arr[index]];
     setConfig({ ...config, phone_chain: arr.map((p, i) => ({ ...p, order: i + 1 })) });
+  };
+
+  const startEdit = (index) => {
+    setEditingIndex(index);
+    setEditName(config.phone_chain[index].name);
+    setEditNumber(config.phone_chain[index].number);
+    setPhoneError('');
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditName('');
+    setEditNumber('');
+    setPhoneError('');
+  };
+
+  const saveEdit = () => {
+    if (!editName.trim()) { setPhoneError('Nome é obrigatório'); return; }
+    if (!E164_REGEX.test(editNumber)) { setPhoneError('Número inválido. Use formato E.164: +5511999999999'); return; }
+    const updated = config.phone_chain.map((p, i) =>
+      i === editingIndex ? { ...p, name: editName.trim(), number: editNumber.trim() } : p
+    );
+    setConfig({ ...config, phone_chain: updated });
+    setEditingIndex(null);
+    setEditName('');
+    setEditNumber('');
+    setPhoneError('');
   };
 
   const testCall = async (number) => {
@@ -339,18 +369,34 @@ function EscalationConfig() {
             {config.phone_chain.map((phone, i) => (
               <div className="esc-phone-item" key={i}>
                 <span className="esc-phone-order">#{i + 1}</span>
-                <div className="esc-phone-info">
-                  <span className="esc-phone-name">{phone.name}</span>
-                  <span className="esc-phone-number">{phone.number}</span>
-                </div>
-                <div className="esc-phone-actions">
-                  <button onClick={() => testCall(phone.number)} disabled={testCallLoading === phone.number} title="Testar ligação">
-                    {testCallLoading === phone.number ? '⏳' : '📞'}
-                  </button>
-                  <button onClick={() => movePhone(i, -1)} disabled={i === 0} title="Mover para cima">▲</button>
-                  <button onClick={() => movePhone(i, 1)} disabled={i === config.phone_chain.length - 1} title="Mover para baixo">▼</button>
-                  <button className="remove" onClick={() => removePhone(i)} title="Remover">✕</button>
-                </div>
+                {editingIndex === i ? (
+                  <>
+                    <div className="esc-phone-info" style={{ flex: 1, display: 'flex', gap: 8 }}>
+                      <input type="text" value={editName} onChange={e => setEditName(e.target.value)} placeholder="Nome" style={{ flex: 1, background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--primary)', borderRadius: 4, padding: '4px 8px', fontSize: 13 }} />
+                      <input type="text" value={editNumber} onChange={e => setEditNumber(e.target.value)} placeholder="+5511999999999" style={{ flex: 1, background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--primary)', borderRadius: 4, padding: '4px 8px', fontSize: 13, fontFamily: 'var(--font-mono)' }} />
+                    </div>
+                    <div className="esc-phone-actions">
+                      <button onClick={saveEdit} title="Salvar" style={{ color: 'var(--success)' }}>✓</button>
+                      <button onClick={cancelEdit} title="Cancelar">✕</button>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="esc-phone-info">
+                      <span className="esc-phone-name">{phone.name}</span>
+                      <span className="esc-phone-number">{phone.number}</span>
+                    </div>
+                    <div className="esc-phone-actions">
+                      <button onClick={() => testCall(phone.number)} disabled={testCallLoading === phone.number} title="Testar ligação">
+                        {testCallLoading === phone.number ? '⏳' : '📞'}
+                      </button>
+                      <button onClick={() => startEdit(i)} title="Editar">✏️</button>
+                      <button onClick={() => movePhone(i, -1)} disabled={i === 0} title="Mover para cima">▲</button>
+                      <button onClick={() => movePhone(i, 1)} disabled={i === config.phone_chain.length - 1} title="Mover para baixo">▼</button>
+                      <button className="remove" onClick={() => removePhone(i)} title="Remover">✕</button>
+                    </div>
+                  </>
+                )}
               </div>
             ))}
           </div>
