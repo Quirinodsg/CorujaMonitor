@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\hyperv_collector.py
+# hypothesis_version: 6.151.9
+
+['-Command', 'Name', 'Running', 'State', 'hyperv', 'metadata', 'name', 'ok', 'powershell', 'state', 'status', 'type', 'unit', 'value', 'vm_name', 'vm_state', 'warning']

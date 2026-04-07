@@ -1515,6 +1515,9 @@ function Settings({ onNavigate }) {
                 <input type="text" value={notificationConfig.kiro_conecta?.subcategory || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, subcategory: e.target.value }})} placeholder="Alerta Automatico" />
               </div>
             </div>
+            <button className="btn-test" onClick={() => handleTestNotification('kiro_conecta')} style={{ marginTop: 12, marginBottom: 8 }}>
+              🎫 Testar Abertura de Chamado
+            </button>
           </div>
         )}
       </div>

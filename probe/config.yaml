@@ -30,7 +30,7 @@ probe:
   # Para reverter: basta setar parallel_enabled: false (efeito imediato no próximo ciclo)
   #
   # parallel_enabled: Ativa/desativa o modo paralelo (default: false)
-  parallel_enabled: false
+  parallel_enabled: true
 
   # max_workers: Número de threads no ThreadPoolExecutor (default: 8)
   #   Recomendado: 1 thread por servidor remoto, até o limite de I/O da rede.

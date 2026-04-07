@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\engine\wmi_batch_collector.py
+# hypothesis_version: 6.151.9
+
+[0.0, 100, 1024, 'CPU Usage', 'Memory Usage', 'cache_size', 'cache_ttl_sec', 'cpu', 'critical', 'data', 'device', 'disk', 'expires_at', 'free_gb', 'hit_rate_pct', 'hits', 'logical_cpus', 'memory', 'metadata', 'metrics', 'misses', 'name', 'ok', 'percent', 'status', 'total_gb', 'type', 'unit', 'value', 'warning']

@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\service_collector.py
+# hypothesis_version: 6.151.9
+
+['RUNNING', 'STOPPED', 'critical', 'error', 'metadata', 'name', 'net', 'ok', 'query', 'running', 'sc', 'service', 'service_name', 'service_status', 'start', 'status', 'stop', 'stopped', 'type', 'unit', 'unknown', 'value']

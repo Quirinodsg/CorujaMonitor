@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\hyperv_wmi_collector.py
+# hypothesis_version: 6.151.9
+
+[10.0, 300, 1000, '-Command', '-NoProfile', 'Running', 'Z', 'cpu_percent', 'error', 'host', 'hostname', 'hyperv', 'ip', 'memory_percent', 'online', 'powershell', 'probe_token', 'running_vm_count', 'state', 'status', 'storage_percent', 'timestamp', 'total_cpus', 'total_memory_gb', 'total_storage_gb', 'type', 'unreachable', 'vm_count', 'vms', 'wmi_latency_ms']

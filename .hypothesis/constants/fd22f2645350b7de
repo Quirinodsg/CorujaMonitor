@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\network_collector.py
+# hypothesis_version: 6.151.9
+
+['Network IN', 'Network OUT', 'bytes/s', 'bytes_recv', 'bytes_sent', 'errin', 'errout', 'metadata', 'name', 'network', 'ok', 'packets_recv', 'packets_sent', 'status', 'type', 'unit', 'value']

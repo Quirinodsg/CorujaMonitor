@@ -204,6 +204,8 @@ async def test_notification(
         return await test_glpi(db, current_user)
     elif channel == 'dynamics365':
         return await test_dynamics365(db, current_user)
+    elif channel == 'kiro_conecta':
+        return await test_kiro_conecta(config, tenant, current_user)
     else:
         raise HTTPException(status_code=400, detail=f"Unknown channel: {channel}")
 
@@ -1310,6 +1312,57 @@ Se você está vendo este incidente no Dynamics 365, a integração está funcio
         }
     else:
         raise HTTPException(status_code=500, detail=result.get('error'))
+
+
+# Conecta (Sistema de Chamados) Integration
+async def test_kiro_conecta(config: Dict[str, Any], tenant: Tenant, current_user: User) -> Dict[str, Any]:
+    """Test Conecta ticketing system integration by creating a test ticket."""
+    import httpx
+
+    url = config.get('url', '').rstrip('/')
+    user_email = config.get('user_email', '')
+
+    if not url or not user_email:
+        raise HTTPException(status_code=400, detail="Conecta: URL ou user_email não configurado")
+
+    payload = {
+        'title': 'Teste de Integração - Coruja Monitor',
+        'description': (
+            f'Chamado de teste criado automaticamente pelo Coruja Monitor.\n\n'
+            f'Tenant: {tenant.name}\n'
+            f'Usuário: {current_user.email}\n'
+            f'Data/Hora: {datetime.now(BRAZIL_TZ).strftime("%d/%m/%Y %H:%M:%S")}\n\n'
+            f'Se você está vendo este chamado, a integração está funcionando!'
+        ),
+        'user_email': user_email,
+        'ticket_type': 'Incidente',
+        'category': config.get('category', 'Monitoramento'),
+        'subcategory': config.get('subcategory', 'Alerta Automático'),
+        'urgency': 'Baixa',
+        'impact': 'Baixo',
+        'tags': ['coruja-monitor', 'teste-integracao'],
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0, verify=False) as client:
+            resp = await client.post(f"{url}/api/v1/tickets", json=payload)
+
+            if resp.status_code in (200, 201):
+                result = resp.json()
+                ticket_id = result.get('id', 'unknown')
+                frontend_url = config.get('frontend_url', url).rstrip('/')
+                return {
+                    'message': 'Chamado de teste criado com sucesso no Conecta!',
+                    'ticket_id': ticket_id,
+                    'ticket_url': f"{frontend_url}/tickets/{ticket_id}",
+                }
+            else:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Conecta API error: {resp.status_code} — {resp.text[:200]}"
+                )
+    except httpx.HTTPError as e:
+        raise HTTPException(status_code=500, detail=f"Conecta connection error: {str(e)}")
 
 
 # Enhanced Twilio Integration with WhatsApp support

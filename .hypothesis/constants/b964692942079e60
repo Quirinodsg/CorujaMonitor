@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\udm_collector.py
+# hypothesis_version: 6.151.9
+
+['-n', '-w', '1', '1000', '8.8.8.8', 'PING', 'critical', 'down', 'error', 'latency_ms', 'link_status', 'metadata', 'ms', 'name', 'ok', 'ping', 'status', 'target', 'tempo=', 'time=', 'type', 'unit', 'up', 'value']

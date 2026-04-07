@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\config.py
+# hypothesis_version: 6.151.9
+
+[3.0, 200, 8000, '1.0.0', '127.0.0.1', 'INFO', 'PROBE001', 'backup_count', 'collection_interval', 'collectors', 'config.yaml', 'docker', 'file', 'host', 'http', 'kubernetes', 'level', 'localhost', 'location', 'logging', 'logs/probe.log', 'max_size_mb', 'monitored_services', 'name', 'ping', 'port', 'probe', 'probe_token', 'protocol', 'r', 'server', 'snmp', 'system', 'token', 'udm_targets', 'utf-8', 'version', 'w', 'wmi_remote']

@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\cpu_collector.py
+# hypothesis_version: 6.151.9
+
+['CPU', 'cpu', 'cpu_count', 'critical', 'metadata', 'name', 'ok', 'per_cpu', 'percent', 'status', 'type', 'unit', 'value', 'warning']

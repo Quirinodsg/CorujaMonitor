@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\system_collector.py
+# hypothesis_version: 6.151.9
+
+[5.0, 200, 86400, 'Uptime', 'boot_time', 'days', 'hostname', 'ip_address', 'metadata', 'name', 'ok', 'public_ip', 'status', 'system', 'type', 'unit', 'unknown', 'uptime_seconds', 'value']

@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\memory_collector.py
+# hypothesis_version: 6.151.9
+
+['Memória', 'available', 'critical', 'memory', 'metadata', 'name', 'ok', 'percent', 'status', 'total', 'type', 'unit', 'used', 'value', 'warning']

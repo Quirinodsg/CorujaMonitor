@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\wmi_service_collector.py
+# hypothesis_version: 6.151.9
+
+[':', 'Auto', 'RUNNING', 'Running', 'SERVICE_NAME:', 'STATE', 'Stopped', 'all', 'collection_method', 'critical', 'display_name', 'metadata', 'name', 'ok', 'query', 'sc', 'sc_query', 'service', 'service_name', 'start_mode', 'state', 'state=', 'status', 'type', 'type=', 'unit', 'value', 'wmi_local']

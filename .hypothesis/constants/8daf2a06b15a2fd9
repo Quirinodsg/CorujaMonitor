@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\ping_collector.py
+# hypothesis_version: 6.151.9
+
+[100, '-c', '-n', '1', '8.8.8.8', 'Ping', 'critical', 'error', 'is_online', 'metadata', 'ms', 'name', 'ok', 'packet_loss', 'ping', 'status', 'target', 'time<', 'time=', 'time[=<](\\d+\\.?\\d*)', 'timeout', 'type', 'unit', 'value', 'windows']

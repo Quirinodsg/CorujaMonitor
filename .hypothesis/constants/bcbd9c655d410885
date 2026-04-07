@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\disk_collector.py
+# hypothesis_version: 6.151.9
+
+[':', '\\', 'cdrom', 'critical', 'device', 'disk', 'free', 'fstype', 'metadata', 'mountpoint', 'name', 'ok', 'percent', 'status', 'total', 'type', 'unit', 'used', 'value', 'warning']

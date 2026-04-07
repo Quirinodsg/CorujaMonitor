@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\collectors\docker_collector.py
+# hypothesis_version: 6.151.9
+
+['%', '--format', '--no-stream', '-a', '0%', 'CPUPerc', 'ID', 'Image', 'MemPerc', 'Names', 'State', 'Status', 'container_id', 'containers', 'cpu_percent', 'critical', 'docker', 'id', 'image', 'memory_percent', 'metadata', 'name', 'ok', 'percent', 'ps', 'running', 'sensor_type', 'state', 'stats', 'status', 'unit', 'value', 'version', 'warning', '{{json .}}']

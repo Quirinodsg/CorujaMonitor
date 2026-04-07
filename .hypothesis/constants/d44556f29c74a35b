@@ -1,0 +1,4 @@
+# file: C:\Users\andre.quirino\Coruja Monitor\probe\parallel_engine.py
+# hypothesis_version: 6.151.9
+
+[0.0, 5.0, 10.0, 15.0, 100.0, 100, 200, 1000, 9999, '127.0.0.1', '?', 'DRIFT', 'OK', '__hyperv__', '__local__', '__standalone__', 'buffered', 'bulk', 'canary_hosts', 'cycle_duration_ms', 'diff_pct', 'dispatch_mode', 'drifts', 'errors', 'host', 'hostname', 'incremental', 'ip_address', 'max_workers', 'metadata', 'metric', 'metrics', 'monitoring_protocol', 'name', 'new', 'ok', 'old', 'pass', 'probe', 'probe_token', 'sensor_name', 'sensor_type', 'sent', 'slowest_host', 'slowest_ms', 'snmp', 'status', 'timeout', 'timeout_seconds', 'timestamp', 'total', 'total_errors', 'total_hosts', 'total_metrics', 'type', 'unit', 'unknown', 'value', 'wmi']
