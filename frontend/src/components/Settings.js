@@ -21,7 +21,8 @@ function Settings({ onNavigate }) {
     topdesk: { enabled: false, url: '', username: '', password: '', operator_group: '', category: '', subcategory: '' },
     glpi: { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
     zammad: { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' },
-    dynamics365: { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' }
+    dynamics365: { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' },
+    kiro_conecta: { enabled: false, url: 'http://conecta.techbiz.com.br:8000', frontend_url: 'http://conecta.techbiz.com.br:5173', user_email: '', category: 'Monitoramento', subcategory: 'Alerta Automatico' }
   });
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -176,7 +177,8 @@ function Settings({ onNavigate }) {
           topdesk: notifResponse.data.notification_config.topdesk || { enabled: false, url: '', username: '', password: '', operator_group: '', category: '', subcategory: '' },
           glpi: notifResponse.data.notification_config.glpi || { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
           zammad: notifResponse.data.notification_config.zammad || { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' },
-          dynamics365: notifResponse.data.notification_config.dynamics365 || { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' }
+          dynamics365: notifResponse.data.notification_config.dynamics365 || { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' },
+          kiro_conecta: notifResponse.data.notification_config.kiro_conecta || { enabled: false, url: 'http://conecta.techbiz.com.br:8000', frontend_url: 'http://conecta.techbiz.com.br:5173', user_email: '', category: 'Monitoramento', subcategory: 'Alerta Automatico' }
         });
       }
 
@@ -1458,6 +1460,61 @@ function Settings({ onNavigate }) {
             <button className="btn-test" onClick={() => handleTestNotification('dynamics365')}>
               Testar Criação de Incidente
             </button>
+          </div>
+        )}
+      </div>
+
+      {/* Conecta (Sistema de Chamados) */}
+      <div className="integration-card">
+        <div className="integration-header">
+          <div className="integration-title">
+            <span className="integration-icon">🎫</span>
+            <h3>Conecta (Sistema de Chamados)</h3>
+          </div>
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={notificationConfig.kiro_conecta?.enabled || false}
+              onChange={(e) => setNotificationConfig({
+                ...notificationConfig,
+                kiro_conecta: { ...notificationConfig.kiro_conecta, enabled: e.target.checked }
+              })}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+        {notificationConfig.kiro_conecta?.enabled && (
+          <div className="integration-config">
+            <div style={{ marginBottom: 16, padding: 12, background: '#1e293b', borderRadius: 8, fontSize: 13, color: '#94a3b8' }}>
+              <p style={{ margin: 0 }}>📋 Abertura automática de chamados no Conecta quando incidentes são criados.</p>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>URL da API:</label>
+                <input type="text" value={notificationConfig.kiro_conecta?.url || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, url: e.target.value }})} placeholder="http://conecta.techbiz.com.br:8000" />
+              </div>
+              <div className="form-group">
+                <label>URL do Frontend:</label>
+                <input type="text" value={notificationConfig.kiro_conecta?.frontend_url || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, frontend_url: e.target.value }})} placeholder="http://conecta.techbiz.com.br:5173" />
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>E-mail do Solicitante:</label>
+                <input type="email" value={notificationConfig.kiro_conecta?.user_email || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, user_email: e.target.value }})} placeholder="coruja.monitor@techbiz.com.br" />
+                <small>Deve existir como usuário no Conecta</small>
+              </div>
+            </div>
+            <div className="form-row">
+              <div className="form-group">
+                <label>Categoria:</label>
+                <input type="text" value={notificationConfig.kiro_conecta?.category || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, category: e.target.value }})} placeholder="Monitoramento" />
+              </div>
+              <div className="form-group">
+                <label>Subcategoria:</label>
+                <input type="text" value={notificationConfig.kiro_conecta?.subcategory || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, subcategory: e.target.value }})} placeholder="Alerta Automatico" />
+              </div>
+            </div>
           </div>
         )}
       </div>
