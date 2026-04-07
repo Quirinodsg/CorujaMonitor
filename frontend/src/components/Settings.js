@@ -454,7 +454,8 @@ function Settings({ onNavigate }) {
       } else if (errorMsg.includes('authentication') || errorMsg.includes('credentials') || errorMsg.includes('401') || errorMsg.includes('403')) {
         alert(`❌ Erro de Autenticação!\n\nUsuário ou senha incorretos.\n\nVerifique:\n✓ URL: ${channelConfig.url}\n✓ Usuário: ${channelConfig.username}\n✓ Senha está correta?\n\nCorreção:\n1. Verifique as credenciais\n2. Clique em "Salvar Configurações"\n3. Teste novamente`);
       } else if (errorMsg.includes('connection') || errorMsg.includes('timeout') || errorMsg.includes('network')) {
-        alert(`❌ Erro de Conexão!\n\nNão foi possível conectar ao TOPdesk.\n\nVerifique:\n✓ URL está correta? ${channelConfig.url}\n✓ O servidor está acessível?\n✓ Firewall bloqueando?\n\nErro: ${errorMsg}`);
+        const serviceName = channel === 'kiro_conecta' ? 'Conecta' : channel === 'topdesk' ? 'TOPdesk' : channel;
+        alert(`❌ Erro de Conexão!\n\nNão foi possível conectar ao ${serviceName}.\n\nVerifique:\n✓ URL está correta? ${channelConfig.url}\n✓ O servidor está acessível a partir do container Docker?\n✓ DNS resolve dentro do Docker?\n✓ Firewall bloqueando?\n\nErro: ${errorMsg}`);
       } else {
         alert(`❌ Erro ao testar ${channel}:\n\n${errorMsg}\n\nSe o erro persistir, verifique os logs do sistema.`);
       }
