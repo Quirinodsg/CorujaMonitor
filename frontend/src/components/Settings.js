@@ -22,7 +22,7 @@ function Settings({ onNavigate }) {
     glpi: { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
     zammad: { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' },
     dynamics365: { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' },
-    kiro_conecta: { enabled: false, url: 'http://conecta.techbiz.com.br:8000', frontend_url: 'http://conecta.techbiz.com.br:5173', user_email: '', category: 'Monitoramento', subcategory: 'Alerta Automatico' }
+    kiro_conecta: { enabled: false, url: 'http://conecta.techbiz.com.br:8000', frontend_url: 'http://conecta.techbiz.com.br:5173', user_email: '', category: 'Software', subcategory: '' }
   });
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -178,7 +178,7 @@ function Settings({ onNavigate }) {
           glpi: notifResponse.data.notification_config.glpi || { enabled: false, url: '', app_token: '', user_token: '', entity_id: '', category_id: '', urgency: 4, impact: 3 },
           zammad: notifResponse.data.notification_config.zammad || { enabled: false, url: '', api_token: '', group_id: '', customer_id: '', priority: 2, tags: 'monitoramento,automatico' },
           dynamics365: notifResponse.data.notification_config.dynamics365 || { enabled: false, url: '', tenant_id: '', client_id: '', client_secret: '', resource: '', api_version: '9.2', incident_type: 'incident', priority: 2, owner_id: '' },
-          kiro_conecta: notifResponse.data.notification_config.kiro_conecta || { enabled: false, url: 'http://conecta.techbiz.com.br:8000', frontend_url: 'http://conecta.techbiz.com.br:5173', user_email: '', category: 'Monitoramento', subcategory: 'Alerta Automatico' }
+          kiro_conecta: notifResponse.data.notification_config.kiro_conecta || { enabled: false, url: 'http://conecta.techbiz.com.br:8000', frontend_url: 'http://conecta.techbiz.com.br:5173', user_email: '', category: 'Software', subcategory: '' }
         });
       }
 
@@ -1509,7 +1509,7 @@ function Settings({ onNavigate }) {
             <div className="form-row">
               <div className="form-group">
                 <label>Categoria:</label>
-                <input type="text" value={notificationConfig.kiro_conecta?.category || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, category: e.target.value }})} placeholder="Monitoramento" />
+                <input type="text" value={notificationConfig.kiro_conecta?.category || ''} onChange={(e) => setNotificationConfig({...notificationConfig, kiro_conecta: { ...notificationConfig.kiro_conecta, category: e.target.value }})} placeholder="Software" />
               </div>
               <div className="form-group">
                 <label>Subcategoria:</label>

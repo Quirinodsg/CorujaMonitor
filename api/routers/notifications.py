@@ -24,6 +24,7 @@ class NotificationConfig(BaseModel):
     glpi: Optional[Dict[str, Any]] = None
     dynamics365: Optional[Dict[str, Any]] = None
     azure_ad: Optional[Dict[str, Any]] = None
+    kiro_conecta: Optional[Dict[str, Any]] = None
 
 
 class NotificationConfigResponse(BaseModel):
@@ -158,6 +159,16 @@ async def update_notification_config(
             'redirect_uri': config.azure_ad.get('redirect_uri', 'https://coruja.techbiz.com.br/api/v1/auth/azure/callback'),
             'admin_group_id': config.azure_ad.get('admin_group_id'),
             'user_group_id': config.azure_ad.get('user_group_id'),
+        }
+    
+    if config.kiro_conecta:
+        notification_config['kiro_conecta'] = {
+            'enabled': config.kiro_conecta.get('enabled', False),
+            'url': config.kiro_conecta.get('url'),
+            'frontend_url': config.kiro_conecta.get('frontend_url'),
+            'user_email': config.kiro_conecta.get('user_email'),
+            'category': config.kiro_conecta.get('category', 'Software'),
+            'subcategory': config.kiro_conecta.get('subcategory', ''),
         }
     
     tenant.notification_config = notification_config
@@ -1336,8 +1347,8 @@ async def test_kiro_conecta(config: Dict[str, Any], tenant: Tenant, current_user
         ),
         'user_email': user_email,
         'ticket_type': 'Incidente',
-        'category': config.get('category', 'Monitoramento'),
-        'subcategory': config.get('subcategory', 'Alerta Automático'),
+        'category': config.get('category', 'Software'),
+        'subcategory': config.get('subcategory', ''),
         'urgency': 'Baixa',
         'impact': 'Baixo',
         'tags': ['coruja-monitor', 'teste-integracao'],
