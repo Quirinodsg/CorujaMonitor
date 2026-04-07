@@ -83,11 +83,9 @@ def evaluate_all_thresholds():
 
             # 3. Check metric_only — coleta mas não cria Incident nem envia ao predictor
             alert_mode = getattr(sensor, 'alert_mode', 'normal') or 'normal'
-            # Hardcoded: network_in/network_out sem internet_link são sempre metric_only
+            # Hardcoded: network_in/network_out são SEMPRE metric_only (nunca criam incidentes)
             if sensor.sensor_type in ('network_in', 'network_out'):
-                config = sensor.config or {}
-                if not config.get('internet_link'):
-                    alert_mode = 'metric_only'
+                alert_mode = 'metric_only'
             is_metric_only = alert_mode == 'metric_only'
 
             # 4. Skip silent sensors (no alerts, no incidents)
@@ -110,6 +108,11 @@ def evaluate_all_thresholds():
             threshold_breached, severity = evaluate_thresholds(
                 sensor, latest_metric.value
             )
+
+            # HTTP sensors: tratar status='critical' como breach mesmo se latência é 0
+            if not threshold_breached and sensor.sensor_type == 'http' and latest_metric.status == 'critical':
+                threshold_breached = True
+                severity = 'critical'
 
             if threshold_breached:
                 # ── WARNING: não cria incidente, mas auto-resolve incidentes antigos se sensor melhorou ──

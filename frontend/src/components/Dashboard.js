@@ -405,8 +405,14 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                     <div className="dash-site-name">❄️ {s.name}</div>
                     {(() => {
                       const md2 = m?.metadata || {};
-                      const temp = md2['Conflex temp_interna']?.value;
-                      if (temp != null) return <div className="dash-site-url">🌡️ {temp}°C</div>;
+                      const temp = md2['Conflex temp_interna']?.value
+                        ?? md2['Conflex temp_retorno_maq1']?.value
+                        ?? md2['Conflex temp_retorno_maq2']?.value;
+                      const tempAlta = md2['Conflex alarme_temp_alta']?.value;
+                      const plc = md2['Conflex status_plc']?.value;
+                      if (temp != null) return <div className="dash-site-url">🌡️ {temp}°C{tempAlta === 1 ? ' ⚠️' : ''}</div>;
+                      // Fallback: mostrar status das máquinas se não tem temperatura
+                      if (plc != null) return <div className="dash-site-url">🔌 PLC: {plc === 1 ? 'ON' : 'OFF'}</div>;
                       if (m) return <div className="dash-site-url">📊 {m.value?.toFixed(1)} {m.unit}</div>;
                       return null;
                     })()}
