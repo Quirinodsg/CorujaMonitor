@@ -397,8 +397,9 @@ function SensorLibrary() {
                 const freeLabel = freeGb >= 1024 ? `${freeTb} TB` : `${freeGb} GB`;
                 return (
                   <div style={{ color: statusColor, fontWeight: 600 }}>
-                    <p>💾 Uso: {pct}% · Total: {totalLabel} · Livre: {freeLabel}</p>
-                    {disksTotal != null && <p style={{ fontWeight: 400, fontSize: 11 }}>💿 Discos: {disksOnline}/{disksTotal} online{conns ? ` · 🔗 ${conns} iSCSI` : ''}</p>}
+                    <p>💾 Uso: {pct}% · Total: {totalLabel}</p>
+                    <p>💿 Livre: {freeLabel}</p>
+                    {disksTotal != null && <p style={{ fontWeight: 400, fontSize: 11 }}>🔧 Discos: {disksOnline}/{disksTotal} online{conns ? ` · 🔗 ${conns} iSCSI` : ''}</p>}
                   </div>
                 );
               }
