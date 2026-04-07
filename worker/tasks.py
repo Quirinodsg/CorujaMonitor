@@ -910,6 +910,18 @@ def send_incident_notifications_with_aiops(incident_id: int, aiops_result: dict 
             except Exception as e:
                 notifications_failed.append(f"Email: {str(e)}")
         
+        # KIRO Conecta (Sistema de Chamados) — com AIOps
+        if notification_config.get('kiro_conecta', {}).get('enabled'):
+            try:
+                result = send_kiro_conecta_notification_sync(notification_config['kiro_conecta'], incident_data)
+                if result.get('success'):
+                    notifications_sent.append(f"KIRO Conecta: #{result.get('ticket_id')}")
+                    logger.info(f"✅ KIRO Conecta: Chamado #{result.get('ticket_id')} criado com AIOps")
+                else:
+                    notifications_failed.append(f"KIRO Conecta: {result.get('error')}")
+            except Exception as e:
+                notifications_failed.append(f"KIRO Conecta: {str(e)}")
+
         logger.info(f"📊 Resumo: {len(notifications_sent)} enviadas, {len(notifications_failed)} falharam")
         
     except Exception as e:
@@ -1044,6 +1056,23 @@ def send_incident_notifications(incident_id: int):
         else:
             logger.info("⚪ Email desabilitado")
         
+        # KIRO Conecta (Sistema de Chamados)
+        if notification_config.get('kiro_conecta', {}).get('enabled'):
+            logger.info("🔵 KIRO Conecta está habilitado, tentando enviar...")
+            try:
+                result = send_kiro_conecta_notification_sync(notification_config['kiro_conecta'], incident_data)
+                if result.get('success'):
+                    notifications_sent.append(f"KIRO Conecta: #{result.get('ticket_id')}")
+                    logger.info(f"✅ KIRO Conecta: Chamado #{result.get('ticket_id')} criado")
+                else:
+                    notifications_failed.append(f"KIRO Conecta: {result.get('error')}")
+                    logger.error(f"❌ KIRO Conecta: {result.get('error')}")
+            except Exception as e:
+                notifications_failed.append(f"KIRO Conecta: {str(e)}")
+                logger.error(f"❌ KIRO Conecta exception: {e}")
+        else:
+            logger.info("⚪ KIRO Conecta desabilitado")
+
         logger.info(f"📊 Resumo: {len(notifications_sent)} enviadas, {len(notifications_failed)} falharam")
         if notifications_sent:
             logger.info(f"   ✅ Enviadas: {', '.join(notifications_sent)}")
@@ -1527,6 +1556,72 @@ def send_dynamics365_notification_sync(config: dict, incident_data: dict) -> dic
         return {
             'success': False,
             'error': f"Dynamics 365 connection error: {str(e)}"
+        }
+
+
+def send_kiro_conecta_notification_sync(config: dict, incident_data: dict) -> dict:
+    """Cria chamado no KIRO Conecta (sistema de chamados Techbiz)."""
+    import httpx
+
+    url = config.get('url', 'http://conecta.techbiz.com.br:8000').rstrip('/')
+    user_email = config.get('user_email', '')
+
+    if not url or not user_email:
+        return {'success': False, 'error': 'KIRO Conecta: URL ou user_email não configurado'}
+
+    severity = incident_data.get('severity', 'warning')
+    urgency_map = {'critical': 'Alta', 'warning': 'Média', 'info': 'Baixa'}
+    impact_map = {'critical': 'Alto', 'warning': 'Médio', 'info': 'Baixo'}
+
+    description = (
+        f"{incident_data.get('description', '')}\n\n"
+        f"━━━ Coruja Monitor ━━━\n"
+        f"Servidor: {incident_data.get('server_hostname', 'N/A')}\n"
+        f"Sensor: {incident_data.get('sensor_name', 'N/A')}\n"
+        f"Tipo: {incident_data.get('sensor_type', 'N/A')}\n"
+        f"Severidade: {severity.upper()}\n"
+        f"Incidente ID: {incident_data.get('incident_id', 'N/A')}\n"
+        f"Data/Hora: {incident_data.get('created_at', 'N/A')}"
+    )
+
+    # Adicionar análise AIOps se disponível
+    aiops = incident_data.get('aiops_analysis')
+    if aiops:
+        description += f"\n\n🤖 Análise AIOps:\nCausa Raiz: {aiops.get('root_cause', 'N/A')}"
+
+    payload = {
+        'title': incident_data.get('title', 'Alerta do Coruja Monitor')[:200],
+        'description': description[:2000],
+        'user_email': user_email,
+        'ticket_type': 'Incidente',
+        'category': config.get('category', 'Monitoramento'),
+        'subcategory': config.get('subcategory', 'Alerta Automático'),
+        'urgency': urgency_map.get(severity, 'Média'),
+        'impact': impact_map.get(severity, 'Médio'),
+        'tags': ['coruja-monitor', 'automatico', severity],
+    }
+
+    try:
+        with httpx.Client(timeout=30.0, verify=False) as client:
+            resp = client.post(f"{url}/api/v1/tickets", json=payload)
+
+            if resp.status_code in (200, 201):
+                result = resp.json()
+                ticket_id = result.get('id', 'unknown')
+                return {
+                    'success': True,
+                    'ticket_id': ticket_id,
+                    'ticket_url': f"{config.get('frontend_url', url).rstrip('/')}/tickets/{ticket_id}",
+                }
+            else:
+                return {
+                    'success': False,
+                    'error': f"KIRO Conecta API error: {resp.status_code} — {resp.text[:200]}",
+                }
+    except Exception as e:
+        return {
+            'success': False,
+            'error': f"KIRO Conecta connection error: {str(e)}",
         }
 
 
