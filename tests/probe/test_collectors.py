@@ -95,10 +95,27 @@ class TestICMPCollector:
     @patch("subprocess.run")
     def test_icmp_successful_ping(self, mock_run):
         """Successful ping returns ok status with latency."""
+        import platform
         from probe.protocol_engines.icmp_engine import ICMPEngine
+        if platform.system().lower() == "windows":
+            stdout = (
+                "Reply from 192.168.1.1: bytes=32 time=5ms TTL=128\n\n"
+                "Ping statistics for 192.168.1.1:\n"
+                "    Packets: Sent = 1, Received = 1, Lost = 0 (0% loss)\n"
+                "Approximate round trip times in milli-seconds:\n"
+                "    Minimum = 5ms, Maximum = 5ms, Average = 5ms"
+            )
+        else:
+            stdout = (
+                "PING 192.168.1.1 (192.168.1.1) 56(84) bytes of data.\n"
+                "64 bytes from 192.168.1.1: icmp_seq=1 ttl=64 time=5.00 ms\n\n"
+                "--- 192.168.1.1 ping statistics ---\n"
+                "1 packets transmitted, 1 received, 0% packet loss, time 0ms\n"
+                "rtt min/avg/max/mdev = 5.000/5.000/5.000/0.000 ms"
+            )
         mock_run.return_value = MagicMock(
             returncode=0,
-            stdout="Reply from 192.168.1.1: bytes=32 time=5ms TTL=128\n\nPing statistics for 192.168.1.1:\n    Packets: Sent = 1, Received = 1, Lost = 0 (0% loss)\nApproximate round trip times in milli-seconds:\n    Minimum = 5ms, Maximum = 5ms, Average = 5ms",
+            stdout=stdout,
             stderr="",
         )
         engine = ICMPEngine(count=1, timeout=2, retries=0)
