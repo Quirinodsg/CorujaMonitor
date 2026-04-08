@@ -7,6 +7,7 @@ import SystemReset from './SystemReset';
 import Credentials from './Credentials';
 import TestTools from './TestTools';
 import DefaultSensorProfiles from './DefaultSensorProfiles';
+import NotificationMatrix from './NotificationMatrix';
 import './Management.css';
 import './Settings.css';
 
@@ -504,6 +505,17 @@ function Settings({ onNavigate }) {
         Configure canais de notificação para alertas críticos e integrações com sistemas de Service Desk.
         Ambientes de PRODUÇÃO podem acionar ligações automáticas e criar chamados automaticamente.
       </p>
+
+      {/* Notification Matrix — admin only */}
+      {(() => {
+        try {
+          const userData = JSON.parse(localStorage.getItem('user') || '{}');
+          if (userData.role === 'admin') {
+            return <NotificationMatrix />;
+          }
+        } catch (e) {}
+        return null;
+      })()}
 
       {/* Email */}
       <div className="integration-card">

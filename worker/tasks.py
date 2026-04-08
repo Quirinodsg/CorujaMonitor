@@ -193,11 +193,9 @@ def evaluate_all_thresholds():
                     logger.info(f"🔄 Reboot detectado: {incident.title} (ID: {incident.id}) — incidente informativo criado já resolvido")
                     print(f"🔄 Reboot: {incident.title} (ID: {incident.id}) — informativo")
 
-                    # Enviar e-mail informativo de reboot
-                    try:
-                        _send_reboot_email(db, sensor, server_name, uptime_minutes)
-                    except Exception as mail_err:
-                        logger.warning(f"Erro ao enviar e-mail de reboot: {mail_err}")
+                    # Dispatcher: envia notificações conforme matriz (system → email)
+                    from notification_dispatcher import dispatch_notifications_task
+                    dispatch_notifications_task.delay(incident.id)
 
                     # Resolver qualquer incidente PING aberto do mesmo servidor (o server voltou)
                     if sensor.server_id:
@@ -328,26 +326,15 @@ def evaluate_all_thresholds():
 
                     print(f"✅ Incidente criado: {incident.title} (ID: {incident.id})")
 
-                    # Execute AIOps analysis automatically
+                    # ── DISPATCHER: Notificações imediatas via Matriz (independente do AIOps) ──
+                    from notification_dispatcher import dispatch_notifications_task
+                    dispatch_notifications_task.delay(incident.id)
+
+                    # Execute AIOps analysis (enriquecimento — não bloqueia notificações)
                     execute_aiops_analysis.delay(incident.id)
 
                     # Attempt self-healing
                     attempt_self_healing.delay(incident.id)
-
-                    # ── PRIORIDADE: só envia notificação externa se priority == 5 ──
-                    sensor_priority = getattr(sensor, 'priority', 3) or 3
-                    if sensor_priority >= 5:
-                        logger.info(
-                            "Sensor %s priority=%d → disparando notificação externa (Telegram/Teams)",
-                            sensor.name, sensor_priority
-                        )
-                        send_external_notification.delay(incident.id)
-                    else:
-                        logger.debug(
-                            "Sensor %s priority=%d < 5 → notificação externa suprimida",
-                            sensor.name, sensor_priority
-                        )
-                    # ─────────────────────────────────────────────────────────────
                 else:
                     # Update existing incident severity if it changed
                     if existing_incident.severity != severity:
@@ -1623,6 +1610,146 @@ def send_kiro_conecta_notification_sync(config: dict, incident_data: dict) -> di
             'success': False,
             'error': f"KIRO Conecta connection error: {str(e)}",
         }
+
+
+def send_sms_notification_sync(config: dict, incident_data: dict) -> dict:
+    """Envia SMS via Twilio (síncrono para Celery worker).
+
+    Args:
+        config: Configuração Twilio do tenant (account_sid, auth_token, from_number, to_numbers).
+        incident_data: Dados do incidente para compor a mensagem.
+
+    Returns:
+        {'success': bool, 'error'?: str}
+    """
+    try:
+        from twilio.rest import Client
+
+        account_sid = config.get('account_sid')
+        auth_token = config.get('auth_token')
+        from_number = config.get('from_number')
+        to_numbers = config.get('to_numbers', [])
+
+        if not all([account_sid, auth_token, from_number, to_numbers]):
+            return {'success': False, 'error': 'Twilio SMS configuration incomplete'}
+
+        client = Client(account_sid, auth_token)
+
+        message_body = (
+            f"🚨 {incident_data.get('title', 'Alerta do Coruja Monitor')}\n"
+            f"Servidor: {incident_data.get('server_hostname', 'N/A')}\n"
+            f"Sensor: {incident_data.get('sensor_name', 'N/A')}\n"
+            f"Severidade: {incident_data.get('severity', 'N/A').upper()}"
+        )
+
+        sent_count = 0
+        errors = []
+
+        for to_number in to_numbers:
+            try:
+                client.messages.create(
+                    body=message_body,
+                    from_=from_number,
+                    to=to_number,
+                )
+                sent_count += 1
+            except Exception as e:
+                errors.append(f"{to_number}: {str(e)}")
+
+        if sent_count > 0:
+            return {'success': True, 'message': f'SMS enviado para {sent_count} número(s)'}
+        else:
+            return {'success': False, 'error': f'Falha ao enviar SMS: {", ".join(errors)}'}
+
+    except ImportError:
+        return {'success': False, 'error': 'Biblioteca Twilio não instalada'}
+    except Exception as e:
+        return {'success': False, 'error': f'Erro Twilio SMS: {str(e)}'}
+
+
+def send_whatsapp_notification_sync(config: dict, incident_data: dict) -> dict:
+    """Envia WhatsApp via Twilio (síncrono para Celery worker).
+
+    Args:
+        config: Configuração WhatsApp/Twilio do tenant (account_sid, auth_token, from_number, to_numbers).
+        incident_data: Dados do incidente para compor a mensagem.
+
+    Returns:
+        {'success': bool, 'error'?: str}
+    """
+    try:
+        from twilio.rest import Client
+
+        account_sid = config.get('account_sid')
+        auth_token = config.get('auth_token')
+        from_number = config.get('from_number')
+        to_numbers = config.get('to_numbers') or config.get('phone_numbers', [])
+
+        if not all([account_sid, auth_token, from_number, to_numbers]):
+            return {'success': False, 'error': 'Twilio WhatsApp configuration incomplete'}
+
+        # Ensure from_number has whatsapp: prefix
+        if not from_number.startswith('whatsapp:'):
+            from_number = f'whatsapp:{from_number}'
+
+        client = Client(account_sid, auth_token)
+
+        message_body = (
+            f"🚨 {incident_data.get('title', 'Alerta do Coruja Monitor')}\n"
+            f"Servidor: {incident_data.get('server_hostname', 'N/A')}\n"
+            f"Sensor: {incident_data.get('sensor_name', 'N/A')}\n"
+            f"Severidade: {incident_data.get('severity', 'N/A').upper()}\n"
+            f"Descrição: {incident_data.get('description', 'N/A')}"
+        )
+
+        sent_count = 0
+        errors = []
+
+        for to_number in to_numbers:
+            try:
+                if not to_number.startswith('whatsapp:'):
+                    to_number = f'whatsapp:{to_number}'
+                client.messages.create(
+                    body=message_body,
+                    from_=from_number,
+                    to=to_number,
+                )
+                sent_count += 1
+            except Exception as e:
+                errors.append(f"{to_number}: {str(e)}")
+
+        if sent_count > 0:
+            return {'success': True, 'message': f'WhatsApp enviado para {sent_count} número(s)'}
+        else:
+            return {'success': False, 'error': f'Falha ao enviar WhatsApp: {", ".join(errors)}'}
+
+    except ImportError:
+        return {'success': False, 'error': 'Biblioteca Twilio não instalada'}
+    except Exception as e:
+        return {'success': False, 'error': f'Erro Twilio WhatsApp: {str(e)}'}
+
+
+def send_ticket_sync(notification_config: dict, incident_data: dict) -> dict:
+    """Envia chamado para o sistema de tickets configurado.
+
+    Detecta qual sistema está habilitado (TOPdesk, Conecta, GLPI, Dynamics 365)
+    e chama a função sync correspondente.
+
+    Args:
+        notification_config: notification_config completo do tenant.
+        incident_data: Dados do incidente.
+
+    Returns:
+        {'success': bool, 'error'?: str}
+    """
+    if notification_config.get('topdesk', {}).get('enabled'):
+        return send_topdesk_notification_sync(notification_config['topdesk'], incident_data)
+    elif notification_config.get('kiro_conecta', {}).get('enabled'):
+        return send_kiro_conecta_notification_sync(notification_config['kiro_conecta'], incident_data)
+    elif notification_config.get('dynamics365', {}).get('enabled'):
+        return send_dynamics365_notification_sync(notification_config['dynamics365'], incident_data)
+    else:
+        return {'success': False, 'error': 'Nenhum sistema de tickets habilitado'}
 
 
 @app.task

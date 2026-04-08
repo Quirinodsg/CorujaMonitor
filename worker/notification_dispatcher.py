@@ -1,0 +1,242 @@
+"""
+Módulo de despacho de notificações — Matriz de Notificação Inteligente.
+
+Contém a função pura `resolve_channels` que mapeia sensor_type → conjunto de canais,
+e as constantes da matriz de notificação padrão.
+"""
+
+VALID_CHANNELS: set[str] = {
+    "email", "teams", "ticket", "sms", "whatsapp", "phone_call"
+}
+
+VALID_SENSOR_TYPES: set[str] = {
+    "ping", "disk", "service", "http", "printer",
+    "conflex", "engetron", "snmp", "system",
+    "network_in", "network_out",
+}
+
+DEFAULT_MATRIX: dict[str, list[str]] = {
+    "ping":      ["email", "ticket", "teams"],
+    "disk":      ["email", "teams", "ticket"],
+    "service":   ["email", "teams"],
+    "http":      ["email", "teams", "ticket", "sms", "whatsapp"],
+    "printer":   ["email", "teams", "ticket"],
+    "conflex":   ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
+    "engetron":  ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
+    "snmp":      ["email", "teams", "sms"],
+    "system":    ["email"],
+}
+
+
+def resolve_channels(
+    sensor_type: str,
+    custom_matrix: dict | None = None,
+) -> set[str]:
+    """Resolve os canais de notificação para um dado sensor_type.
+
+    Regras:
+    - Se custom_matrix contém o sensor_type, usa esses canais.
+    - Caso contrário, usa DEFAULT_MATRIX.
+    - Se sensor_type não existe em nenhum dos dois, retorna {"email"} (fallback seguro).
+    - Filtra canais inválidos (interseção com VALID_CHANNELS).
+    - Garante resultado não-vazio (adiciona "email" se vazio após filtragem).
+    """
+    if custom_matrix is not None and sensor_type in custom_matrix:
+        raw_channels = custom_matrix[sensor_type]
+    elif sensor_type in DEFAULT_MATRIX:
+        raw_channels = DEFAULT_MATRIX[sensor_type]
+    else:
+        return {"email"}
+
+    channels = set(raw_channels) & VALID_CHANNELS
+
+    if not channels:
+        channels.add("email")
+
+    return channels
+
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Sensor types que são metric_only (não geram notificação)
+METRIC_ONLY_TYPES: set[str] = {"network_in", "network_out"}
+
+
+def dispatch_notifications(incident_id: int) -> dict:
+    """Despacha notificações para todos os canais da matriz.
+
+    Fluxo:
+    1. Carrega incident, sensor, server, tenant do banco.
+    2. Força priority=5 para sensor_type='ping'.
+    3. Ignora network_in/network_out (metric_only).
+    4. Resolve canais via resolve_channels(sensor_type, tenant.notification_matrix).
+    5. Para cada canal: try/except isolado chamando a função de envio correspondente.
+    6. phone_call → start_escalation() com dados do tenant.
+    7. Retorna {sent: [...], failed: [...]}.
+
+    Args:
+        incident_id: ID do incidente a notificar.
+
+    Returns:
+        dict com 'sent' (list[str]) e 'failed' (list[dict]).
+    """
+    from database import SessionLocal
+    from models import Incident, Sensor, Server, Tenant
+
+    db = SessionLocal()
+    sent = []
+    failed = []
+
+    try:
+        # 1. Carregar dados
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+        if not incident:
+            logger.error(f"Incidente {incident_id} não encontrado")
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': f'Incidente {incident_id} não encontrado'}]}
+
+        sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
+        if not sensor:
+            logger.error(f"Sensor não encontrado para incidente {incident_id}")
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Sensor não encontrado'}]}
+
+        server = db.query(Server).filter(Server.id == sensor.server_id).first()
+        tenant = db.query(Tenant).filter(Tenant.id == (server.tenant_id if server else None)).first()
+
+        if not tenant:
+            logger.warning(f"Tenant não encontrado para incidente {incident_id}")
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
+
+        # 2. Forçar priority=5 para sensor_type='ping'
+        sensor_type = sensor.sensor_type or ''
+        if sensor_type == 'ping':
+            sensor.priority = 5
+
+        # 3. Ignorar network_in/network_out (metric_only)
+        if sensor_type in METRIC_ONLY_TYPES:
+            logger.info(f"Sensor {sensor.id} é metric_only ({sensor_type}) — ignorando notificações")
+            return {'sent': sent, 'failed': failed}
+
+        # 4. Resolver canais
+        custom_matrix = getattr(tenant, 'notification_matrix', None)
+        channels = resolve_channels(sensor_type, custom_matrix)
+        notification_config = tenant.notification_config or {}
+
+        # Preparar incident_data
+        incident_data = {
+            'title': incident.title,
+            'description': incident.description or '',
+            'severity': incident.severity,
+            'server_hostname': server.hostname if server else 'N/A',
+            'sensor_name': sensor.name,
+            'sensor_type': sensor_type,
+            'incident_id': incident.id,
+            'created_at': incident.created_at.isoformat() if incident.created_at else None,
+        }
+
+        # 5. Para cada canal: try/except isolado
+        for channel in channels:
+            try:
+                if channel == 'email':
+                    email_config = notification_config.get('email', {})
+                    if email_config.get('enabled'):
+                        from tasks import send_email_notification_sync
+                        result = send_email_notification_sync(email_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Email não habilitado'}
+
+                elif channel == 'teams':
+                    teams_config = notification_config.get('teams', {})
+                    if teams_config.get('enabled'):
+                        from tasks import send_teams_notification_sync
+                        result = send_teams_notification_sync(teams_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Teams não habilitado'}
+
+                elif channel == 'ticket':
+                    from tasks import send_ticket_sync
+                    result = send_ticket_sync(notification_config, incident_data)
+
+                elif channel == 'sms':
+                    twilio_config = notification_config.get('twilio', {})
+                    if twilio_config.get('account_sid'):
+                        from tasks import send_sms_notification_sync
+                        result = send_sms_notification_sync(twilio_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Twilio SMS não configurado'}
+
+                elif channel == 'whatsapp':
+                    whatsapp_config = notification_config.get('whatsapp') or notification_config.get('twilio', {})
+                    if whatsapp_config.get('account_sid'):
+                        from tasks import send_whatsapp_notification_sync
+                        result = send_whatsapp_notification_sync(whatsapp_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Twilio WhatsApp não configurado'}
+
+                elif channel == 'phone_call':
+                    from escalation import start_escalation
+                    escalation_config = notification_config.get('escalation', {})
+                    phone_chain = escalation_config.get('phone_chain', [])
+                    esc_result = start_escalation(
+                        sensor_id=sensor.id,
+                        incident_id=incident.id,
+                        tenant_id=tenant.id,
+                        alert_data={
+                            'device_type': sensor_type,
+                            'problem_description': incident.description or incident.title,
+                            'phone_chain': phone_chain,
+                            'mode': escalation_config.get('mode', 'sequential'),
+                            'interval_minutes': escalation_config.get('interval_minutes', 5),
+                            'max_attempts': escalation_config.get('max_attempts', 10),
+                            'call_duration_seconds': escalation_config.get('call_duration_seconds', 30),
+                        },
+                    )
+                    result = {'success': esc_result is not None}
+                    if not result['success']:
+                        result['error'] = 'Escalação não iniciada (duplicata ou sensor reconhecido)'
+
+                else:
+                    result = {'success': False, 'error': f'Canal desconhecido: {channel}'}
+
+                if result.get('success'):
+                    sent.append(channel)
+                    logger.info(f"✅ Canal '{channel}' enviado para incidente {incident_id}")
+                else:
+                    failed.append({'channel': channel, 'error': result.get('error', 'Erro desconhecido')})
+                    logger.warning(f"⚠️ Canal '{channel}' falhou para incidente {incident_id}: {result.get('error')}")
+
+            except Exception as e:
+                failed.append({'channel': channel, 'error': str(e)})
+                logger.error(f"❌ Exceção no canal '{channel}' para incidente {incident_id}: {e}", exc_info=True)
+
+        # Log resumo
+        if not sent and failed:
+            logger.critical(
+                f"🚨 FALHA TOTAL: Nenhum canal enviou notificação para incidente {incident_id}. "
+                f"Falhas: {failed}"
+            )
+        else:
+            logger.info(f"📊 Dispatch incidente {incident_id}: {len(sent)} enviados, {len(failed)} falharam")
+
+        return {'sent': sent, 'failed': failed}
+
+    except Exception as e:
+        logger.error(f"❌ Erro fatal no dispatch de incidente {incident_id}: {e}", exc_info=True)
+        return {'sent': sent, 'failed': [{'channel': 'all', 'error': str(e)}]}
+    finally:
+        db.close()
+
+
+# Registrar como Celery task importando o app de tasks
+def _register_celery_task():
+    """Registra dispatch_notifications como Celery task."""
+    from tasks import app as celery_app
+    return celery_app.task(name='notification_dispatcher.dispatch_notifications')(dispatch_notifications)
+
+
+# Criar a versão task para uso com .delay()
+try:
+    dispatch_notifications_task = _register_celery_task()
+except Exception:
+    # Se falhar na importação (ex: testes unitários), manter a função pura
+    dispatch_notifications_task = dispatch_notifications

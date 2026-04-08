@@ -15,6 +15,7 @@ class Tenant(Base):
     
     # Configurações de notificação
     notification_config = Column(JSON)  # Configurações de Twilio, Teams, WhatsApp, Telegram
+    notification_matrix = Column(JSON)  # Matriz de notificação por sensor_type
     
     users = relationship("User", back_populates="tenant")
     probes = relationship("Probe", back_populates="tenant")

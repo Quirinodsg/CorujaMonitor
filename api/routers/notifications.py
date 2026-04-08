@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import datetime, timezone, timedelta
 
 from database import get_db
@@ -1546,3 +1546,74 @@ _Mensagem enviada via {config.get('provider', 'API customizada')}_'''
         }
     else:
         raise HTTPException(status_code=500, detail=result.get('error'))
+
+
+# ── Notification Matrix ──────────────────────────────────────────────
+
+VALID_CHANNELS: set[str] = {
+    "email", "teams", "ticket", "sms", "whatsapp", "phone_call"
+}
+
+DEFAULT_MATRIX: Dict[str, List[str]] = {
+    "ping":      ["email", "ticket", "teams"],
+    "disk":      ["email", "teams", "ticket"],
+    "service":   ["email", "teams"],
+    "http":      ["email", "teams", "ticket", "sms", "whatsapp"],
+    "printer":   ["email", "teams", "ticket"],
+    "conflex":   ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
+    "engetron":  ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
+    "snmp":      ["email", "teams", "sms"],
+    "system":    ["email"],
+}
+
+
+class NotificationMatrixUpdate(BaseModel):
+    matrix: Dict[str, List[str]]  # sensor_type → list of channels
+
+
+class NotificationMatrixResponse(BaseModel):
+    matrix: Dict[str, List[str]]
+    is_default: bool  # True if using DEFAULT_MATRIX
+
+
+@router.get("/matrix", response_model=NotificationMatrixResponse)
+async def get_notification_matrix(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user),
+):
+    """Return the tenant's notification matrix (or default if absent)."""
+    tenant = db.query(Tenant).filter(Tenant.id == current_user.tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    custom = tenant.notification_matrix
+    if custom:
+        return NotificationMatrixResponse(matrix=custom, is_default=False)
+    return NotificationMatrixResponse(matrix=DEFAULT_MATRIX, is_default=True)
+
+
+@router.put("/matrix", response_model=NotificationMatrixResponse)
+async def update_notification_matrix(
+    payload: NotificationMatrixUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin")),
+):
+    """Save a custom notification matrix for the tenant (admin only)."""
+    # Validate channels
+    for sensor_type, channels in payload.matrix.items():
+        invalid = set(channels) - VALID_CHANNELS
+        if invalid:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid channels for '{sensor_type}': {sorted(invalid)}",
+            )
+
+    tenant = db.query(Tenant).filter(Tenant.id == current_user.tenant_id).first()
+    if not tenant:
+        raise HTTPException(status_code=404, detail="Tenant not found")
+
+    tenant.notification_matrix = payload.matrix
+    db.commit()
+    db.refresh(tenant)
+
+    return NotificationMatrixResponse(matrix=tenant.notification_matrix, is_default=False)
