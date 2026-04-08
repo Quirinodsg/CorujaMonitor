@@ -4,13 +4,21 @@ import './NotificationMatrix.css';
 
 const SENSOR_TYPES = [
   { key: 'ping', label: 'PING (Servidor Offline)' },
+  { key: 'cpu', label: 'CPU' },
+  { key: 'memory', label: 'Memória' },
   { key: 'disk', label: 'Disco' },
   { key: 'service', label: 'Serviço' },
   { key: 'http', label: 'HTTP (Sites)' },
   { key: 'printer', label: 'Impressora' },
+  { key: 'equallogic', label: 'Storage (EqualLogic)' },
   { key: 'conflex', label: 'Ar-condicionado (Conflex)' },
   { key: 'engetron', label: 'Nobreak (Engetron)' },
   { key: 'snmp', label: 'Ativos de Rede (SNMP)' },
+  { key: 'docker', label: 'Docker' },
+  { key: 'kubernetes', label: 'Kubernetes' },
+  { key: 'hyperv', label: 'Hyper-V' },
+  { key: 'network_in', label: 'Link Internet (IN)' },
+  { key: 'network_out', label: 'Link Internet (OUT)' },
   { key: 'system', label: 'Reboot (Informativo)' },
 ];
 

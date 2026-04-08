@@ -1555,15 +1555,23 @@ VALID_CHANNELS: set[str] = {
 }
 
 DEFAULT_MATRIX: Dict[str, List[str]] = {
-    "ping":      ["email", "ticket", "teams"],
-    "disk":      ["email", "teams", "ticket"],
-    "service":   ["email", "teams"],
-    "http":      ["email", "teams", "ticket", "sms", "whatsapp"],
-    "printer":   ["email", "teams", "ticket"],
-    "conflex":   ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
-    "engetron":  ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
-    "snmp":      ["email", "teams", "sms"],
-    "system":    ["email"],
+    "ping":        ["email", "ticket", "teams"],
+    "cpu":         ["email", "teams"],
+    "memory":      ["email", "teams"],
+    "disk":        ["email", "teams", "ticket"],
+    "service":     ["email", "teams"],
+    "http":        ["email", "teams", "ticket", "sms", "whatsapp"],
+    "printer":     ["email", "teams", "ticket"],
+    "equallogic":  ["email", "teams", "ticket"],
+    "conflex":     ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
+    "engetron":    ["phone_call", "email", "ticket", "teams", "sms", "whatsapp"],
+    "snmp":        ["email", "teams", "sms"],
+    "docker":      ["email", "teams"],
+    "kubernetes":  ["email", "teams"],
+    "hyperv":      ["email", "teams"],
+    "network_in":  [],
+    "network_out": [],
+    "system":      ["email"],
 }
 
 
