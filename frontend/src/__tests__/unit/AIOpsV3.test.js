@@ -80,7 +80,8 @@ describe('AIOpsV3', () => {
     await waitFor(() => {
       // Pipeline status metrics are rendered
       expect(screen.getByText('156')).toBeInTheDocument(); // total_runs
-      expect(screen.getByText('42')).toBeInTheDocument();  // total_intelligent_alerts or actions_successful
+      // 42 appears in both "Alertas Gerados" and "Ações Bem-sucedidas"
+      expect(screen.getAllByText('42').length).toBeGreaterThanOrEqual(2);
     });
   });
 

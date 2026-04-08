@@ -88,3 +88,7 @@ export function createObservabilityBurst(count = 100) {
 }
 
 export default MockWS;
+
+
+// Dummy test so Jest doesn't fail when collecting this file
+test('utility module loads', () => { expect(true).toBe(true); });

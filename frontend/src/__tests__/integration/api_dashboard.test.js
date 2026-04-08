@@ -1,18 +1,18 @@
 /**
- * Integration tests for ObservabilityDashboard using MSW.
+ * Integration tests for ObservabilityDashboard using jest.mock for api.
  */
 import React from 'react';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
 import ObservabilityDashboard from '../../components/ObservabilityDashboard';
 
-// We need to mock the api module to use our MSW base URL
-jest.mock('../../services/api', () => {
-  const axios = require('axios');
-  const instance = axios.create({ baseURL: '' });
-  return { __esModule: true, default: instance };
-});
+jest.mock('../../services/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+  },
+}));
+
+import api from '../../services/api';
 
 const healthData = {
   score: 92,
@@ -30,22 +30,23 @@ const alertsData = {
   ],
 };
 
-const server = setupServer(
-  http.get('/api/v1/observability/health-score', () => HttpResponse.json(healthData)),
-  http.get('/api/v1/observability/impact-map', () => HttpResponse.json({ nodes: impactNodes })),
-  http.get('/api/v1/alerts/intelligent', () => HttpResponse.json(alertsData)),
-);
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+function setupSuccess() {
+  api.get.mockImplementation((url) => {
+    if (url.includes('health-score')) return Promise.resolve({ data: healthData });
+    if (url.includes('impact-map')) return Promise.resolve({ data: { nodes: impactNodes } });
+    if (url.includes('alerts/intelligent')) return Promise.resolve({ data: alertsData });
+    return Promise.resolve({ data: {} });
+  });
+}
 
 beforeEach(() => {
+  jest.clearAllMocks();
   localStorage.setItem('token', 'test-token');
 });
 
 describe('API Dashboard Integration', () => {
   test('fetches health score and renders', async () => {
+    setupSuccess();
     await act(async () => { render(<ObservabilityDashboard />); });
     await waitFor(() => {
       expect(screen.getByText('92')).toBeInTheDocument();
@@ -53,6 +54,7 @@ describe('API Dashboard Integration', () => {
   });
 
   test('fetches impact map and renders nodes', async () => {
+    setupSuccess();
     await act(async () => { render(<ObservabilityDashboard />); });
     await waitFor(() => {
       expect(screen.getByText('Impacted-Server')).toBeInTheDocument();
@@ -60,6 +62,7 @@ describe('API Dashboard Integration', () => {
   });
 
   test('fetches alerts and renders table', async () => {
+    setupSuccess();
     await act(async () => { render(<ObservabilityDashboard />); });
     await waitFor(() => {
       expect(screen.getByText('Integration Alert 1')).toBeInTheDocument();
@@ -68,11 +71,7 @@ describe('API Dashboard Integration', () => {
   });
 
   test('handles API 500 error gracefully', async () => {
-    server.use(
-      http.get('/api/v1/observability/health-score', () => HttpResponse.json({ error: 'Internal Server Error' }, { status: 500 })),
-      http.get('/api/v1/observability/impact-map', () => HttpResponse.json({ error: 'fail' }, { status: 500 })),
-      http.get('/api/v1/alerts/intelligent', () => HttpResponse.json({ error: 'fail' }, { status: 500 })),
-    );
+    api.get.mockRejectedValue(new Error('Request failed with status code 500'));
     await act(async () => { render(<ObservabilityDashboard />); });
     await waitFor(() => {
       expect(screen.getByText(/Erro/i)).toBeInTheDocument();
@@ -80,11 +79,7 @@ describe('API Dashboard Integration', () => {
   });
 
   test('handles network timeout', async () => {
-    server.use(
-      http.get('/api/v1/observability/health-score', () => HttpResponse.error()),
-      http.get('/api/v1/observability/impact-map', () => HttpResponse.error()),
-      http.get('/api/v1/alerts/intelligent', () => HttpResponse.error()),
-    );
+    api.get.mockRejectedValue(new Error('Network Error'));
     await act(async () => { render(<ObservabilityDashboard />); });
     await waitFor(() => {
       expect(screen.getByText(/Erro/i)).toBeInTheDocument();
@@ -94,15 +89,14 @@ describe('API Dashboard Integration', () => {
   test('retries on failure (auto-refresh)', async () => {
     jest.useFakeTimers();
     let callCount = 0;
-    server.use(
-      http.get('/api/v1/observability/health-score', () => {
-        callCount++;
-        if (callCount <= 1) return HttpResponse.error();
-        return HttpResponse.json(healthData);
-      }),
-      http.get('/api/v1/observability/impact-map', () => HttpResponse.json({ nodes: [] })),
-      http.get('/api/v1/alerts/intelligent', () => HttpResponse.json({ alerts: [] })),
-    );
+    api.get.mockImplementation((url) => {
+      callCount++;
+      if (callCount <= 3) return Promise.reject(new Error('fail'));
+      if (url.includes('health-score')) return Promise.resolve({ data: healthData });
+      if (url.includes('impact-map')) return Promise.resolve({ data: { nodes: [] } });
+      if (url.includes('alerts/intelligent')) return Promise.resolve({ data: { alerts: [] } });
+      return Promise.resolve({ data: {} });
+    });
     await act(async () => { render(<ObservabilityDashboard />); });
     // First call fails
     await waitFor(() => expect(screen.getByText(/Erro/i)).toBeInTheDocument());

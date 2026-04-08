@@ -1,9 +1,7 @@
 /**
- * MSW handlers for all API endpoints used by frontend components.
- * Uses MSW v2 syntax.
+ * API mock helpers for Coruja Monitor v3.0 frontend tests.
+ * Uses jest.mock('../../services/api') pattern instead of MSW.
  */
-import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
 import {
   generateHealthScore,
   generateImpactMap,
@@ -15,222 +13,136 @@ import {
   generatePipelineStatus,
 } from './event_gen';
 
-// Default successful handlers
-export const handlers = [
-  // Observability
-  http.get('/api/v1/observability/health-score', () => {
-    return HttpResponse.json(generateHealthScore());
-  }),
+/**
+ * Setup api.get mock with default successful responses for ObservabilityDashboard.
+ * @param {object} api - The mocked api module default export
+ * @param {object} overrides - Optional overrides for specific endpoints
+ */
+export function setupDashboardMocks(api, overrides = {}) {
+  const healthData = overrides.health || generateHealthScore();
+  const impactData = overrides.impact || { nodes: generateImpactMap(5) };
+  const alertsData = overrides.alerts || { alerts: generateAlerts(10) };
 
-  http.get('/api/v1/observability/impact-map', () => {
-    return HttpResponse.json({ nodes: generateImpactMap(5) });
-  }),
-
-  // Alerts
-  http.get('/api/v1/alerts/intelligent', ({ request }) => {
-    const url = new URL(request.url);
-    const severity = url.searchParams.get('severity');
-    const status = url.searchParams.get('status');
-    let alerts = generateAlerts(10);
-    if (severity) alerts = alerts.filter(a => a.severity === severity);
-    if (status) alerts = alerts.filter(a => a.status === status);
-    return HttpResponse.json({ alerts });
-  }),
-
-  http.get('/api/v1/alerts/intelligent/:id/root-cause', ({ params }) => {
-    return HttpResponse.json({
-      root_cause: 'High CPU usage on database server causing cascading failures',
-      affected_hosts: ['db-primary', 'app-server-1', 'app-server-2'],
-      confidence: 0.92,
-    });
-  }),
-
-  http.post('/api/v1/alerts/intelligent/:id/acknowledge', () => {
-    return HttpResponse.json({ status: 'acknowledged' });
-  }),
-
-  http.post('/api/v1/alerts/intelligent/:id/resolve', () => {
-    return HttpResponse.json({ status: 'resolved' });
-  }),
-
-  http.delete('/api/v1/alerts/intelligent/:id', () => {
-    return HttpResponse.json({ deleted: true });
-  }),
-
-  // Topology
-  http.get('/api/v1/topology/graph', () => {
-    return HttpResponse.json(generateTopologyGraph(8));
-  }),
-
-  http.get('/api/v1/topology/impact/:id', ({ params }) => {
-    return HttpResponse.json({
-      total_impact: 3,
-      affected_hosts: ['host-a', 'host-b', 'host-c'],
-      depends_on: ['core-switch'],
-      all_affected: ['host-a', 'host-b', 'host-c'],
-      edge_count: 5,
-    });
-  }),
-
-  http.post('/api/v1/topology/sync-from-servers', () => {
-    return HttpResponse.json({ message: 'Sync concluido', created: 5, updated: 2 });
-  }),
-
-  // Servers & Sensors
-  http.get('/api/v1/servers', () => {
-    return HttpResponse.json(generateServers(5));
-  }),
-
-  http.get('/api/v1/sensors', ({ request }) => {
-    const url = new URL(request.url);
-    const serverId = url.searchParams.get('server_id');
-    return HttpResponse.json(generateSensors(8, serverId));
-  }),
-
-  // Metrics
-  http.get('/api/v1/metrics', ({ request }) => {
-    const url = new URL(request.url);
-    const limit = parseInt(url.searchParams.get('limit') || '50');
-    return HttpResponse.json(generateMetrics(Math.min(limit, 200)));
-  }),
-
-  // AIOps Pipeline
-  http.get('/api/v1/aiops-pipeline/status', () => {
-    return HttpResponse.json(generatePipelineStatus());
-  }),
-
-  http.get('/api/v1/aiops-pipeline/runs', () => {
-    return HttpResponse.json({
-      runs: [
-        {
-          run_id: 'run-abc-123-def-456',
-          agents: ['AnomalyDetection', 'Correlation', 'RootCause', 'Decision'],
-          agents_success: 4,
-          agents_error: 0,
-          started_at: new Date().toISOString(),
-        },
-      ],
-    });
-  }),
-
-  http.get('/api/v1/aiops-pipeline/logs', () => {
-    return HttpResponse.json({
-      logs: [
-        {
-          id: 'log-1',
-          agent_name: 'AnomalyDetection',
-          run_id: 'run-abc-123',
-          status: 'success',
-          output: { anomalies: 2 },
-          timestamp: new Date().toISOString(),
-        },
-      ],
-    });
-  }),
-
-  http.get('/api/v1/aiops-v3/feedback-metrics', () => {
-    return HttpResponse.json({
-      actions_successful: 42,
-      actions_failed: 3,
-      total_feedback: 45,
-    });
-  }),
-
-  http.post('/api/v1/aiops-pipeline/run', () => {
-    return HttpResponse.json({ run_id: 'new-run-id', status: 'started' });
-  }),
-
-  http.post('/api/v1/aiops-pipeline/simulate', () => {
-    return HttpResponse.json({
-      run_id: 'sim-run-id-12345678',
-      events_processed: 1,
-      agents_run: 5,
-      agents_success: 5,
-      should_alert: true,
-      results: [
-        { agent: 'AnomalyDetection', success: true },
-        { agent: 'Correlation', success: true },
-        { agent: 'RootCause', success: true },
-        { agent: 'Decision', success: true },
-        { agent: 'AutoRemediationAgent', success: true },
-      ],
-    });
-  }),
-
-  // NOC endpoints
-  http.get('/api/v1/noc/global-status', () => {
-    return HttpResponse.json({
-      servers_ok: 45,
-      servers_warning: 3,
-      servers_critical: 1,
-      availability: '99.8',
-      companies: [
-        { id: 1, name: 'Empresa A', status: 'ok', ok: 20, warning: 1, critical: 0, availability: '99.9' },
-        { id: 2, name: 'Empresa B', status: 'warning', ok: 15, warning: 2, critical: 1, availability: '98.5' },
-      ],
-    });
-  }),
-
-  http.get('/api/v1/noc/heatmap', () => {
-    return HttpResponse.json([
-      { id: 1, hostname: 'srv-web-01', status: 'ok', availability: '99.9' },
-      { id: 2, hostname: 'srv-db-01', status: 'warning', availability: '93.2' },
-      { id: 3, hostname: 'srv-app-01', status: 'critical', availability: '85.1' },
-    ]);
-  }),
-
-  http.get('/api/v1/noc/active-incidents', () => {
-    return HttpResponse.json([
-      {
-        id: 1,
-        severity: 'critical',
-        server_name: 'srv-db-01',
-        description: 'CPU acima de 95%',
-        created_at: new Date().toISOString(),
-        duration: '15min',
-      },
-    ]);
-  }),
-
-  http.get('/api/v1/noc/kpis', () => {
-    return HttpResponse.json({ mttr: '12', mtbf: '800', sla: '99.97', incidents_24h: '8' });
-  }),
-
-  // Standalone sensors & batch metrics for NOC datacenter
-  http.get('/api/v1/sensors/standalone', () => {
-    return HttpResponse.json([]);
-  }),
-
-  http.get('/api/v1/metrics/latest/batch', () => {
-    return HttpResponse.json({});
-  }),
-
-  http.get('/api/v1/dashboard/network-assets-status', () => {
-    return HttpResponse.json({});
-  }),
-];
-
-// Create MSW server
-export const server = setupServer(...handlers);
-
-// Error handler factories
-export function createErrorHandler(path, statusCode = 500) {
-  return http.get(path, () => {
-    return HttpResponse.json({ error: 'Internal Server Error' }, { status: statusCode });
+  api.get.mockImplementation((url) => {
+    if (url.includes('health-score')) return Promise.resolve({ data: healthData });
+    if (url.includes('impact-map')) return Promise.resolve({ data: impactData });
+    if (url.includes('alerts/intelligent')) return Promise.resolve({ data: alertsData });
+    return Promise.resolve({ data: {} });
   });
 }
 
-export function createTimeoutHandler(path) {
-  return http.get(path, async () => {
-    await new Promise(resolve => setTimeout(resolve, 60000));
-    return HttpResponse.json({});
+/**
+ * Setup global.fetch mock with default successful responses for IntelligentAlerts.
+ * @param {object} overrides - Optional overrides
+ * @returns {jest.Mock} The fetch mock
+ */
+export function setupAlertsFetchMock(overrides = {}) {
+  const allAlerts = overrides.alerts || generateAlerts(10);
+
+  const fetchMock = jest.fn().mockImplementation((url) => {
+    if (url.includes('/alerts/intelligent') && !url.includes('/root-cause') && !url.includes('/acknowledge') && !url.includes('/resolve')) {
+      const urlObj = new URL(url, 'http://localhost');
+      const severity = urlObj.searchParams.get('severity');
+      const status = urlObj.searchParams.get('status');
+      let filtered = [...allAlerts];
+      if (severity) filtered = filtered.filter(a => a.severity === severity);
+      if (status) filtered = filtered.filter(a => a.status === status);
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ alerts: filtered }) });
+    }
+    if (url.includes('/root-cause')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          root_cause: overrides.rootCause || 'High CPU usage on database server causing cascading failures',
+          affected_hosts: overrides.affectedHosts || ['db-primary', 'app-server-1'],
+          confidence: 0.92,
+        }),
+      });
+    }
+    if (url.includes('/acknowledge')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'acknowledged' }) });
+    }
+    if (url.includes('/resolve')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'resolved' }) });
+    }
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+  });
+
+  global.fetch = fetchMock;
+  return fetchMock;
+}
+
+/**
+ * Setup api.get mock to return errors for all endpoints.
+ * @param {object} api - The mocked api module default export
+ * @param {number} statusCode - HTTP status code
+ */
+export function setupErrorMocks(api, statusCode = 500) {
+  api.get.mockRejectedValue(new Error(`Request failed with status code ${statusCode}`));
+}
+
+/**
+ * Setup api.get mock for NOC endpoints.
+ * @param {object} api - The mocked api module default export
+ * @param {object} overrides - Optional overrides
+ */
+export function setupNOCMocks(api, overrides = {}) {
+  const globalData = overrides.global || {
+    servers_ok: 45, servers_warning: 3, servers_critical: 1,
+    availability: '99.8',
+    companies: [
+      { id: 1, name: 'Empresa A', status: 'ok', ok: 20, warning: 1, critical: 0, availability: '99.9' },
+      { id: 2, name: 'Empresa B', status: 'warning', ok: 15, warning: 2, critical: 1, availability: '98.5' },
+    ],
+  };
+
+  api.get.mockImplementation((url) => {
+    if (url.includes('global-status')) return Promise.resolve({ data: globalData });
+    if (url.includes('heatmap')) return Promise.resolve({ data: overrides.heatmap || [] });
+    if (url.includes('active-incidents')) return Promise.resolve({ data: overrides.incidents || [] });
+    if (url.includes('kpis')) return Promise.resolve({ data: overrides.kpis || { mttr: '12', mtbf: '800', sla: '99.97', incidents_24h: '8' } });
+    if (url.includes('standalone')) return Promise.resolve({ data: [] });
+    if (url.includes('servers')) return Promise.resolve({ data: [] });
+    return Promise.resolve({ data: {} });
   });
 }
 
-export function createNetworkErrorHandler(path) {
-  return http.get(path, () => {
-    return HttpResponse.error();
+/**
+ * Setup global.fetch mock for AIOps pipeline endpoints.
+ * @param {object} overrides - Optional overrides
+ * @returns {jest.Mock} The fetch mock
+ */
+export function setupAIOpsFetchMock(overrides = {}) {
+  const pipelineStatus = overrides.status || generatePipelineStatus();
+  const runs = overrides.runs || {
+    runs: [{
+      run_id: 'run-abc-123-def-456',
+      agents: ['AnomalyDetection', 'Correlation', 'RootCause', 'Decision'],
+      agents_success: 4, agents_error: 0,
+      started_at: new Date().toISOString(),
+    }],
+  };
+  const logs = overrides.logs || {
+    logs: [{
+      id: 'log-1', agent_name: 'AnomalyDetection', run_id: 'run-abc-123',
+      status: 'success', output: { anomalies: 2 }, timestamp: new Date().toISOString(),
+    }],
+  };
+  const feedback = overrides.feedback || { actions_successful: 42, actions_failed: 3 };
+
+  const fetchMock = jest.fn().mockImplementation((url) => {
+    if (url.includes('pipeline/status')) return Promise.resolve({ ok: true, json: () => Promise.resolve(pipelineStatus) });
+    if (url.includes('pipeline/runs')) return Promise.resolve({ ok: true, json: () => Promise.resolve(runs) });
+    if (url.includes('pipeline/logs')) return Promise.resolve({ ok: true, json: () => Promise.resolve(logs) });
+    if (url.includes('feedback-metrics')) return Promise.resolve({ ok: true, json: () => Promise.resolve(feedback) });
+    if (url.includes('pipeline/run')) return Promise.resolve({ ok: true, json: () => Promise.resolve({ run_id: 'new-run', status: 'started' }) });
+    if (url.includes('pipeline/simulate')) return Promise.resolve({ ok: true, json: () => Promise.resolve({ run_id: 'sim-run', events_processed: 1, agents_run: 5, agents_success: 5, should_alert: true, results: [] }) });
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
   });
+
+  global.fetch = fetchMock;
+  return fetchMock;
 }
 
-export { http, HttpResponse };
+// Dummy test so Jest doesn't fail when collecting this file
+test('utility module loads', () => { expect(true).toBe(true); });

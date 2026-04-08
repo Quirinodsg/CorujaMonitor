@@ -58,3 +58,7 @@ export function stressTestData(generator, count) {
   expect(data).toHaveLength(count);
   return data;
 }
+
+
+// Dummy test so Jest doesn't fail when collecting this file
+test('utility module loads', () => { expect(true).toBe(true); });

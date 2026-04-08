@@ -1,10 +1,8 @@
 /**
- * Integration tests for IntelligentAlerts using MSW.
+ * Integration tests for IntelligentAlerts using global.fetch mock.
  */
 import React from 'react';
 import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
-import { http, HttpResponse } from 'msw';
-import { setupServer } from 'msw/node';
 import IntelligentAlerts from '../../components/IntelligentAlerts';
 
 const allAlerts = [
@@ -14,33 +12,39 @@ const allAlerts = [
   { id: 'ia4', title: 'Critical Network', severity: 'critical', status: 'open', confidence: 0.91, created_at: '2024-01-15T07:00:00Z' },
 ];
 
-const server = setupServer(
-  http.get('/api/v1/alerts/intelligent', ({ request }) => {
-    const url = new URL(request.url);
-    const severity = url.searchParams.get('severity');
-    const status = url.searchParams.get('status');
-    let filtered = [...allAlerts];
-    if (severity) filtered = filtered.filter(a => a.severity === severity);
-    if (status) filtered = filtered.filter(a => a.status === status);
-    return HttpResponse.json({ alerts: filtered });
-  }),
-  http.get('/api/v1/alerts/intelligent/:id/root-cause', () => {
-    return HttpResponse.json({ root_cause: 'Connection pool exhaustion', affected_hosts: ['db-primary'] });
-  }),
-  http.post('/api/v1/alerts/intelligent/:id/acknowledge', () => {
-    return HttpResponse.json({ status: 'acknowledged' });
-  }),
-  http.post('/api/v1/alerts/intelligent/:id/resolve', () => {
-    return HttpResponse.json({ status: 'resolved' });
-  }),
-);
-
-beforeAll(() => server.listen({ onUnhandledRequest: 'bypass' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+let fetchMock;
+let capturedUrls;
 
 beforeEach(() => {
   localStorage.setItem('token', 'test-token');
+  capturedUrls = [];
+  fetchMock = jest.fn().mockImplementation((url) => {
+    capturedUrls.push(url);
+    if (url.includes('/alerts/intelligent') && !url.includes('/root-cause') && !url.includes('/acknowledge') && !url.includes('/resolve')) {
+      const urlObj = new URL(url, 'http://localhost');
+      const severity = urlObj.searchParams.get('severity');
+      const status = urlObj.searchParams.get('status');
+      let filtered = [...allAlerts];
+      if (severity) filtered = filtered.filter(a => a.severity === severity);
+      if (status) filtered = filtered.filter(a => a.status === status);
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ alerts: filtered }) });
+    }
+    if (url.includes('/root-cause')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ root_cause: 'Connection pool exhaustion', affected_hosts: ['db-primary'] }) });
+    }
+    if (url.includes('/acknowledge')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'acknowledged' }) });
+    }
+    if (url.includes('/resolve')) {
+      return Promise.resolve({ ok: true, json: () => Promise.resolve({ status: 'resolved' }) });
+    }
+    return Promise.resolve({ ok: true, json: () => Promise.resolve({}) });
+  });
+  global.fetch = fetchMock;
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe('API Alerts Integration', () => {
@@ -85,17 +89,10 @@ describe('API Alerts Integration', () => {
   });
 
   test('handles pagination (limit param)', async () => {
-    // Verify the component sends limit param
-    let capturedUrl = '';
-    server.use(
-      http.get('/api/v1/alerts/intelligent', ({ request }) => {
-        capturedUrl = request.url;
-        return HttpResponse.json({ alerts: allAlerts });
-      }),
-    );
     await act(async () => { render(<IntelligentAlerts />); });
     await waitFor(() => {
-      expect(capturedUrl).toContain('limit=');
+      const hasLimit = capturedUrls.some(u => u.includes('limit='));
+      expect(hasLimit).toBe(true);
     });
   });
 });

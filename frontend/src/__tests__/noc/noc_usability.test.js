@@ -105,12 +105,12 @@ describe('NOC Usability', () => {
   test('server status is color-coded', async () => {
     await act(async () => { render(<NOCMode onExit={jest.fn()} />); });
     await waitFor(() => {
-      // OK servers count
-      expect(screen.getByText('45')).toBeInTheDocument();
+      // OK servers count - may appear in KPI + company stats
+      expect(screen.getAllByText('45').length).toBeGreaterThanOrEqual(1);
       // Warning servers count
-      expect(screen.getByText('3')).toBeInTheDocument();
-      // Critical servers count
-      expect(screen.getByText('2')).toBeInTheDocument();
+      expect(screen.getAllByText('3').length).toBeGreaterThanOrEqual(1);
+      // Critical servers count - '2' appears in multiple places (KPI + company stats)
+      expect(screen.getAllByText('2').length).toBeGreaterThanOrEqual(1);
     });
     // KPI cards have distinct classes
     expect(screen.getByText(/SERVIDORES OK/i).closest('.kpi-mega')).toHaveClass('ok');

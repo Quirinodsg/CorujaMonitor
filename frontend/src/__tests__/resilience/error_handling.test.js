@@ -22,7 +22,7 @@ beforeEach(() => {
 
 describe('Error Handling Resilience', () => {
   test('API 500 shows error fallback', async () => {
-    api.get.mockRejectedValue({ response: { status: 500, data: { error: 'Internal Server Error' } } });
+    api.get.mockRejectedValue(new Error('Request failed with status code 500'));
     await act(async () => { render(<ObservabilityDashboard />); });
     await waitFor(() => {
       expect(screen.getByText(/Erro/i)).toBeInTheDocument();
