@@ -732,9 +732,9 @@ def execute_aiops_analysis(incident_id: int):
         except Exception as e:
             logger.error(f"❌ Erro na análise AIOps: {e}")
         
-        # Now send notifications with AIOps analysis included
-        logger.info("📧 Enviando notificações com análise AIOps...")
-        send_incident_notifications_with_aiops.delay(incident.id, aiops_result, action_plan)
+        # AIOps analysis complete — notificações já foram enviadas pelo dispatch_notifications_task
+        # NÃO enviar novamente aqui para evitar duplicação
+        logger.info("📧 AIOps concluído para incidente %d — notificações já enviadas pelo Dispatcher", incident.id)
         
     except Exception as e:
         logger.error(f"❌ Erro ao executar análise AIOps: {e}", exc_info=True)
