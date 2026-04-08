@@ -1,20 +1,18 @@
-// Playwright config — Coruja Monitor v3.0
-// Executar no Linux: npx playwright test
+// @ts-check
 const { defineConfig, devices } = require('@playwright/test');
 
 module.exports = defineConfig({
   testDir: './e2e',
+  fullyParallel: true,
+  forbidOnly: !!process.env.CI,
+  retries: process.env.CI ? 2 : 0,
+  workers: process.env.CI ? 1 : undefined,
+  reporter: [['html', { outputFolder: 'playwright-report' }]],
   timeout: 30000,
-  retries: 1,
-  workers: 1, // sequencial para evitar conflitos de estado
-  reporter: [['list'], ['html', { outputFolder: 'playwright-report', open: 'never' }]],
   use: {
-    baseURL: process.env.BASE_URL || 'http://localhost:3000',
-    headless: true,
+    baseURL: 'http://localhost:3000',
+    trace: 'on-first-retry',
     screenshot: 'only-on-failure',
-    video: 'off',
-    // Token JWT para autenticação
-    extraHTTPHeaders: {},
   },
   projects: [
     {
@@ -22,4 +20,10 @@ module.exports = defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
+  webServer: {
+    command: 'npm start',
+    url: 'http://localhost:3000',
+    reuseExistingServer: !process.env.CI,
+    timeout: 120000,
+  },
 });
