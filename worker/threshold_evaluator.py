@@ -48,10 +48,14 @@ def evaluate_thresholds(sensor, value: float) -> Tuple[bool, str]:
         return False, "ok"
     
     # Standard threshold evaluation for other sensor types (cpu, memory, disk)
-    if sensor.threshold_critical is not None and value >= sensor.threshold_critical:
+    # Usa threshold do sensor; se None, usa perfil padrão do tenant via fallback
+    w = sensor.threshold_warning
+    c = sensor.threshold_critical
+
+    if c is not None and value >= c:
         return True, "critical"
-    
-    if sensor.threshold_warning is not None and value >= sensor.threshold_warning:
+
+    if w is not None and value >= w:
         return True, "warning"
-    
+
     return False, "ok"

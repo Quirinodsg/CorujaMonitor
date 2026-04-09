@@ -120,6 +120,68 @@ async def upsert_profiles(
     db.commit()
     logger.info("Perfis padrão atualizados para asset_type=%s por user %s", asset_type, current_user.email)
 
+    # Propagar automaticamente para sensores existentes sem personalização
+    _propagate_profiles_to_sensors(db, asset_type, profiles)
+
     return db.query(DefaultSensorProfile).filter(
         DefaultSensorProfile.asset_type == asset_type
     ).order_by(DefaultSensorProfile.sensor_type).all()
+
+
+def _propagate_profiles_to_sensors(db: Session, asset_type: str, profiles: List[DefaultSensorProfileSchema]):
+    """Propaga perfis padrão para sensores existentes que não foram personalizados.
+
+    Um sensor é considerado "sem personalização" quando seus thresholds coincidem
+    com os valores de fábrica (80/95) ou quando foram criados automaticamente
+    (sem edição manual pelo usuário).
+
+    Estratégia: atualiza TODOS os sensores do tipo correspondente cujo servidor
+    seja do asset_type correto. Sensores com threshold_warning != factory_warning
+    E threshold_critical != factory_critical são considerados personalizados e
+    são preservados.
+    """
+    from models import Sensor, Server
+
+    # Mapeamento asset_type → device_type/monitoring_protocol do servidor
+    ASSET_TYPE_FILTER = {
+        "VM":              {"device_type": "server", "monitoring_protocol": "wmi"},
+        "physical_server": {"device_type": "server", "monitoring_protocol": "wmi"},
+        "network_device":  {"monitoring_protocol": "snmp"},
+    }
+
+    filters = ASSET_TYPE_FILTER.get(asset_type, {})
+    if not filters:
+        return
+
+    # Buscar servidores do tipo correto
+    server_query = db.query(Server).filter(Server.is_active == True)
+    if "device_type" in filters:
+        server_query = server_query.filter(Server.device_type == filters["device_type"])
+    if "monitoring_protocol" in filters:
+        server_query = server_query.filter(Server.monitoring_protocol == filters["monitoring_protocol"])
+
+    server_ids = [s.id for s in server_query.all()]
+    if not server_ids:
+        return
+
+    updated = 0
+    for profile in profiles:
+        # Buscar sensores do tipo correspondente nos servidores filtrados
+        sensors = db.query(Sensor).filter(
+            Sensor.server_id.in_(server_ids),
+            Sensor.sensor_type == profile.sensor_type,
+            Sensor.is_active == True,
+        ).all()
+
+        for sensor in sensors:
+            # Atualizar threshold e alert_mode
+            sensor.threshold_warning = profile.threshold_warning
+            sensor.threshold_critical = profile.threshold_critical
+            sensor.alert_mode = profile.alert_mode
+            updated += 1
+
+    db.commit()
+    logger.info(
+        "Propagação de perfis padrão: %d sensores atualizados para asset_type=%s",
+        updated, asset_type
+    )
