@@ -1,6 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import api from '../services/api';
 import './NOCMode.css';
+
+// Intervalo de polling aumentado para reduzir carga no servidor
+const POLL_INTERVAL_MS = 10000;   // 10s (era 3s)
+const DC_POLL_INTERVAL_MS = 60000; // 60s (era 30s)
 
 function NOCMode({ onExit }) {
   const [data, setData] = useState({
@@ -22,15 +26,26 @@ function NOCMode({ onExit }) {
   const [dcMetrics, setDcMetrics] = useState({});
   const [dcNetStatuses, setDcNetStatuses] = useState({});
 
+  // Refs para cancelar requests em voo ao desmontar
+  const abortRef = useRef(null);
+  const dcAbortRef = useRef(null);
+  const mountedRef = useRef(true);
+
   const loadNOCData = useCallback(async () => {
+    // Cancela request anterior se ainda estiver em voo
+    if (abortRef.current) abortRef.current.abort();
+    abortRef.current = new AbortController();
+    const signal = abortRef.current.signal;
+
     try {
       const [global, heatmap, incidents, kpis] = await Promise.all([
-        api.get('/noc/global-status', { timeout: 30000 }),
-        api.get('/noc/heatmap', { timeout: 30000 }),
-        api.get('/noc/active-incidents', { timeout: 30000 }),
-        api.get('/noc/kpis', { timeout: 30000 })
+        api.get('/noc/global-status', { timeout: 15000, signal }),
+        api.get('/noc/heatmap', { timeout: 15000, signal }),
+        api.get('/noc/active-incidents', { timeout: 15000, signal }),
+        api.get('/noc/kpis', { timeout: 15000, signal })
       ]);
 
+      if (!mountedRef.current) return;
       setData({
         global: global.data,
         heatmap: heatmap.data,
@@ -39,13 +54,22 @@ function NOCMode({ onExit }) {
       });
       setLastUpdate(new Date());
     } catch (error) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError') return;
       console.error('Erro ao carregar dados NOC:', error);
     }
   }, []);
 
   const loadDatacenterData = useCallback(async () => {
+    if (dcAbortRef.current) dcAbortRef.current.abort();
+    dcAbortRef.current = new AbortController();
+    const signal = dcAbortRef.current.signal;
+
     try {
-      const [sr, svr] = await Promise.all([api.get('/sensors/standalone'), api.get('/servers')]);
+      const [sr, svr] = await Promise.all([
+        api.get('/sensors/standalone', { signal }),
+        api.get('/servers', { signal })
+      ]);
+      if (!mountedRef.current) return;
       const all = sr.data;
       setDcSites(all.filter(s => s.sensor_type === 'http' || s.category === 'network'));
       setDcEnergy(all.filter(s => (s.name||'').toLowerCase().match(/nobreak|ups|gerador|energia|engetron/)));
@@ -53,24 +77,42 @@ function NOCMode({ onExit }) {
       const netTypes = ['switch','router','firewall','access_point','ap','gateway'];
       const assets = svr.data.filter(s => netTypes.includes((s.device_type||'').toLowerCase()));
       setDcNetwork(assets);
-      if (all.length > 0) { const mr = await api.get('/metrics/latest/batch?sensor_ids=' + all.map(s=>s.id).join(',')); setDcMetrics(mr.data); }
-      if (assets.length > 0) { try { const ns = await api.get('/dashboard/network-assets-status?ids=' + assets.map(a=>a.id).join(',')); setDcNetStatuses(ns.data); } catch(_){} }
-    } catch(_){}
+      if (all.length > 0) {
+        const mr = await api.get('/metrics/latest/batch?sensor_ids=' + all.map(s=>s.id).join(','), { signal });
+        if (mountedRef.current) setDcMetrics(mr.data);
+      }
+      if (assets.length > 0) {
+        try {
+          const ns = await api.get('/dashboard/network-assets-status?ids=' + assets.map(a=>a.id).join(','), { signal });
+          if (mountedRef.current) setDcNetStatuses(ns.data);
+        } catch(_){}
+      }
+    } catch(e) {
+      if (e.name === 'CanceledError' || e.name === 'AbortError') return;
+    }
   }, []);
 
   useEffect(() => {
+    mountedRef.current = true;
     loadNOCData();
     loadDatacenterData();
-    const interval = setInterval(loadNOCData, 3000);
-    const dcInterval = setInterval(loadDatacenterData, 30000);
-    return () => { clearInterval(interval); clearInterval(dcInterval); };
+    const interval = setInterval(loadNOCData, POLL_INTERVAL_MS);
+    const dcInterval = setInterval(loadDatacenterData, DC_POLL_INTERVAL_MS);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+      clearInterval(dcInterval);
+      // Cancela qualquer request em voo
+      if (abortRef.current) abortRef.current.abort();
+      if (dcAbortRef.current) dcAbortRef.current.abort();
+    };
   }, [loadNOCData, loadDatacenterData]);
 
   useEffect(() => {
     if (autoRotate) {
       const rotateInterval = setInterval(() => {
         setCurrentDashboard((prev) => (prev + 1) % dashboards.length);
-      }, 15000); // Rotaciona a cada 15s
+      }, 15000);
       return () => clearInterval(rotateInterval);
     }
   }, [autoRotate, dashboards.length]);
@@ -367,7 +409,7 @@ function NOCMode({ onExit }) {
           </button>
         </div>
         <div className="noc-time">
-          {lastUpdate.toLocaleTimeString()} • Atualização automática: 3s
+          {lastUpdate.toLocaleTimeString()} • Atualização automática: 10s
         </div>
       </div>
 

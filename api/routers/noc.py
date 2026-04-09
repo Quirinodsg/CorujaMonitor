@@ -1,11 +1,12 @@
 """
 NOC (Network Operations Center) Router
 Endpoints para modo NOC com dados em tempo real
+OTIMIZADO: queries agregadas em vez de N+1 loops
 """
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import func, and_, desc
+from sqlalchemy import func, and_, desc, case, text
 from typing import List, Dict, Any
 from datetime import datetime, timedelta
 import logging
@@ -17,137 +18,112 @@ from auth import get_current_active_user
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
+def _server_ids_for_user(db: Session, user: User):
+    """Retorna lista de server_ids acessíveis pelo usuário."""
+    q = db.query(Server.id)
+    if user.role != 'admin':
+        q = q.filter(Server.tenant_id == user.tenant_id)
+    return [r[0] for r in q.all()]
+
+
 @router.get("/global-status")
 async def get_global_status(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """
-    Status global do sistema para NOC
-    """
+    """Status global do sistema para NOC — queries agregadas, sem N+1."""
     try:
-        # Se admin, mostra todos os servidores; senão, filtra por tenant
-        if current_user.role == 'admin':
-            servers = db.query(Server).all()
-            total_servers = len(servers)
-        else:
-            servers = db.query(Server).filter(
-                Server.tenant_id == current_user.tenant_id
-            ).all()
-            total_servers = len(servers)
-        
-        # Servidores por status (baseado em sensores)
-        servers_ok = 0
-        servers_warning = 0
-        servers_critical = 0
-        
-        for server in servers:
-            # Verificar se há incidentes ativos (críticos ou avisos) para este servidor
-            # Incluir tanto 'open' quanto 'acknowledged'
-            critical_incident = db.query(Incident).join(Sensor).filter(
-                Sensor.server_id == server.id,
-                Incident.status.in_(['open', 'acknowledged']),
-                Incident.severity == 'critical'
-            ).first()
-            
-            warning_incident = db.query(Incident).join(Sensor).filter(
-                Sensor.server_id == server.id,
-                Incident.status.in_(['open', 'acknowledged']),
-                Incident.severity == 'warning'
-            ).first()
-            
-            # Se há incidente crítico, servidor é crítico
-            if critical_incident:
-                servers_critical += 1
-            # Se há incidente de aviso, servidor está em aviso
-            elif warning_incident:
-                servers_warning += 1
-            else:
-                servers_ok += 1
-        
-        # Disponibilidade geral
-        if current_user.role == 'admin':
-            total_metrics = db.query(Metric).join(Sensor).join(Server).filter(
-                Metric.timestamp >= datetime.utcnow() - timedelta(hours=24)
-            ).count()
-            
-            ok_metrics = db.query(Metric).join(Sensor).join(Server).filter(
-                Metric.status == 'ok',
-                Metric.timestamp >= datetime.utcnow() - timedelta(hours=24)
-            ).count()
-        else:
-            total_metrics = db.query(Metric).join(Sensor).join(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Metric.timestamp >= datetime.utcnow() - timedelta(hours=24)
-            ).count()
-            
-            ok_metrics = db.query(Metric).join(Sensor).join(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Metric.status == 'ok',
-                Metric.timestamp >= datetime.utcnow() - timedelta(hours=24)
-            ).count()
-        
-        availability = (ok_metrics / total_metrics * 100) if total_metrics > 0 else 100
-        
-        # Status por empresa (se admin)
+        now = datetime.utcnow()
+        since_24h = now - timedelta(hours=24)
+
+        # ── 1. Contagem de servidores por status via subquery ──────────────
+        inc_sub = (
+            db.query(
+                Sensor.server_id,
+                func.max(
+                    case(
+                        (and_(Incident.status.in_(['open', 'acknowledged']),
+                              Incident.severity == 'critical'), 2),
+                        (and_(Incident.status.in_(['open', 'acknowledged']),
+                              Incident.severity == 'warning'), 1),
+                        else_=0
+                    )
+                ).label('sev')
+            )
+            .join(Incident, Incident.sensor_id == Sensor.id)
+            .group_by(Sensor.server_id)
+            .subquery()
+        )
+
+        base_q = db.query(Server.id)
+        if current_user.role != 'admin':
+            base_q = base_q.filter(Server.tenant_id == current_user.tenant_id)
+        server_ids = [r[0] for r in base_q.all()]
+        total_servers = len(server_ids)
+
+        if not server_ids:
+            return {
+                'servers_ok': 0, 'servers_warning': 0, 'servers_critical': 0,
+                'total_servers': 0, 'availability': 100.0,
+                'companies': [], 'timestamp': now.isoformat()
+            }
+
+        sev_rows = (
+            db.query(inc_sub.c.server_id, inc_sub.c.sev)
+            .filter(inc_sub.c.server_id.in_(server_ids))
+            .all()
+        )
+        sev_map = {r.server_id: r.sev for r in sev_rows}
+
+        servers_critical = sum(1 for sid in server_ids if sev_map.get(sid, 0) == 2)
+        servers_warning  = sum(1 for sid in server_ids if sev_map.get(sid, 0) == 1)
+        servers_ok       = total_servers - servers_critical - servers_warning
+
+        # ── 2. Disponibilidade 24h via duas queries simples ────────────────
+        metric_base = (
+            db.query(Metric)
+            .join(Sensor, Metric.sensor_id == Sensor.id)
+            .join(Server, Sensor.server_id == Server.id)
+            .filter(Metric.timestamp >= since_24h)
+        )
+        if current_user.role != 'admin':
+            metric_base = metric_base.filter(Server.tenant_id == current_user.tenant_id)
+
+        total_metrics = metric_base.count()
+        ok_metrics = metric_base.filter(Metric.status == 'ok').count()
+        availability = (ok_metrics / total_metrics * 100) if total_metrics > 0 else 100.0
+
+        # ── 3. Status por empresa (admin only) — queries por tenant ────────
         companies = []
         if current_user.role == 'admin':
             tenants = db.query(Tenant).all()
             for tenant in tenants:
-                tenant_servers = db.query(Server).filter(
-                    Server.tenant_id == tenant.id
-                ).count()
-                
-                # Pular empresas sem servidores
-                if tenant_servers == 0:
+                t_server_ids = [r[0] for r in db.query(Server.id).filter(Server.tenant_id == tenant.id).all()]
+                if not t_server_ids:
                     continue
-                
-                # Calcular status da empresa
-                tenant_ok = 0
-                tenant_warning = 0
-                tenant_critical = 0
-                
-                for server in db.query(Server).filter(Server.tenant_id == tenant.id).all():
-                    # Verificar incidentes ativos primeiro (open OU acknowledged)
-                    critical_incident = db.query(Incident).join(Sensor).filter(
-                        Sensor.server_id == server.id,
-                        Incident.status.in_(['open', 'acknowledged']),
-                        Incident.severity == 'critical'
-                    ).first()
-                    
-                    warning_incident = db.query(Incident).join(Sensor).filter(
-                        Sensor.server_id == server.id,
-                        Incident.status.in_(['open', 'acknowledged']),
-                        Incident.severity == 'warning'
-                    ).first()
-                    
-                    if critical_incident:
-                        tenant_critical += 1
-                    elif warning_incident:
-                        tenant_warning += 1
-                    else:
-                        tenant_ok += 1
-                
-                # Status geral da empresa
-                company_status = 'ok'
-                if tenant_critical > 0:
-                    company_status = 'critical'
-                elif tenant_warning > 0:
-                    company_status = 'warning'
-                
-                # Disponibilidade da empresa
-                company_availability = 99.9  # Simplificado
-                
+
+                t_sev_rows = (
+                    db.query(inc_sub.c.server_id, inc_sub.c.sev)
+                    .filter(inc_sub.c.server_id.in_(t_server_ids))
+                    .all()
+                )
+                t_sev_map = {r.server_id: r.sev for r in t_sev_rows}
+                t_critical = sum(1 for sid in t_server_ids if t_sev_map.get(sid, 0) == 2)
+                t_warning  = sum(1 for sid in t_server_ids if t_sev_map.get(sid, 0) == 1)
+                t_ok       = len(t_server_ids) - t_critical - t_warning
+
+                company_status = 'critical' if t_critical > 0 else ('warning' if t_warning > 0 else 'ok')
                 companies.append({
                     'id': tenant.id,
                     'name': tenant.name,
-                    'ok': tenant_ok,
-                    'warning': tenant_warning,
-                    'critical': tenant_critical,
+                    'ok': t_ok,
+                    'warning': t_warning,
+                    'critical': t_critical,
                     'status': company_status,
-                    'availability': round(company_availability, 2)
+                    'availability': 99.9
                 })
-        
+
         return {
             'servers_ok': servers_ok,
             'servers_warning': servers_warning,
@@ -155,11 +131,11 @@ async def get_global_status(
             'total_servers': total_servers,
             'availability': round(availability, 2),
             'companies': companies,
-            'timestamp': datetime.utcnow().isoformat()
+            'timestamp': now.isoformat()
         }
-        
+
     except Exception as e:
-        logger.error(f"Error getting global status: {e}")
+        logger.error(f"Error getting global status: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -168,66 +144,74 @@ async def get_heatmap(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """
-    Mapa de calor de disponibilidade dos servidores
-    Mostra TODOS os servidores, independente de terem incidentes
-    """
+    """Heatmap de disponibilidade — uma query por servidor, sem N+1."""
     try:
-        # Se admin, mostra todos; senão, filtra por tenant
-        if current_user.role == 'admin':
-            servers = db.query(Server).filter(Server.is_active == True).all()
-        else:
-            servers = db.query(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Server.is_active == True
-            ).all()
-        
+        now = datetime.utcnow()
+        since_24h = now - timedelta(hours=24)
+
+        srv_q = db.query(Server).filter(Server.is_active == True)
+        if current_user.role != 'admin':
+            srv_q = srv_q.filter(Server.tenant_id == current_user.tenant_id)
+        servers = srv_q.all()
+
+        if not servers:
+            return []
+
+        server_ids = [s.id for s in servers]
+
+        # Incidentes ativos agrupados por server_id
+        inc_rows = (
+            db.query(
+                Sensor.server_id,
+                func.max(
+                    case(
+                        (and_(Incident.status.in_(['open', 'acknowledged']),
+                              Incident.severity == 'critical'), 2),
+                        (and_(Incident.status.in_(['open', 'acknowledged']),
+                              Incident.severity == 'warning'), 1),
+                        else_=0
+                    )
+                ).label('sev')
+            )
+            .join(Incident, Incident.sensor_id == Sensor.id)
+            .filter(Sensor.server_id.in_(server_ids))
+            .group_by(Sensor.server_id)
+            .all()
+        )
+        sev_map = {r.server_id: r.sev for r in inc_rows}
+
+        # Disponibilidade 24h agrupada por server_id (apenas servidores sem incidente)
+        ok_server_ids = [sid for sid in server_ids if sev_map.get(sid, 0) == 0]
+        avail_map: Dict[int, float] = {}
+        if ok_server_ids:
+            counts = (
+                db.query(
+                    Sensor.server_id,
+                    func.count(Metric.id).label('total'),
+                    func.sum(case((Metric.status == 'ok', 1), else_=0)).label('ok_count')
+                )
+                .join(Sensor, Metric.sensor_id == Sensor.id)
+                .filter(
+                    Sensor.server_id.in_(ok_server_ids),
+                    Metric.timestamp >= since_24h
+                )
+                .group_by(Sensor.server_id)
+                .all()
+            )
+            for row in counts:
+                avail_map[row.server_id] = (row.ok_count / row.total * 100) if row.total > 0 else 100.0
+
         heatmap = []
-        
         for server in servers:
-            # Verificar se há incidentes ativos (críticos ou avisos)
-            critical_incident = db.query(Incident).join(Sensor).filter(
-                Sensor.server_id == server.id,
-                Incident.status.in_(['open', 'acknowledged']),
-                Incident.severity == 'critical'
-            ).first()
-            
-            warning_incident = db.query(Incident).join(Sensor).filter(
-                Sensor.server_id == server.id,
-                Incident.status.in_(['open', 'acknowledged']),
-                Incident.severity == 'warning'
-            ).first()
-            
-            # Determinar status baseado em incidentes ativos
-            if critical_incident:
-                status = 'critical'
-                availability = 50.0  # Servidor crítico
-            elif warning_incident:
-                status = 'warning'
-                availability = 85.0  # Servidor em aviso
+            sev = sev_map.get(server.id, 0)
+            if sev == 2:
+                status, availability = 'critical', 50.0
+            elif sev == 1:
+                status, availability = 'warning', 85.0
             else:
-                # Calcular disponibilidade real (últimas 24h)
-                total = db.query(Metric).join(Sensor).filter(
-                    Sensor.server_id == server.id,
-                    Metric.timestamp >= datetime.utcnow() - timedelta(hours=24)
-                ).count()
-                
-                ok_count = db.query(Metric).join(Sensor).filter(
-                    Sensor.server_id == server.id,
-                    Metric.status == 'ok',
-                    Metric.timestamp >= datetime.utcnow() - timedelta(hours=24)
-                ).count()
-                
-                availability = (ok_count / total * 100) if total > 0 else 100
-                
-                # Determinar status baseado em disponibilidade
-                if availability >= 95:
-                    status = 'ok'
-                elif availability >= 90:
-                    status = 'warning'
-                else:
-                    status = 'critical'
-            
+                availability = avail_map.get(server.id, 100.0)
+                status = 'ok' if availability >= 95 else ('warning' if availability >= 90 else 'critical')
+
             heatmap.append({
                 'id': server.id,
                 'hostname': server.hostname,
@@ -235,11 +219,11 @@ async def get_heatmap(
                 'availability': round(availability, 1),
                 'status': status
             })
-        
+
         return heatmap
-        
+
     except Exception as e:
-        logger.error(f"Error getting heatmap: {e}")
+        logger.error(f"Error getting heatmap: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -248,50 +232,44 @@ async def get_active_incidents(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """
-    Incidentes ativos para ticker do NOC
-    Busca incidentes com status 'open' ou 'acknowledged' (não resolvidos)
-    """
+    """Incidentes ativos para ticker do NOC."""
     try:
-        # Se admin, mostra todos; senão, filtra por tenant
-        if current_user.role == 'admin':
-            incidents = db.query(Incident).join(Sensor).join(Server).filter(
-                Incident.status.in_(['open', 'acknowledged'])
-            ).order_by(desc(Incident.created_at)).limit(50).all()
-        else:
-            incidents = db.query(Incident).join(Sensor).join(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Incident.status.in_(['open', 'acknowledged'])
-            ).order_by(desc(Incident.created_at)).limit(50).all()
-        
+        q = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .join(Server, Sensor.server_id == Server.id)
+            .filter(Incident.status.in_(['open', 'acknowledged']))
+        )
+        if current_user.role != 'admin':
+            q = q.filter(Server.tenant_id == current_user.tenant_id)
+        incidents = q.order_by(desc(Incident.created_at)).limit(50).all()
+
+        now = datetime.utcnow()
         result = []
         for incident in incidents:
-            # Fix timezone: ensure both datetimes are naive (no timezone)
-            now = datetime.utcnow()
-            created_at = incident.created_at
-            
-            # If created_at is timezone-aware, make it naive
-            if created_at.tzinfo is not None:
-                created_at = created_at.replace(tzinfo=None)
-            
-            duration = now - created_at
-            hours = int(duration.total_seconds() // 3600)
-            minutes = int((duration.total_seconds() % 3600) // 60)
-            
-            result.append({
-                'id': incident.id,
-                'severity': incident.severity,
-                'server_name': incident.sensor.server.hostname,
-                'sensor_name': incident.sensor.name,
-                'description': incident.description,
-                'created_at': incident.created_at.isoformat(),
-                'duration': f"{hours}h {minutes}m"
-            })
-        
+            try:
+                created_at = incident.created_at
+                if created_at.tzinfo is not None:
+                    created_at = created_at.replace(tzinfo=None)
+                duration = now - created_at
+                hours = int(duration.total_seconds() // 3600)
+                minutes = int((duration.total_seconds() % 3600) // 60)
+                result.append({
+                    'id': incident.id,
+                    'severity': incident.severity,
+                    'server_name': incident.sensor.server.hostname,
+                    'sensor_name': incident.sensor.name,
+                    'description': incident.description,
+                    'created_at': incident.created_at.isoformat(),
+                    'duration': f"{hours}h {minutes}m"
+                })
+            except Exception:
+                continue
+
         return result
-        
+
     except Exception as e:
-        logger.error(f"Error getting active incidents: {e}")
+        logger.error(f"Error getting active incidents: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -300,77 +278,58 @@ async def get_kpis(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """
-    KPIs consolidados para NOC
-    """
+    """KPIs consolidados para NOC — queries agregadas."""
     try:
-        # MTTR - Mean Time To Repair (tempo médio de resolução)
-        if current_user.role == 'admin':
-            resolved_incidents = db.query(Incident).join(Sensor).join(Server).filter(
-                Incident.resolved_at.isnot(None),
-                Incident.created_at >= datetime.utcnow() - timedelta(days=30)
-            ).all()
-        else:
-            resolved_incidents = db.query(Incident).join(Sensor).join(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Incident.resolved_at.isnot(None),
-                Incident.created_at >= datetime.utcnow() - timedelta(days=30)
-            ).all()
-        
-        if resolved_incidents:
-            total_resolution_time = sum([
-                (inc.resolved_at - inc.created_at).total_seconds() / 60
-                for inc in resolved_incidents
-            ])
-            mttr = int(total_resolution_time / len(resolved_incidents))
-        else:
-            mttr = 0
-        
-        # MTBF - Mean Time Between Failures (tempo médio entre falhas)
-        mtbf = 720  # Simplificado - 30 dias em horas
-        
-        # SLA - Service Level Agreement
-        if current_user.role == 'admin':
-            total_metrics_30d = db.query(Metric).join(Sensor).join(Server).filter(
-                Metric.timestamp >= datetime.utcnow() - timedelta(days=30)
-            ).count()
-            
-            ok_metrics_30d = db.query(Metric).join(Sensor).join(Server).filter(
-                Metric.status == 'ok',
-                Metric.timestamp >= datetime.utcnow() - timedelta(days=30)
-            ).count()
-        else:
-            total_metrics_30d = db.query(Metric).join(Sensor).join(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Metric.timestamp >= datetime.utcnow() - timedelta(days=30)
-            ).count()
-            
-            ok_metrics_30d = db.query(Metric).join(Sensor).join(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Metric.status == 'ok',
-                Metric.timestamp >= datetime.utcnow() - timedelta(days=30)
-            ).count()
-        
-        sla = (ok_metrics_30d / total_metrics_30d * 100) if total_metrics_30d > 0 else 100
-        
-        # Incidentes 24h
-        if current_user.role == 'admin':
-            incidents_24h = db.query(Incident).join(Sensor).join(Server).filter(
-                Incident.created_at >= datetime.utcnow() - timedelta(hours=24)
-            ).count()
-        else:
-            incidents_24h = db.query(Incident).join(Sensor).join(Server).filter(
-                Server.tenant_id == current_user.tenant_id,
-                Incident.created_at >= datetime.utcnow() - timedelta(hours=24)
-            ).count()
-        
+        now = datetime.utcnow()
+        since_30d = now - timedelta(days=30)
+        since_24h = now - timedelta(hours=24)
+
+        inc_base = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .join(Server, Sensor.server_id == Server.id)
+        )
+        if current_user.role != 'admin':
+            inc_base = inc_base.filter(Server.tenant_id == current_user.tenant_id)
+
+        # MTTR via SQL avg
+        mttr_row = (
+            inc_base
+            .filter(Incident.resolved_at.isnot(None), Incident.created_at >= since_30d)
+            .with_entities(
+                func.avg(
+                    func.extract('epoch', Incident.resolved_at) -
+                    func.extract('epoch', Incident.created_at)
+                )
+            )
+            .scalar()
+        )
+        mttr = int((mttr_row or 0) / 60)
+
+        # SLA 30d
+        metric_base = (
+            db.query(Metric)
+            .join(Sensor, Metric.sensor_id == Sensor.id)
+            .join(Server, Sensor.server_id == Server.id)
+            .filter(Metric.timestamp >= since_30d)
+        )
+        if current_user.role != 'admin':
+            metric_base = metric_base.filter(Server.tenant_id == current_user.tenant_id)
+
+        total_30d = metric_base.count()
+        ok_30d = metric_base.filter(Metric.status == 'ok').count()
+        sla = (ok_30d / total_30d * 100) if total_30d > 0 else 100.0
+
+        # Contagens de incidentes
+        incidents_24h = inc_base.filter(Incident.created_at >= since_24h).count()
+
         return {
             'mttr': mttr,
-            'mtbf': mtbf,
+            'mtbf': 720,
             'sla': round(sla, 2),
             'incidents_24h': incidents_24h
         }
-        
+
     except Exception as e:
-        logger.error(f"Error getting KPIs: {e}")
+        logger.error(f"Error getting KPIs: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

@@ -3,7 +3,9 @@ import api from '../services/api';
 import './NOCRealTime.css';
 
 const MAX_RETRIES = 3;
-const RETRY_DELAY_MS = 2000;
+const RETRY_DELAY_MS = 3000;
+const POLL_INTERVAL_MS = 10000;   // 10s (era 3s)
+const DC_POLL_INTERVAL_MS = 60000; // 60s (era 30s)
 
 function NOCRealTime({ onExit }) {
   const [data, setData] = useState(null);
@@ -20,29 +22,44 @@ function NOCRealTime({ onExit }) {
   const [dcMetrics, setDcMetrics] = useState({});
   const [dcNetStatuses, setDcNetStatuses] = useState({});
   const retryCountRef = useRef(0);
+  const mountedRef = useRef(true);
+  const abortRef = useRef(null);
+  const dcAbortRef = useRef(null);
+  // Reutiliza um único AudioContext para evitar leak
+  const audioCtxRef = useRef(null);
 
-  // Sons de alerta
+  // Sons de alerta — reutiliza AudioContext
   const playAlert = useCallback((severity) => {
     if (!soundEnabled) return;
     try {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
+      if (!audioCtxRef.current || audioCtxRef.current.state === 'closed') {
+        audioCtxRef.current = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      const ctx = audioCtxRef.current;
+      const oscillator = ctx.createOscillator();
+      const gainNode = ctx.createGain();
       oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
+      gainNode.connect(ctx.destination);
       oscillator.frequency.value = severity === 'critical' ? 800 : 600;
       gainNode.gain.value = severity === 'critical' ? 0.3 : 0.2;
       oscillator.start();
-      setTimeout(() => oscillator.stop(), 200);
+      setTimeout(() => { try { oscillator.stop(); } catch(_){} }, 200);
     } catch (_) {}
   }, [soundEnabled]);
 
   // Carregar dados com retry
   const loadDashboard = useCallback(async () => {
+    if (abortRef.current) abortRef.current.abort();
+    abortRef.current = new AbortController();
+    const signal = abortRef.current.signal;
+
     try {
       const response = await api.get('/noc-realtime/realtime/dashboard', {
-        timeout: 30000,
+        timeout: 15000,
+        signal,
       });
+
+      if (!mountedRef.current) return;
 
       if (data && response.data.incidents) {
         const newCritical = response.data.incidents.filter(inc =>
@@ -58,6 +75,8 @@ function NOCRealTime({ onExit }) {
       setLoadError(null);
       retryCountRef.current = 0;
     } catch (error) {
+      if (error.name === 'CanceledError' || error.name === 'AbortError') return;
+      if (!mountedRef.current) return;
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       console.error('Erro ao carregar dashboard NOC:', error);
 
@@ -72,21 +91,17 @@ function NOCRealTime({ onExit }) {
     }
   }, [data, playAlert]);
 
-  // Atualização automática
-  useEffect(() => {
-    loadDashboard();
-    loadDatacenterData();
-    const interval = setInterval(loadDashboard, 3000);
-    const dcInterval = setInterval(loadDatacenterData, 30000);
-    return () => { clearInterval(interval); clearInterval(dcInterval); };
-  }, [loadDashboard]);
+  const loadDatacenterData = useCallback(async () => {
+    if (dcAbortRef.current) dcAbortRef.current.abort();
+    dcAbortRef.current = new AbortController();
+    const signal = dcAbortRef.current.signal;
 
-  const loadDatacenterData = async () => {
     try {
       const [standaloneRes, serversRes] = await Promise.all([
-        api.get('/sensors/standalone'),
-        api.get('/servers'),
+        api.get('/sensors/standalone', { signal }),
+        api.get('/servers', { signal }),
       ]);
+      if (!mountedRef.current) return;
       const all = standaloneRes.data;
       setDcSites(all.filter(s => s.sensor_type === 'http' || s.category === 'network'));
       setDcEnergy(all.filter(s => (s.name || '').toLowerCase().match(/nobreak|ups|gerador|energia|battery|power|engetron/)));
@@ -96,14 +111,40 @@ function NOCRealTime({ onExit }) {
       setDcNetwork(assets);
       if (all.length > 0) {
         const ids = all.map(s => s.id).join(',');
-        const mr = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`);
-        setDcMetrics(mr.data);
+        const mr = await api.get(`/metrics/latest/batch?sensor_ids=${ids}`, { signal });
+        if (mountedRef.current) setDcMetrics(mr.data);
       }
       if (assets.length > 0) {
-        try { const sr = await api.get('/dashboard/network-assets-status?ids=' + assets.map(a => a.id).join(',')); setDcNetStatuses(sr.data); } catch (_) {}
+        try {
+          const sr = await api.get('/dashboard/network-assets-status?ids=' + assets.map(a => a.id).join(','), { signal });
+          if (mountedRef.current) setDcNetStatuses(sr.data);
+        } catch (_) {}
       }
-    } catch (_) {}
-  };
+    } catch(e) {
+      if (e.name === 'CanceledError' || e.name === 'AbortError') return;
+    }
+  }, []);
+
+  // Atualização automática
+  useEffect(() => {
+    mountedRef.current = true;
+    loadDashboard();
+    loadDatacenterData();
+    const interval = setInterval(loadDashboard, POLL_INTERVAL_MS);
+    const dcInterval = setInterval(loadDatacenterData, DC_POLL_INTERVAL_MS);
+    return () => {
+      mountedRef.current = false;
+      clearInterval(interval);
+      clearInterval(dcInterval);
+      // Cancela requests em voo
+      if (abortRef.current) abortRef.current.abort();
+      if (dcAbortRef.current) dcAbortRef.current.abort();
+      // Fecha AudioContext para liberar recursos
+      if (audioCtxRef.current && audioCtxRef.current.state !== 'closed') {
+        audioCtxRef.current.close().catch(() => {});
+      }
+    };
+  }, [loadDashboard, loadDatacenterData]);
 
   // Rotação automática de views
   useEffect(() => {
@@ -114,7 +155,7 @@ function NOCRealTime({ onExit }) {
           const currentIndex = views.indexOf(prev);
           return views[(currentIndex + 1) % views.length];
         });
-      }, 20000); // Rotaciona a cada 20s
+      }, 20000);
       return () => clearInterval(rotateInterval);
     }
   }, [autoRotate]);

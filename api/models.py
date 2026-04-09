@@ -161,7 +161,12 @@ class Metric(Base):
 
 class Incident(Base):
     __tablename__ = "incidents"
-    
+    __table_args__ = (
+        Index('idx_incident_status_severity', 'status', 'severity'),
+        Index('idx_incident_sensor_status', 'sensor_id', 'status', 'severity'),
+        Index('idx_incident_created_at', 'created_at'),
+        Index('idx_incident_resolved_at', 'resolved_at'),
+    )
     id = Column(Integer, primary_key=True, index=True)
     sensor_id = Column(Integer, ForeignKey("sensors.id"), nullable=False)
     severity = Column(String(20), nullable=False)  # warning, critical
