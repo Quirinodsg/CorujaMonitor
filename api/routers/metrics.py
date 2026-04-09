@@ -301,12 +301,26 @@ async def create_probe_metrics_bulk(
             timestamp = brazil_tz.localize(timestamp)
             # Convert to UTC for storage
             timestamp = timestamp.astimezone(pytz.UTC)
+
+        # Recalcular status com os thresholds do banco (ignora status enviado pela sonda)
+        # Isso garante que mudanças de threshold na UI reflitam imediatamente
+        computed_status = metric_data.status  # fallback para tipos especiais
+        if sensor.sensor_type in ('cpu', 'memory', 'disk', 'network', 'network_in', 'network_out'):
+            w = sensor.threshold_warning
+            c = sensor.threshold_critical
+            v = metric_data.value
+            if c is not None and v >= c:
+                computed_status = 'critical'
+            elif w is not None and v >= w:
+                computed_status = 'warning'
+            else:
+                computed_status = 'ok'
         
         metric = Metric(
             sensor_id=sensor.id,
             value=metric_data.value,
             unit=metric_data.unit,
-            status=metric_data.status,
+            status=computed_status,
             timestamp=timestamp,
             extra_metadata=metric_data.metadata  # CORRIGIDO: usar extra_metadata
         )
