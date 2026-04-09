@@ -1220,14 +1220,45 @@ class ProbeCore:
                 except ValueError:
                     pass
 
-        # Network (simplificado - apenas uptime como proxy)
         # Uptime
         for oid, value in data.items():
             if '1.3.6.1.2.1.1.3.0' in oid:  # sysUpTime
                 try:
-                    # Converter timeticks para dias
-                    timeticks = int(value)
-                    uptime_days = timeticks / (100 * 60 * 60 * 24)
+                    # pysnmp pode retornar timeticks como int ou como string formatada
+                    # Formato 1: inteiro (centésimos de segundo) ex: 149730000
+                    # Formato 2: string "17 days, 7:55:03.00" (pysnmp 7.x)
+                    # Formato 3: string "149730000" (centésimos de segundo como string)
+                    value_str = str(value).strip()
+                    
+                    if 'day' in value_str.lower():
+                        # Formato "17 days, 7:55:03.00" ou "1 day, 2:03:04.00"
+                        import re
+                        days_match = re.search(r'(\d+)\s+day', value_str)
+                        hours_match = re.search(r'(\d+):(\d+):(\d+)', value_str)
+                        days = int(days_match.group(1)) if days_match else 0
+                        if hours_match:
+                            hours = int(hours_match.group(1))
+                            minutes = int(hours_match.group(2))
+                            seconds = int(hours_match.group(3))
+                            uptime_days = days + hours/24 + minutes/1440 + seconds/86400
+                        else:
+                            uptime_days = float(days)
+                    elif ':' in value_str:
+                        # Formato "7:55:03.00" (sem dias)
+                        import re
+                        hours_match = re.search(r'(\d+):(\d+):(\d+)', value_str)
+                        if hours_match:
+                            hours = int(hours_match.group(1))
+                            minutes = int(hours_match.group(2))
+                            seconds = int(hours_match.group(3))
+                            uptime_days = hours/24 + minutes/1440 + seconds/86400
+                        else:
+                            uptime_days = 0
+                    else:
+                        # Formato numérico: timeticks em centésimos de segundo
+                        timeticks = int(float(value_str))
+                        uptime_days = timeticks / (100 * 60 * 60 * 24)
+                    
                     metrics.append({
                         'type': 'system',
                         'name': 'Uptime',
@@ -1236,7 +1267,8 @@ class ProbeCore:
                         'status': 'ok',
                         'server_id': server_id
                     })
-                except ValueError:
+                except (ValueError, AttributeError) as e:
+                    logger.warning(f"Error parsing sysUpTime '{value}': {e}")
                     pass
 
         logger.info(f"Parsed {len(metrics)} metrics from SNMP data")
