@@ -305,7 +305,7 @@ async def create_probe_metrics_bulk(
         # Recalcular status com os thresholds do banco (ignora status enviado pela sonda)
         # Isso garante que mudanças de threshold na UI reflitam imediatamente
         computed_status = metric_data.status  # fallback para tipos especiais
-        if sensor.sensor_type in ('cpu', 'memory', 'disk', 'network', 'network_in', 'network_out'):
+        if sensor.sensor_type in ('cpu', 'memory', 'disk'):
             w = sensor.threshold_warning
             c = sensor.threshold_critical
             v = metric_data.value
@@ -315,6 +315,10 @@ async def create_probe_metrics_bulk(
                 computed_status = 'warning'
             else:
                 computed_status = 'ok'
+        elif sensor.sensor_type in ('network', 'network_in', 'network_out'):
+            # Network é sempre metric_only — nunca gera status warning/critical
+            # O valor vem em bytes/s, threshold em MB/s
+            computed_status = 'ok'
         
         metric = Metric(
             sensor_id=sensor.id,
