@@ -89,7 +89,21 @@ def evaluate_all_thresholds():
             is_metric_only = alert_mode == 'metric_only'
 
             # 4. Skip silent sensors (no alerts, no incidents)
+            # Mas ainda atualiza o status da métrica para refletir o threshold atual
             if alert_mode == 'silent':
+                # Atualizar status da métrica mesmo para sensores silenciosos
+                latest_metric = db.query(Metric).filter(
+                    Metric.sensor_id == sensor.id
+                ).order_by(Metric.timestamp.desc()).first()
+                if latest_metric and sensor.sensor_type not in ('ping', 'service', 'system', 'http'):
+                    threshold_breached_silent, severity_silent = evaluate_thresholds(sensor, latest_metric.value)
+                    expected_silent = severity_silent if threshold_breached_silent else 'ok'
+                    if latest_metric.status != expected_silent:
+                        latest_metric.status = expected_silent
+                        try:
+                            db.commit()
+                        except Exception:
+                            db.rollback()
                 continue
 
             # Get latest metric
@@ -113,6 +127,17 @@ def evaluate_all_thresholds():
             if not threshold_breached and sensor.sensor_type == 'http' and latest_metric.status == 'critical':
                 threshold_breached = True
                 severity = 'critical'
+
+            # ── Atualizar status da métrica para refletir threshold atual ──
+            # Isso garante que o dashboard sempre mostre o status correto,
+            # mesmo após mudança de threshold sem nova coleta da sonda.
+            expected_status = severity if threshold_breached else 'ok'
+            if latest_metric.status != expected_status and sensor.sensor_type not in ('ping', 'service', 'system', 'http'):
+                latest_metric.status = expected_status
+                try:
+                    db.commit()
+                except Exception:
+                    db.rollback()
 
             if threshold_breached:
                 # ── WARNING: não cria incidente, mas auto-resolve incidentes antigos se sensor melhorou ──
