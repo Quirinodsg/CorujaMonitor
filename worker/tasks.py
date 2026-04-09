@@ -86,6 +86,13 @@ def evaluate_all_thresholds():
             # Hardcoded: network_in/network_out são SEMPRE metric_only (nunca criam incidentes)
             if sensor.sensor_type in ('network_in', 'network_out'):
                 alert_mode = 'metric_only'
+            # Sensores SNMP com nome "Network IN" / "Network OUT" também são metric_only
+            # (coletam tráfego de interface em Mbps — não devem gerar alarmes)
+            _sensor_name_lower = (sensor.name or '').lower()
+            if sensor.sensor_type == 'snmp' and any(
+                kw in _sensor_name_lower for kw in ('network in', 'network out', 'network_in', 'network_out')
+            ):
+                alert_mode = 'metric_only'
             is_metric_only = alert_mode == 'metric_only'
 
             # 4. Skip silent sensors (no alerts, no incidents)
