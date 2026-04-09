@@ -185,3 +185,51 @@ def _propagate_profiles_to_sensors(db: Session, asset_type: str, profiles: List[
         "Propagação de perfis padrão: %d sensores atualizados para asset_type=%s",
         updated, asset_type
     )
+
+    # Recalcular status das métricas recentes para refletir novos thresholds
+    _recalculate_recent_metric_status(db, server_ids, profiles)
+
+
+def _recalculate_recent_metric_status(db: Session, server_ids: list, profiles: List[DefaultSensorProfileSchema]):
+    """Recalcula o status da última métrica de cada sensor após mudança de threshold.
+
+    Isso garante que o dashboard reflita imediatamente os novos thresholds
+    sem precisar aguardar o próximo ciclo de coleta da sonda.
+    """
+    from models import Sensor, Metric
+    from sqlalchemy import func
+
+    for profile in profiles:
+        if profile.threshold_warning is None and profile.threshold_critical is None:
+            continue
+
+        sensors = db.query(Sensor).filter(
+            Sensor.server_id.in_(server_ids),
+            Sensor.sensor_type == profile.sensor_type,
+            Sensor.is_active == True,
+        ).all()
+
+        for sensor in sensors:
+            latest = db.query(Metric).filter(
+                Metric.sensor_id == sensor.id
+            ).order_by(Metric.timestamp.desc()).first()
+
+            if not latest:
+                continue
+
+            value = latest.value
+            w = profile.threshold_warning
+            c = profile.threshold_critical
+
+            if c is not None and value >= c:
+                new_status = 'critical'
+            elif w is not None and value >= w:
+                new_status = 'warning'
+            else:
+                new_status = 'ok'
+
+            if latest.status != new_status:
+                latest.status = new_status
+
+    db.commit()
+    logger.info("Status de métricas recalculado para %d perfis", len(profiles))
