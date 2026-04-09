@@ -62,12 +62,12 @@ function Incidents({ onNavigateToServer, onNavigate }) {
   };
 
   const handleAcknowledge = async (incident) => {
-    const sensor = sensors[incident.sensor_id];
-    if (!sensor) return;
-
-    // Navigate to server to acknowledge
-    if (onNavigateToServer) {
-      onNavigateToServer(sensor.server_id);
+    try {
+      await api.post(`/incidents/${incident.id}/acknowledge`, { notes: '' });
+      await loadIncidents();
+    } catch (error) {
+      console.error('Erro ao reconhecer incidente:', error);
+      alert('Erro ao reconhecer: ' + (error.response?.data?.detail || error.message));
     }
   };
 
