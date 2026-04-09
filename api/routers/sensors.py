@@ -72,6 +72,7 @@ class SensorResponse(BaseModel):
     config: Optional[Dict[str, Any]]
     threshold_warning: Optional[float]
     threshold_critical: Optional[float]
+    threshold_custom: Optional[bool] = False  # True = threshold personalizado, protegido do padrão
     is_active: bool
     is_acknowledged: Optional[bool] = False
     acknowledged_by: Optional[int] = None
@@ -221,8 +222,10 @@ async def update_sensor(
     # Update thresholds
     if sensor_update.threshold_warning is not None:
         sensor.threshold_warning = sensor_update.threshold_warning
+        sensor.threshold_custom = True  # Marcar como personalizado — não será sobrescrito pelo padrão
     if sensor_update.threshold_critical is not None:
         sensor.threshold_critical = sensor_update.threshold_critical
+        sensor.threshold_custom = True  # Marcar como personalizado — não será sobrescrito pelo padrão
     
     # Update is_active (for enabling/disabling sensor)
     # CORRECAO 09MAR: Permite desativar sensor sem deletar do banco
@@ -234,6 +237,50 @@ async def update_sensor(
     db.commit()
     db.refresh(sensor)
     
+    return sensor
+
+
+@router.post("/{sensor_id}/reset-threshold", response_model=SensorResponse)
+async def reset_sensor_threshold(
+    sensor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Remove a personalização de threshold do sensor, voltando ao padrão do perfil."""
+    from sqlalchemy import or_ as db_or
+    from routers.default_sensor_profiles import FACTORY_PROFILES
+
+    sensor = db.query(Sensor).outerjoin(Server).filter(
+        Sensor.id == sensor_id,
+        db_or(
+            Server.tenant_id == current_user.tenant_id,
+            Sensor.server_id.is_(None)
+        )
+    ).first()
+
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+
+    # Buscar perfil padrão ativo para este tipo de sensor
+    from models import DefaultSensorProfile
+    profile = db.query(DefaultSensorProfile).filter(
+        DefaultSensorProfile.sensor_type == sensor.sensor_type
+    ).first()
+
+    if profile:
+        sensor.threshold_warning = profile.threshold_warning
+        sensor.threshold_critical = profile.threshold_critical
+        sensor.alert_mode = profile.alert_mode
+    else:
+        # Fallback para valores de fábrica
+        factory = next((p for p in FACTORY_PROFILES if p["sensor_type"] == sensor.sensor_type), None)
+        if factory:
+            sensor.threshold_warning = factory["threshold_warning"]
+            sensor.threshold_critical = factory["threshold_critical"]
+
+    sensor.threshold_custom = False  # Liberar para receber atualizações do padrão
+    db.commit()
+    db.refresh(sensor)
     return sensor
 
 

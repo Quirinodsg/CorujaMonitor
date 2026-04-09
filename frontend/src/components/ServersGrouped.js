@@ -210,9 +210,9 @@ const renderSensorCard = (sensor) => {
         ) : (sensor.sensor_type === 'system' || sensor.sensor_type === 'uptime') ? (
           <>🔄 Alerta apenas em reboot</>
         ) : sensor.sensor_type === 'network' ? (
-          <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s</>
+          <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s{sensor.threshold_custom && <span title="Threshold personalizado" style={{marginLeft:4,fontSize:'0.75em',color:'#a78bfa'}}>✎</span>}</>
         ) : (
-          <>⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%</>
+          <>⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%{sensor.threshold_custom && <span title="Threshold personalizado" style={{marginLeft:4,fontSize:'0.75em',color:'#a78bfa'}}>✎</span>}</>
         )}
       </div>
       

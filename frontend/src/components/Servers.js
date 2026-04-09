@@ -890,11 +890,11 @@ function Servers({ selectedServerId, selectedSensorId }) {
           {sensor.sensor_type === 'ping' ? (
             <>🏓 Alerta apenas se offline</>
           ) : sensor.sensor_type === 'network' ? (
-            <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s</>
+            <>⚠️ {sensor.threshold_warning || 80}MB/s | 🔥 {sensor.threshold_critical || 95}MB/s{sensor.threshold_custom && <span title="Threshold personalizado" style={{marginLeft:4,fontSize:'0.75em',color:'#a78bfa'}}>✎</span>}</>
           ) : (sensor.sensor_type === 'system' || sensor.sensor_type === 'uptime') ? (
             <>🔄 Alerta apenas em reboot</>
           ) : (
-            <>⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%</>
+            <>⚠️ {sensor.threshold_warning || 80}% | 🔥 {sensor.threshold_critical || 95}%{sensor.threshold_custom && <span title="Threshold personalizado" style={{marginLeft:4,fontSize:'0.75em',color:'#a78bfa'}}>✎</span>}</>
           )}
         </div>
         
@@ -1302,6 +1302,7 @@ function Servers({ selectedServerId, selectedSensorId }) {
       sensor_type: sensor.sensor_type,
       threshold_warning: sensor.threshold_warning || 80,
       threshold_critical: sensor.threshold_critical || 95,
+      threshold_custom: sensor.threshold_custom || false,
       display_name: sensor.name // For renaming
     });
     setShowEditSensorModal(true);
@@ -1372,6 +1373,19 @@ function Servers({ selectedServerId, selectedSensorId }) {
     } catch (error) {
       console.error('Erro ao atualizar sensor:', error);
       alert('Erro ao atualizar sensor: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
+  const handleResetSensorThreshold = async (sensorId) => {
+    if (!window.confirm('Resetar threshold para o padrão do perfil? O sensor voltará a receber atualizações automáticas do padrão.')) return;
+    try {
+      await api.post(`/sensors/${sensorId}/reset-threshold`);
+      setShowEditSensorModal(false);
+      setEditingSensor(null);
+      loadSensors(selectedServer.id);
+      alert('Threshold resetado para o padrão!');
+    } catch (error) {
+      alert('Erro ao resetar threshold: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -2528,6 +2542,18 @@ function Servers({ selectedServerId, selectedSensorId }) {
                  'Alerta vermelho quando ultrapassar este valor'}
               </small>
             </div>
+            {editingSensor.threshold_custom && (
+              <div className="form-group" style={{marginTop:4}}>
+                <small style={{color:'#a78bfa'}}>✎ Threshold personalizado — não será sobrescrito pelo padrão.</small>
+                <button
+                  type="button"
+                  onClick={() => handleResetSensorThreshold(editingSensor.id)}
+                  style={{marginLeft:8,fontSize:'0.8em',padding:'2px 8px',background:'#2d2d4e',border:'1px solid #a78bfa',borderRadius:4,color:'#a78bfa',cursor:'pointer'}}
+                >
+                  Resetar para padrão
+                </button>
+              </div>
+            )}
             <div className="modal-actions">
               <button className="btn-cancel" onClick={() => setShowEditSensorModal(false)}>
                 Cancelar

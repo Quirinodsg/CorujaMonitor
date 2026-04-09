@@ -69,6 +69,7 @@ class Sensor(Base):
     config = Column(JSON)
     threshold_warning = Column(Float)
     threshold_critical = Column(Float)
+    threshold_custom = Column(Boolean, default=False)  # True = personalizado, não sobrescrever com padrão
     is_active = Column(Boolean, default=True)
     enabled = Column(Boolean, default=True)
     paused_until = Column(DateTime, nullable=True)

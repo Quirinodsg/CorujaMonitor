@@ -174,6 +174,9 @@ def _propagate_profiles_to_sensors(db: Session, asset_type: str, profiles: List[
         ).all()
 
         for sensor in sensors:
+            # Preservar sensores com threshold personalizado pelo usuário
+            if getattr(sensor, 'threshold_custom', False):
+                continue
             # Atualizar threshold e alert_mode
             sensor.threshold_warning = profile.threshold_warning
             sensor.threshold_critical = profile.threshold_critical
@@ -218,8 +221,13 @@ def _recalculate_recent_metric_status(db: Session, server_ids: list, profiles: L
                 continue
 
             value = latest.value
-            w = profile.threshold_warning
-            c = profile.threshold_critical
+            # Sensores personalizados usam seus próprios thresholds, não o perfil padrão
+            if getattr(sensor, 'threshold_custom', False):
+                w = sensor.threshold_warning
+                c = sensor.threshold_critical
+            else:
+                w = profile.threshold_warning
+                c = profile.threshold_critical
 
             if c is not None and value >= c:
                 new_status = 'critical'

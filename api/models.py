@@ -111,6 +111,7 @@ class Sensor(Base):
     config = Column(JSON)  # Sensor-specific configuration
     threshold_warning = Column(Float)
     threshold_critical = Column(Float)
+    threshold_custom = Column(Boolean, default=False)  # True = threshold editado manualmente, não sobrescrever com padrão
     is_active = Column(Boolean, default=True)
     
     # Protocolo de coleta
