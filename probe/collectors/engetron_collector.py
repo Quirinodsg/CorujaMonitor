@@ -80,19 +80,52 @@ class EngetronCollector:
         # Entrada — Tensão Fase A/B/C (3 valores consecutivos após "Tensão")
         tensao_match = re.search(r"Entrada.*?Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html, re.DOTALL)
         queda_de_fase = False
+        tensoes_entrada = []
         if tensao_match:
             for i, fase in enumerate(["A", "B", "C"]):
                 v = float(tensao_match.group(i + 1))
+                tensoes_entrada.append(v)
                 fase_status = "critical" if v < 100 else "ok"
                 if fase_status == "critical":
                     queda_de_fase = True
                 m.append(self._metric(f"tensao_entrada_fase{fase}", v, "V", fase_status))
+
+        # Entrada — Corrente Fase A/B/C
+        # O WBRC reporta em dA (deciamperes) — converter para A dividindo por 10
+        corrente_match = re.search(r"Entrada.*?Corrente</td>\s*<td class=tdv>\s*([\d.]+)\s*[dD]?[Aa]</td>\s*<td class=tdv>\s*([\d.]+)\s*[dD]?[Aa]</td>\s*<td class=tdv>\s*([\d.]+)\s*[dD]?[Aa]", html, re.DOTALL)
+        correntes_entrada = []
+        if corrente_match:
+            for i, fase in enumerate(["A", "B", "C"]):
+                raw = float(corrente_match.group(i + 1))
+                # Se valor parece estar em dA (deciamperes), converter para A
+                # Valores típicos em dA: 6 dA = 0.6 A; 144 dA = 14.4 A
+                c = raw / 10.0 if raw > 20 else raw
+                correntes_entrada.append(raw)  # guardar valor raw para detecção de zero
+                m.append(self._metric(f"corrente_entrada_fase{fase}", c, "A", "ok"))
+
+        # Detecção de sequência de fase no bypass:
+        # Fase com tensão normal (>= 100V) mas corrente de entrada zero indica
+        # erro de sequência de fase no bypass (mesmo alarme que o Zabbix WBRC reporta)
+        erro_sequencia_fase = False
+        if tensoes_entrada and correntes_entrada and len(tensoes_entrada) == 3 and len(correntes_entrada) == 3:
+            for i, fase in enumerate(["A", "B", "C"]):
+                if tensoes_entrada[i] >= 100 and correntes_entrada[i] == 0:
+                    erro_sequencia_fase = True
+                    logger.warning(
+                        f"Engetron {self.ip}: ERRO SEQUÊNCIA DE FASE no bypass — "
+                        f"Fase {fase}: tensão={tensoes_entrada[i]}V, corrente=0A"
+                    )
 
         # Queda de fase eleva o status geral do sensor para critical
         # para garantir criação de incidente e disparo de notificações
         if queda_de_fase:
             status_metric["status"] = "critical"
             logger.warning(f"Engetron {self.ip}: QUEDA DE FASE detectada — status elevado para critical")
+
+        # Erro de sequência de fase no bypass também eleva para critical
+        if erro_sequencia_fase:
+            status_metric["status"] = "critical"
+            logger.warning(f"Engetron {self.ip}: ERRO SEQUÊNCIA DE FASE BYPASS — status elevado para critical")
 
         # Saída — Tensão Fase A/B/C
         tensao_saida_match = re.search(r"Sa.*?Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html, re.DOTALL)
