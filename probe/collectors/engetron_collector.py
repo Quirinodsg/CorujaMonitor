@@ -65,7 +65,9 @@ class EngetronCollector:
             m.append(self._metric("temperatura", temp, "°C", status))
 
         status_txt = "ok" if "LIGADO" in html else "critical"
-        m.append(self._metric("status", 1 if status_txt == "ok" else 0, "status", status_txt))
+        # Placeholder — será atualizado após parsear tensões de entrada
+        status_metric = self._metric("status", 1 if status_txt == "ok" else 0, "status", status_txt)
+        m.append(status_metric)
 
         uptime_match = re.search(r"opera.*?(\d+)\s*dias", html)
         if uptime_match:
@@ -77,11 +79,20 @@ class EngetronCollector:
 
         # Entrada — Tensão Fase A/B/C (3 valores consecutivos após "Tensão")
         tensao_match = re.search(r"Entrada.*?Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html, re.DOTALL)
+        queda_de_fase = False
         if tensao_match:
             for i, fase in enumerate(["A", "B", "C"]):
                 v = float(tensao_match.group(i + 1))
-                status = "critical" if v < 100 else "ok"
-                m.append(self._metric(f"tensao_entrada_fase{fase}", v, "V", status))
+                fase_status = "critical" if v < 100 else "ok"
+                if fase_status == "critical":
+                    queda_de_fase = True
+                m.append(self._metric(f"tensao_entrada_fase{fase}", v, "V", fase_status))
+
+        # Queda de fase eleva o status geral do sensor para critical
+        # para garantir criação de incidente e disparo de notificações
+        if queda_de_fase:
+            status_metric["status"] = "critical"
+            logger.warning(f"Engetron {self.ip}: QUEDA DE FASE detectada — status elevado para critical")
 
         # Saída — Tensão Fase A/B/C
         tensao_saida_match = re.search(r"Sa.*?Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html, re.DOTALL)
