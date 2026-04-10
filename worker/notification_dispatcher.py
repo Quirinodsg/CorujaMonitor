@@ -246,11 +246,6 @@ def dispatch_notifications(incident_id: int) -> dict:
         db.close()
 
 
-# Registrar como Celery task importando o app de tasks
-def _register_celery_task():
-    """Registra dispatch_notifications como Celery task."""
-    from tasks import app as celery_app
-    return celery_app.task(name='notification_dispatcher.dispatch_notifications')(dispatch_notifications)
 
 
 def dispatch_resolution(incident_id: int) -> dict:
@@ -359,15 +354,3 @@ def dispatch_resolution(incident_id: int) -> dict:
         db.close()
 
 
-def _register_resolution_task():
-    from tasks import app as celery_app
-    return celery_app.task(name='notification_dispatcher.dispatch_resolution')(dispatch_resolution)
-
-
-# Criar a versão task para uso com .delay()
-try:
-    dispatch_notifications_task = _register_celery_task()
-    dispatch_resolution_task = _register_resolution_task()
-except Exception:
-    dispatch_notifications_task = dispatch_notifications
-    dispatch_resolution_task = dispatch_resolution

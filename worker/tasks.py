@@ -20,6 +20,7 @@ from models import Metric, Sensor, Incident, RemediationLog, Server
 from threshold_evaluator import evaluate_thresholds
 from self_healing import attempt_remediation
 from sla_calculator import calculate_monthly_sla
+from notification_dispatcher import dispatch_notifications, dispatch_resolution
 
 # Logger do Celery
 logger = get_task_logger(__name__)
@@ -54,6 +55,17 @@ app.conf.beat_schedule = {
         'schedule': 60.0,
     },
 }
+
+# Registrar dispatch_notifications e dispatch_resolution como Celery tasks
+# Feito aqui (em tasks.py) para evitar importação circular:
+# notification_dispatcher.py não precisa mais importar 'app' de tasks.py
+dispatch_notifications_task = app.task(
+    name='notification_dispatcher.dispatch_notifications'
+)(dispatch_notifications)
+
+dispatch_resolution_task = app.task(
+    name='notification_dispatcher.dispatch_resolution'
+)(dispatch_resolution)
 
 @app.task
 def evaluate_all_thresholds():
@@ -232,7 +244,6 @@ def evaluate_all_thresholds():
                     print(f"🔄 Reboot: {incident.title} (ID: {incident.id}) — informativo")
 
                     # Dispatcher: envia notificações conforme matriz (system → email)
-                    from notification_dispatcher import dispatch_notifications_task
                     dispatch_notifications_task.delay(incident.id)
 
                     # Resolver qualquer incidente PING aberto do mesmo servidor (o server voltou)
@@ -353,7 +364,6 @@ def evaluate_all_thresholds():
                     print(f"✅ Incidente criado: {incident.title} (ID: {incident.id})")
 
                     # ── DISPATCHER: Notificações imediatas via Matriz (independente do AIOps) ──
-                    from notification_dispatcher import dispatch_notifications_task
                     dispatch_notifications_task.delay(incident.id)
 
                     # Execute AIOps analysis (enriquecimento — não bloqueia notificações)
@@ -382,7 +392,6 @@ def evaluate_all_thresholds():
 
                     if not already_notified:
                         try:
-                            from notification_dispatcher import dispatch_notifications_task
                             dispatch_notifications_task.delay(existing_incident.id)
                             logger.info(f"🔔 Re-notificando incidente aberto {existing_incident.id} (sensor {sensor.name})")
                             if redis_client is not None:
@@ -410,7 +419,6 @@ def evaluate_all_thresholds():
 
                     # Notificar resolução (email + teams)
                     try:
-                        from notification_dispatcher import dispatch_resolution_task
                         dispatch_resolution_task.delay(incident.id)
                     except Exception as _ne:
                         logger.warning(f"Falha ao despachar notificação de resolução: {_ne}")
