@@ -142,15 +142,40 @@ def dispatch_notifications(incident_id: int) -> dict:
         notification_config = tenant.notification_config or {}
 
         # Preparar incident_data
+        from datetime import timezone as _tz
+        import zoneinfo as _zi
+        try:
+            _tz_local = _zi.ZoneInfo("America/Sao_Paulo")
+        except Exception:
+            _tz_local = None
+
+        def _fmt_dt(dt):
+            if not dt:
+                return 'N/A'
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=_tz.utc)
+            if _tz_local:
+                dt = dt.astimezone(_tz_local)
+            return dt.strftime('%d/%m/%Y %H:%M:%S')
+
+        # Para sensores PING, usar o hostname do servidor como nome principal
+        display_server = server.hostname if server else sensor.name
+        display_sensor = sensor.name
+        # Se o sensor se chama igual ao servidor (ex: sensor "PING" no servidor "UDM 4º ANDAR"),
+        # mostrar o hostname do servidor como servidor e o tipo como sensor
+        if server and server.hostname and sensor.name.upper() in ('PING', 'CPU', 'MEMÓRIA', 'DISCO', 'UPTIME'):
+            display_server = server.hostname
+            display_sensor = f"{sensor.name} ({sensor_type})"
+
         incident_data = {
             'title': incident.title,
             'description': incident.description or '',
             'severity': incident.severity,
-            'server_hostname': server.hostname if server else 'N/A',
-            'sensor_name': sensor.name,
+            'server_hostname': display_server,
+            'sensor_name': display_sensor,
             'sensor_type': sensor_type,
             'incident_id': incident.id,
-            'created_at': incident.created_at.isoformat() if incident.created_at else None,
+            'created_at': _fmt_dt(incident.created_at),
         }
 
         # 5. Para cada canal: try/except isolado
