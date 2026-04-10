@@ -109,10 +109,21 @@ def dispatch_notifications(incident_id: int) -> dict:
             return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Sensor não encontrado'}]}
 
         server = db.query(Server).filter(Server.id == sensor.server_id).first()
-        tenant = db.query(Tenant).filter(Tenant.id == (server.tenant_id if server else None)).first()
+
+        # Para sensores standalone (sem server_id), buscar tenant via probe
+        if server:
+            tenant_id = server.tenant_id
+        elif sensor.probe_id:
+            from models import Probe
+            probe = db.query(Probe).filter(Probe.id == sensor.probe_id).first()
+            tenant_id = probe.tenant_id if probe else None
+        else:
+            tenant_id = None
+
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
         if not tenant:
-            logger.warning(f"Tenant não encontrado para incidente {incident_id}")
+            logger.warning(f"Tenant não encontrado para incidente {incident_id} (sensor_id={sensor.id}, server_id={sensor.server_id}, probe_id={sensor.probe_id})")
             return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
 
         # 2. Forçar priority=5 para sensor_type='ping'
@@ -271,7 +282,18 @@ def dispatch_resolution(incident_id: int) -> dict:
             return {'sent': sent, 'failed': failed}
 
         server = db.query(Server).filter(Server.id == sensor.server_id).first()
-        tenant = db.query(Tenant).filter(Tenant.id == (server.tenant_id if server else None)).first()
+
+        # Para sensores standalone (sem server_id), buscar tenant via probe
+        if server:
+            tenant_id = server.tenant_id
+        elif sensor.probe_id:
+            from models import Probe
+            probe = db.query(Probe).filter(Probe.id == sensor.probe_id).first()
+            tenant_id = probe.tenant_id if probe else None
+        else:
+            tenant_id = None
+
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
         if not tenant:
             logger.warning(f"Tenant não encontrado para resolução do incidente {incident_id}")
             return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
