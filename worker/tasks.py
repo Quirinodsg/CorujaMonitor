@@ -396,66 +396,6 @@ def evaluate_all_thresholds():
         db.close()
 
 
-def _send_reboot_email(db, sensor, server_name, uptime_minutes):
-    """Envia e-mail informativo quando um servidor reinicia."""
-    from models import Tenant
-    tenant = db.query(Tenant).filter(Tenant.id == 1).first()
-    if not tenant or not tenant.notification_config:
-        return
-    email_cfg = tenant.notification_config.get('email', {})
-    if not email_cfg.get('enabled'):
-        return
-
-    import smtplib
-    from email.mime.text import MIMEText
-    from email.mime.multipart import MIMEMultipart
-
-    smtp_server = email_cfg.get('smtp_server')
-    smtp_port = email_cfg.get('smtp_port', 587)
-    smtp_user = email_cfg.get('smtp_user')
-    smtp_password = email_cfg.get('smtp_password')
-    from_email = email_cfg.get('from_email')
-    to_emails = email_cfg.get('to_emails', [])
-
-    if not all([smtp_server, smtp_user, smtp_password, from_email, to_emails]):
-        return
-
-    now_str = datetime.now(timezone.utc).strftime('%d/%m/%Y %H:%M UTC')
-    subject = f"🔄 Reboot Detectado: {server_name}"
-    body = f"""
-    <html><body style="font-family:Arial;background:#0f172a;color:#e2e8f0;padding:20px;">
-    <div style="max-width:600px;margin:0 auto;background:#1e293b;border-radius:12px;padding:24px;border:1px solid #334155;">
-        <h2 style="color:#f59e0b;margin-top:0;">🔄 Servidor Reiniciado</h2>
-        <table style="width:100%;font-size:14px;">
-            <tr><td style="padding:8px 0;color:#94a3b8;">Servidor:</td><td style="font-weight:bold;">{server_name}</td></tr>
-            <tr><td style="padding:8px 0;color:#94a3b8;">Uptime atual:</td><td>{uptime_minutes} minutos</td></tr>
-            <tr><td style="padding:8px 0;color:#94a3b8;">Data/Hora:</td><td>{now_str}</td></tr>
-            <tr><td style="padding:8px 0;color:#94a3b8;">Status:</td><td style="color:#22c55e;">✅ Online (já resolvido)</td></tr>
-        </table>
-        <p style="color:#64748b;font-size:12px;margin-top:16px;">Este é um e-mail informativo. O servidor foi reiniciado e já está online. Nenhuma ação necessária.</p>
-        <hr style="border-color:#334155;margin:16px 0;">
-        <p style="color:#475569;font-size:11px;">🦉 Coruja Monitor — Sistema de Monitoramento Inteligente</p>
-    </div>
-    </body></html>
-    """
-
-    try:
-        msg = MIMEMultipart('alternative')
-        msg['Subject'] = subject
-        msg['From'] = from_email
-        msg['To'] = ', '.join(to_emails)
-        msg.attach(MIMEText(body, 'html'))
-
-        server = smtplib.SMTP(smtp_server, smtp_port)
-        server.starttls()
-        server.login(smtp_user, smtp_password)
-        server.sendmail(from_email, to_emails, msg.as_string())
-        server.quit()
-        logger.info(f"📧 E-mail de reboot enviado: {server_name}")
-    except Exception as e:
-        logger.warning(f"Erro ao enviar e-mail de reboot: {e}")
-
-
 def get_incident_description(sensor, metric):
     """Generate incident description based on sensor type"""
     value = metric.value
