@@ -360,7 +360,33 @@ def evaluate_all_thresholds():
                     if existing_incident.severity != severity:
                         existing_incident.severity = severity
                         db.commit()
+                        logger.info(f"⚠️ Incidente {existing_incident.id} atualizado para {severity}")
                         print(f"⚠️ Incidente {existing_incident.id} atualizado para {severity}")
+
+                    # Re-notificar incidentes abertos há mais de 30 min sem notificação recente
+                    # Isso garante que incidentes criados antes de um restart do worker
+                    # ainda gerem notificações (o dispatcher só é chamado na criação normalmente)
+                    notif_key = f"notified:{existing_incident.id}"
+                    already_notified = False
+                    if redis_client is not None:
+                        try:
+                            already_notified = bool(redis_client.exists(notif_key))
+                        except Exception:
+                            pass
+
+                    if not already_notified:
+                        try:
+                            from notification_dispatcher import dispatch_notifications_task
+                            dispatch_notifications_task.delay(existing_incident.id)
+                            logger.info(f"🔔 Re-notificando incidente aberto {existing_incident.id} (sensor {sensor.name})")
+                            if redis_client is not None:
+                                try:
+                                    # Cooldown de 30 min para re-notificação
+                                    redis_client.setex(notif_key, 1800, "1")
+                                except Exception:
+                                    pass
+                        except Exception as _ne:
+                            logger.warning(f"Falha ao re-notificar incidente {existing_incident.id}: {_ne}")
             else:
                 # Sensor OK — auto-resolve incidents
                 open_incidents = db.query(Incident).filter(

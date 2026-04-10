@@ -130,8 +130,17 @@ class EngetronCollector:
         # Saída — Tensão Fase A/B/C
         tensao_saida_match = re.search(r"Sa.*?Tens[^<]*o</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V</td>\s*<td class=tdv>\s*([\d.]+)\s*V", html, re.DOTALL)
         if tensao_saida_match:
+            saida_zero = True
             for i, fase in enumerate(["A", "B", "C"]):
-                m.append(self._metric(f"tensao_saida_fase{fase}", float(tensao_saida_match.group(i + 1)), "V", "ok"))
+                v = float(tensao_saida_match.group(i + 1))
+                if v > 0:
+                    saida_zero = False
+                m.append(self._metric(f"tensao_saida_fase{fase}", v, "V", "ok"))
+
+            # Saída 0V em todas as fases com entrada presente = nobreak sem saída (crítico)
+            if saida_zero and tensoes_entrada and any(v >= 100 for v in tensoes_entrada):
+                status_metric["status"] = "critical"
+                logger.warning(f"Engetron {self.ip}: SAÍDA 0V em todas as fases — nobreak sem saída, status elevado para critical")
 
         cargas = re.findall(r"Carga Utilizada</td>\s*<td class=tdv>\s*(\d+)\s*%", html)
         if cargas:
