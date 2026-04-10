@@ -8,6 +8,12 @@ import sys
 import subprocess
 import os
 
+# Garantir que /app está no sys.path para imports dentro do worker Celery
+# O CWD do processo Celery pode não ser /app, causando ModuleNotFoundError
+_app_dir = os.path.dirname(os.path.abspath(__file__))
+if _app_dir not in sys.path:
+    sys.path.insert(0, _app_dir)
+
 from config import settings
 from database import SessionLocal
 from models import Metric, Sensor, Incident, RemediationLog, Server
