@@ -36,21 +36,59 @@ DEFAULT_MATRIX: dict[str, list[str]] = {
 }
 
 
+def _effective_sensor_type(sensor_type: str, sensor_name: str = '') -> str:
+    """
+    Resolve o sensor_type efetivo para lookup na matriz.
+    Sensores SNMP com nomes específicos são mapeados para seus tipos reais
+    para que a matriz de notificação seja aplicada corretamente.
+    """
+    if sensor_type not in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch'):
+        return sensor_type
+
+    name_lower = (sensor_name or '').lower()
+
+    # Nobreak/UPS Engetron
+    if any(kw in name_lower for kw in ('engetron', 'nobreak', 'ups', 'nobreak engetron')):
+        return 'engetron'
+
+    # Ar-condicionado Conflex
+    if any(kw in name_lower for kw in ('conflex', 'ar-condicionado', 'ar condicionado', 'hvac', 'climatizacao', 'climatização')):
+        return 'conflex'
+
+    # Storage EqualLogic
+    if any(kw in name_lower for kw in ('equallogic', 'storage', 'dell storage')):
+        return 'equallogic'
+
+    # Impressora
+    if any(kw in name_lower for kw in ('impressora', 'printer', 'hp laserjet')):
+        return 'printer'
+
+    return sensor_type
+
+
 def resolve_channels(
     sensor_type: str,
     custom_matrix: dict | None = None,
+    sensor_name: str = '',
 ) -> set[str]:
     """Resolve os canais de notificação para um dado sensor_type.
 
     Regras:
+    - Mapeia sensor_type efetivo baseado no nome do sensor (ex: snmp "Nobreak Engetron" → engetron)
     - Se custom_matrix contém o sensor_type, usa esses canais.
     - Caso contrário, usa DEFAULT_MATRIX.
     - Se sensor_type não existe em nenhum dos dois, retorna {"email"} (fallback seguro).
     - Filtra canais inválidos (interseção com VALID_CHANNELS).
     - Garante resultado não-vazio (adiciona "email" se vazio após filtragem).
     """
-    if custom_matrix is not None and sensor_type in custom_matrix:
+    effective_type = _effective_sensor_type(sensor_type, sensor_name)
+
+    if custom_matrix is not None and effective_type in custom_matrix:
+        raw_channels = custom_matrix[effective_type]
+    elif custom_matrix is not None and sensor_type in custom_matrix:
         raw_channels = custom_matrix[sensor_type]
+    elif effective_type in DEFAULT_MATRIX:
+        raw_channels = DEFAULT_MATRIX[effective_type]
     elif sensor_type in DEFAULT_MATRIX:
         raw_channels = DEFAULT_MATRIX[sensor_type]
     else:
@@ -138,7 +176,7 @@ def dispatch_notifications(incident_id: int) -> dict:
 
         # 4. Resolver canais
         custom_matrix = getattr(tenant, 'notification_matrix', None)
-        channels = resolve_channels(sensor_type, custom_matrix)
+        channels = resolve_channels(sensor_type, custom_matrix, sensor.name)
         notification_config = tenant.notification_config or {}
 
         # Preparar incident_data
@@ -320,7 +358,7 @@ def dispatch_resolution(incident_id: int) -> dict:
 
         notification_config = tenant.notification_config or {}
         custom_matrix = getattr(tenant, 'notification_matrix', None)
-        channels = resolve_channels(sensor.sensor_type, custom_matrix)
+        channels = resolve_channels(sensor.sensor_type, custom_matrix, sensor.name)
         # Resolução só vai para email e teams (não SMS/whatsapp/phone)
         channels = channels & {'email', 'teams'}
 
