@@ -242,9 +242,110 @@ def _register_celery_task():
     return celery_app.task(name='notification_dispatcher.dispatch_notifications')(dispatch_notifications)
 
 
+def dispatch_resolution(incident_id: int) -> dict:
+    """
+    Envia notificação de RESOLUÇÃO (problema resolvido) para email e teams.
+    Chamado quando um incidente é auto-resolvido.
+    """
+    from database import SessionLocal
+    from models import Incident, Sensor, Server, Tenant
+
+    db = SessionLocal()
+    sent = []
+    failed = []
+
+    try:
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+        if not incident:
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': f'Incidente {incident_id} não encontrado'}]}
+
+        sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
+        if not sensor:
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Sensor não encontrado'}]}
+
+        # Sensores metric_only não notificam resolução
+        if (sensor.sensor_type in METRIC_ONLY_TYPES or
+                (sensor.sensor_type == 'snmp' and any(
+                    kw in (sensor.name or '').lower()
+                    for kw in ('network in', 'network out', 'network_in', 'network_out')))):
+            return {'sent': sent, 'failed': failed}
+
+        server = db.query(Server).filter(Server.id == sensor.server_id).first()
+        tenant = db.query(Tenant).filter(Tenant.id == (server.tenant_id if server else None)).first()
+        if not tenant:
+            logger.warning(f"Tenant não encontrado para resolução do incidente {incident_id}")
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
+
+        notification_config = tenant.notification_config or {}
+        custom_matrix = getattr(tenant, 'notification_matrix', None)
+        channels = resolve_channels(sensor.sensor_type, custom_matrix)
+        # Resolução só vai para email e teams (não SMS/whatsapp/phone)
+        channels = channels & {'email', 'teams'}
+
+        resolved_at = incident.resolved_at.strftime('%d/%m/%Y %H:%M') if incident.resolved_at else 'N/A'
+        incident_data = {
+            'title': f"✅ RESOLVIDO: {incident.title}",
+            'description': incident.resolution_notes or 'Sensor voltou ao normal',
+            'severity': incident.severity,
+            'server_hostname': server.hostname if server else 'N/A',
+            'sensor_name': sensor.name,
+            'sensor_type': sensor.sensor_type,
+            'incident_id': incident.id,
+            'created_at': incident.created_at.isoformat() if incident.created_at else None,
+            'resolved_at': resolved_at,
+            'is_resolution': True,
+        }
+
+        for channel in channels:
+            try:
+                if channel == 'email':
+                    email_config = notification_config.get('email', {})
+                    if email_config.get('enabled'):
+                        from tasks import send_email_resolution_sync
+                        result = send_email_resolution_sync(email_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Email não habilitado'}
+
+                elif channel == 'teams':
+                    teams_config = notification_config.get('teams', {})
+                    if teams_config.get('enabled'):
+                        from tasks import send_teams_resolution_sync
+                        result = send_teams_resolution_sync(teams_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Teams não habilitado'}
+                else:
+                    result = {'success': False, 'error': f'Canal não suportado para resolução: {channel}'}
+
+                if result.get('success'):
+                    sent.append(channel)
+                    logger.info(f"✅ Resolução enviada via '{channel}' para incidente {incident_id}")
+                else:
+                    failed.append({'channel': channel, 'error': result.get('error', 'Erro desconhecido')})
+                    logger.warning(f"⚠️ Resolução falhou via '{channel}' para incidente {incident_id}: {result.get('error')}")
+
+            except Exception as e:
+                failed.append({'channel': channel, 'error': str(e)})
+                logger.error(f"❌ Exceção ao enviar resolução via '{channel}': {e}", exc_info=True)
+
+        logger.info(f"📊 Resolução incidente {incident_id}: {len(sent)} enviados, {len(failed)} falharam")
+        return {'sent': sent, 'failed': failed}
+
+    except Exception as e:
+        logger.error(f"❌ Erro fatal no dispatch de resolução {incident_id}: {e}", exc_info=True)
+        return {'sent': sent, 'failed': [{'channel': 'all', 'error': str(e)}]}
+    finally:
+        db.close()
+
+
+def _register_resolution_task():
+    from tasks import app as celery_app
+    return celery_app.task(name='notification_dispatcher.dispatch_resolution')(dispatch_resolution)
+
+
 # Criar a versão task para uso com .delay()
 try:
     dispatch_notifications_task = _register_celery_task()
+    dispatch_resolution_task = _register_resolution_task()
 except Exception:
-    # Se falhar na importação (ex: testes unitários), manter a função pura
     dispatch_notifications_task = dispatch_notifications
+    dispatch_resolution_task = dispatch_resolution

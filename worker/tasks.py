@@ -376,6 +376,13 @@ def evaluate_all_thresholds():
                     logger.info(f"✅ Incidente {incident.id} auto-resolvido (sensor {sensor.name} voltou ao normal)")
                     print(f"✅ Incidente {incident.id} auto-resolvido")
 
+                    # Notificar resolução (email + teams)
+                    try:
+                        from notification_dispatcher import dispatch_resolution_task
+                        dispatch_resolution_task.delay(incident.id)
+                    except Exception as _ne:
+                        logger.warning(f"Falha ao despachar notificação de resolução: {_ne}")
+
                     # Parar escalação ativa para o sensor (se houver)
                     try:
                         from escalation import stop_escalation
@@ -1147,6 +1154,100 @@ def send_topdesk_notification_sync(config: dict, incident_data: dict) -> dict:
             'success': False,
             'error': f"TOPdesk connection error: {str(e)}"
         }
+
+
+def send_teams_resolution_sync(config: dict, incident_data: dict) -> dict:
+    """Send resolution notification to Microsoft Teams."""
+    import httpx
+    webhook_url = config.get('webhook_url')
+    if not webhook_url:
+        return {'success': False, 'error': 'Teams webhook URL not configured'}
+
+    card = {
+        "@type": "MessageCard",
+        "@context": "https://schema.org/extensions",
+        "summary": incident_data.get('title'),
+        "themeColor": "00C851",  # Verde
+        "title": incident_data.get('title'),
+        "sections": [{
+            "activityTitle": "✅ Problema Resolvido",
+            "activitySubtitle": f"Resolvido em: {incident_data.get('resolved_at', 'N/A')}",
+            "facts": [
+                {"name": "Servidor:", "value": incident_data.get('server_hostname', 'N/A')},
+                {"name": "Sensor:", "value": incident_data.get('sensor_name', 'N/A')},
+                {"name": "Severidade original:", "value": incident_data.get('severity', 'N/A').upper()},
+                {"name": "Resolução:", "value": incident_data.get('description', 'N/A')},
+            ]
+        }]
+    }
+    try:
+        with httpx.Client(timeout=30.0) as client:
+            response = client.post(webhook_url, json=card)
+            if response.status_code == 200:
+                return {'success': True}
+            return {'success': False, 'error': f"Teams API error: {response.status_code}"}
+    except Exception as e:
+        return {'success': False, 'error': str(e)}
+
+
+def send_email_resolution_sync(config: dict, incident_data: dict) -> dict:
+    """Send resolution email notification."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    smtp_server = config.get('smtp_server')
+    smtp_port = config.get('smtp_port', 587)
+    smtp_user = config.get('smtp_user')
+    smtp_password = config.get('smtp_password')
+    from_email = config.get('from_email')
+    to_emails = config.get('to_emails', [])
+    use_tls = config.get('use_tls', True)
+
+    if not all([smtp_server, smtp_user, smtp_password, from_email, to_emails]):
+        return {'success': False, 'error': 'Email configuration incomplete'}
+
+    try:
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = f"✅ RESOLVIDO: {incident_data.get('sensor_name', '')} - {incident_data.get('server_hostname', '')}"
+        msg['From'] = from_email
+        msg['To'] = ', '.join(to_emails)
+
+        html_body = f"""
+<html><body style="font-family:Arial;background:#f4f4f4;padding:20px;">
+  <div style="max-width:600px;margin:0 auto;background:white;border-radius:8px;overflow:hidden;border:1px solid #ddd;">
+    <div style="background:#00C851;color:white;padding:20px;text-align:center;">
+      <h1 style="margin:0;">✅ Problema Resolvido</h1>
+    </div>
+    <div style="padding:20px;">
+      <table style="width:100%;font-size:14px;border-collapse:collapse;">
+        <tr><td style="padding:8px;color:#666;width:140px;">Servidor:</td><td style="padding:8px;font-weight:bold;">{incident_data.get('server_hostname', 'N/A')}</td></tr>
+        <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">Sensor:</td><td style="padding:8px;">{incident_data.get('sensor_name', 'N/A')}</td></tr>
+        <tr><td style="padding:8px;color:#666;">Severidade:</td><td style="padding:8px;">{incident_data.get('severity', 'N/A').upper()}</td></tr>
+        <tr style="background:#f9f9f9;"><td style="padding:8px;color:#666;">Resolvido em:</td><td style="padding:8px;">{incident_data.get('resolved_at', 'N/A')}</td></tr>
+        <tr><td style="padding:8px;color:#666;">Resolução:</td><td style="padding:8px;">{incident_data.get('description', 'N/A')}</td></tr>
+      </table>
+    </div>
+    <div style="text-align:center;padding:15px;color:#999;font-size:11px;border-top:1px solid #eee;">
+      🦉 Coruja Monitor — Sistema de Monitoramento
+    </div>
+  </div>
+</body></html>"""
+
+        msg.attach(MIMEText(html_body, 'html'))
+
+        if use_tls:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            server.starttls()
+        else:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+
+        server.login(smtp_user, smtp_password)
+        server.sendmail(from_email, to_emails, msg.as_string())
+        server.quit()
+        return {'success': True, 'message': f'E-mail de resolução enviado para {len(to_emails)} destinatário(s)'}
+    except Exception as e:
+        return {'success': False, 'error': f'Erro ao enviar e-mail de resolução: {str(e)}'}
 
 
 def send_teams_notification_sync(config: dict, incident_data: dict) -> dict:
