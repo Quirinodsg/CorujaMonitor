@@ -38,19 +38,25 @@ def evaluate_thresholds(sensor, value: float) -> Tuple[bool, str]:
 
     # ── SNMP sensors ──
     # value=0 sempre significa que o SNMP não respondeu (dispositivo offline)
-    # independente dos thresholds configurados.
     # Exceção: sensores de tráfego de rede E sensores com thresholds numéricos configurados
     # (ex: Storage com threshold_w=97 usa avaliação numérica, não status-based)
     if sensor.sensor_type in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch'):
         name_lower = (sensor.name or '').lower()
         is_network_traffic = any(kw in name_lower for kw in _SNMP_NETWORK_KEYWORDS)
+
+        # Sensores de datacenter identificados pelo nome — value=0 = offline/critical
+        _datacenter_kw = ('nobreak', 'engetron', 'ups', 'ar-condicionado', 'ar condicionado',
+                          'conflex', 'hvac', 'climatizacao', 'climatização')
+        is_datacenter = any(kw in name_lower for kw in _datacenter_kw)
+
         # Sensores com thresholds numéricos configurados usam avaliação numérica
+        # EXCETO sensores de datacenter que sempre usam value=0=critical
         has_numeric_thresholds = (
             sensor.threshold_warning is not None and sensor.threshold_warning > 1
         ) or (
             sensor.threshold_critical is not None and sensor.threshold_critical > 1
         )
-        if value == 0 and not is_network_traffic and not has_numeric_thresholds:
+        if value == 0 and not is_network_traffic and (is_datacenter or not has_numeric_thresholds):
             return True, "critical"
         # Sensores com thresholds numéricos e value>0 usam avaliação padrão abaixo
 
