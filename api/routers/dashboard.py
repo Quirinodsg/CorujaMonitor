@@ -26,15 +26,15 @@ async def get_dashboard_overview(
             Sensor.is_active == True,
         ).scalar()
         
-        # Open incidents (including acknowledged)
+        # Open incidents (not acknowledged)
         open_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
-            Incident.status.in_(["open", "acknowledged"])
+            Incident.status == "open"
         ).scalar()
         
-        # Critical incidents (including acknowledged)
+        # Critical incidents (not acknowledged)
         critical_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
             Incident.severity == "critical",
-            Incident.status.in_(["open", "acknowledged"])
+            Incident.status == "open"
         ).scalar()
         
         # Recent incidents (last 24h)
@@ -62,17 +62,17 @@ async def get_dashboard_overview(
             Sensor.is_active == True,
         ).scalar()
         
-        # Open incidents (including acknowledged)
+        # Open incidents (not acknowledged)
         open_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
             Server.tenant_id == current_user.tenant_id,
-            Incident.status.in_(["open", "acknowledged"])
+            Incident.status == "open"
         ).scalar()
         
-        # Critical incidents (including acknowledged)
+        # Critical incidents (not acknowledged)
         critical_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
             Server.tenant_id == current_user.tenant_id,
             Incident.severity == "critical",
-            Incident.status.in_(["open", "acknowledged"])
+            Incident.status == "open"
         ).scalar()
         
         # Recent incidents (last 24h)
@@ -93,8 +93,8 @@ async def get_dashboard_overview(
     return {
         "total_servers": total_servers,
         "total_sensors": total_sensors,
-        "open_incidents": open_incidents,  # Includes both 'open' and 'acknowledged' incidents
-        "critical_incidents": critical_incidents,  # Includes both 'open' and 'acknowledged' critical incidents
+        "open_incidents": open_incidents,
+        "critical_incidents": critical_incidents,
         "recent_incidents_24h": recent_incidents,
         "auto_resolved_30d": auto_resolved,
         "health_status": "critical" if critical_incidents > 0 else "warning" if open_incidents > 0 else "healthy"
