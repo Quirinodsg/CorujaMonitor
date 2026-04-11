@@ -132,11 +132,30 @@ async def create_probe_metrics_bulk(
                 if timestamp.tzinfo is None:
                     brazil_tz = pytz.timezone('America/Sao_Paulo')
                     timestamp = brazil_tz.localize(timestamp).astimezone(pytz.UTC)
+
+                # Para sensores status-based (engetron, conflex, equallogic, printer e snmp sem threshold),
+                # garantir que value=0 sempre resulte em status=critical independente do que a sonda enviou
+                saved_status = metric_data.status
+                sensor_name_lower = (sensor.name or '').lower()
+                is_status_based = (
+                    sensor.sensor_type in ('engetron', 'conflex', 'equallogic', 'printer')
+                    or (
+                        sensor.sensor_type in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch')
+                        and not any(kw in sensor_name_lower for kw in ('network in', 'network out', 'network_in', 'network_out'))
+                        and (sensor.threshold_warning is None or sensor.threshold_warning <= 1)
+                        and (sensor.threshold_critical is None or sensor.threshold_critical <= 1)
+                    )
+                )
+                if is_status_based and metric_data.value == 0:
+                    saved_status = 'critical'
+                elif is_status_based and metric_data.value > 0 and saved_status == 'ok':
+                    saved_status = 'ok'
+
                 metric = Metric(
                     sensor_id=sensor.id,
                     value=metric_data.value,
                     unit=metric_data.unit,
-                    status=metric_data.status,
+                    status=saved_status,
                     timestamp=timestamp,
                     extra_metadata=metric_data.metadata
                 )
@@ -145,8 +164,7 @@ async def create_probe_metrics_bulk(
 
                 # ── DATACENTER EMERGENCY CALL ──
                 # Ligar se sensor de datacenter (engetron/conflex) ficou critical
-                if metric_data.status == 'critical' and sensor.sensor_type in ('engetron', 'conflex', 'snmp'):
-                    sensor_name_lower = (sensor.name or '').lower()
+                if saved_status == 'critical' and sensor.sensor_type in ('engetron', 'conflex', 'snmp'):
                     is_datacenter = any(kw in sensor_name_lower for kw in ['nobreak', 'engetron', 'ups', 'ar-condicionado', 'conflex', 'hvac'])
                     if is_datacenter:
                         try:
