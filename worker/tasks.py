@@ -20,7 +20,7 @@ from models import Metric, Sensor, Incident, RemediationLog, Server
 from threshold_evaluator import evaluate_thresholds
 from self_healing import attempt_remediation
 from sla_calculator import calculate_monthly_sla
-from notification_dispatcher import dispatch_notifications, dispatch_resolution
+from notification_dispatcher import dispatch_notifications, dispatch_resolution, dispatch_renotification
 
 # Logger do Celery
 logger = get_task_logger(__name__)
@@ -66,6 +66,10 @@ dispatch_notifications_task = app.task(
 dispatch_resolution_task = app.task(
     name='notification_dispatcher.dispatch_resolution'
 )(dispatch_resolution)
+
+dispatch_renotification_task = app.task(
+    name='notification_dispatcher.dispatch_renotification'
+)(dispatch_renotification)
 
 @app.task
 def evaluate_all_thresholds():
@@ -392,7 +396,9 @@ def evaluate_all_thresholds():
 
                     if not already_notified:
                         try:
-                            dispatch_notifications_task.delay(existing_incident.id)
+                            # Re-notificação: apenas email e teams (sem ticket para evitar spam de chamados)
+                            from notification_dispatcher import dispatch_renotification_task
+                            dispatch_renotification_task.delay(existing_incident.id)
                             logger.info(f"🔔 Re-notificando incidente aberto {existing_incident.id} (sensor {sensor.name})")
                             if redis_client is not None:
                                 try:

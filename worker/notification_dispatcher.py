@@ -417,3 +417,116 @@ def dispatch_resolution(incident_id: int) -> dict:
         db.close()
 
 
+
+
+def dispatch_renotification(incident_id: int) -> dict:
+    """
+    Re-notifica um incidente já aberto via email e teams APENAS.
+    Não abre ticket para evitar spam de chamados.
+    Chamado quando um incidente existente ainda está aberto após restart do worker.
+    """
+    from database import SessionLocal
+    from models import Incident, Sensor, Server, Tenant
+
+    db = SessionLocal()
+    sent = []
+    failed = []
+
+    try:
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+        if not incident:
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': f'Incidente {incident_id} não encontrado'}]}
+
+        sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
+        if not sensor:
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Sensor não encontrado'}]}
+
+        if sensor.sensor_type in METRIC_ONLY_TYPES:
+            return {'sent': sent, 'failed': failed}
+
+        server = db.query(Server).filter(Server.id == sensor.server_id).first()
+
+        if server:
+            tenant_id = server.tenant_id
+        elif sensor.probe_id:
+            from models import Probe
+            probe = db.query(Probe).filter(Probe.id == sensor.probe_id).first()
+            tenant_id = probe.tenant_id if probe else None
+        else:
+            tenant_id = None
+
+        tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if not tenant:
+            logger.warning(f"Tenant não encontrado para re-notificação do incidente {incident_id}")
+            return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
+
+        notification_config = tenant.notification_config or {}
+        sensor_type = sensor.sensor_type or ''
+
+        from datetime import timezone as _tz
+        import zoneinfo as _zi
+        try:
+            _tz_local = _zi.ZoneInfo("America/Sao_Paulo")
+        except Exception:
+            _tz_local = None
+
+        def _fmt_dt(dt):
+            if not dt:
+                return 'N/A'
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=_tz.utc)
+            if _tz_local:
+                dt = dt.astimezone(_tz_local)
+            return dt.strftime('%d/%m/%Y %H:%M:%S')
+
+        display_server = server.hostname if server else sensor.name
+        if server and server.hostname and sensor.name.upper() in ('PING', 'CPU', 'MEMÓRIA', 'DISCO', 'UPTIME'):
+            display_server = server.hostname
+
+        incident_data = {
+            'title': f"🔔 LEMBRETE: {incident.title}",
+            'description': incident.description or '',
+            'severity': incident.severity,
+            'server_hostname': display_server,
+            'sensor_name': sensor.name,
+            'sensor_type': sensor_type,
+            'incident_id': incident.id,
+            'created_at': _fmt_dt(incident.created_at),
+        }
+
+        # Re-notificação: APENAS email e teams (sem ticket, sms, whatsapp, phone_call)
+        for channel in ('email', 'teams'):
+            try:
+                if channel == 'email':
+                    email_config = notification_config.get('email', {})
+                    if email_config.get('enabled'):
+                        from tasks import send_email_notification_sync
+                        result = send_email_notification_sync(email_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Email não habilitado'}
+
+                elif channel == 'teams':
+                    teams_config = notification_config.get('teams', {})
+                    if teams_config.get('enabled'):
+                        from tasks import send_teams_notification_sync
+                        result = send_teams_notification_sync(teams_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Teams não habilitado'}
+
+                if result.get('success'):
+                    sent.append(channel)
+                else:
+                    failed.append({'channel': channel, 'error': result.get('error', 'Erro desconhecido')})
+
+            except Exception as e:
+                failed.append({'channel': channel, 'error': str(e)})
+                logger.error(f"❌ Exceção na re-notificação via '{channel}' para incidente {incident_id}: {e}")
+
+        logger.info(f"🔔 Re-notificação incidente {incident_id}: {len(sent)} enviados, {len(failed)} falharam")
+        return {'sent': sent, 'failed': failed}
+
+    except Exception as e:
+        logger.error(f"❌ Erro fatal na re-notificação {incident_id}: {e}", exc_info=True)
+        return {'sent': sent, 'failed': [{'channel': 'all', 'error': str(e)}]}
+    finally:
+        db.close()
