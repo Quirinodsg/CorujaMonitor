@@ -137,8 +137,15 @@ async def create_probe_metrics_bulk(
                 # garantir que value=0 sempre resulte em status=critical independente do que a sonda enviou
                 saved_status = metric_data.status
                 sensor_name_lower = (sensor.name or '').lower()
+
+                # Sensores de datacenter identificados pelo nome — value=0 = offline/critical
+                _datacenter_keywords = ('nobreak', 'engetron', 'ups', 'ar-condicionado', 'ar condicionado',
+                                        'conflex', 'hvac', 'climatizacao', 'climatização')
+                is_datacenter_sensor = any(kw in sensor_name_lower for kw in _datacenter_keywords)
+
                 is_status_based = (
                     sensor.sensor_type in ('engetron', 'conflex', 'equallogic', 'printer')
+                    or is_datacenter_sensor
                     or (
                         sensor.sensor_type in ('snmp', 'snmp_ap', 'snmp_ups', 'snmp_switch')
                         and not any(kw in sensor_name_lower for kw in ('network in', 'network out', 'network_in', 'network_out'))
@@ -148,8 +155,6 @@ async def create_probe_metrics_bulk(
                 )
                 if is_status_based and metric_data.value == 0:
                     saved_status = 'critical'
-                elif is_status_based and metric_data.value > 0 and saved_status == 'ok':
-                    saved_status = 'ok'
 
                 metric = Metric(
                     sensor_id=sensor.id,
