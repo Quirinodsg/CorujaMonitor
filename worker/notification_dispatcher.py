@@ -256,26 +256,29 @@ def dispatch_notifications(incident_id: int) -> dict:
                         result = {'success': False, 'error': 'Twilio WhatsApp não configurado'}
 
                 elif channel == 'phone_call':
-                    from escalation import start_escalation
                     escalation_config = notification_config.get('escalation', {})
-                    phone_chain = escalation_config.get('phone_chain', [])
-                    esc_result = start_escalation(
-                        sensor_id=sensor.id,
-                        incident_id=incident.id,
-                        tenant_id=tenant.id,
-                        alert_data={
-                            'device_type': sensor_type,
-                            'problem_description': incident.description or incident.title,
-                            'phone_chain': phone_chain,
-                            'mode': escalation_config.get('mode', 'sequential'),
-                            'interval_minutes': escalation_config.get('interval_minutes', 5),
-                            'max_attempts': escalation_config.get('max_attempts', 10),
-                            'call_duration_seconds': escalation_config.get('call_duration_seconds', 30),
-                        },
-                    )
-                    result = {'success': esc_result is not None}
-                    if not result['success']:
-                        result['error'] = 'Escalação não iniciada (duplicata ou sensor reconhecido)'
+                    if escalation_config.get('enabled', False):
+                        from escalation import start_escalation
+                        phone_chain = escalation_config.get('phone_chain', [])
+                        esc_result = start_escalation(
+                            sensor_id=sensor.id,
+                            incident_id=incident.id,
+                            tenant_id=tenant.id,
+                            alert_data={
+                                'device_type': sensor_type,
+                                'problem_description': incident.description or incident.title,
+                                'phone_chain': phone_chain,
+                                'mode': escalation_config.get('mode', 'sequential'),
+                                'interval_minutes': escalation_config.get('interval_minutes', 5),
+                                'max_attempts': escalation_config.get('max_attempts', 10),
+                                'call_duration_seconds': escalation_config.get('call_duration_seconds', 30),
+                            },
+                        )
+                        result = {'success': esc_result is not None}
+                        if not result['success']:
+                            result['error'] = 'Escalação não iniciada (duplicata ou sensor reconhecido)'
+                    else:
+                        result = {'success': False, 'error': 'Escalação não habilitada'}
 
                 else:
                     result = {'success': False, 'error': f'Canal desconhecido: {channel}'}

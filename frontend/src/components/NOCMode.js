@@ -54,7 +54,7 @@ function NOCMode({ onExit }) {
       });
       setLastUpdate(new Date());
     } catch (error) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError') return;
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || error.message === 'canceled') return;
       console.error('Erro ao carregar dados NOC:', error);
     }
   }, []);
@@ -88,7 +88,7 @@ function NOCMode({ onExit }) {
         } catch(_){}
       }
     } catch(e) {
-      if (e.name === 'CanceledError' || e.name === 'AbortError') return;
+      if (e.name === 'CanceledError' || e.name === 'AbortError' || e.message === 'canceled') return;
     }
   }, []);
 

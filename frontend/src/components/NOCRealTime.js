@@ -75,7 +75,7 @@ function NOCRealTime({ onExit }) {
       setLoadError(null);
       retryCountRef.current = 0;
     } catch (error) {
-      if (error.name === 'CanceledError' || error.name === 'AbortError') return;
+      if (error.name === 'CanceledError' || error.name === 'AbortError' || error.message === 'canceled') return;
       if (!mountedRef.current) return;
       const isTimeout = error.code === 'ECONNABORTED' || error.message?.includes('timeout');
       console.error('Erro ao carregar dashboard NOC:', error);
@@ -121,7 +121,7 @@ function NOCRealTime({ onExit }) {
         } catch (_) {}
       }
     } catch(e) {
-      if (e.name === 'CanceledError' || e.name === 'AbortError') return;
+      if (e.name === 'CanceledError' || e.name === 'AbortError' || e.message === 'canceled') return;
     }
   }, []);
 

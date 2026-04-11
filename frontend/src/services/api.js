@@ -51,8 +51,12 @@ api.interceptors.response.use(
       console.error('API No Response:', error.request);
       console.error('Possible causes: API not running, CORS issue, network problem');
     } else {
-      // Error setting up request
-      console.error('API Request Setup Error:', error.message);
+      // Cancelamentos via AbortController são cleanup normal — não logar como erro
+      if (axios.isCancel(error) || error.name === 'CanceledError' || error.name === 'AbortError' || error.message === 'canceled') {
+        // silencioso — request cancelado intencionalmente
+      } else {
+        console.error('API Request Setup Error:', error.message);
+      }
     }
     
     // Return a rejected promise with the error

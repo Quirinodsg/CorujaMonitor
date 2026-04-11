@@ -146,7 +146,7 @@ function Incidents({ onNavigateToServer, onNavigate }) {
     };
 
     incidents.forEach(inc => {
-      if (inc.status === 'open') counts.open++;
+      if (inc.status === 'open' || inc.status === 'acknowledged') counts.open++;
       if (inc.status === 'acknowledged') counts.acknowledged++;
       if (inc.status === 'resolved' || inc.status === 'auto_resolved') counts.resolved++;
       if (inc.severity === 'critical') counts.critical++;
