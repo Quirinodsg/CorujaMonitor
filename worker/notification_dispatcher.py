@@ -520,8 +520,15 @@ def dispatch_renotification(incident_id: int) -> dict:
             'created_at': _fmt_dt(incident.created_at),
         }
 
-        # Re-notificação: APENAS email e teams (sem ticket, sms, whatsapp, phone_call)
-        for channel in ('email', 'teams'):
+        # Re-notificação: email e teams sempre; SMS/WhatsApp/phone_call para sensores de datacenter
+        effective_st = _effective_sensor_type(sensor_type, sensor.name)
+        is_datacenter = effective_st in ('conflex', 'engetron')
+
+        channels_to_notify = ['email', 'teams']
+        if is_datacenter:
+            channels_to_notify += ['sms', 'whatsapp', 'phone_call']
+
+        for channel in channels_to_notify:
             try:
                 if channel == 'email':
                     email_config = notification_config.get('email', {})
@@ -538,6 +545,54 @@ def dispatch_renotification(incident_id: int) -> dict:
                         result = send_teams_notification_sync(teams_config, incident_data)
                     else:
                         result = {'success': False, 'error': 'Teams não habilitado'}
+
+                elif channel == 'sms':
+                    twilio_config = notification_config.get('twilio', {})
+                    if twilio_config.get('account_sid'):
+                        from tasks import send_sms_notification_sync
+                        result = send_sms_notification_sync(twilio_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Twilio SMS não configurado'}
+
+                elif channel == 'whatsapp':
+                    whatsapp_config = notification_config.get('whatsapp') or notification_config.get('twilio', {})
+                    if whatsapp_config.get('account_sid'):
+                        from tasks import send_whatsapp_notification_sync
+                        result = send_whatsapp_notification_sync(whatsapp_config, incident_data)
+                    else:
+                        result = {'success': False, 'error': 'Twilio WhatsApp não configurado'}
+
+                elif channel == 'phone_call':
+                    escalation_config = notification_config.get('escalation', {})
+                    phone_chain = escalation_config.get('phone_chain', [])
+                    if not phone_chain:
+                        twilio_config = notification_config.get('twilio', {})
+                        to_numbers = twilio_config.get('to_numbers', [])
+                        if isinstance(to_numbers, str):
+                            to_numbers = [n.strip() for n in to_numbers.split(',') if n.strip()]
+                        phone_chain = [{"name": f"Contato {i+1}", "number": n} for i, n in enumerate(to_numbers)]
+                    if phone_chain:
+                        from escalation import start_escalation
+                        esc_result = start_escalation(
+                            sensor_id=sensor.id,
+                            incident_id=incident.id,
+                            tenant_id=tenant.id,
+                            alert_data={
+                                'device_type': effective_st,
+                                'problem_description': incident.description or incident.title,
+                                'phone_chain': phone_chain,
+                                'mode': escalation_config.get('mode', 'sequential'),
+                                'interval_minutes': escalation_config.get('interval_minutes', 5),
+                                'max_attempts': escalation_config.get('max_attempts', 10),
+                                'call_duration_seconds': escalation_config.get('call_duration_seconds', 30),
+                            },
+                        )
+                        result = {'success': esc_result is not None, 'error': None if esc_result else 'Escalação não iniciada (duplicata ou reconhecido)'}
+                    else:
+                        result = {'success': False, 'error': 'Nenhum número configurado'}
+
+                else:
+                    result = {'success': False, 'error': f'Canal desconhecido: {channel}'}
 
                 if result.get('success'):
                     sent.append(channel)

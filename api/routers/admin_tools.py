@@ -409,3 +409,57 @@ async def get_disk_usage(
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao obter uso de disco: {str(e)}")
+
+
+@router.post("/force-redispatch-datacenter")
+async def force_redispatch_datacenter(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_role("admin"))
+):
+    """
+    Força re-dispatch completo (SMS + WhatsApp + phone_call) para incidentes
+    abertos de sensores de datacenter (Nobreak/Ar-condicionado).
+    Limpa o cooldown Redis para permitir re-notificação imediata.
+    """
+    from models import Incident, Sensor
+    import redis as redis_lib
+
+    # Limpar cooldowns Redis dos incidentes abertos de datacenter
+    try:
+        r = redis_lib.Redis.from_url("redis://redis:6379", decode_responses=True, socket_connect_timeout=2)
+    except Exception as e:
+        raise HTTPException(status_code=503, detail=f"Redis indisponível: {e}")
+
+    datacenter_keywords = ('nobreak', 'engetron', 'ups', 'ar-condicionado', 'ar condicionado', 'conflex', 'hvac')
+
+    open_incidents = db.query(Incident).filter(
+        Incident.status.in_(['open', 'acknowledged'])
+    ).all()
+
+    dispatched = []
+    for incident in open_incidents:
+        sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
+        if not sensor:
+            continue
+        name_lower = (sensor.name or '').lower()
+        if not any(kw in name_lower for kw in datacenter_keywords):
+            continue
+
+        # Limpar cooldown para forçar re-notificação
+        try:
+            r.delete(f"notified:{incident.id}")
+        except Exception:
+            pass
+
+        dispatched.append({
+            'incident_id': incident.id,
+            'sensor_name': sensor.name,
+            'severity': incident.severity,
+        })
+
+    return {
+        'success': True,
+        'message': f'{len(dispatched)} incidentes de datacenter marcados para re-dispatch',
+        'incidents': dispatched,
+        'note': 'O worker vai re-notificar via SMS/WhatsApp/phone_call no próximo ciclo (até 1 minuto)'
+    }
