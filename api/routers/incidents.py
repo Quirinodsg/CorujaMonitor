@@ -230,6 +230,61 @@ async def reopen_incident(
     }
 
 
+@router.post("/{incident_id}/stop-calls")
+async def stop_incident_calls(
+    incident_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Para todas as ligações de escalação ativas para o incidente."""
+    if current_user.role == 'admin':
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    else:
+        from sqlalchemy import or_, and_, exists
+        from models import Probe
+        incident = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                Incident.id == incident_id,
+                or_(
+                    exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
+            .first()
+        )
+
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    stopped = False
+    try:
+        import redis as redis_lib, os
+        redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        r = redis_lib.Redis.from_url(redis_url, socket_connect_timeout=2, decode_responses=True)
+        key = f"escalation:{incident.sensor_id}"
+        raw = r.get(key)
+        if raw:
+            import json
+            state = json.loads(raw)
+            state["status"] = "acknowledged"
+            r.setex(key, 3600, json.dumps(state))
+            stopped = True
+        # Limpar também notified key para permitir re-dispatch futuro
+        r.delete(f"notified:{incident.id}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao parar escalação: {str(e)}")
+
+    return {
+        "success": True,
+        "message": "Ligações paradas" if stopped else "Nenhuma escalação ativa encontrada",
+        "incident_id": incident.id,
+        "sensor_id": incident.sensor_id,
+    }
+
+
 @router.post("/{incident_id}/redispatch")
 async def redispatch_incident(
     incident_id: int,

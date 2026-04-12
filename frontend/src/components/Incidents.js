@@ -71,6 +71,15 @@ function Incidents({ onNavigateToServer, onNavigate }) {
     }
   };
 
+  const handleStopCalls = async (incident) => {
+    try {
+      const res = await api.post(`/incidents/${incident.id}/stop-calls`);
+      alert(res.data.message);
+    } catch (error) {
+      alert('Erro ao parar ligações: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const handleRedispatch = async (incident) => {
     try {
       await api.post(`/incidents/${incident.id}/redispatch`);
@@ -398,6 +407,16 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                             style={{ background: '#9c27b0' }}
                           >
                             📣
+                          </button>
+                        )}
+                        {incident.status === 'open' && (
+                          <button
+                            className="btn-action btn-small"
+                            onClick={() => handleStopCalls(incident)}
+                            title="Parar ligações de escalação"
+                            style={{ background: '#e53935' }}
+                          >
+                            🔕
                           </button>
                         )}
                         {(incident.status === 'acknowledged' || incident.status === 'resolved' || incident.status === 'auto_resolved') && (
