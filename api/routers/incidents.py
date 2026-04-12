@@ -59,34 +59,37 @@ async def list_incidents(
             .outerjoin(Server, Sensor.server_id == Server.id)
         )
     else:
-        # Subquery: IDs de sensores que pertencem ao tenant
-        # Via servidor direto
-        sensor_ids_via_server = (
-            db.query(Sensor.id)
-            .join(Server, Sensor.server_id == Server.id)
-            .filter(Server.tenant_id == current_user.tenant_id)
-        )
-        # Via probe (sensores standalone com probe_id)
-        sensor_ids_via_probe = (
-            db.query(Sensor.id)
-            .join(Probe, Sensor.probe_id == Probe.id)
-            .filter(Probe.tenant_id == current_user.tenant_id)
-        )
-        # Standalone sem vínculo algum (server_id NULL e probe_id NULL)
-        sensor_ids_standalone = (
-            db.query(Sensor.id)
-            .filter(Sensor.server_id == None, Sensor.probe_id == None)
-        )
-
-        all_sensor_ids = (
-            sensor_ids_via_server
-            .union(sensor_ids_via_probe)
-            .union(sensor_ids_standalone)
-        )
-
+        from sqlalchemy import or_, exists, and_
+        # Filtra incidentes cujo sensor pertence ao tenant via:
+        # 1. server.tenant_id direto
+        # 2. probe.tenant_id (sensores standalone com probe)
+        # 3. sensor sem server nem probe (standalone puro)
         query = (
             db.query(Incident)
-            .filter(Incident.sensor_id.in_(all_sensor_ids))
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                or_(
+                    # Sensor vinculado a servidor do tenant
+                    exists().where(
+                        and_(
+                            Server.id == Sensor.server_id,
+                            Server.tenant_id == current_user.tenant_id,
+                        )
+                    ),
+                    # Sensor standalone vinculado a probe do tenant
+                    exists().where(
+                        and_(
+                            Probe.id == Sensor.probe_id,
+                            Probe.tenant_id == current_user.tenant_id,
+                        )
+                    ),
+                    # Sensor completamente standalone (sem server nem probe)
+                    and_(
+                        Sensor.server_id == None,
+                        Sensor.probe_id == None,
+                    ),
+                )
+            )
         )
 
     if status:

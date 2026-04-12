@@ -144,35 +144,20 @@ async def list_active_escalations(
         })
 
     # ── 2. Incidentes abertos de sensores críticos sem escalação ativa ─────
-    # Buscar sensores do tenant com sensor_type snmp (potencialmente conflex/engetron)
-    sensor_ids_via_server = (
-        db.query(Sensor.id)
-        .join(Server, Sensor.server_id == Server.id)
-        .filter(Server.tenant_id == current_user.tenant_id)
-    )
-    sensor_ids_via_probe = (
-        db.query(Sensor.id)
-        .join(Probe, Sensor.probe_id == Probe.id)
-        .filter(Probe.tenant_id == current_user.tenant_id)
-    )
-    sensor_ids_standalone = (
-        db.query(Sensor.id)
-        .filter(Sensor.server_id == None, Sensor.probe_id == None)
-    )
-    all_sensor_ids = (
-        sensor_ids_via_server
-        .union(sensor_ids_via_probe)
-        .union(sensor_ids_standalone)
-    )
+    from sqlalchemy import or_, and_, exists as sa_exists
 
-    # Incidentes abertos de sensores SNMP do tenant
+    # Incidentes abertos de sensores SNMP críticos do tenant
     open_incidents = (
         db.query(Incident)
         .join(Sensor, Incident.sensor_id == Sensor.id)
         .filter(
-            Incident.sensor_id.in_(all_sensor_ids),
             Incident.status == "open",
             Sensor.sensor_type.in_(["snmp", "snmp_ups", "snmp_ap", "snmp_switch", "conflex", "engetron"]),
+            or_(
+                sa_exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                sa_exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                and_(Sensor.server_id == None, Sensor.probe_id == None),
+            ),
         )
         .order_by(Incident.created_at.desc())
         .all()
@@ -531,26 +516,18 @@ async def get_escalation_history(
         query = db.query(Incident).join(Sensor)
     else:
         from models import Probe
-        sensor_ids_via_server = (
-            db.query(Sensor.id)
-            .join(Server, Sensor.server_id == Server.id)
-            .filter(Server.tenant_id == current_user.tenant_id)
+        from sqlalchemy import or_, and_, exists as sa_exists
+        query = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                or_(
+                    sa_exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    sa_exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
         )
-        sensor_ids_via_probe = (
-            db.query(Sensor.id)
-            .join(Probe, Sensor.probe_id == Probe.id)
-            .filter(Probe.tenant_id == current_user.tenant_id)
-        )
-        sensor_ids_standalone = (
-            db.query(Sensor.id)
-            .filter(Sensor.server_id == None, Sensor.probe_id == None)
-        )
-        all_sensor_ids = (
-            sensor_ids_via_server
-            .union(sensor_ids_via_probe)
-            .union(sensor_ids_standalone)
-        )
-        query = db.query(Incident).filter(Incident.sensor_id.in_(all_sensor_ids))
 
     # Filtrar incidentes que possuem ai_analysis com escalation_history
     incidents = (
