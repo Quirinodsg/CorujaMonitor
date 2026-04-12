@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import "./Topbar.css";
 import { API_URL } from "../config";
+import api from "../services/api";
 
 const PAGE_LABELS = {
   dashboard: "Dashboard", observability: "Observabilidade", topology: "Topologia",
@@ -13,7 +14,7 @@ const PAGE_LABELS = {
   "system-health": "Saude do Sistema", "noc-realtime": "NOC",
 };
 
-const RESULT_ICONS = { server: "🖥️", sensor: "📡", default: "🔍" };
+const RESULT_ICONS = { server: "🖥️", sensor: "📡", incident: "🚨", default: "🔍" };
 
 const base = API_URL;
 
@@ -42,25 +43,49 @@ function IcoBell() {
 async function fetchAllData() {
   const now = Date.now();
   if (_cache && now - _cacheTs < CACHE_TTL) return _cache;
-  const token = localStorage.getItem("token");
-  const headers = { Authorization: "Bearer " + token };
-  const [r1, r2] = await Promise.allSettled([
-    fetch(base + "/servers?limit=200", { headers }),
-    fetch(base + "/sensors?limit=200", { headers }),
-  ]);
+
   const items = [];
-  if (r1.status === "fulfilled" && r1.value.ok) {
-    const d = await r1.value.json();
-    (Array.isArray(d) ? d : (d.items || [])).forEach(s =>
-      items.push({ type: "server", id: s.id, label: s.hostname || s.name || "", sub: s.ip_address || "", page: "servers" })
-    );
-  }
-  if (r2.status === "fulfilled" && r2.value.ok) {
-    const d = await r2.value.json();
-    (Array.isArray(d) ? d : (d.items || [])).forEach(s =>
-      items.push({ type: "sensor", id: s.id, label: s.name || "", sub: s.sensor_type || "", page: "sensors" })
-    );
-  }
+  try {
+    const [r1, r2, r3] = await Promise.allSettled([
+      api.get('/servers'),
+      api.get('/sensors'),
+      api.get('/incidents/?status=open&limit=50'),
+    ]);
+
+    if (r1.status === 'fulfilled') {
+      (r1.value.data || []).forEach(s =>
+        items.push({
+          type: 'server', id: s.id,
+          label: s.hostname || s.name || '',
+          sub: s.ip_address || s.group_name || '',
+          page: 'servers',
+        })
+      );
+    }
+
+    if (r2.status === 'fulfilled') {
+      (r2.value.data || []).forEach(s =>
+        items.push({
+          type: 'sensor', id: s.id,
+          label: s.name || '',
+          sub: s.sensor_type || '',
+          page: 'sensors',
+        })
+      );
+    }
+
+    if (r3.status === 'fulfilled') {
+      (r3.value.data || []).forEach(i =>
+        items.push({
+          type: 'incident', id: i.id,
+          label: i.title || `Incidente #${i.id}`,
+          sub: i.severity || '',
+          page: 'incidents',
+        })
+      );
+    }
+  } catch (_) {}
+
   _cache = items;
   _cacheTs = now;
   return items;
