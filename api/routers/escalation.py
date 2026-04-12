@@ -101,21 +101,31 @@ async def list_active_escalations(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user),
 ):
-    """Retorna lista de escalações ativas do tenant do usuário."""
+    """Retorna lista de escalações ativas do tenant do usuário.
+    
+    Inclui:
+    1. Escalações ativas no Redis (em andamento)
+    2. Incidentes abertos de sensores críticos (conflex/engetron) sem escalação ativa — 
+       aparecem como alarmes pendentes para que o operador possa agir.
+    """
+    from models import Probe
+
+    # ── 1. Escalações ativas no Redis ──────────────────────────────────────
     try:
         esc = _get_escalation_module()
-        active = esc.get_active_escalations(current_user.tenant_id)
+        active_redis = esc.get_active_escalations(current_user.tenant_id)
     except Exception as e:
         logger.warning("Erro ao buscar escalações ativas (Redis pode estar indisponível): %s", e)
-        # Retornar lista vazia em vez de 503 — Redis indisponível não é erro fatal
-        return []
+        active_redis = []
 
-    # Enriquecer com sensor_name do banco
     result = []
-    for state in active:
+    active_sensor_ids = set()
+
+    for state in active_redis:
         sensor_id = state.get("sensor_id")
         sensor = db.query(Sensor).filter(Sensor.id == sensor_id).first()
         sensor_name = sensor.name if sensor else f"Sensor #{sensor_id}"
+        active_sensor_ids.add(sensor_id)
 
         result.append({
             "sensor_id": sensor_id,
@@ -130,6 +140,77 @@ async def list_active_escalations(
             "status": state.get("status"),
             "mode": state.get("mode"),
             "phone_numbers": state.get("phone_numbers", []),
+            "source": "redis",
+        })
+
+    # ── 2. Incidentes abertos de sensores críticos sem escalação ativa ─────
+    # Buscar sensores do tenant com sensor_type snmp (potencialmente conflex/engetron)
+    sensor_ids_via_server = (
+        db.query(Sensor.id)
+        .join(Server, Sensor.server_id == Server.id)
+        .filter(Server.tenant_id == current_user.tenant_id)
+    )
+    sensor_ids_via_probe = (
+        db.query(Sensor.id)
+        .join(Probe, Sensor.probe_id == Probe.id)
+        .filter(Probe.tenant_id == current_user.tenant_id)
+    )
+    sensor_ids_standalone = (
+        db.query(Sensor.id)
+        .filter(Sensor.server_id == None, Sensor.probe_id == None)
+    )
+    all_sensor_ids = (
+        sensor_ids_via_server
+        .union(sensor_ids_via_probe)
+        .union(sensor_ids_standalone)
+    )
+
+    # Incidentes abertos de sensores SNMP do tenant
+    open_incidents = (
+        db.query(Incident)
+        .join(Sensor, Incident.sensor_id == Sensor.id)
+        .filter(
+            Incident.sensor_id.in_(all_sensor_ids),
+            Incident.status == "open",
+            Sensor.sensor_type.in_(["snmp", "snmp_ups", "snmp_ap", "snmp_switch", "conflex", "engetron"]),
+        )
+        .order_by(Incident.created_at.desc())
+        .all()
+    )
+
+    for incident in open_incidents:
+        if incident.sensor_id in active_sensor_ids:
+            continue  # Já está no Redis
+
+        sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
+        if not sensor:
+            continue
+
+        # Verificar se é sensor crítico (conflex/engetron) pelo nome
+        name_lower = (sensor.name or "").lower()
+        is_critical = any(kw in name_lower for kw in (
+            "engetron", "nobreak", "ups", "conflex",
+            "ar-condicionado", "ar condicionado", "hvac",
+        ))
+        if not is_critical:
+            continue
+
+        device_type = "engetron" if any(kw in name_lower for kw in ("engetron", "nobreak", "ups")) else "conflex"
+
+        result.append({
+            "sensor_id": sensor.id,
+            "sensor_name": sensor.name,
+            "incident_id": incident.id,
+            "device_type": device_type,
+            "problem_description": incident.description or incident.title,
+            "started_at": incident.created_at.isoformat() if incident.created_at else None,
+            "attempt_count": 0,
+            "max_attempts": None,
+            "next_attempt_at": None,
+            "status": "pending_escalation",
+            "mode": None,
+            "phone_numbers": [],
+            "source": "incident",
         })
 
     return result
@@ -449,15 +530,27 @@ async def get_escalation_history(
     if current_user.role == "admin":
         query = db.query(Incident).join(Sensor)
     else:
-        query = (
-            db.query(Incident)
-            .join(Sensor)
-            .outerjoin(Server, Sensor.server_id == Server.id)
-            .filter(
-                (Server.tenant_id == current_user.tenant_id)
-                | (Sensor.server_id == None)
-            )
+        from models import Probe
+        sensor_ids_via_server = (
+            db.query(Sensor.id)
+            .join(Server, Sensor.server_id == Server.id)
+            .filter(Server.tenant_id == current_user.tenant_id)
         )
+        sensor_ids_via_probe = (
+            db.query(Sensor.id)
+            .join(Probe, Sensor.probe_id == Probe.id)
+            .filter(Probe.tenant_id == current_user.tenant_id)
+        )
+        sensor_ids_standalone = (
+            db.query(Sensor.id)
+            .filter(Sensor.server_id == None, Sensor.probe_id == None)
+        )
+        all_sensor_ids = (
+            sensor_ids_via_server
+            .union(sensor_ids_via_probe)
+            .union(sensor_ids_standalone)
+        )
+        query = db.query(Incident).filter(Incident.sensor_id.in_(all_sensor_ids))
 
     # Filtrar incidentes que possuem ai_analysis com escalation_history
     incidents = (

@@ -484,30 +484,45 @@ function EscalationConfig() {
           <div className="esc-loading"><div className="spinner" /><p>Carregando alarmes...</p></div>
         ) : alarms.length > 0 ? (
           <div className="esc-alarms-list">
-            {alarms.map(alarm => (
-              <div className="esc-alarm-item" key={alarm.sensor_id}>
-                <div className="esc-alarm-info">
-                  <span className="esc-alarm-sensor">{alarm.sensor_name}</span>
-                  <span className="esc-alarm-desc">
-                    {alarm.device_type && <span className="esc-badge active" style={{ marginRight: 8 }}>{alarm.device_type}</span>}
-                    {alarm.problem_description || 'Alarme crítico'}
-                  </span>
-                  <div className="esc-alarm-meta">
-                    <span>Início: {formatDate(alarm.started_at)}</span>
-                    <span>Tentativas: {alarm.attempt_count}/{alarm.max_attempts}</span>
-                    <span>Próxima: {formatDate(alarm.next_attempt_at)}</span>
-                    <span>Modo: {alarm.mode === 'simultaneous' ? 'Simultâneo' : 'Sequencial'}</span>
+            {alarms.map(alarm => {
+              const isPending = alarm.status === 'pending_escalation';
+              return (
+                <div className="esc-alarm-item" key={`${alarm.sensor_id}-${alarm.incident_id}`}>
+                  <div className="esc-alarm-info">
+                    <span className="esc-alarm-sensor">{alarm.sensor_name}</span>
+                    <span className="esc-alarm-desc">
+                      {alarm.device_type && (
+                        <span className={`esc-badge ${isPending ? 'expired' : 'active'}`} style={{ marginRight: 8 }}>
+                          {alarm.device_type === 'engetron' ? '⚡ Nobreak' : alarm.device_type === 'conflex' ? '❄️ Ar-Condicionado' : alarm.device_type}
+                        </span>
+                      )}
+                      {isPending && <span className="esc-badge expired" style={{ marginRight: 8 }}>⚠️ Aguardando Escalação</span>}
+                      {alarm.problem_description || 'Alarme crítico'}
+                    </span>
+                    <div className="esc-alarm-meta">
+                      <span>Início: {formatDate(alarm.started_at)}</span>
+                      {!isPending && <span>Tentativas: {alarm.attempt_count}/{alarm.max_attempts}</span>}
+                      {!isPending && <span>Próxima: {formatDate(alarm.next_attempt_at)}</span>}
+                      {!isPending && <span>Modo: {alarm.mode === 'simultaneous' ? 'Simultâneo' : 'Sequencial'}</span>}
+                      {isPending && (
+                        <span style={{ color: '#F59E0B' }}>
+                          Configure a cadeia de escalação para ativar ligações automáticas
+                        </span>
+                      )}
+                    </div>
                   </div>
+                  {!isPending && (
+                    <button
+                      className="ds-btn ds-btn--primary"
+                      onClick={() => acknowledgeAlarm(alarm.sensor_id)}
+                      disabled={ackLoading === alarm.sensor_id}
+                    >
+                      {ackLoading === alarm.sensor_id ? '⏳...' : '✅ Reconhecer'}
+                    </button>
+                  )}
                 </div>
-                <button
-                  className="ds-btn ds-btn--primary"
-                  onClick={() => acknowledgeAlarm(alarm.sensor_id)}
-                  disabled={ackLoading === alarm.sensor_id}
-                >
-                  {ackLoading === alarm.sensor_id ? '⏳...' : '✅ Reconhecer'}
-                </button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="esc-empty">
