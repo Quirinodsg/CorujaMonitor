@@ -42,14 +42,31 @@ manager = ConnectionManager()
 # ─── Health Score ─────────────────────────────────────────────────────────────
 
 @router.get("/observability/health-score")
-async def get_health_score(db: Session = Depends(get_db)):
+async def get_health_score(
+    db: Session = Depends(get_db),
+    current_user=Depends(__import__('auth').get_current_active_user),
+):
     """
     Calcula health score geral da infraestrutura (0-100).
     Baseado em: sensores ok/total, incidentes abertos, alertas críticos.
     """
     try:
-        # Usa LATERAL com índice idx_metrics_sensor_timestamp para evitar full scan
-        sensor_stats = db.execute(text("""
+        from models import User as _User
+        # Filtro de tenant
+        if current_user.role == 'admin':
+            tenant_filter = ""
+            params: dict = {}
+        else:
+            tenant_filter = """
+                AND (
+                    EXISTS (SELECT 1 FROM servers srv WHERE srv.id = s.server_id AND srv.tenant_id = :tid)
+                    OR EXISTS (SELECT 1 FROM probes p WHERE p.id = s.probe_id AND p.tenant_id = :tid)
+                    OR (s.server_id IS NULL AND s.probe_id IS NULL)
+                )
+            """
+            params = {"tid": current_user.tenant_id}
+
+        sensor_stats = db.execute(text(f"""
             SELECT
                 COUNT(*) FILTER (WHERE m.status = 'ok') as ok_count,
                 COUNT(*) FILTER (WHERE m.status = 'warning') as warning_count,
@@ -63,18 +80,29 @@ async def get_health_score(db: Session = Depends(get_db)):
                 ORDER BY timestamp DESC
                 LIMIT 1
             ) m ON TRUE
-            WHERE s.is_active = true
-        """)).fetchone()
+            WHERE s.is_active = true {tenant_filter}
+        """), params).fetchone()
 
         total = sensor_stats.total or 1
         ok = sensor_stats.ok_count or 0
         warning = sensor_stats.warning_count or 0
         critical = sensor_stats.critical_count or 0
 
-        # Open incidents
-        incident_count = db.execute(text(
-            "SELECT COUNT(*) FROM incidents WHERE status = 'open'"
-        )).scalar() or 0
+        # Open incidents filtrados por tenant
+        if current_user.role == 'admin':
+            incident_count = db.execute(text(
+                "SELECT COUNT(*) FROM incidents WHERE status = 'open'"
+            )).scalar() or 0
+        else:
+            incident_count = db.execute(text("""
+                SELECT COUNT(i.id) FROM incidents i
+                JOIN sensors s ON s.id = i.sensor_id
+                LEFT JOIN servers srv ON srv.id = s.server_id
+                LEFT JOIN probes p ON p.id = s.probe_id
+                WHERE i.status = 'open'
+                  AND (srv.tenant_id = :tid OR p.tenant_id = :tid
+                       OR (s.server_id IS NULL AND s.probe_id IS NULL))
+            """), {"tid": current_user.tenant_id}).scalar() or 0
 
         # Score formula: ok*1.0 + warning*0.5 + critical*0 — normalized
         weighted = (ok * 1.0 + warning * 0.5) / total * 100
@@ -118,45 +146,106 @@ async def get_health_score(db: Session = Depends(get_db)):
 # ─── Impact Map ───────────────────────────────────────────────────────────────
 
 @router.get("/observability/impact-map")
-async def get_impact_map(db: Session = Depends(get_db)):
+async def get_impact_map(
+    db: Session = Depends(get_db),
+    current_user=Depends(__import__('auth').get_current_active_user),
+):
     """
-    Retorna mapa de impacto: servidores com sensores críticos e seus afetados.
+    Retorna mapa de impacto: servidores e sensores standalone com alertas críticos/warning.
     """
     try:
-        rows = db.execute(text("""
+        if current_user.role == 'admin':
+            tenant_filter = ""
+            params: dict = {}
+        else:
+            tenant_filter = "AND srv.tenant_id = :tid"
+            params = {"tid": current_user.tenant_id}
+
+        # Servidores com sensores críticos/warning
+        rows = db.execute(text(f"""
             SELECT
-                s.id as server_id,
-                s.name as server_name,
-                s.ip_address,
+                srv.id as server_id,
+                srv.hostname as server_name,
+                srv.ip_address,
                 COUNT(sen.id) FILTER (WHERE m.status = 'critical') as critical_sensors,
                 COUNT(sen.id) FILTER (WHERE m.status = 'warning') as warning_sensors,
                 COUNT(sen.id) as total_sensors
-            FROM servers s
-            LEFT JOIN sensors sen ON sen.server_id = s.id AND sen.is_active = true
+            FROM servers srv
+            LEFT JOIN sensors sen ON sen.server_id = srv.id AND sen.is_active = true
             LEFT JOIN LATERAL (
                 SELECT status FROM metrics
                 WHERE sensor_id = sen.id
                 ORDER BY timestamp DESC
                 LIMIT 1
             ) m ON TRUE
-            GROUP BY s.id, s.name, s.ip_address
+            WHERE 1=1 {tenant_filter}
+            GROUP BY srv.id, srv.hostname, srv.ip_address
             HAVING COUNT(sen.id) FILTER (WHERE m.status IN ('critical','warning')) > 0
             ORDER BY critical_sensors DESC, warning_sensors DESC
             LIMIT 50
-        """)).fetchall()
+        """), params).fetchall()
 
         nodes = []
         for r in rows:
             severity = "critical" if r.critical_sensors > 0 else "warning"
             nodes.append({
-                "id": str(r.server_id),
+                "id": f"srv-{r.server_id}",
                 "name": r.server_name,
                 "ip": r.ip_address,
                 "severity": severity,
                 "critical_sensors": r.critical_sensors,
                 "warning_sensors": r.warning_sensors,
                 "total_sensors": r.total_sensors,
+                "type": "server",
             })
+
+        # Sensores standalone (sem servidor) com alertas
+        if current_user.role == 'admin':
+            standalone_filter = "AND (s.server_id IS NULL)"
+            standalone_params: dict = {}
+        else:
+            standalone_filter = """
+                AND s.server_id IS NULL
+                AND (
+                    EXISTS (SELECT 1 FROM probes p WHERE p.id = s.probe_id AND p.tenant_id = :tid)
+                    OR s.probe_id IS NULL
+                )
+            """
+            standalone_params = {"tid": current_user.tenant_id}
+
+        standalone_rows = db.execute(text(f"""
+            SELECT
+                s.id as sensor_id,
+                s.name as sensor_name,
+                m.status
+            FROM sensors s
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = s.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
+            WHERE s.is_active = true
+              {standalone_filter}
+              AND m.status IN ('critical', 'warning')
+            ORDER BY CASE m.status WHEN 'critical' THEN 0 ELSE 1 END
+            LIMIT 20
+        """), standalone_params).fetchall()
+
+        for r in standalone_rows:
+            nodes.append({
+                "id": f"sensor-{r.sensor_id}",
+                "name": r.sensor_name,
+                "ip": "Standalone",
+                "severity": r.status,
+                "critical_sensors": 1 if r.status == 'critical' else 0,
+                "warning_sensors": 1 if r.status == 'warning' else 0,
+                "total_sensors": 1,
+                "type": "standalone",
+            })
+
+        # Reordenar: críticos primeiro
+        nodes.sort(key=lambda n: (0 if n['severity'] == 'critical' else 1))
 
         return {
             "nodes": nodes,
