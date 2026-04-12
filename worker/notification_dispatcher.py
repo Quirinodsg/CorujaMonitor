@@ -99,6 +99,11 @@ def resolve_channels(
     if not channels:
         channels.add("email")
 
+    # Garantia: conflex e engetron sempre incluem phone_call
+    # (são sensores críticos de datacenter que devem sempre ligar)
+    if effective_type in ('conflex', 'engetron') and 'phone_call' not in channels:
+        channels.add('phone_call')
+
     return channels
 
 import logging
@@ -257,28 +262,46 @@ def dispatch_notifications(incident_id: int) -> dict:
 
                 elif channel == 'phone_call':
                     escalation_config = notification_config.get('escalation', {})
-                    if escalation_config.get('enabled', False):
+                    phone_chain = escalation_config.get('phone_chain', [])
+
+                    # Fallback: usar to_numbers do Twilio se phone_chain vazia
+                    if not phone_chain:
+                        twilio_config = notification_config.get('twilio', {})
+                        to_numbers = twilio_config.get('to_numbers', [])
+                        if isinstance(to_numbers, str):
+                            to_numbers = [n.strip() for n in to_numbers.split(',') if n.strip()]
+                        phone_chain = [{"name": f"Contato {i+1}", "number": n} for i, n in enumerate(to_numbers)]
+
+                    if phone_chain:
                         from escalation import start_escalation
-                        phone_chain = escalation_config.get('phone_chain', [])
-                        esc_result = start_escalation(
-                            sensor_id=sensor.id,
-                            incident_id=incident.id,
-                            tenant_id=tenant.id,
-                            alert_data={
-                                'device_type': sensor_type,
-                                'problem_description': incident.description or incident.title,
-                                'phone_chain': phone_chain,
-                                'mode': escalation_config.get('mode', 'sequential'),
-                                'interval_minutes': escalation_config.get('interval_minutes', 5),
-                                'max_attempts': escalation_config.get('max_attempts', 10),
-                                'call_duration_seconds': escalation_config.get('call_duration_seconds', 30),
-                            },
-                        )
-                        result = {'success': esc_result is not None}
-                        if not result['success']:
-                            result['error'] = 'Escalação não iniciada (duplicata ou sensor reconhecido)'
+                        # Sensores padrão de datacenter (conflex/engetron) sempre disparam
+                        # escalação quando há cadeia de telefones, independente do toggle enabled.
+                        effective_st = _effective_sensor_type(sensor_type, sensor.name)
+                        is_datacenter = effective_st in ('conflex', 'engetron')
+                        escalation_enabled = escalation_config.get('enabled', False) or is_datacenter
+
+                        if escalation_enabled:
+                            esc_result = start_escalation(
+                                sensor_id=sensor.id,
+                                incident_id=incident.id,
+                                tenant_id=tenant.id,
+                                alert_data={
+                                    'device_type': effective_st,
+                                    'problem_description': incident.description or incident.title,
+                                    'phone_chain': phone_chain,
+                                    'mode': escalation_config.get('mode', 'sequential'),
+                                    'interval_minutes': escalation_config.get('interval_minutes', 5),
+                                    'max_attempts': escalation_config.get('max_attempts', 10),
+                                    'call_duration_seconds': escalation_config.get('call_duration_seconds', 30),
+                                },
+                            )
+                            result = {'success': esc_result is not None}
+                            if not result['success']:
+                                result['error'] = 'Escalação não iniciada (duplicata ou sensor reconhecido)'
+                        else:
+                            result = {'success': False, 'error': 'Escalação não habilitada e sensor não é datacenter padrão'}
                     else:
-                        result = {'success': False, 'error': 'Escalação não habilitada'}
+                        result = {'success': False, 'error': 'Nenhum número de telefone configurado (phone_chain e to_numbers vazios)'}
 
                 else:
                     result = {'success': False, 'error': f'Canal desconhecido: {channel}'}

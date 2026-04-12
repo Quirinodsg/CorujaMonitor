@@ -5,7 +5,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from database import get_db
-from models import Sensor, Server, User
+from models import Sensor, Server, User, Probe
 from auth import get_current_active_user
 
 # Imports para teste de conexão
@@ -127,12 +127,29 @@ async def list_sensors(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    from sqlalchemy import or_ as db_or
+
     # Admin vê todos os sensores, usuário normal vê apenas do seu tenant
+    # outerjoin para incluir sensores standalone (server_id NULL)
     if current_user.role == 'admin':
-        query = db.query(Sensor).join(Server)
+        query = (
+            db.query(Sensor)
+            .outerjoin(Server, Sensor.server_id == Server.id)
+        )
     else:
-        query = db.query(Sensor).join(Server).filter(Server.tenant_id == current_user.tenant_id)
-    
+        query = (
+            db.query(Sensor)
+            .outerjoin(Server, Sensor.server_id == Server.id)
+            .outerjoin(Probe, Sensor.probe_id == Probe.id)
+            .filter(
+                db_or(
+                    Server.tenant_id == current_user.tenant_id,
+                    Probe.tenant_id == current_user.tenant_id,
+                    (Sensor.server_id == None) & (Sensor.probe_id == None),
+                )
+            )
+        )
+
     if server_id:
         query = query.filter(Sensor.server_id == server_id)
 

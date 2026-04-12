@@ -313,9 +313,9 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                     </td>
                     <td>{getStatusBadge(incident.status)}</td>
                     <td>
-                      <strong>{server?.hostname || 'Desconhecido'}</strong>
+                      <strong>{server?.hostname || (sensor ? '— Standalone —' : 'Desconhecido')}</strong>
                       <br />
-                      <small style={{ color: '#999' }}>{server?.ip_address}</small>
+                      <small style={{ color: '#999' }}>{server?.ip_address || (sensor ? sensor.sensor_type : '')}</small>
                     </td>
                     <td>
                       <strong>{sensor?.name || 'Sensor desconhecido'}</strong>
