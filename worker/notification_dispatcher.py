@@ -539,12 +539,26 @@ def dispatch_renotification(incident_id: int) -> dict:
         }
 
         # Re-notificação: email e teams sempre; SMS/WhatsApp/phone_call para sensores de datacenter
+        # MAS apenas se não houver bloqueio manual de escalação
         effective_st = _effective_sensor_type(sensor_type, sensor.name)
         is_datacenter = effective_st in ('conflex', 'engetron')
 
-        channels_to_notify = ['email', 'teams']
+        escalation_blocked = False
         if is_datacenter:
+            try:
+                import redis as _redis_lib
+                import os as _os
+                _redis_url = _os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+                _r = _redis_lib.Redis.from_url(_redis_url, socket_connect_timeout=2)
+                escalation_blocked = bool(_r.exists(f"escalation_blocked:{sensor.id}"))
+            except Exception:
+                pass  # fail-open: se Redis indisponível, permite notificação
+
+        channels_to_notify = ['email', 'teams']
+        if is_datacenter and not escalation_blocked:
             channels_to_notify += ['sms', 'whatsapp', 'phone_call']
+        elif is_datacenter and escalation_blocked:
+            logger.info(f"Re-notificação incidente {incident_id}: SMS/WhatsApp/ligação bloqueados manualmente para sensor {sensor.id}")
 
         for channel in channels_to_notify:
             try:
