@@ -755,7 +755,7 @@ Seja direto e técnico."""
         with _httpx.Client(timeout=60.0) as client:
             response = client.post(
                 f"{ollama_url}/api/generate",
-                json={"model": "llama2", "prompt": prompt, "stream": False},
+                json={"model": os.environ.get("AI_MODEL", "llama3.2"), "prompt": prompt, "stream": False},
             )
             if response.status_code == 200:
                 analysis = response.json().get("response", "").strip()
@@ -776,7 +776,7 @@ Seja direto e técnico."""
                             "run_id": run_id,
                             "agent": "OllamaAnalysisAgent",
                             "input": _json.dumps({"incidents_count": len(incidents), "prompt_length": len(prompt)}),
-                            "output": _json.dumps({"analysis": analysis, "model": "llama2"}),
+                            "output": _json.dumps({"analysis": analysis, "model": os.environ.get("AI_MODEL", "llama3.2")}),
                         },
                     )
                     db.commit()
@@ -790,7 +790,7 @@ Seja direto e técnico."""
                         inc.root_cause = f"🧠 Análise IA: {analysis[:200]}..."
                         existing = inc.ai_analysis or {}
                         existing["ollama_analysis"] = {
-                            "model": "llama2",
+                            "model": os.environ.get("AI_MODEL", "llama3.2"),
                             "analysis": analysis,
                             "timestamp": datetime.now(timezone.utc).isoformat(),
                         }

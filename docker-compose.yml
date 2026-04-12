@@ -49,7 +49,7 @@ services:
       - "conecta.techbiz.com.br:192.168.31.80"
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - AI_MODEL=llama2
+      - AI_MODEL=llama3.2
       - TZ=America/Sao_Paulo
       # v3 Streaming
       - METRICS_STREAM_KEY=metrics_stream
@@ -132,7 +132,7 @@ services:
     env_file: .env
     environment:
       - OLLAMA_BASE_URL=http://ollama:11434
-      - AI_MODEL=llama2
+      - AI_MODEL=llama3.2
       - TZ=America/Sao_Paulo
     ports:
       - "8001:8001"
