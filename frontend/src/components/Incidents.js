@@ -71,6 +71,21 @@ function Incidents({ onNavigateToServer, onNavigate }) {
     }
   };
 
+  const handleRedispatch = async (incident) => {
+    try {
+      const res = await api.post(`/incidents/${incident.id}/redispatch`);
+      const sent = res.data.sent || [];
+      const failed = res.data.failed || [];
+      const msg = sent.length > 0
+        ? `✅ Enviado: ${sent.join(', ')}${failed.length > 0 ? `\n⚠️ Falhou: ${failed.map(f => f.channel).join(', ')}` : ''}`
+        : `⚠️ Nenhum canal enviou. Falhas: ${failed.map(f => `${f.channel}: ${f.error}`).join('; ')}`;
+      alert(msg);
+      await loadIncidents();
+    } catch (error) {
+      alert('Erro ao re-despachar: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const handleAcknowledge = async (incident) => {
     try {
       await api.post(`/incidents/${incident.id}/acknowledge`, { notes: '' });
@@ -379,6 +394,16 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                             style={{ background: '#2196f3' }}
                           >
                             ✓
+                          </button>
+                        )}
+                        {incident.status === 'open' && (
+                          <button
+                            className="btn-action btn-small"
+                            onClick={() => handleRedispatch(incident)}
+                            title="Re-enviar notificações (SMS, WhatsApp, Ligação)"
+                            style={{ background: '#9c27b0' }}
+                          >
+                            📣
                           </button>
                         )}
                         {(incident.status === 'acknowledged' || incident.status === 'resolved' || incident.status === 'auto_resolved') && (
