@@ -710,7 +710,7 @@ function AIActivities() {
               </span>
             </div>
             <div style={{ background: '#0f172a', borderRadius: 10, padding: 16, fontSize: 13, color: '#cbd5e1', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
-              {selectedActivity.description || 'Sem detalhes disponíveis.'}
+              {selectedActivity.server_name || selectedActivity.description || 'Sem detalhes disponíveis.'}
             </div>
           </div>
         </div>,

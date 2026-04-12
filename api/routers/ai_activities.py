@@ -75,18 +75,19 @@ async def list_ai_activities(
 
         for r in rows:
             icon = agent_icons.get(r.agent_name, "🤖")
-            desc_text = r.ollama_analysis[:120] + "..." if r.ollama_analysis and len(r.ollama_analysis) > 120 else (r.ollama_analysis or r.error or "Análise concluída")
+            full_text = r.ollama_analysis or r.error or "Análise concluída"
+            short_text = full_text[:120] + "..." if len(full_text) > 120 else full_text
             activities.append(ActivityResponse(
                 id=r.id,
                 type="analysis",
                 title=f"{icon} {r.agent_name}",
-                description=desc_text,
+                description=short_text,
                 status=r.status or "success",
                 success=r.status == "success",
                 created_at=r.timestamp,
                 incident_id=None,
-                server_name=None,
-                sensor_name=None,
+                server_name=full_text,  # reutilizando campo para texto completo
+                sensor_name=r.agent_name,
             ))
     except Exception:
         pass
