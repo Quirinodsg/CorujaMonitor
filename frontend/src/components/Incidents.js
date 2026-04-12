@@ -73,14 +73,8 @@ function Incidents({ onNavigateToServer, onNavigate }) {
 
   const handleRedispatch = async (incident) => {
     try {
-      const res = await api.post(`/incidents/${incident.id}/redispatch`);
-      const sent = res.data.sent || [];
-      const failed = res.data.failed || [];
-      const msg = sent.length > 0
-        ? `✅ Enviado: ${sent.join(', ')}${failed.length > 0 ? `\n⚠️ Falhou: ${failed.map(f => f.channel).join(', ')}` : ''}`
-        : `⚠️ Nenhum canal enviou. Falhas: ${failed.map(f => `${f.channel}: ${f.error}`).join('; ')}`;
-      alert(msg);
-      await loadIncidents();
+      await api.post(`/incidents/${incident.id}/redispatch`);
+      alert('✅ Notificações enfileiradas para re-envio.\nVerifique SMS, WhatsApp e ligação em alguns segundos.');
     } catch (error) {
       alert('Erro ao re-despachar: ' + (error.response?.data?.detail || error.message));
     }

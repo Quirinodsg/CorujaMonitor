@@ -270,23 +270,24 @@ async def redispatch_incident(
     except Exception:
         pass  # fail-open
 
-    # Disparar notificações via Celery
+    # Disparar via Celery — envia a task para o worker sem importar o módulo diretamente
     try:
-        import sys, os as _os
-        worker_dir = _os.path.join(_os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))), "worker")
-        if worker_dir not in sys.path:
-            sys.path.insert(0, worker_dir)
-        from notification_dispatcher import dispatch_notifications
-        result = dispatch_notifications(incident.id)
+        import os
+        from celery import Celery
+        celery_app = Celery('coruja_worker')
+        celery_app.conf.broker_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        celery_app.conf.result_backend = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
+        celery_app.send_task(
+            'notification_dispatcher.dispatch_notifications',
+            args=[incident.id],
+        )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro ao despachar notificações: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro ao enfileirar notificações: {str(e)}")
 
     return {
         "success": True,
-        "message": "Notificações re-despachadas",
+        "message": "Notificações enfileiradas para re-envio (SMS, WhatsApp, Ligação, Email)",
         "incident_id": incident.id,
-        "sent": result.get("sent", []),
-        "failed": result.get("failed", []),
     }
 
 
