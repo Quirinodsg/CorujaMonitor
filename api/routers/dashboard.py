@@ -50,7 +50,7 @@ async def get_dashboard_overview(
             Incident.created_at >= last_month
         ).scalar()
     else:
-        from sqlalchemy import or_
+        from sqlalchemy import exists, and_
         from models import Probe
 
         # Total servers
@@ -58,51 +58,71 @@ async def get_dashboard_overview(
             Server.tenant_id == current_user.tenant_id,
             Server.is_active == True
         ).scalar()
-        
-        # Total sensors
-        total_sensors = db.query(func.count(Sensor.id)).join(Server).filter(
-            Server.tenant_id == current_user.tenant_id,
-            Sensor.is_active == True,
+
+        # Total sensors — incluindo standalone via probe
+        total_sensors = (
+            db.query(func.count(Sensor.id))
+            .outerjoin(Server, Sensor.server_id == Server.id)
+            .outerjoin(Probe, Sensor.probe_id == Probe.id)
+            .filter(
+                Sensor.is_active == True,
+                db.query(func.count()).filter(
+                    (Server.tenant_id == current_user.tenant_id) |
+                    (Probe.tenant_id == current_user.tenant_id) |
+                    ((Sensor.server_id == None) & (Sensor.probe_id == None))
+                ).correlate(Sensor).as_scalar() > 0
+            )
+            .scalar()
+        )
+        # Simplificado: usar subquery direta
+        total_sensors = db.execute(
+            __import__('sqlalchemy').text("""
+                SELECT COUNT(s.id) FROM sensors s
+                LEFT JOIN servers srv ON srv.id = s.server_id
+                LEFT JOIN probes p ON p.id = s.probe_id
+                WHERE s.is_active = TRUE
+                  AND (srv.tenant_id = :tid OR p.tenant_id = :tid
+                       OR (s.server_id IS NULL AND s.probe_id IS NULL))
+            """), {"tid": current_user.tenant_id}
         ).scalar()
 
         def _incident_base_query():
-            return (
-                db.query(func.count(Incident.id))
-                .join(Sensor, Incident.sensor_id == Sensor.id)
-                .outerjoin(Server, Sensor.server_id == Server.id)
-                .outerjoin(Probe, Sensor.probe_id == Probe.id)
-                .filter(
-                    or_(
-                        Server.tenant_id == current_user.tenant_id,
-                        Probe.tenant_id == current_user.tenant_id,
-                        (Sensor.server_id == None) & (Sensor.probe_id == None),
-                    )
-                )
+            return db.execute(
+                __import__('sqlalchemy').text("""
+                    SELECT COUNT(i.id) FROM incidents i
+                    JOIN sensors s ON s.id = i.sensor_id
+                    LEFT JOIN servers srv ON srv.id = s.server_id
+                    LEFT JOIN probes p ON p.id = s.probe_id
+                    WHERE (srv.tenant_id = :tid OR p.tenant_id = :tid
+                           OR (s.server_id IS NULL AND s.probe_id IS NULL))
+                      {extra}
+                """),
+                {"tid": current_user.tenant_id}
             )
 
-        # Open incidents
-        open_incidents = _incident_base_query().filter(
-            Incident.status == "open"
-        ).scalar()
-        
-        # Critical incidents
-        critical_incidents = _incident_base_query().filter(
-            Incident.severity == "critical",
-            Incident.status == "open"
-        ).scalar()
-        
-        # Recent incidents (last 24h)
+        # Usar SQL direto para cada contagem
+        def _count_incidents(extra_where, extra_params=None):
+            params = {"tid": current_user.tenant_id}
+            if extra_params:
+                params.update(extra_params)
+            return db.execute(
+                __import__('sqlalchemy').text(f"""
+                    SELECT COUNT(i.id) FROM incidents i
+                    JOIN sensors s ON s.id = i.sensor_id
+                    LEFT JOIN servers srv ON srv.id = s.server_id
+                    LEFT JOIN probes p ON p.id = s.probe_id
+                    WHERE (srv.tenant_id = :tid OR p.tenant_id = :tid
+                           OR (s.server_id IS NULL AND s.probe_id IS NULL))
+                      AND {extra_where}
+                """), params
+            ).scalar() or 0
+
+        open_incidents = _count_incidents("i.status = 'open'")
+        critical_incidents = _count_incidents("i.severity = 'critical' AND i.status = 'open'")
         yesterday = datetime.utcnow() - timedelta(days=1)
-        recent_incidents = _incident_base_query().filter(
-            Incident.created_at >= yesterday
-        ).scalar()
-        
-        # Auto-resolved incidents (last 30 days)
+        recent_incidents = _count_incidents("i.created_at >= :yesterday", {"yesterday": yesterday})
         last_month = datetime.utcnow() - timedelta(days=30)
-        auto_resolved = _incident_base_query().filter(
-            Incident.status == "auto_resolved",
-            Incident.created_at >= last_month
-        ).scalar()
+        auto_resolved = _count_incidents("i.status = 'auto_resolved' AND i.created_at >= :last_month", {"last_month": last_month})
     
     return {
         "total_servers": total_servers,
@@ -122,29 +142,48 @@ async def get_health_summary(
     from sqlalchemy import text
 
     if current_user.role == 'admin':
-        tenant_filter = ""
-        params = {}
+        # Admin: todos os sensores ativos (com ou sem servidor)
+        rows = db.execute(text("""
+            SELECT
+                SUM(CASE WHEN s.is_acknowledged = TRUE THEN 1 ELSE 0 END) AS acknowledged,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'critical' THEN 1 ELSE 0 END) AS critical,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'warning' THEN 1 ELSE 0 END) AS warning,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'ok' THEN 1 ELSE 0 END) AS healthy,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status IS NULL THEN 1 ELSE 0 END) AS unknown
+            FROM sensors s
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = s.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
+            WHERE s.is_active = TRUE
+        """), {}).fetchone()
     else:
-        tenant_filter = "AND srv.tenant_id = :tenant_id"
-        params = {"tenant_id": current_user.tenant_id}
-
-    rows = db.execute(text(f"""
-        SELECT
-            SUM(CASE WHEN s.is_acknowledged = TRUE THEN 1 ELSE 0 END) AS acknowledged,
-            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'critical' THEN 1 ELSE 0 END) AS critical,
-            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'warning' THEN 1 ELSE 0 END) AS warning,
-            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'ok' THEN 1 ELSE 0 END) AS healthy,
-            SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status IS NULL THEN 1 ELSE 0 END) AS unknown
-        FROM sensors s
-        JOIN servers srv ON srv.id = s.server_id
-        LEFT JOIN LATERAL (
-            SELECT status FROM metrics
-            WHERE sensor_id = s.id
-            ORDER BY timestamp DESC
-            LIMIT 1
-        ) m ON TRUE
-        WHERE s.is_active = TRUE {tenant_filter}
-    """), params).fetchone()
+        # Usuário normal: sensores via servidor do tenant OU via probe do tenant OU standalone puro
+        rows = db.execute(text("""
+            SELECT
+                SUM(CASE WHEN s.is_acknowledged = TRUE THEN 1 ELSE 0 END) AS acknowledged,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'critical' THEN 1 ELSE 0 END) AS critical,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'warning' THEN 1 ELSE 0 END) AS warning,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status = 'ok' THEN 1 ELSE 0 END) AS healthy,
+                SUM(CASE WHEN s.is_acknowledged = FALSE AND m.status IS NULL THEN 1 ELSE 0 END) AS unknown
+            FROM sensors s
+            LEFT JOIN servers srv ON srv.id = s.server_id
+            LEFT JOIN probes p ON p.id = s.probe_id
+            LEFT JOIN LATERAL (
+                SELECT status FROM metrics
+                WHERE sensor_id = s.id
+                ORDER BY timestamp DESC
+                LIMIT 1
+            ) m ON TRUE
+            WHERE s.is_active = TRUE
+              AND (
+                srv.tenant_id = :tenant_id
+                OR p.tenant_id = :tenant_id
+                OR (s.server_id IS NULL AND s.probe_id IS NULL)
+              )
+        """), {"tenant_id": current_user.tenant_id}).fetchone()
 
     return {
         "healthy": int(rows.healthy or 0),

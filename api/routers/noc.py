@@ -287,10 +287,18 @@ async def get_kpis(
         inc_base = (
             db.query(Incident)
             .join(Sensor, Incident.sensor_id == Sensor.id)
-            .join(Server, Sensor.server_id == Server.id)
+            .outerjoin(Server, Sensor.server_id == Server.id)
         )
         if current_user.role != 'admin':
-            inc_base = inc_base.filter(Server.tenant_id == current_user.tenant_id)
+            from sqlalchemy import or_, and_, exists, text as sa_text
+            from models import Probe
+            inc_base = inc_base.filter(
+                or_(
+                    exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
 
         # MTTR via SQL avg
         mttr_row = (
