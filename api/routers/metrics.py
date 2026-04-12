@@ -380,7 +380,9 @@ async def list_metrics(
         Sensor.id == sensor_id,
         or_(
             Server.tenant_id == current_user.tenant_id,
-            Probe.tenant_id == current_user.tenant_id
+            Probe.tenant_id == current_user.tenant_id,
+            # Sensores standalone sem server nem probe (ex: HTTP coletado pelo worker)
+            (Sensor.server_id == None) & (Sensor.probe_id == None),
         )
     ).first()
     

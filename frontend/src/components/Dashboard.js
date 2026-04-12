@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import './Dashboard.css';
 
 const WS_URL = (() => {
@@ -38,6 +39,9 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
   const [allStandaloneSensors, setAllStandaloneSensors] = useState([]);
   const [networkAssets, setNetworkAssets] = useState([]);
   const [networkAssetStatuses, setNetworkAssetStatuses] = useState({});
+  const [siteModalSensor, setSiteModalSensor] = useState(null);
+  const [siteHistory, setSiteHistory] = useState([]);
+  const [siteHistoryLoading, setSiteHistoryLoading] = useState(false);
   const wsRef = useRef(null);
   const reconnectRef = useRef(null);
 
@@ -150,6 +154,21 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
     }
     if (filterCriticality !== 'all') f = f.filter(i => i.severity === filterCriticality);
     return f;
+  };
+
+  const openSiteModal = async (sensor) => {
+    setSiteModalSensor(sensor);
+    setSiteHistory([]);
+    setSiteHistoryLoading(true);
+    try {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const res = await api.get(`/metrics/?sensor_id=${sensor.id}&start_time=${since}&limit=2000`);
+      setSiteHistory(res.data || []);
+    } catch (e) {
+      console.error('Erro ao carregar histórico:', e);
+    } finally {
+      setSiteHistoryLoading(false);
+    }
   };
 
   if (loading) {
@@ -301,7 +320,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
               const url = sensor.config?.http_url || sensor.http_url || '';
               const responseMs = metric?.value ? Math.round(metric.value) : null;
               return (
-                <div key={sensor.id} className="dash-site-card" style={{ '--site-color': color }}>
+                <div key={sensor.id} className="dash-site-card" style={{ '--site-color': color, cursor: 'pointer' }} onClick={() => openSiteModal(sensor)}>
                   <div className="dash-site-status">
                     <span className="dash-site-badge">
                       <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'white' }} />
@@ -311,6 +330,7 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
                   </div>
                   <div className="dash-site-name">{sensor.name}</div>
                   {url && <div className="dash-site-url">{url}</div>}
+                  <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', marginTop: 4 }}>Clique para ver histórico</div>
                 </div>
               );
             })}
@@ -535,6 +555,161 @@ function Dashboard({ user, onLogout, onNavigate, onEnterNOC }) {
           </div>
         )}
       </div>
+
+      {/* ── Modal Histórico do Site ── */}
+      {siteModalSensor && (
+        <div
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => setSiteModalSensor(null)}
+        >
+          <div
+            style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 760, maxHeight: '85vh', overflowY: 'auto', border: '1px solid #334155' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#e2e8f0' }}>🌐 {siteModalSensor.name}</div>
+                <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                  {siteModalSensor.config?.http?.url || siteModalSensor.config?.http_url || siteModalSensor.http_url || ''}
+                </div>
+              </div>
+              <button onClick={() => setSiteModalSensor(null)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer', padding: '0 4px' }}>✕</button>
+            </div>
+
+            {siteHistoryLoading ? (
+              <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Carregando histórico...</div>
+            ) : siteHistory.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Nenhum dado nos últimos 7 dias</div>
+            ) : (() => {
+              // Calcular estatísticas
+              const okCount = siteHistory.filter(m => m.status === 'ok').length;
+              const critCount = siteHistory.filter(m => m.status === 'critical').length;
+              const warnCount = siteHistory.filter(m => m.status === 'warning').length;
+              const uptime = ((okCount / siteHistory.length) * 100).toFixed(2);
+              const responseTimes = siteHistory.filter(m => m.value > 0).map(m => m.value);
+              const avgMs = responseTimes.length ? Math.round(responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length) : 0;
+              const maxMs = responseTimes.length ? Math.round(Math.max(...responseTimes)) : 0;
+              const minMs = responseTimes.length ? Math.round(Math.min(...responseTimes)) : 0;
+
+              // Preparar dados para o gráfico (amostrar para não sobrecarregar)
+              const step = Math.max(1, Math.floor(siteHistory.length / 200));
+              const chartData = siteHistory
+                .filter((_, i) => i % step === 0)
+                .reverse()
+                .map(m => ({
+                  time: new Date(m.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+                  ms: m.value > 0 ? Math.round(m.value) : null,
+                  status: m.status,
+                }));
+
+              // Calcular incidentes (períodos offline)
+              const incidents = [];
+              let offlineStart = null;
+              for (const m of [...siteHistory].reverse()) {
+                if (m.status === 'critical' && !offlineStart) {
+                  offlineStart = m.timestamp;
+                } else if (m.status === 'ok' && offlineStart) {
+                  incidents.push({ start: offlineStart, end: m.timestamp });
+                  offlineStart = null;
+                }
+              }
+              if (offlineStart) incidents.push({ start: offlineStart, end: null });
+
+              return (
+                <>
+                  {/* KPIs */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+                    {[
+                      { label: 'Uptime 7d', value: `${uptime}%`, color: parseFloat(uptime) >= 99 ? '#22C55E' : parseFloat(uptime) >= 95 ? '#F59E0B' : '#EF4444' },
+                      { label: 'Tempo Médio', value: `${avgMs}ms`, color: avgMs < 1000 ? '#22C55E' : avgMs < 3000 ? '#F59E0B' : '#EF4444' },
+                      { label: 'Pior Resposta', value: `${maxMs}ms`, color: '#94a3b8' },
+                      { label: 'Melhor Resposta', value: `${minMs}ms`, color: '#94a3b8' },
+                    ].map(kpi => (
+                      <div key={kpi.label} style={{ background: '#0f172a', borderRadius: 10, padding: '12px 16px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color }}>{kpi.value}</div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 4 }}>{kpi.label}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Gráfico de tempo de resposta */}
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Tempo de Resposta (ms) — últimos 7 dias</div>
+                    <ResponsiveContainer width="100%" height={180}>
+                      <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                        <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#475569' }} interval="preserveStartEnd" />
+                        <YAxis tick={{ fontSize: 9, fill: '#475569' }} />
+                        <Tooltip
+                          contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                          formatter={(v, n) => [`${v}ms`, 'Resposta']}
+                        />
+                        <ReferenceLine y={avgMs} stroke="#F59E0B" strokeDasharray="4 4" label={{ value: `Média ${avgMs}ms`, fill: '#F59E0B', fontSize: 10 }} />
+                        <Line type="monotone" dataKey="ms" stroke="#6366F1" strokeWidth={1.5} dot={false} connectNulls={false} />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  {/* Barra de disponibilidade por dia */}
+                  <div style={{ marginBottom: 20 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Disponibilidade por Dia</div>
+                    <div style={{ display: 'flex', gap: 4 }}>
+                      {Array.from({ length: 7 }, (_, i) => {
+                        const day = new Date(Date.now() - (6 - i) * 86400000);
+                        const dayStr = day.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+                        const dayMetrics = siteHistory.filter(m => {
+                          const d = new Date(m.timestamp);
+                          return d.toDateString() === day.toDateString();
+                        });
+                        const dayOk = dayMetrics.filter(m => m.status === 'ok').length;
+                        const dayTotal = dayMetrics.length;
+                        const dayUptime = dayTotal > 0 ? (dayOk / dayTotal * 100) : null;
+                        const barColor = dayUptime === null ? '#334155' : dayUptime >= 99 ? '#22C55E' : dayUptime >= 95 ? '#F59E0B' : '#EF4444';
+                        return (
+                          <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                            <div title={dayUptime !== null ? `${dayUptime.toFixed(1)}%` : 'Sem dados'} style={{ height: 32, background: barColor, borderRadius: 4, marginBottom: 4, opacity: dayUptime === null ? 0.3 : 1 }} />
+                            <div style={{ fontSize: 10, color: '#475569' }}>{dayStr}</div>
+                            <div style={{ fontSize: 10, color: barColor, fontWeight: 600 }}>{dayUptime !== null ? `${dayUptime.toFixed(0)}%` : '—'}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Incidentes recentes */}
+                  {incidents.length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>🔴 Quedas Detectadas ({incidents.length})</div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {incidents.slice(0, 5).map((inc, i) => {
+                          const start = new Date(inc.start);
+                          const end = inc.end ? new Date(inc.end) : new Date();
+                          const dur = Math.round((end - start) / 60000);
+                          return (
+                            <div key={i} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '3px solid #EF4444' }}>
+                              <div>
+                                <div style={{ fontSize: 12, color: '#e2e8f0' }}>
+                                  {start.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                                  {inc.end && ` → ${end.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}`}
+                                  {!inc.end && ' → Agora'}
+                                </div>
+                              </div>
+                              <div style={{ fontSize: 12, color: '#EF4444', fontWeight: 600 }}>
+                                {dur < 60 ? `${dur}min` : `${Math.floor(dur/60)}h ${dur%60}min`}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
