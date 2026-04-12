@@ -104,6 +104,7 @@ function AIActivities() {
   }
 
   return (
+    <>
     <div className="ai-activities-container">
       <div className="ai-activities-header">
         <h2>🤖 Atividades da IA</h2>
@@ -685,10 +686,10 @@ function AIActivities() {
           </div>
         )}
       </div>
+    </div>
 
-      {/* Modal de detalhes da atividade */}
       {selectedActivity && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={() => setSelectedActivity(null)}>
           <div style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 640, maxHeight: '80vh', overflowY: 'auto', border: '1px solid #334155' }}
             onClick={e => e.stopPropagation()}>
@@ -703,23 +704,17 @@ function AIActivities() {
               <span style={{ background: '#1e3a5f', color: '#60a5fa', padding: '3px 10px', borderRadius: 20, fontSize: 12 }}>
                 {selectedActivity.type}
               </span>
-              <span style={{ color: '#64748b', fontSize: 12, padding: '3px 0' }}>
+              <span style={{ color: '#64748b', fontSize: 12 }}>
                 🕐 {new Date(selectedActivity.created_at).toLocaleString('pt-BR')}
               </span>
             </div>
             <div style={{ background: '#0f172a', borderRadius: 10, padding: 16, fontSize: 13, color: '#cbd5e1', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
               {selectedActivity.description || 'Sem detalhes disponíveis.'}
             </div>
-            {(selectedActivity.server_name || selectedActivity.sensor_name) && (
-              <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
-                {selectedActivity.server_name && <span style={{ color: '#94a3b8', fontSize: 12 }}>🖥️ {selectedActivity.server_name}</span>}
-                {selectedActivity.sensor_name && <span style={{ color: '#94a3b8', fontSize: 12 }}>📡 {selectedActivity.sensor_name}</span>}
-              </div>
-            )}
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 
