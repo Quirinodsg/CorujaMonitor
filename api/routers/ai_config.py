@@ -48,54 +48,48 @@ async def get_ollama_status(
     current_user: User = Depends(get_current_active_user)
 ):
     """Verificar status do Ollama"""
-    
     import os
     ollama_url = os.getenv("OLLAMA_BASE_URL", "http://ollama:11434")
-    model = "llama2"
-    
+    preferred_model = os.getenv("AI_MODEL", "llama3.2")
+
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
-            # Test connection
             response = await client.get(f"{ollama_url}/api/tags")
-            
+
             if response.status_code == 200:
                 data = response.json()
                 models = data.get("models", [])
-                
-                # Check if llama2 is installed
-                model_installed = any(m.get("name", "").startswith("llama2") for m in models)
-                
+                model_names = [m.get("name", "") for m in models]
+
+                # Usar o modelo preferido se instalado, senão o primeiro disponível
+                active_model = preferred_model
+                model_installed = any(m.startswith(preferred_model.split(":")[0]) for m in model_names)
+                if not model_installed and model_names:
+                    active_model = model_names[0]
+                    model_installed = True
+
                 return OllamaStatusResponse(
                     online=True,
                     url=ollama_url,
-                    model=model if model_installed else "not_installed",
+                    model=active_model if model_installed else "not_installed",
                     version=data.get("version"),
-                    error=None if model_installed else "Model llama2 not installed"
+                    error=None if model_installed else f"Modelo {preferred_model} não instalado"
                 )
             else:
                 return OllamaStatusResponse(
-                    online=False,
-                    url=ollama_url,
-                    model=model,
-                    version=None,
-                    error=f"HTTP {response.status_code}"
+                    online=False, url=ollama_url, model=preferred_model,
+                    version=None, error=f"HTTP {response.status_code}"
                 )
-    
+
     except httpx.ConnectError:
         return OllamaStatusResponse(
-            online=False,
-            url=ollama_url,
-            model=model,
-            version=None,
-            error="Connection refused - Ollama not running"
+            online=False, url=ollama_url, model=preferred_model,
+            version=None, error="Connection refused - Ollama não está rodando"
         )
     except Exception as e:
         return OllamaStatusResponse(
-            online=False,
-            url=ollama_url,
-            model=model,
-            version=None,
-            error=str(e)
+            online=False, url=ollama_url, model=preferred_model,
+            version=None, error=str(e)
         )
 
 

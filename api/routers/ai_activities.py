@@ -3,7 +3,7 @@ AI Activities API - Dashboard de atividades da IA
 """
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from sqlalchemy import desc, func
+from sqlalchemy import desc, func, text
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
 from datetime import datetime, timedelta
@@ -17,7 +17,7 @@ router = APIRouter()
 
 class ActivityResponse(BaseModel):
     id: int
-    type: str  # resolution, learning, analysis
+    type: str
     title: str
     description: str
     status: str
@@ -26,7 +26,7 @@ class ActivityResponse(BaseModel):
     incident_id: Optional[int]
     server_name: Optional[str]
     sensor_name: Optional[str]
-    
+
     class Config:
         from_attributes = True
 
@@ -43,6 +43,110 @@ class ActivityStatsResponse(BaseModel):
 @router.get("/", response_model=List[ActivityResponse])
 async def list_ai_activities(
     activity_type: Optional[str] = None,
+    days: int = 7,
+    skip: int = 0,
+    limit: int = 50,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Listar atividades da IA — combina pipeline v3 (ai_agent_logs) com dados legados."""
+    activities = []
+    since = datetime.now() - timedelta(days=days)
+
+    # ── 1. Logs do pipeline v3 (ai_agent_logs) ──────────────────────────
+    try:
+        rows = db.execute(text("""
+            SELECT id, run_id, agent_name, status, error, timestamp,
+                   output->>'analysis' as ollama_analysis
+            FROM ai_agent_logs
+            WHERE timestamp >= :since
+            ORDER BY timestamp DESC
+            LIMIT :limit
+        """), {"since": since, "limit": limit}).fetchall()
+
+        agent_icons = {
+            "AnomalyDetectionAgent": "📈",
+            "CorrelationAgent": "🔗",
+            "RootCauseAgent": "🔍",
+            "DecisionAgent": "⚖️",
+            "AutoRemediationAgent": "🔧",
+            "OllamaAnalysisAgent": "🧠",
+        }
+
+        for r in rows:
+            icon = agent_icons.get(r.agent_name, "🤖")
+            desc_text = r.ollama_analysis[:120] + "..." if r.ollama_analysis and len(r.ollama_analysis) > 120 else (r.ollama_analysis or r.error or "Análise concluída")
+            activities.append(ActivityResponse(
+                id=r.id,
+                type="analysis",
+                title=f"{icon} {r.agent_name}",
+                description=desc_text,
+                status=r.status or "success",
+                success=r.status == "success",
+                created_at=r.timestamp,
+                incident_id=None,
+                server_name=None,
+                sensor_name=None,
+            ))
+    except Exception:
+        pass
+
+    # ── 2. Alertas inteligentes (intelligent_alerts) ─────────────────────
+    try:
+        alerts = db.execute(text("""
+            SELECT id, title, severity, status, root_cause, confidence, created_at
+            FROM intelligent_alerts
+            WHERE created_at >= :since
+            ORDER BY created_at DESC
+            LIMIT :limit
+        """), {"since": since, "limit": limit}).fetchall()
+
+        for a in alerts:
+            sev_icon = "🔴" if a.severity == "critical" else "🟡"
+            activities.append(ActivityResponse(
+                id=a.id,
+                type="analysis",
+                title=f"{sev_icon} Alerta Inteligente: {a.title or 'Padrão detectado'}",
+                description=a.root_cause or f"Confiança: {int((a.confidence or 0) * 100)}%",
+                status=a.status or "open",
+                success=a.status == "resolved",
+                created_at=a.created_at,
+                incident_id=None,
+                server_name=None,
+                sensor_name=None,
+            ))
+    except Exception:
+        pass
+
+    # ── 3. Dados legados (ResolutionAttempt) ─────────────────────────────
+    try:
+        resolutions = db.query(ResolutionAttempt).filter(
+            ResolutionAttempt.tenant_id == current_user.tenant_id,
+            ResolutionAttempt.created_at >= since
+        ).order_by(desc(ResolutionAttempt.created_at)).limit(limit).all()
+
+        for r in resolutions:
+            incident = db.query(Incident).filter(Incident.id == r.incident_id).first()
+            sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first() if incident else None
+            server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor else None
+            status_emoji = "✅" if r.success else "❌" if r.success is False else "⏳"
+            activities.append(ActivityResponse(
+                id=r.id,
+                type="resolution",
+                title=f"{status_emoji} Auto-Resolução",
+                description=f"Problema: {r.problem_signature[:100]}",
+                status=r.status,
+                success=r.success,
+                created_at=r.created_at,
+                incident_id=r.incident_id,
+                server_name=server.hostname if server else None,
+                sensor_name=sensor.name if sensor else None,
+            ))
+    except Exception:
+        pass
+
+    activities.sort(key=lambda x: x.created_at, reverse=True)
+    return activities[skip:skip + limit]
     days: int = 7,
     skip: int = 0,
     limit: int = 50,
@@ -125,52 +229,64 @@ async def list_ai_activities(
 
 
 @router.get("/stats", response_model=ActivityStatsResponse)
+@router.get("/stats", response_model=ActivityStatsResponse)
 async def get_ai_activity_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Estatísticas de atividades da IA"""
-    
+    """Estatísticas de atividades da IA — usa pipeline v3 + dados legados."""
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
-    
-    # Resoluções hoje
-    resolutions_today = db.query(func.count(ResolutionAttempt.id)).filter(
-        ResolutionAttempt.tenant_id == current_user.tenant_id,
-        ResolutionAttempt.created_at >= today
-    ).scalar() or 0
-    
-    # Sessões de aprendizado hoje
-    learning_today = db.query(func.count(LearningSession.id)).filter(
-        LearningSession.tenant_id == current_user.tenant_id,
-        LearningSession.created_at >= today
-    ).scalar() or 0
-    
-    # Aguardando aprovação
-    pending = db.query(func.count(ResolutionAttempt.id)).filter(
-        ResolutionAttempt.tenant_id == current_user.tenant_id,
-        ResolutionAttempt.status == "pending",
-        ResolutionAttempt.requires_approval == True
-    ).scalar() or 0
-    
-    # Taxa de sucesso hoje
-    successful_today = db.query(func.count(ResolutionAttempt.id)).filter(
-        ResolutionAttempt.tenant_id == current_user.tenant_id,
-        ResolutionAttempt.created_at >= today,
-        ResolutionAttempt.success == True
-    ).scalar() or 0
-    
-    success_rate = (successful_today / resolutions_today * 100) if resolutions_today > 0 else 0.0
-    
-    # Tempo economizado (estimativa: 15 minutos por resolução automática)
-    time_saved = successful_today * 15
-    
+
+    # Análises hoje (ai_agent_logs)
+    try:
+        analyses_today = db.execute(text(
+            "SELECT COUNT(*) FROM ai_agent_logs WHERE timestamp >= :today"
+        ), {"today": today}).scalar() or 0
+    except Exception:
+        analyses_today = 0
+
+    # Alertas inteligentes hoje
+    try:
+        alerts_today = db.execute(text(
+            "SELECT COUNT(*) FROM intelligent_alerts WHERE created_at >= :today"
+        ), {"today": today}).scalar() or 0
+    except Exception:
+        alerts_today = 0
+
+    # Resoluções legadas hoje
+    try:
+        resolutions_today = db.query(func.count(ResolutionAttempt.id)).filter(
+            ResolutionAttempt.tenant_id == current_user.tenant_id,
+            ResolutionAttempt.created_at >= today
+        ).scalar() or 0
+        successful_today = db.query(func.count(ResolutionAttempt.id)).filter(
+            ResolutionAttempt.tenant_id == current_user.tenant_id,
+            ResolutionAttempt.created_at >= today,
+            ResolutionAttempt.success == True
+        ).scalar() or 0
+    except Exception:
+        resolutions_today = 0
+        successful_today = 0
+
+    # Taxa de sucesso (agentes v3 com status success)
+    try:
+        success_count = db.execute(text(
+            "SELECT COUNT(*) FROM ai_agent_logs WHERE timestamp >= :today AND status = 'success'"
+        ), {"today": today}).scalar() or 0
+        success_rate = (success_count / analyses_today * 100) if analyses_today > 0 else 0.0
+    except Exception:
+        success_rate = 0.0
+
+    # Tempo economizado: 15 min por alerta inteligente + 15 min por resolução
+    time_saved = (alerts_today + successful_today) * 15
+
     return ActivityStatsResponse(
-        today_analyses=resolutions_today + learning_today,
-        today_resolutions=resolutions_today,
-        today_learning_sessions=learning_today,
-        pending_approvals=pending,
-        success_rate_today=success_rate,
-        total_time_saved_minutes=time_saved
+        today_analyses=analyses_today,
+        today_resolutions=resolutions_today + alerts_today,
+        today_learning_sessions=0,
+        pending_approvals=0,
+        success_rate_today=round(success_rate, 1),
+        total_time_saved_minutes=time_saved,
     )
 
 
