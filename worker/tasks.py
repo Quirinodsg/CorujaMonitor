@@ -2252,6 +2252,40 @@ def escalation_cycle(self, sensor_id: int):
             )
             return
 
+        # ── 4b. Reler config ao vivo do banco (max_attempts, interval, mode) ──
+        # Isso garante que mudanças feitas na UI durante uma escalação ativa
+        # sejam respeitadas imediatamente no próximo ciclo.
+        try:
+            from database import SessionLocal as _SL
+            from models import Tenant as _Tenant
+            _db = _SL()
+            try:
+                _tenant = _db.query(_Tenant).filter(_Tenant.id == state.get("tenant_id")).first()
+                if _tenant and _tenant.notification_config:
+                    _esc_cfg = _tenant.notification_config.get("escalation", {})
+                    if _esc_cfg.get("max_attempts") is not None:
+                        state["max_attempts"] = int(_esc_cfg["max_attempts"])
+                    if _esc_cfg.get("interval_minutes") is not None:
+                        state["interval_minutes"] = int(_esc_cfg["interval_minutes"])
+                    if _esc_cfg.get("mode") is not None:
+                        state["mode"] = _esc_cfg["mode"]
+                    if _esc_cfg.get("call_duration_seconds") is not None:
+                        state["call_duration_seconds"] = int(_esc_cfg["call_duration_seconds"])
+                    # Atualizar phone_chain se mudou
+                    if _esc_cfg.get("phone_chain"):
+                        state["phone_numbers"] = [
+                            {"name": p.get("name", ""), "number": p.get("number", "")}
+                            for p in _esc_cfg["phone_chain"]
+                        ]
+                    logger.info(
+                        "escalation_cycle: config recarregada do banco — max_attempts=%d, interval=%dmin, mode=%s",
+                        state["max_attempts"], state["interval_minutes"], state["mode"],
+                    )
+            finally:
+                _db.close()
+        except Exception as _cfg_err:
+            logger.warning("escalation_cycle: erro ao reler config do banco: %s — usando valores do Redis", _cfg_err)
+
         # ── 5. Verificar max_attempts atingido ─────────────────────────────
         if state["attempt_count"] >= state["max_attempts"]:
             logger.info(
