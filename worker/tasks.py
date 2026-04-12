@@ -445,7 +445,7 @@ def get_incident_description(sensor, metric):
     """Generate incident description based on sensor type"""
     value = metric.value
     unit = metric.unit
-    
+
     if sensor.sensor_type == 'cpu':
         return f"CPU em {value:.1f}% (Crítico: {sensor.threshold_critical}%, Aviso: {sensor.threshold_warning}%)"
     elif sensor.sensor_type == 'memory':
@@ -462,8 +462,47 @@ def get_incident_description(sensor, metric):
         return f"Tráfego de rede: {mbps:.2f} MB/s (Crítico: {sensor.threshold_critical} MB/s, Aviso: {sensor.threshold_warning} MB/s)"
     elif sensor.sensor_type == 'service':
         return f"Serviço parado ou não respondendo"
+    elif sensor.sensor_type in ('snmp', 'snmp_ups', 'snmp_ap', 'snmp_switch'):
+        # Tentar extrair informação útil dos metadados da métrica
+        metadata = getattr(metric, 'extra_metadata', None) or {}
+        name_lower = (sensor.name or '').lower()
+
+        # Nobreak / UPS Engetron
+        if any(kw in name_lower for kw in ('engetron', 'nobreak', 'ups')):
+            alarmes = []
+            for k, v in metadata.items():
+                if isinstance(v, dict):
+                    val = v.get('value')
+                    label = v.get('label', k)
+                    # Alarmes binários (1 = ativo)
+                    if val == 1 and any(kw in k.lower() for kw in ('alarme', 'alarm', 'falha', 'fault', 'erro', 'error', 'fase', 'phase', 'bateria', 'battery', 'sobrecarga', 'overload')):
+                        alarmes.append(label or k)
+            if alarmes:
+                return f"Nobreak em alarme: {', '.join(alarmes[:3])}. Verifique o equipamento imediatamente."
+            return f"Nobreak Engetron em estado crítico. Valor atual: {value:.1f}. Verifique o equipamento."
+
+        # Ar-condicionado Conflex
+        if any(kw in name_lower for kw in ('conflex', 'ar-condicionado', 'ar condicionado', 'hvac')):
+            alarmes = []
+            for k, v in metadata.items():
+                if isinstance(v, dict):
+                    val = v.get('value')
+                    label = v.get('label', k)
+                    if val == 1 and any(kw in k.lower() for kw in ('alarme', 'alarm', 'falha', 'fault', 'temp', 'pressao', 'pressure', 'compressor')):
+                        alarmes.append(label or k)
+            if alarmes:
+                return f"Ar-condicionado em alarme: {', '.join(alarmes[:3])}. Verifique o equipamento imediatamente."
+            temp_keys = [k for k in metadata if 'temp' in k.lower()]
+            if temp_keys:
+                temp_val = metadata[temp_keys[0]]
+                temp = temp_val.get('value') if isinstance(temp_val, dict) else temp_val
+                return f"Ar-condicionado Conflex em estado crítico. Temperatura: {temp}°C. Verifique imediatamente."
+            return f"Ar-condicionado Conflex em estado crítico. Valor atual: {value:.1f}. Verifique o equipamento."
+
+        # SNMP genérico
+        return f"Sensor SNMP {sensor.name} em estado crítico. Valor: {value:.1f} {unit or ''}. Limite crítico: {sensor.threshold_critical}."
     else:
-        return f"Valor: {value}, Limite crítico: {sensor.threshold_critical}, Limite aviso: {sensor.threshold_warning}"
+        return f"Sensor {sensor.name} em estado crítico. Valor atual: {value:.1f} {unit or ''}. Limite: {sensor.threshold_critical}."
 
 @app.task
 def attempt_self_healing(incident_id: int):
@@ -2361,7 +2400,7 @@ def _make_escalation_call(state: dict, number: str, call_duration: int) -> str:
     """
     try:
         from database import SessionLocal
-        from models import Tenant
+        from models import Tenant, Incident, Sensor
         db = SessionLocal()
         try:
             tenant = db.query(Tenant).filter(Tenant.id == state.get("tenant_id")).first()
@@ -2381,14 +2420,62 @@ def _make_escalation_call(state: dict, number: str, call_duration: int) -> str:
             from twilio.rest import Client
             client = Client(account_sid, auth_token)
 
-            device = state.get("device_type", "equipamento")
-            problem = state.get("problem_description", "problema detectado")
+            # ── Construir mensagem inteligente ─────────────────────────────
+            device_type = state.get("device_type", "")
+            sensor_id = state.get("sensor_id")
+            incident_id = state.get("incident_id")
+
+            # Buscar nome do sensor e descrição real do incidente
+            sensor_name = ""
+            incident_title = ""
+            incident_desc = ""
+            if sensor_id:
+                sensor = db.query(Sensor).filter(Sensor.id == sensor_id).first()
+                if sensor:
+                    sensor_name = sensor.name
+            if incident_id:
+                incident = db.query(Incident).filter(Incident.id == incident_id).first()
+                if incident:
+                    incident_title = incident.title or ""
+                    incident_desc = incident.description or ""
+
+            # Mapear device_type para nome legível
+            device_labels = {
+                "engetron": "Nobreak Engetron",
+                "conflex": "Ar Condicionado Conflex",
+                "equallogic": "Storage EqualLogic",
+                "printer": "Impressora",
+            }
+            device_label = device_labels.get(device_type, sensor_name or "equipamento")
+
+            # Limpar descrição técnica — remover valores numéricos soltos e texto de threshold
+            # Usar o título do incidente que é mais limpo, ou a descrição se tiver info útil
+            problem_text = incident_title or state.get("problem_description", "")
+
+            # Remover padrões técnicos como "warning 0.0 critical 95.0"
+            import re
+            problem_clean = re.sub(
+                r'\b(warning|critical|aviso|critico)\s+[\d\.]+\s*(warning|critical|aviso|critico)?\s*[\d\.]*\b',
+                '', problem_text, flags=re.IGNORECASE
+            ).strip()
+            # Se ficou vazio ou muito curto, usar a descrição do incidente
+            if len(problem_clean) < 10 and incident_desc:
+                # Pegar primeira frase da descrição
+                problem_clean = incident_desc.split('.')[0].split('\n')[0].strip()
+            if not problem_clean:
+                problem_clean = "falha crítica detectada"
+
+            # Montar fala clara e informativa
+            attempt = state.get("attempt_count", 0) + 1
+            max_att = state.get("max_attempts", 10)
 
             speech = (
-                f'Atenção. Alerta crítico. '
-                f'{problem}. '
+                f'Atenção. Alerta crítico do sistema Coruja Monitor. '
+                f'{device_label}. '
+                f'{problem_clean}. '
                 f'Verifique imediatamente. '
-                f'Repito. {problem}.'
+                f'Esta é a tentativa {attempt} de {max_att}. '
+                f'Repito. {device_label}. {problem_clean}.'
             )
 
             call = client.calls.create(
