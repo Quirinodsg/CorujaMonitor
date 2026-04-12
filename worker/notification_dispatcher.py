@@ -184,6 +184,10 @@ def dispatch_notifications(incident_id: int) -> dict:
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
 
         if not tenant:
+            # Fallback para sensores standalone sem probe (ex: HTTP coletado pelo worker)
+            tenant = db.query(Tenant).order_by(Tenant.id).first()
+
+        if not tenant:
             logger.warning(f"Tenant não encontrado para incidente {incident_id} (sensor_id={sensor.id}, server_id={sensor.server_id}, probe_id={sensor.probe_id})")
             return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
 
@@ -397,6 +401,11 @@ def dispatch_resolution(incident_id: int) -> dict:
 
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
         if not tenant:
+            # Fallback para sensores standalone sem probe: usar o único tenant ativo
+            # (sensores HTTP coletados pelo worker Linux não têm server_id nem probe_id)
+            from sqlalchemy import func as _func
+            tenant = db.query(Tenant).order_by(Tenant.id).first()
+        if not tenant:
             logger.warning(f"Tenant não encontrado para resolução do incidente {incident_id}")
             return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
 
@@ -532,6 +541,9 @@ def dispatch_renotification(incident_id: int) -> dict:
             tenant_id = None
 
         tenant = db.query(Tenant).filter(Tenant.id == tenant_id).first()
+        if not tenant:
+            # Fallback para sensores standalone sem probe (ex: HTTP coletado pelo worker)
+            tenant = db.query(Tenant).order_by(Tenant.id).first()
         if not tenant:
             logger.warning(f"Tenant não encontrado para re-notificação do incidente {incident_id}")
             return {'sent': sent, 'failed': [{'channel': 'all', 'error': 'Tenant não encontrado'}]}
