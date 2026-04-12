@@ -7,7 +7,10 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from core.spec.models import Event, Metric
-from topology_engine.graph import TopologyGraph
+try:
+    from topology_engine.graph import TopologyGraph
+except ImportError:
+    TopologyGraph = None  # type: ignore
 
 
 @dataclass

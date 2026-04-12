@@ -8,7 +8,10 @@ from typing import Optional
 
 from core.spec.models import Event
 from core.spec.enums import EventSeverity
-from topology_engine.graph import TopologyGraph
+try:
+    from topology_engine.graph import TopologyGraph
+except ImportError:
+    TopologyGraph = None  # type: ignore
 from ai_agents.base_agent import BaseAgent, AgentContext, AgentResult
 
 logger = logging.getLogger(__name__)
