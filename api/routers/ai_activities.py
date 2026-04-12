@@ -147,88 +147,8 @@ async def list_ai_activities(
 
     activities.sort(key=lambda x: x.created_at, reverse=True)
     return activities[skip:skip + limit]
-    days: int = 7,
-    skip: int = 0,
-    limit: int = 50,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
-):
-    """Listar atividades da IA"""
-    
-    activities = []
-    since = datetime.now() - timedelta(days=days)
-    
-    # Resolution Attempts
-    if not activity_type or activity_type == "resolution":
-        resolutions = db.query(ResolutionAttempt).join(
-            Incident
-        ).join(
-            Sensor
-        ).join(
-            Server
-        ).filter(
-            ResolutionAttempt.tenant_id == current_user.tenant_id,
-            ResolutionAttempt.created_at >= since
-        ).order_by(desc(ResolutionAttempt.created_at)).limit(limit).all()
-        
-        for r in resolutions:
-            incident = db.query(Incident).filter(Incident.id == r.incident_id).first()
-            sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first() if incident else None
-            server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor else None
-            
-            status_emoji = "✅" if r.success else "❌" if r.success == False else "⏳"
-            activities.append(ActivityResponse(
-                id=r.id,
-                type="resolution",
-                title=f"{status_emoji} Auto-Resolução",
-                description=f"Problema: {r.problem_signature[:100]}",
-                status=r.status,
-                success=r.success,
-                created_at=r.created_at,
-                incident_id=r.incident_id,
-                server_name=server.hostname if server else None,
-                sensor_name=sensor.name if sensor else None
-            ))
-    
-    # Learning Sessions
-    if not activity_type or activity_type == "learning":
-        sessions = db.query(LearningSession).join(
-            Incident
-        ).join(
-            Sensor
-        ).join(
-            Server
-        ).filter(
-            LearningSession.tenant_id == current_user.tenant_id,
-            LearningSession.created_at >= since
-        ).order_by(desc(LearningSession.created_at)).limit(limit).all()
-        
-        for s in sessions:
-            incident = db.query(Incident).filter(Incident.id == s.incident_id).first()
-            sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first() if incident else None
-            server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor else None
-            
-            emoji = "🎓" if s.added_to_knowledge_base else "📝"
-            activities.append(ActivityResponse(
-                id=s.id,
-                type="learning",
-                title=f"{emoji} Aprendizado",
-                description=f"Aprendeu: {s.problem_description[:100]}",
-                status="learned" if s.added_to_knowledge_base else "captured",
-                success=s.was_successful,
-                created_at=s.created_at,
-                incident_id=s.incident_id,
-                server_name=server.hostname if server else None,
-                sensor_name=sensor.name if sensor else None
-            ))
-    
-    # Sort by date
-    activities.sort(key=lambda x: x.created_at, reverse=True)
-    
-    return activities[skip:skip+limit]
 
 
-@router.get("/stats", response_model=ActivityStatsResponse)
 @router.get("/stats", response_model=ActivityStatsResponse)
 async def get_ai_activity_stats(
     db: Session = Depends(get_db),
@@ -237,7 +157,6 @@ async def get_ai_activity_stats(
     """Estatísticas de atividades da IA — usa pipeline v3 + dados legados."""
     today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Análises hoje (ai_agent_logs)
     try:
         analyses_today = db.execute(text(
             "SELECT COUNT(*) FROM ai_agent_logs WHERE timestamp >= :today"
@@ -245,7 +164,6 @@ async def get_ai_activity_stats(
     except Exception:
         analyses_today = 0
 
-    # Alertas inteligentes hoje
     try:
         alerts_today = db.execute(text(
             "SELECT COUNT(*) FROM intelligent_alerts WHERE created_at >= :today"
@@ -253,7 +171,6 @@ async def get_ai_activity_stats(
     except Exception:
         alerts_today = 0
 
-    # Resoluções legadas hoje
     try:
         resolutions_today = db.query(func.count(ResolutionAttempt.id)).filter(
             ResolutionAttempt.tenant_id == current_user.tenant_id,
@@ -268,7 +185,6 @@ async def get_ai_activity_stats(
         resolutions_today = 0
         successful_today = 0
 
-    # Taxa de sucesso (agentes v3 com status success)
     try:
         success_count = db.execute(text(
             "SELECT COUNT(*) FROM ai_agent_logs WHERE timestamp >= :today AND status = 'success'"
@@ -277,7 +193,6 @@ async def get_ai_activity_stats(
     except Exception:
         success_rate = 0.0
 
-    # Tempo economizado: 15 min por alerta inteligente + 15 min por resolução
     time_saved = (alerts_today + successful_today) * 15
 
     return ActivityStatsResponse(
@@ -296,26 +211,23 @@ async def get_pending_approvals(
     current_user: User = Depends(get_current_active_user)
 ):
     """Listar resoluções aguardando aprovação"""
-    
-    pending = db.query(ResolutionAttempt).filter(
-        ResolutionAttempt.tenant_id == current_user.tenant_id,
-        ResolutionAttempt.status == "pending",
-        ResolutionAttempt.requires_approval == True
-    ).order_by(ResolutionAttempt.created_at).all()
-    
+    try:
+        pending = db.query(ResolutionAttempt).filter(
+            ResolutionAttempt.tenant_id == current_user.tenant_id,
+            ResolutionAttempt.status == "pending",
+            ResolutionAttempt.requires_approval == True
+        ).order_by(ResolutionAttempt.created_at).all()
+    except Exception:
+        return []
+
     result = []
     for p in pending:
         incident = db.query(Incident).filter(Incident.id == p.incident_id).first()
         sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first() if incident else None
         server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor else None
-        
-        # Get KB entry for confidence
         kb_entry = None
         if p.knowledge_base_id:
-            kb_entry = db.query(KnowledgeBaseEntry).filter(
-                KnowledgeBaseEntry.id == p.knowledge_base_id
-            ).first()
-        
+            kb_entry = db.query(KnowledgeBaseEntry).filter(KnowledgeBaseEntry.id == p.knowledge_base_id).first()
         result.append({
             "id": p.id,
             "incident_id": p.incident_id,
@@ -327,9 +239,8 @@ async def get_pending_approvals(
             "confidence": kb_entry.root_cause_confidence if kb_entry else 0.0,
             "success_rate": kb_entry.success_rate if kb_entry else 0.0,
             "risk_level": kb_entry.risk_level if kb_entry else "unknown",
-            "created_at": p.created_at
+            "created_at": p.created_at,
         })
-    
     return result
 
 
@@ -340,26 +251,19 @@ async def approve_resolution(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin"))
 ):
-    """Aprovar resolução automática"""
-    
     attempt = db.query(ResolutionAttempt).filter(
         ResolutionAttempt.id == attempt_id,
         ResolutionAttempt.tenant_id == current_user.tenant_id
     ).first()
-    
     if not attempt:
         raise HTTPException(status_code=404, detail="Resolution attempt not found")
-    
     if attempt.status != "pending":
         raise HTTPException(status_code=400, detail="Resolution is not pending approval")
-    
     attempt.approved_by = current_user.id
     attempt.approved_at = datetime.now()
     attempt.approval_notes = notes
     attempt.status = "approved"
-    
     db.commit()
-    
     return {"message": "Resolution approved", "attempt_id": attempt_id}
 
 
@@ -370,26 +274,19 @@ async def reject_resolution(
     db: Session = Depends(get_db),
     current_user: User = Depends(require_role("admin"))
 ):
-    """Rejeitar resolução automática"""
-    
     attempt = db.query(ResolutionAttempt).filter(
         ResolutionAttempt.id == attempt_id,
         ResolutionAttempt.tenant_id == current_user.tenant_id
     ).first()
-    
     if not attempt:
         raise HTTPException(status_code=404, detail="Resolution attempt not found")
-    
     if attempt.status != "pending":
         raise HTTPException(status_code=400, detail="Resolution is not pending approval")
-    
     attempt.status = "rejected"
     attempt.approval_notes = reason
     attempt.approved_by = current_user.id
     attempt.approved_at = datetime.now()
-    
     db.commit()
-    
     return {"message": "Resolution rejected", "attempt_id": attempt_id}
 
 
@@ -399,30 +296,22 @@ async def get_activity_detail(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Detalhes de uma atividade"""
-    
     attempt = db.query(ResolutionAttempt).filter(
         ResolutionAttempt.id == attempt_id,
         ResolutionAttempt.tenant_id == current_user.tenant_id
     ).first()
-    
     if not attempt:
         raise HTTPException(status_code=404, detail="Activity not found")
-    
     incident = db.query(Incident).filter(Incident.id == attempt.incident_id).first()
     sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first() if incident else None
     server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor else None
-    
     kb_entry = None
     if attempt.knowledge_base_id:
-        kb_entry = db.query(KnowledgeBaseEntry).filter(
-            KnowledgeBaseEntry.id == attempt.knowledge_base_id
-        ).first()
-    
+        kb_entry = db.query(KnowledgeBaseEntry).filter(KnowledgeBaseEntry.id == attempt.knowledge_base_id).first()
     return {
         "attempt": attempt,
         "incident": incident,
         "sensor": sensor,
         "server": server,
-        "knowledge_base_entry": kb_entry
+        "knowledge_base_entry": kb_entry,
     }
