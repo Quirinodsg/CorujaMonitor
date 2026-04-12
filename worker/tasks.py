@@ -650,15 +650,13 @@ def generate_monthly_reports():
 @app.task
 def run_aiops_pipeline_v3():
     """
-    Executa o pipeline de agentes v3 com incidentes abertos dos últimos 30 minutos.
+    Executa o pipeline de agentes v3 com incidentes recentes.
     Agendado a cada 5 minutos pelo Celery Beat.
+    Usa Ollama (llama2) para enriquecer análise com linguagem natural.
     """
     logger.info("🤖 AIOps Pipeline v3: iniciando execução agendada")
     db = SessionLocal()
     try:
-        # ai_agents está montado em /app/ai_agents via volume docker
-        # _app_dir já é /app (adicionado no topo do arquivo)
-        # Garantir que /app está no path para encontrar ai_agents/
         if _app_dir not in sys.path:
             sys.path.insert(0, _app_dir)
 
@@ -667,14 +665,15 @@ def run_aiops_pipeline_v3():
         from core.spec.enums import EventSeverity
         from uuid import uuid4, UUID
 
-        since = datetime.now(timezone.utc) - timedelta(hours=24)
+        # Buscar incidentes dos últimos 7 dias (open ou acknowledged)
+        since = datetime.now(timezone.utc) - timedelta(days=7)
         incidents = db.query(Incident).filter(
             Incident.status.in_(["open", "acknowledged"]),
             Incident.created_at >= since,
         ).order_by(Incident.created_at.desc()).limit(50).all()
 
         if not incidents:
-            logger.info("AIOps Pipeline v3: nenhum incidente aberto/reconhecido nas últimas 24h")
+            logger.info("AIOps Pipeline v3: nenhum incidente aberto/reconhecido nos últimos 7 dias")
             return
 
         events = []
@@ -714,10 +713,96 @@ def run_aiops_pipeline_v3():
             result.get("should_alert"),
         )
 
+        # ── Enriquecer com Ollama (análise de linguagem natural) ──────────
+        # Chama llama2 para gerar resumo executivo dos incidentes detectados
+        if incidents:
+            _enrich_with_ollama(incidents, result, db)
+
     except Exception as e:
         logger.error("AIOps Pipeline v3: erro — %s", e, exc_info=True)
     finally:
         db.close()
+
+
+def _enrich_with_ollama(incidents, pipeline_result: dict, db):
+    """
+    Usa Ollama (llama2) para gerar análise de linguagem natural dos incidentes.
+    Salva resultado em ai_agent_logs e atualiza root_cause dos incidentes críticos.
+    """
+    import os as _os
+    ollama_url = _os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434")
+
+    # Montar resumo dos incidentes para o prompt
+    inc_summary = "\n".join([
+        f"- [{inc.severity.upper()}] {inc.title} (sensor_id={inc.sensor_id}, status={inc.status})"
+        for inc in incidents[:10]
+    ])
+
+    prompt = f"""Você é um especialista em infraestrutura de TI analisando alertas do sistema de monitoramento Coruja Monitor.
+
+Incidentes ativos:
+{inc_summary}
+
+Forneça em português:
+1. Diagnóstico resumido (2-3 frases)
+2. Causa raiz mais provável
+3. Ação recomendada imediata
+
+Seja direto e técnico."""
+
+    try:
+        import httpx as _httpx
+        with _httpx.Client(timeout=60.0) as client:
+            response = client.post(
+                f"{ollama_url}/api/generate",
+                json={"model": "llama2", "prompt": prompt, "stream": False},
+            )
+            if response.status_code == 200:
+                analysis = response.json().get("response", "").strip()
+                logger.info("🧠 Ollama análise concluída (%d chars)", len(analysis))
+
+                # Salvar em ai_agent_logs
+                import json as _json
+                run_id = pipeline_result.get("run_id", "ollama-direct")
+                try:
+                    db.execute(
+                        __import__('sqlalchemy').text("""
+                            INSERT INTO ai_agent_logs
+                                (run_id, agent_name, input, output, status, error, timestamp)
+                            VALUES
+                                (:run_id, :agent, CAST(:input AS jsonb), CAST(:output AS jsonb), 'success', NULL, NOW())
+                        """),
+                        {
+                            "run_id": run_id,
+                            "agent": "OllamaAnalysisAgent",
+                            "input": _json.dumps({"incidents_count": len(incidents), "prompt_length": len(prompt)}),
+                            "output": _json.dumps({"analysis": analysis, "model": "llama2"}),
+                        },
+                    )
+                    db.commit()
+                except Exception as db_err:
+                    logger.warning("Ollama: erro ao salvar log: %s", db_err)
+                    db.rollback()
+
+                # Atualizar root_cause dos incidentes críticos sem análise
+                for inc in incidents:
+                    if inc.severity == "critical" and not inc.root_cause:
+                        inc.root_cause = f"🧠 Análise IA: {analysis[:200]}..."
+                        existing = inc.ai_analysis or {}
+                        existing["ollama_analysis"] = {
+                            "model": "llama2",
+                            "analysis": analysis,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }
+                        inc.ai_analysis = existing
+                try:
+                    db.commit()
+                except Exception:
+                    db.rollback()
+            else:
+                logger.warning("Ollama retornou status %d", response.status_code)
+    except Exception as e:
+        logger.warning("Ollama indisponível ou erro: %s", e)
 
 
 @app.task
@@ -793,6 +878,10 @@ def execute_aiops_analysis(incident_id: int):
                 f"agents={result.get('agents_success', 0)}/{result.get('agents_run', 0)} "
                 f"alert={result.get('should_alert', False)}"
             )
+
+            # Enriquecer com Ollama se incidente crítico
+            if incident.severity == "critical" and not incident.root_cause:
+                _enrich_with_ollama([incident], result, db)
 
         except Exception as e:
             logger.error(f"❌ Erro no pipeline AIOps v3 para incidente {incident_id}: {e}", exc_info=True)
