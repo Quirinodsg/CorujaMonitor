@@ -343,6 +343,9 @@ def evaluate_all_thresholds():
                         inc_title = f"{sensor.name} - HOST DOWN (sem resposta)"
                     elif sensor.sensor_type == 'service':
                         inc_title = f"{sensor.name} - Serviço parado"
+                    elif sensor.sensor_type == 'http':
+                        _http_url = (sensor.config or {}).get('http', {}).get('url') or (sensor.config or {}).get('http_url') or sensor.name
+                        inc_title = f"{sensor.name} - OFFLINE ({_http_url})"
                     else:
                         inc_title = f"{sensor.name} - {severity.upper()}"
 
@@ -417,7 +420,19 @@ def evaluate_all_thresholds():
                 for incident in open_incidents:
                     incident.status = "resolved"
                     incident.resolved_at = datetime.now(timezone.utc)
-                    incident.resolution_notes = "Auto-resolvido: sensor voltou ao normal"
+                    # Para HTTP: incluir URL e tempo de queda na resolução
+                    if sensor.sensor_type == 'http':
+                        _http_url = (sensor.config or {}).get('http', {}).get('url') or (sensor.config or {}).get('http_url') or sensor.name
+                        _diff = incident.resolved_at - incident.created_at if incident.created_at else None
+                        _downtime = ''
+                        if _diff:
+                            _sec = int(_diff.total_seconds())
+                            if _sec < 60: _downtime = f"{_sec}s"
+                            elif _sec < 3600: _downtime = f"{_sec//60}min {_sec%60}s"
+                            else: _downtime = f"{_sec//3600}h {(_sec%3600)//60}min"
+                        incident.resolution_notes = f"Site voltou ao normal. URL: {_http_url}. Tempo de indisponibilidade: {_downtime or 'N/A'}"
+                    else:
+                        incident.resolution_notes = "Auto-resolvido: sensor voltou ao normal"
                     db.commit()
                     logger.info(f"✅ Incidente {incident.id} auto-resolvido (sensor {sensor.name} voltou ao normal)")
                     print(f"✅ Incidente {incident.id} auto-resolvido")
@@ -462,6 +477,14 @@ def get_incident_description(sensor, metric):
         return f"Tráfego de rede: {mbps:.2f} MB/s (Crítico: {sensor.threshold_critical} MB/s, Aviso: {sensor.threshold_warning} MB/s)"
     elif sensor.sensor_type == 'service':
         return f"Serviço parado ou não respondendo"
+    elif sensor.sensor_type == 'http':
+        url = ''
+        cfg = sensor.config or {}
+        http_cfg = cfg.get('http') or {}
+        url = http_cfg.get('url') or cfg.get('http_url') or sensor.name
+        if value and value > 0:
+            return f"Site OFFLINE ou lento — {url} — Tempo de resposta: {value:.0f}ms (limite crítico: {sensor.threshold_critical or 5000}ms)"
+        return f"Site OFFLINE — {url} — Sem resposta (timeout)"
     elif sensor.sensor_type in ('snmp', 'snmp_ups', 'snmp_ap', 'snmp_switch'):
         # Tentar extrair informação útil dos metadados da métrica
         metadata = getattr(metric, 'extra_metadata', None) or {}

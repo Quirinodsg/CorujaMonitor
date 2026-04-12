@@ -407,16 +407,48 @@ def dispatch_resolution(incident_id: int) -> dict:
         channels = channels & {'email', 'teams'}
 
         resolved_at = incident.resolved_at.strftime('%d/%m/%Y %H:%M') if incident.resolved_at else 'N/A'
+        created_at_fmt = incident.created_at.strftime('%d/%m/%Y %H:%M') if incident.created_at else 'N/A'
+
+        # Calcular tempo de queda
+        downtime_str = ''
+        if incident.created_at and incident.resolved_at:
+            diff = incident.resolved_at - incident.created_at
+            total_sec = int(diff.total_seconds())
+            if total_sec < 60:
+                downtime_str = f"{total_sec}s"
+            elif total_sec < 3600:
+                downtime_str = f"{total_sec // 60}min {total_sec % 60}s"
+            else:
+                downtime_str = f"{total_sec // 3600}h {(total_sec % 3600) // 60}min"
+
+        # Para HTTP, incluir URL na descrição
+        sensor_url = ''
+        if sensor.sensor_type == 'http':
+            cfg = sensor.config or {}
+            http_cfg = cfg.get('http') or {}
+            sensor_url = http_cfg.get('url') or cfg.get('http_url') or ''
+
+        display_server = server.hostname if server else (sensor_url or sensor.name)
+
+        description_parts = [incident.resolution_notes or 'Sensor voltou ao normal']
+        if downtime_str:
+            description_parts.append(f"Tempo de indisponibilidade: {downtime_str}")
+        if sensor_url:
+            description_parts.append(f"URL: {sensor_url}")
+        description_parts.append(f"Início: {created_at_fmt} | Fim: {resolved_at}")
+
         incident_data = {
             'title': f"✅ RESOLVIDO: {incident.title}",
-            'description': incident.resolution_notes or 'Sensor voltou ao normal',
+            'description': ' | '.join(description_parts),
             'severity': incident.severity,
-            'server_hostname': server.hostname if server else 'N/A',
+            'server_hostname': display_server,
             'sensor_name': sensor.name,
             'sensor_type': sensor.sensor_type,
             'incident_id': incident.id,
-            'created_at': incident.created_at.isoformat() if incident.created_at else None,
+            'created_at': created_at_fmt,
             'resolved_at': resolved_at,
+            'downtime': downtime_str,
+            'sensor_url': sensor_url,
             'is_resolution': True,
         }
 
