@@ -722,114 +722,81 @@ def run_aiops_pipeline_v3():
 
 @app.task
 def execute_aiops_analysis(incident_id: int):
-    """Execute complete AIOps analysis automatically when incident is created"""
-    logger.info(f"🤖 Iniciando análise AIOps automática para incidente {incident_id}")
+    """Executa análise AIOps v3 diretamente via pipeline (sem passar pela API HTTP)."""
+    logger.info(f"🤖 Iniciando análise AIOps v3 para incidente {incident_id}")
     db = SessionLocal()
-    
+
     try:
         incident = db.query(Incident).filter(Incident.id == incident_id).first()
         if not incident:
             logger.error(f"Incidente {incident_id} não encontrado")
             return
-        
+
         sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
         server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor and sensor.server_id else None
-
         server_hostname = server.hostname if server else (sensor.name if sensor else f"Sensor #{incident.sensor_id}")
-        logger.info(f"🔍 Executando análise para {sensor.name if sensor else '?'} em {server_hostname}")
-        
-        # Get metrics history (last 2 hours)
-        metrics_since = incident.created_at - timedelta(hours=2)
-        metrics = db.query(Metric).filter(
-            Metric.sensor_id == sensor.id,
-            Metric.timestamp >= metrics_since,
-            Metric.timestamp <= incident.created_at
-        ).order_by(Metric.timestamp.asc()).all()
-        
-        # Get current value from latest metric
-        current_value = None
-        if metrics:
-            current_value = metrics[-1].value
-        
-        # Prepare incident data for AIOps
-        incident_data = {
-            "id": incident.id,
-            "server_id": sensor.server_id if sensor else None,
-            "server_hostname": server_hostname,
-            "sensor_id": sensor.id if sensor else None,
-            "sensor_name": sensor.name if sensor else "Desconhecido",
-            "sensor_type": sensor.sensor_type if sensor else "unknown",
-            "severity": incident.severity,
-            "current_value": current_value,
-            "threshold_warning": sensor.threshold_warning if sensor else None,
-            "threshold_critical": sensor.threshold_critical if sensor else None,
-            "created_at": incident.created_at.isoformat()
-        }
-        
-        metrics_data = [
-            {
-                "value": m.value,
-                "timestamp": m.timestamp.isoformat(),
-                "status": m.status
-            }
-            for m in metrics
-        ]
-        
-        # Call AIOps API for Root Cause Analysis
-        aiops_result = {}
-        action_plan = {}
-        
+
+        logger.info(f"🔍 Analisando: {sensor.name if sensor else '?'} em {server_hostname}")
+
+        # Executar pipeline v3 diretamente
         try:
-            with httpx.Client(timeout=30.0) as client:
-                # 1. Root Cause Analysis
-                logger.info("📊 Executando análise de causa raiz...")
-                rca_response = client.post(
-                    "http://coruja-api:8000/api/v1/aiops/root-cause-analysis",
-                    json={"incident_id": incident.id},
-                    headers={"Authorization": f"Bearer {get_system_token()}"}
-                )
-                
-                if rca_response.status_code == 200:
-                    aiops_result = rca_response.json()
-                    logger.info(f"✅ RCA concluído: {aiops_result.get('root_cause', 'N/A')}")
-                    
-                    # Store RCA result in incident
-                    incident.root_cause = aiops_result.get('root_cause')
-                    incident.ai_analysis = {
-                        'rca': aiops_result,
-                        'timestamp': datetime.now(timezone.utc).isoformat()
-                    }
-                    db.commit()
-                else:
-                    logger.warning(f"⚠️ RCA falhou: {rca_response.status_code}")
-                
-                # 2. Create Action Plan
-                logger.info("📋 Criando plano de ação...")
-                plan_response = client.post(
-                    f"http://coruja-api:8000/api/v1/aiops/action-plan/{incident.id}?include_correlation=true",
-                    headers={"Authorization": f"Bearer {get_system_token()}"}
-                )
-                
-                if plan_response.status_code == 200:
-                    action_plan = plan_response.json()
-                    logger.info(f"✅ Plano de ação criado: {action_plan.get('plan_id')}")
-                    
-                    # Update incident with action plan
-                    if incident.ai_analysis:
-                        incident.ai_analysis['action_plan'] = action_plan
-                    else:
-                        incident.ai_analysis = {'action_plan': action_plan}
-                    db.commit()
-                else:
-                    logger.warning(f"⚠️ Plano de ação falhou: {plan_response.status_code}")
-                    
+            from ai_agents.pipeline_orchestrator import PipelineOrchestrator
+            from core.spec.models import Event
+            from core.spec.enums import EventSeverity
+            from uuid import uuid4, UUID
+
+            server_id = sensor.server_id if sensor else 0
+            try:
+                host_uuid = UUID(int=server_id) if server_id else uuid4()
+            except Exception:
+                host_uuid = uuid4()
+
+            sev = EventSeverity.CRITICAL if incident.severity == "critical" else EventSeverity.WARNING
+            ts = incident.created_at
+            if ts.tzinfo is None:
+                ts = ts.replace(tzinfo=timezone.utc)
+
+            event = Event(
+                host_id=host_uuid,
+                type=f"high_{sensor.sensor_type if sensor else 'unknown'}",
+                severity=sev,
+                timestamp=ts,
+                description=incident.title or f"Incidente #{incident.id}",
+            )
+
+            orch = PipelineOrchestrator(db_conn=db)
+            result = orch.run_from_events([event])
+
+            # Atualizar incidente com resultado do pipeline
+            root_cause = None
+            for agent_result in result.get("results", []):
+                if "RootCause" in agent_result.get("agent", "") and agent_result.get("success"):
+                    root_cause = f"Análise AIOps: {incident.title}"
+                    break
+
+            if root_cause or result.get("should_alert"):
+                incident.root_cause = root_cause or f"Padrão detectado pelo AIOps v3 (run: {result.get('run_id', '')[:8]})"
+                existing = incident.ai_analysis or {}
+                existing['aiops_v3'] = {
+                    'run_id': result.get('run_id'),
+                    'agents_run': result.get('agents_run', 0),
+                    'agents_success': result.get('agents_success', 0),
+                    'should_alert': result.get('should_alert', False),
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                }
+                incident.ai_analysis = existing
+                db.commit()
+
+            logger.info(
+                f"✅ AIOps v3 concluído para incidente {incident_id}: "
+                f"run_id={result.get('run_id', '')[:8]} "
+                f"agents={result.get('agents_success', 0)}/{result.get('agents_run', 0)} "
+                f"alert={result.get('should_alert', False)}"
+            )
+
         except Exception as e:
-            logger.error(f"❌ Erro na análise AIOps: {e}")
-        
-        # AIOps analysis complete — notificações já foram enviadas pelo dispatch_notifications_task
-        # NÃO enviar novamente aqui para evitar duplicação
-        logger.info("📧 AIOps concluído para incidente %d — notificações já enviadas pelo Dispatcher", incident.id)
-        
+            logger.error(f"❌ Erro no pipeline AIOps v3 para incidente {incident_id}: {e}", exc_info=True)
+
     except Exception as e:
         logger.error(f"❌ Erro ao executar análise AIOps: {e}", exc_info=True)
     finally:
