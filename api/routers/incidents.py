@@ -141,6 +141,53 @@ class ResolveIncidentRequest(BaseModel):
     resolution_notes: Optional[str] = None
 
 
+@router.post("/{incident_id}/reopen")
+async def reopen_incident(
+    incident_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_active_user)
+):
+    """Reabre um incidente reconhecido ou resolvido."""
+    if current_user.role == 'admin':
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    else:
+        from sqlalchemy import or_, and_, exists
+        from models import Probe
+        incident = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                Incident.id == incident_id,
+                or_(
+                    exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
+            .first()
+        )
+
+    if not incident:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    if incident.status == 'open':
+        raise HTTPException(status_code=400, detail="Incident is already open")
+
+    incident.status = 'open'
+    incident.resolved_at = None
+    incident.acknowledged_at = None
+    incident.acknowledged_by = None
+    db.commit()
+    db.refresh(incident)
+
+    return {
+        "success": True,
+        "message": "Incident reopened successfully",
+        "incident_id": incident.id,
+        "status": incident.status,
+    }
+
+
 @router.post("/{incident_id}/resolve")
 async def resolve_incident(
     incident_id: int,

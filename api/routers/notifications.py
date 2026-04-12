@@ -66,8 +66,9 @@ async def update_notification_config(
     if not tenant:
         raise HTTPException(status_code=404, detail="Tenant not found")
     
-    # Build configuration dict
-    notification_config = {}
+    # Build configuration dict — merge com o existente para não apagar escalation/phone_chain
+    from sqlalchemy.orm.attributes import flag_modified
+    notification_config = dict(tenant.notification_config or {})
     
     if config.email:
         notification_config['email'] = {
@@ -172,6 +173,7 @@ async def update_notification_config(
         }
     
     tenant.notification_config = notification_config
+    flag_modified(tenant, "notification_config")
     db.commit()
     db.refresh(tenant)
     

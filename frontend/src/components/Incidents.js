@@ -61,6 +61,16 @@ function Incidents({ onNavigateToServer, onNavigate }) {
     }
   };
 
+  const handleReopen = async (incident) => {
+    try {
+      await api.post(`/incidents/${incident.id}/reopen`);
+      await loadIncidents();
+    } catch (error) {
+      console.error('Erro ao reabrir incidente:', error);
+      alert('Erro ao reabrir: ' + (error.response?.data?.detail || error.message));
+    }
+  };
+
   const handleAcknowledge = async (incident) => {
     try {
       await api.post(`/incidents/${incident.id}/acknowledge`, { notes: '' });
@@ -369,6 +379,16 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                             style={{ background: '#2196f3' }}
                           >
                             ✓
+                          </button>
+                        )}
+                        {(incident.status === 'acknowledged' || incident.status === 'resolved' || incident.status === 'auto_resolved') && (
+                          <button
+                            className="btn-action btn-small"
+                            onClick={() => handleReopen(incident)}
+                            title="Reabrir incidente"
+                            style={{ background: '#ff9800' }}
+                          >
+                            🔄
                           </button>
                         )}
                       </div>
