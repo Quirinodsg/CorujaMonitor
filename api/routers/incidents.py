@@ -475,20 +475,23 @@ async def acknowledge_incident(
     incident.acknowledged_by = current_user.id
     if request.notes:
         incident.acknowledgement_notes = request.notes
-    
+
     db.commit()
     db.refresh(incident)
-    
-    # Parar escalação ativa para o sensor associado (se houver)
+
+    # Parar TODAS as notificações: escalação + SMS/email/teams por 24h
     try:
-        import sys, os
-        worker_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "worker")
-        if worker_dir not in sys.path:
-            sys.path.insert(0, worker_dir)
-        from escalation import stop_escalation
-        stop_escalation(incident.sensor_id, reason="acknowledged")
+        import redis as redis_lib, os
+        redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        r = redis_lib.Redis.from_url(redis_url, socket_connect_timeout=2, decode_responses=True)
+        # Deletar escalação ativa
+        r.delete(f"escalation:{incident.sensor_id}")
+        # Bloquear novas escalações por 24h
+        r.setex(f"escalation_blocked:{incident.sensor_id}", 86400, "1")
+        # Bloquear re-notificações por 24h
+        r.setex(f"notified:{incident.id}", 86400, "1")
     except Exception:
-        pass  # fail-open: não impedir reconhecimento se escalação falhar
+        pass  # fail-open
     
     return {
         "success": True,
