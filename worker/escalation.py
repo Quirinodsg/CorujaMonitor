@@ -260,6 +260,15 @@ def start_escalation(
             # Estado corrompido — prosseguir com nova escalação
             pass
 
+    # 1b. Verificar bloqueio manual (usuário parou as ligações)
+    blocked_key = f"escalation_blocked:{sensor_id}"
+    if r.exists(blocked_key):
+        logger.info(
+            "Escalação bloqueada manualmente para sensor %d — não iniciando",
+            sensor_id,
+        )
+        return None
+
     # 2. Verificar se sensor já está reconhecido
     SessionLocal, Incident, Sensor, Tenant = _import_db()
     db = SessionLocal()

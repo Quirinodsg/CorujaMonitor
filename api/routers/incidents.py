@@ -259,27 +259,27 @@ async def stop_incident_calls(
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
 
-    stopped = False
     try:
-        import redis as redis_lib, os
+        import redis as redis_lib, os, json
         redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
         r = redis_lib.Redis.from_url(redis_url, socket_connect_timeout=2, decode_responses=True)
         key = f"escalation:{incident.sensor_id}"
-        raw = r.get(key)
-        if raw:
-            import json
-            state = json.loads(raw)
-            state["status"] = "acknowledged"
-            r.setex(key, 3600, json.dumps(state))
-            stopped = True
-        # Limpar também notified key para permitir re-dispatch futuro
+
+        # Deletar a chave de escalação completamente — impede que o ciclo continue
+        r.delete(key)
+
+        # Setar chave de bloqueio por 24h — impede start_escalation de criar nova
+        r.setex(f"escalation_blocked:{incident.sensor_id}", 86400, "1")
+
+        # Limpar notified key
         r.delete(f"notified:{incident.id}")
+        r.delete(f"cooldown:{incident.sensor_id}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao parar escalação: {str(e)}")
 
     return {
         "success": True,
-        "message": "Ligações paradas" if stopped else "Nenhuma escalação ativa encontrada",
+        "message": "Ligações paradas. Novas ligações bloqueadas por 24h.",
         "incident_id": incident.id,
         "sensor_id": incident.sensor_id,
     }
