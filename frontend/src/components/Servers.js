@@ -1102,14 +1102,29 @@ function Servers({ selectedServerId, selectedSensorId }) {
     if (targetIndex < 0 || targetIndex >= groupServers.length) return;
 
     const target = groupServers[targetIndex];
-    const currentOrder = server.sort_order ?? currentIndex;
-    const targetOrder = target.sort_order ?? targetIndex;
+
+    // Garantir que todos os servidores do grupo têm sort_order inicializado
+    // Se sort_order for 0 ou null para todos, inicializar com índice atual
+    const allZero = groupServers.every(s => !s.sort_order);
+    const updates = [];
+
+    if (allZero) {
+      // Inicializar todos com índice atual, depois trocar os dois
+      groupServers.forEach((s, idx) => {
+        let newOrder = idx;
+        if (s.id === server.id) newOrder = targetIndex;
+        else if (s.id === target.id) newOrder = currentIndex;
+        updates.push(api.put(`/servers/${s.id}/reorder`, { sort_order: newOrder }));
+      });
+    } else {
+      const currentOrder = server.sort_order ?? currentIndex;
+      const targetOrder = target.sort_order ?? targetIndex;
+      updates.push(api.put(`/servers/${server.id}/reorder`, { sort_order: targetOrder }));
+      updates.push(api.put(`/servers/${target.id}/reorder`, { sort_order: currentOrder }));
+    }
 
     try {
-      await Promise.all([
-        api.put(`/servers/${server.id}/reorder`, { sort_order: targetOrder }),
-        api.put(`/servers/${target.id}/reorder`, { sort_order: currentOrder })
-      ]);
+      await Promise.all(updates);
       loadServers();
     } catch (error) {
       console.error('Erro ao reordenar servidor:', error);
