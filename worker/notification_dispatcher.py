@@ -11,6 +11,18 @@ _app_dir = _os.path.dirname(_os.path.abspath(__file__))
 if _app_dir not in _sys.path:
     _sys.path.insert(0, _app_dir)
 
+# Import antecipado do módulo escalation para garantir disponibilidade nos forks Celery
+try:
+    import importlib as _importlib
+    import importlib.util as _importlib_util
+    _esc_path = _os.path.join(_app_dir, 'escalation.py')
+    _esc_spec = _importlib_util.spec_from_file_location('escalation', _esc_path)
+    _esc_mod = _importlib_util.module_from_spec(_esc_spec)
+    _esc_spec.loader.exec_module(_esc_mod)
+    _sys.modules['escalation'] = _esc_mod
+except Exception as _e:
+    pass  # fail-open — erro será capturado no uso
+
 VALID_CHANNELS: set[str] = {
     "email", "teams", "ticket", "sms", "whatsapp", "phone_call"
 }
