@@ -270,17 +270,29 @@ async def redispatch_incident(
     except Exception:
         pass  # fail-open
 
-    # Disparar via Celery — envia a task para o worker sem importar o módulo diretamente
+    # Disparar via Redis diretamente no formato Celery (sem importar celery no container da API)
     try:
-        import os
-        from celery import Celery
-        celery_app = Celery('coruja_worker')
-        celery_app.conf.broker_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
-        celery_app.conf.result_backend = os.environ.get('CELERY_RESULT_BACKEND', 'redis://redis:6379/0')
-        celery_app.send_task(
-            'notification_dispatcher.dispatch_notifications',
-            args=[incident.id],
-        )
+        import os, json, uuid
+        import redis as redis_lib
+        redis_url = os.environ.get('CELERY_BROKER_URL', 'redis://redis:6379/0')
+        r = redis_lib.Redis.from_url(redis_url, socket_connect_timeout=3)
+        task_id = str(uuid.uuid4())
+        task_msg = json.dumps({
+            "id": task_id,
+            "task": "notification_dispatcher.dispatch_notifications",
+            "args": [incident.id],
+            "kwargs": {},
+            "retries": 0,
+            "eta": None,
+            "expires": None,
+            "utc": True,
+            "callbacks": None,
+            "errbacks": None,
+            "timelimit": [None, None],
+            "taskset": None,
+            "chord": None,
+        })
+        r.lpush("celery", task_msg)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao enfileirar notificações: {str(e)}")
 
