@@ -667,14 +667,14 @@ def run_aiops_pipeline_v3():
         from core.spec.enums import EventSeverity
         from uuid import uuid4, UUID
 
-        since = datetime.now(timezone.utc) - timedelta(minutes=30)
+        since = datetime.now(timezone.utc) - timedelta(hours=24)
         incidents = db.query(Incident).filter(
-            Incident.status == "open",
+            Incident.status.in_(["open", "acknowledged"]),
             Incident.created_at >= since,
         ).order_by(Incident.created_at.desc()).limit(50).all()
 
         if not incidents:
-            logger.info("AIOps Pipeline v3: nenhum incidente aberto nos últimos 30 min")
+            logger.info("AIOps Pipeline v3: nenhum incidente aberto/reconhecido nas últimas 24h")
             return
 
         events = []

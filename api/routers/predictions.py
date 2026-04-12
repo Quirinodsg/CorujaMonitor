@@ -43,10 +43,11 @@ def backfill_predictor(db: Session):
         predictor = _get_predictor()
         rows = db.execute(text("""
             SELECT ps.sensor_id, ps.timestamp, ps.value,
-                   s.sensor_type, srv.hostname
+                   s.sensor_type,
+                   COALESCE(srv.hostname, s.name) as hostname
             FROM prediction_samples ps
             JOIN sensors s ON s.id = ps.sensor_id
-            JOIN servers srv ON srv.id = s.server_id
+            LEFT JOIN servers srv ON srv.id = s.server_id
             ORDER BY ps.sensor_id, ps.timestamp
         """)).fetchall()
 
@@ -108,10 +109,12 @@ def get_predictions(
 
     try:
         # Buscar últimas 100 métricas por sensor em uma única query batch
-        # Evita N queries sequenciais (uma por sensor)
+        # Inclui sensores standalone (sem servidor) via LEFT JOIN
         rows = db.execute(text("""
             SELECT m.sensor_id, m.value, m.timestamp,
-                   s.sensor_type, srv.hostname, srv.id as server_id
+                   s.sensor_type,
+                   COALESCE(srv.hostname, s.name) as hostname,
+                   COALESCE(srv.id, 0) as server_id
             FROM (
                 SELECT sensor_id, value, timestamp,
                        ROW_NUMBER() OVER (PARTITION BY sensor_id ORDER BY timestamp DESC) as rn
@@ -119,7 +122,7 @@ def get_predictions(
                 WHERE timestamp >= NOW() - INTERVAL '6 hours'
             ) m
             JOIN sensors s ON s.id = m.sensor_id AND s.is_active = true
-            JOIN servers srv ON srv.id = s.server_id
+            LEFT JOIN servers srv ON srv.id = s.server_id
             WHERE m.rn <= 100
             ORDER BY m.sensor_id, m.timestamp
         """)).fetchall()
