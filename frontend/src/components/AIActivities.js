@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import axios from 'axios';
 import './AIActivities.css';
 import { API_URL } from '../config';
@@ -688,14 +689,14 @@ function AIActivities() {
       </div>
     </div>
 
-      {selectedActivity && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      {selectedActivity && ReactDOM.createPortal(
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.75)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
           onClick={() => setSelectedActivity(null)}>
-          <div style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 640, maxHeight: '80vh', overflowY: 'auto', border: '1px solid #334155' }}
+          <div style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 640, maxHeight: '80vh', overflowY: 'auto', border: '1px solid #334155', boxShadow: '0 25px 50px rgba(0,0,0,0.5)' }}
             onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>{selectedActivity.title}</div>
-              <button onClick={() => setSelectedActivity(null)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>
+              <button onClick={() => setSelectedActivity(null)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 24, cursor: 'pointer', padding: '0 4px' }}>✕</button>
             </div>
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               <span style={{ background: selectedActivity.success ? '#065f46' : '#7f1d1d', color: selectedActivity.success ? '#22c55e' : '#ef4444', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
@@ -712,7 +713,8 @@ function AIActivities() {
               {selectedActivity.description || 'Sem detalhes disponíveis.'}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   );
