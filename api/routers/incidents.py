@@ -271,8 +271,10 @@ async def stop_incident_calls(
         # Setar chave de bloqueio por 24h — impede start_escalation de criar nova
         r.setex(f"escalation_blocked:{incident.sensor_id}", 86400, "1")
 
-        # Limpar notified key
-        r.delete(f"notified:{incident.id}")
+        # Setar notified por 24h — impede dispatch_renotification de re-enviar SMS/email/teams
+        r.setex(f"notified:{incident.id}", 86400, "1")
+
+        # Limpar cooldown para não interferir com auto-resolve
         r.delete(f"cooldown:{incident.sensor_id}")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro ao parar escalação: {str(e)}")
