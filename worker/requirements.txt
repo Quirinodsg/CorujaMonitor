@@ -5,3 +5,5 @@ psycopg2-binary==2.9.9
 pydantic==2.5.3
 pydantic-settings==2.1.0
 httpx==0.26.0
+twilio>=8.0.0
+zoneinfo; python_version < "3.9"

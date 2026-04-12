@@ -5,6 +5,12 @@ Contém a função pura `resolve_channels` que mapeia sensor_type → conjunto d
 e as constantes da matriz de notificação padrão.
 """
 
+import os as _os
+import sys as _sys
+_app_dir = _os.path.dirname(_os.path.abspath(__file__))
+if _app_dir not in _sys.path:
+    _sys.path.insert(0, _app_dir)
+
 VALID_CHANNELS: set[str] = {
     "email", "teams", "ticket", "sms", "whatsapp", "phone_call"
 }
