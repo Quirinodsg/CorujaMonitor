@@ -26,30 +26,33 @@ async def get_dashboard_overview(
             Sensor.is_active == True,
         ).scalar()
         
-        # Open incidents (not acknowledged)
-        open_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
+        # Open incidents — outerjoin para incluir sensores standalone (server_id NULL)
+        open_incidents = db.query(func.count(Incident.id)).join(Sensor).outerjoin(Server).filter(
             Incident.status == "open"
         ).scalar()
         
-        # Critical incidents (not acknowledged)
-        critical_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
+        # Critical incidents — outerjoin para incluir sensores standalone
+        critical_incidents = db.query(func.count(Incident.id)).join(Sensor).outerjoin(Server).filter(
             Incident.severity == "critical",
             Incident.status == "open"
         ).scalar()
         
         # Recent incidents (last 24h)
         yesterday = datetime.utcnow() - timedelta(days=1)
-        recent_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
+        recent_incidents = db.query(func.count(Incident.id)).join(Sensor).outerjoin(Server).filter(
             Incident.created_at >= yesterday
         ).scalar()
         
         # Auto-resolved incidents (last 30 days)
         last_month = datetime.utcnow() - timedelta(days=30)
-        auto_resolved = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
+        auto_resolved = db.query(func.count(Incident.id)).join(Sensor).outerjoin(Server).filter(
             Incident.status == "auto_resolved",
             Incident.created_at >= last_month
         ).scalar()
     else:
+        from sqlalchemy import or_
+        from models import Probe
+
         # Total servers
         total_servers = db.query(func.count(Server.id)).filter(
             Server.tenant_id == current_user.tenant_id,
@@ -61,31 +64,42 @@ async def get_dashboard_overview(
             Server.tenant_id == current_user.tenant_id,
             Sensor.is_active == True,
         ).scalar()
-        
-        # Open incidents (not acknowledged)
-        open_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
-            Server.tenant_id == current_user.tenant_id,
+
+        def _incident_base_query():
+            return (
+                db.query(func.count(Incident.id))
+                .join(Sensor, Incident.sensor_id == Sensor.id)
+                .outerjoin(Server, Sensor.server_id == Server.id)
+                .outerjoin(Probe, Sensor.probe_id == Probe.id)
+                .filter(
+                    or_(
+                        Server.tenant_id == current_user.tenant_id,
+                        Probe.tenant_id == current_user.tenant_id,
+                        (Sensor.server_id == None) & (Sensor.probe_id == None),
+                    )
+                )
+            )
+
+        # Open incidents
+        open_incidents = _incident_base_query().filter(
             Incident.status == "open"
         ).scalar()
         
-        # Critical incidents (not acknowledged)
-        critical_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
-            Server.tenant_id == current_user.tenant_id,
+        # Critical incidents
+        critical_incidents = _incident_base_query().filter(
             Incident.severity == "critical",
             Incident.status == "open"
         ).scalar()
         
         # Recent incidents (last 24h)
         yesterday = datetime.utcnow() - timedelta(days=1)
-        recent_incidents = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
-            Server.tenant_id == current_user.tenant_id,
+        recent_incidents = _incident_base_query().filter(
             Incident.created_at >= yesterday
         ).scalar()
         
         # Auto-resolved incidents (last 30 days)
         last_month = datetime.utcnow() - timedelta(days=30)
-        auto_resolved = db.query(func.count(Incident.id)).join(Sensor).join(Server).filter(
-            Server.tenant_id == current_user.tenant_id,
+        auto_resolved = _incident_base_query().filter(
             Incident.status == "auto_resolved",
             Incident.created_at >= last_month
         ).scalar()

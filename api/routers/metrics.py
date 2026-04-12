@@ -582,7 +582,13 @@ def _trigger_datacenter_emergency(db, tenant_id, sensor, metric_data):
         notification_config = tenant.notification_config or {}
         escalation_config = notification_config.get('escalation', {})
 
-        if escalation_config.get('enabled', False):
+        # Sensores padrão de datacenter (Nobreak/Ar-condicionado) sempre disparam
+        # escalação quando há cadeia de telefones configurada, independente do toggle enabled.
+        # Sensores adicionados manualmente à lista só disparam se enabled=True.
+        is_default_datacenter = _is_default_datacenter_sensor(sensor)
+        escalation_enabled = escalation_config.get('enabled', False) or is_default_datacenter
+
+        if escalation_enabled:
             phone_chain = escalation_config.get('phone_chain', [])
 
             # Fallback: usar to_numbers do Twilio se phone_chain vazia

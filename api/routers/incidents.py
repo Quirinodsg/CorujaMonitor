@@ -49,18 +49,37 @@ async def list_incidents(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
+    from sqlalchemy import or_
+    from models import Probe
+
     if current_user.role == 'admin':
-        query = db.query(Incident).join(Sensor).join(Server)
-    else:
-        query = db.query(Incident).join(Sensor).join(Server).filter(
-            Server.tenant_id == current_user.tenant_id
+        # Admin vê todos — incluindo sensores standalone (server_id NULL)
+        query = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .outerjoin(Server, Sensor.server_id == Server.id)
         )
-    
+    else:
+        # Usuário normal: incidentes do tenant via server OU via probe OU standalone sem vínculo
+        query = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .outerjoin(Server, Sensor.server_id == Server.id)
+            .outerjoin(Probe, Sensor.probe_id == Probe.id)
+            .filter(
+                or_(
+                    Server.tenant_id == current_user.tenant_id,   # sensor com servidor
+                    Probe.tenant_id == current_user.tenant_id,    # sensor standalone com probe
+                    (Sensor.server_id == None) & (Sensor.probe_id == None),  # standalone sem vínculo
+                )
+            )
+        )
+
     if status:
         query = query.filter(Incident.status == status)
     if severity:
         query = query.filter(Incident.severity == severity)
-    
+
     incidents = query.order_by(Incident.created_at.desc()).limit(limit).all()
     return incidents
 
