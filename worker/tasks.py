@@ -397,7 +397,6 @@ def evaluate_all_thresholds():
                     if not already_notified:
                         try:
                             # Re-notificação: apenas email e teams (sem ticket para evitar spam de chamados)
-                            from notification_dispatcher import dispatch_renotification_task
                             dispatch_renotification_task.delay(existing_incident.id)
                             logger.info(f"🔔 Re-notificando incidente aberto {existing_incident.id} (sensor {sensor.name})")
                             if redis_client is not None:
