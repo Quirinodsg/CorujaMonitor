@@ -413,19 +413,19 @@ export default function TopologyView() {
               <div className="topo-detail-section-title">Blast Radius</div>
               <div className="topo-blast-grid">
                 <div className="topo-blast-item">
-                  <div className="topo-blast-value">{impact?.total_impact ?? '—'}</div>
+                  <div className="topo-blast-value">{impact?.total_impact > 0 ? impact.total_impact : (impact?.direct_neighbors?.length ?? '—')}</div>
                   <div className="topo-blast-label">Impacto</div>
                 </div>
                 <div className="topo-blast-item">
-                  <div className="topo-blast-value">{impact?.affected_hosts?.length ?? '—'}</div>
+                  <div className="topo-blast-value">{impact?.affected_hosts?.length > 0 ? impact.affected_hosts.length : (impact?.direct_neighbors?.filter(id => { const n = graphData.nodes.find(x => x.id === id); return n?.type === 'server' || n?.type === 'host'; }).length ?? '—')}</div>
                   <div className="topo-blast-label">Hosts</div>
                 </div>
                 <div className="topo-blast-item">
-                  <div className="topo-blast-value">{impact?.depends_on?.length ?? '—'}</div>
+                  <div className="topo-blast-value">{impact?.depends_on?.length ?? 0}</div>
                   <div className="topo-blast-label">Depende de</div>
                 </div>
                 <div className="topo-blast-item">
-                  <div className="topo-blast-value">{impact?.edge_count ?? '—'}</div>
+                  <div className="topo-blast-value">{impact?.direct_neighbors?.length ?? graphData.edges.filter(e => e.source === selected?.id || e.target === selected?.id).length}</div>
                   <div className="topo-blast-label">Conexões</div>
                 </div>
               </div>

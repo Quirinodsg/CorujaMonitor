@@ -510,6 +510,14 @@ async def get_impact(node_id: str, db: Session = Depends(get_db)):
         # Upstream = de quem este depende
         depends_on = _bfs(node_id, upstream)
 
+        # Se BFS retornou vazio mas há edges conectadas ao nó, usar vizinhos diretos
+        direct_downstream = downstream.get(node_id, [])
+        direct_upstream = upstream.get(node_id, [])
+        if not affected and direct_downstream:
+            affected = direct_downstream
+        if not depends_on and direct_upstream:
+            depends_on = direct_upstream
+
         node_map = {str(r.id): r for r in rows}
         affected_hosts = [d for d in affected
                           if node_map.get(d) and node_map[d].type in ("server", "host")]
