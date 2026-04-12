@@ -17,7 +17,6 @@ var CATS = [
     { id: "noc-realtime",       icon: "🖥️",  label: "NOC" },
   ]},
   { id: "aiops", label: "AIOps", icon: "🧠", items: [
-    { id: "aiops",         icon: "🔮", label: "AIOps" },
     { id: "aiops-v3",      icon: "🤖", label: "AIOps v3" },
     { id: "ai-activities", icon: "✨", label: "Atividades da IA" },
     { id: "predictions",   icon: "📉", label: "Predições de Falha" },

@@ -119,7 +119,7 @@ function MainLayout({ user, onLogout }) {
       case 'maintenance':
         return <MaintenanceWindows />;
       case 'aiops':
-        return <AIOps />;
+        return <AIOpsV3 />;
       case 'kubernetes':
         return <KubernetesDashboard />;
       case 'reports':
