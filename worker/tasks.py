@@ -14,6 +14,12 @@ _app_dir = os.path.dirname(os.path.abspath(__file__))
 if _app_dir not in sys.path:
     sys.path.insert(0, _app_dir)
 
+# Garantir que o diretório raiz do projeto também está no path
+# para que ai_agents/, core/, etc. sejam encontrados
+_project_root = os.path.dirname(_app_dir)
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 from config import settings
 from database import SessionLocal
 from models import Metric, Sensor, Incident, RemediationLog, Server
@@ -650,10 +656,11 @@ def run_aiops_pipeline_v3():
     logger.info("🤖 AIOps Pipeline v3: iniciando execução agendada")
     db = SessionLocal()
     try:
-        import sys, os
-        project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-        if project_root not in sys.path:
-            sys.path.insert(0, project_root)
+        # ai_agents está montado em /app/ai_agents via volume docker
+        # _app_dir já é /app (adicionado no topo do arquivo)
+        # Garantir que /app está no path para encontrar ai_agents/
+        if _app_dir not in sys.path:
+            sys.path.insert(0, _app_dir)
 
         from ai_agents.pipeline_orchestrator import PipelineOrchestrator
         from core.spec.models import Event
@@ -726,9 +733,10 @@ def execute_aiops_analysis(incident_id: int):
             return
         
         sensor = db.query(Sensor).filter(Sensor.id == incident.sensor_id).first()
-        server = db.query(Server).filter(Server.id == sensor.server_id).first()
-        
-        logger.info(f"🔍 Executando análise para {sensor.name} em {server.hostname}")
+        server = db.query(Server).filter(Server.id == sensor.server_id).first() if sensor and sensor.server_id else None
+
+        server_hostname = server.hostname if server else (sensor.name if sensor else f"Sensor #{incident.sensor_id}")
+        logger.info(f"🔍 Executando análise para {sensor.name if sensor else '?'} em {server_hostname}")
         
         # Get metrics history (last 2 hours)
         metrics_since = incident.created_at - timedelta(hours=2)
@@ -746,15 +754,15 @@ def execute_aiops_analysis(incident_id: int):
         # Prepare incident data for AIOps
         incident_data = {
             "id": incident.id,
-            "server_id": sensor.server_id,
-            "server_hostname": server.hostname,
-            "sensor_id": sensor.id,
-            "sensor_name": sensor.name,
-            "sensor_type": sensor.sensor_type,
+            "server_id": sensor.server_id if sensor else None,
+            "server_hostname": server_hostname,
+            "sensor_id": sensor.id if sensor else None,
+            "sensor_name": sensor.name if sensor else "Desconhecido",
+            "sensor_type": sensor.sensor_type if sensor else "unknown",
             "severity": incident.severity,
             "current_value": current_value,
-            "threshold_warning": sensor.threshold_warning,
-            "threshold_critical": sensor.threshold_critical,
+            "threshold_warning": sensor.threshold_warning if sensor else None,
+            "threshold_critical": sensor.threshold_critical if sensor else None,
             "created_at": incident.created_at.isoformat()
         }
         
