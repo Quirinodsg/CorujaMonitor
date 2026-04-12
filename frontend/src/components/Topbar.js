@@ -14,7 +14,33 @@ const PAGE_LABELS = {
   "system-health": "Saude do Sistema", "noc-realtime": "NOC",
 };
 
-const RESULT_ICONS = { server: "🖥️", sensor: "📡", incident: "🚨", default: "🔍" };
+const RESULT_ICONS = { server: "🖥️", sensor: "📡", incident: "🚨", page: "📄", default: "🔍" };
+
+
+const SYSTEM_PAGES = [
+  { type: 'page', id: 'dashboard',         label: 'Dashboard',           sub: 'Monitoramento', page: 'dashboard' },
+  { type: 'page', id: 'servers',           label: 'Servidores',          sub: 'Monitoramento', page: 'servers' },
+  { type: 'page', id: 'sensors',           label: 'Sensores',            sub: 'Monitoramento', page: 'sensors' },
+  { type: 'page', id: 'incidents',         label: 'Incidentes',          sub: 'Operação', page: 'incidents' },
+  { type: 'page', id: 'intelligent-alerts',label: 'Alertas Inteligentes',sub: 'Operação', page: 'intelligent-alerts' },
+  { type: 'page', id: 'escalation',        label: 'Escalação',           sub: 'Operação', page: 'escalation' },
+  { type: 'page', id: 'events-timeline',   label: 'Timeline de Eventos', sub: 'Operação', page: 'events-timeline' },
+  { type: 'page', id: 'noc-realtime',      label: 'NOC',                 sub: 'Operação', page: 'noc-realtime' },
+  { type: 'page', id: 'aiops-v3',          label: 'AIOps v3',            sub: 'AIOps', page: 'aiops-v3' },
+  { type: 'page', id: 'ai-activities',     label: 'Atividades da IA',    sub: 'AIOps', page: 'ai-activities' },
+  { type: 'page', id: 'predictions',       label: 'Predições de Falha',  sub: 'AIOps', page: 'predictions' },
+  { type: 'page', id: 'observability',     label: 'Observabilidade',     sub: 'Observabilidade', page: 'observability' },
+  { type: 'page', id: 'topology',          label: 'Topologia',           sub: 'Observabilidade', page: 'topology' },
+  { type: 'page', id: 'advanced-metrics',  label: 'Métricas Avançadas',  sub: 'Observabilidade', page: 'advanced-metrics' },
+  { type: 'page', id: 'hyperv',            label: 'Hyper-V',             sub: 'Observabilidade', page: 'hyperv' },
+  { type: 'page', id: 'discovery',         label: 'Discovery',           sub: 'Sistema', page: 'discovery' },
+  { type: 'page', id: 'probe-nodes',       label: 'Probe Nodes',         sub: 'Sistema', page: 'probe-nodes' },
+  { type: 'page', id: 'system-health',     label: 'Saúde do Sistema',    sub: 'Sistema', page: 'system-health' },
+  { type: 'page', id: 'maintenance',       label: 'GMUD',                sub: 'Sistema', page: 'maintenance' },
+  { type: 'page', id: 'settings',          label: 'Configurações',       sub: 'Sistema', page: 'settings' },
+  { type: 'page', id: 'knowledge-base',    label: 'Base de Conhecimento',sub: 'Conhecimento', page: 'knowledge-base' },
+  { type: 'page', id: 'companies',         label: 'Empresas',            sub: 'Monitoramento', page: 'companies' },
+];
 
 const base = API_URL;
 
@@ -124,11 +150,18 @@ function Topbar({ currentPage, systemStatus, alertCount = 0, onNavigate }) {
     setLoading(true);
     try {
       const ql = q.toLowerCase();
-      const all = await fetchAllData();
-      const filtered = all.filter(item =>
+      // Buscar páginas do sistema primeiro (estático, sem API)
+      const pageResults = SYSTEM_PAGES.filter(item =>
         (item.label || "").toLowerCase().includes(ql) ||
         (item.sub || "").toLowerCase().includes(ql)
-      ).slice(0, 10);
+      );
+      // Buscar servidores/sensores/incidentes (dinâmico, via API)
+      const all = await fetchAllData();
+      const dynamicResults = all.filter(item =>
+        (item.label || "").toLowerCase().includes(ql) ||
+        (item.sub || "").toLowerCase().includes(ql)
+      );
+      const filtered = [...pageResults, ...dynamicResults].slice(0, 12);
       setResults(filtered);
       setOpen(true);
     } catch (_) {
@@ -147,7 +180,19 @@ function Topbar({ currentPage, systemStatus, alertCount = 0, onNavigate }) {
     debounceRef.current = setTimeout(() => doSearch(q), 200);
   };
 
-  const handleSelect = (r) => { onNavigate && onNavigate(r.page); setSearch(""); setResults([]); setOpen(false); };
+  const handleSelect = (r) => {
+    if (onNavigate) {
+      // Para servidores, passar o ID para seleção direta
+      if (r.type === 'server' && r.id) {
+        onNavigate(r.page, { serverId: r.id });
+      } else if (r.type === 'incident' && r.id) {
+        onNavigate(r.page, { incidentId: r.id });
+      } else {
+        onNavigate(r.page);
+      }
+    }
+    setSearch(""); setResults([]); setOpen(false);
+  };
 
   const handleKeyDown = (e) => {
     if (!open || !results.length) return;

@@ -11,6 +11,7 @@ function AIActivities() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('recent');
   const [autoRemediationConfig, setAutoRemediationConfig] = useState(null);
+  const [selectedActivity, setSelectedActivity] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -212,7 +213,7 @@ function AIActivities() {
               </div>
             ) : (
               activities.map((activity) => (
-                <div key={`${activity.type}-${activity.id}`} className={`ai-activity-card ${activity.type}`}>
+                <div key={`${activity.type}-${activity.id}`} className={`ai-activity-card ${activity.type}`} onClick={() => setSelectedActivity(activity)} style={{ cursor: 'pointer' }}>
                   <div className="ai-activity-header">
                     <div className="ai-activity-title">
                       <span className="ai-activity-icon">
@@ -684,6 +685,40 @@ function AIActivities() {
           </div>
         )}
       </div>
+
+      {/* Modal de detalhes da atividade */}
+      {selectedActivity && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => setSelectedActivity(null)}>
+          <div style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 640, maxHeight: '80vh', overflowY: 'auto', border: '1px solid #334155' }}
+            onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#e2e8f0' }}>{selectedActivity.title}</div>
+              <button onClick={() => setSelectedActivity(null)} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 20, cursor: 'pointer' }}>✕</button>
+            </div>
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              <span style={{ background: selectedActivity.success ? '#065f46' : '#7f1d1d', color: selectedActivity.success ? '#22c55e' : '#ef4444', padding: '3px 10px', borderRadius: 20, fontSize: 12, fontWeight: 600 }}>
+                {selectedActivity.success ? '✅ Sucesso' : selectedActivity.status}
+              </span>
+              <span style={{ background: '#1e3a5f', color: '#60a5fa', padding: '3px 10px', borderRadius: 20, fontSize: 12 }}>
+                {selectedActivity.type}
+              </span>
+              <span style={{ color: '#64748b', fontSize: 12, padding: '3px 0' }}>
+                🕐 {new Date(selectedActivity.created_at).toLocaleString('pt-BR')}
+              </span>
+            </div>
+            <div style={{ background: '#0f172a', borderRadius: 10, padding: 16, fontSize: 13, color: '#cbd5e1', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+              {selectedActivity.description || 'Sem detalhes disponíveis.'}
+            </div>
+            {(selectedActivity.server_name || selectedActivity.sensor_name) && (
+              <div style={{ marginTop: 12, display: 'flex', gap: 12 }}>
+                {selectedActivity.server_name && <span style={{ color: '#94a3b8', fontSize: 12 }}>🖥️ {selectedActivity.server_name}</span>}
+                {selectedActivity.sensor_name && <span style={{ color: '#94a3b8', fontSize: 12 }}>📡 {selectedActivity.sensor_name}</span>}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
