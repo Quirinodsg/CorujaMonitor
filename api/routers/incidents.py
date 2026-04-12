@@ -106,15 +106,31 @@ async def get_incident(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    incident = db.query(Incident).join(Sensor).join(Server).filter(
-        Incident.id == incident_id,
-        Server.tenant_id == current_user.tenant_id
-    ).first()
-    
+    from sqlalchemy import or_, and_, exists
+    from models import Probe
+
+    if current_user.role == 'admin':
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    else:
+        incident = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                Incident.id == incident_id,
+                or_(
+                    exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
+            .first()
+        )
+
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
-    
+
     return incident
+
 
 @router.get("/{incident_id}/remediation", response_model=List[RemediationLogResponse])
 async def get_incident_remediation_logs(
@@ -122,10 +138,25 @@ async def get_incident_remediation_logs(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    incident = db.query(Incident).join(Sensor).join(Server).filter(
-        Incident.id == incident_id,
-        Server.tenant_id == current_user.tenant_id
-    ).first()
+    from sqlalchemy import or_, and_, exists
+    from models import Probe
+
+    if current_user.role == 'admin':
+        incident = db.query(Incident).filter(Incident.id == incident_id).first()
+    else:
+        incident = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                Incident.id == incident_id,
+                or_(
+                    exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
+            .first()
+        )
     
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
@@ -275,17 +306,28 @@ async def resolve_incident(
             Incident.id == incident_id
         ).first()
     else:
-        incident = db.query(Incident).join(Sensor).join(Server).filter(
-            Incident.id == incident_id,
-            Server.tenant_id == current_user.tenant_id
-        ).first()
-    
+        from sqlalchemy import or_, and_, exists
+        from models import Probe
+        incident = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                Incident.id == incident_id,
+                or_(
+                    exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
+            .first()
+        )
+
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
-    
+
     if incident.resolved_at:
         raise HTTPException(status_code=400, detail="Incident already resolved")
-    
+
     # Resolver incidente
     incident.resolved_at = datetime.utcnow()
     incident.status = "resolved"
@@ -335,17 +377,28 @@ async def acknowledge_incident(
             Incident.id == incident_id
         ).first()
     else:
-        incident = db.query(Incident).join(Sensor).join(Server).filter(
-            Incident.id == incident_id,
-            Server.tenant_id == current_user.tenant_id
-        ).first()
-    
+        from sqlalchemy import or_, and_, exists
+        from models import Probe
+        incident = (
+            db.query(Incident)
+            .join(Sensor, Incident.sensor_id == Sensor.id)
+            .filter(
+                Incident.id == incident_id,
+                or_(
+                    exists().where(and_(Server.id == Sensor.server_id, Server.tenant_id == current_user.tenant_id)),
+                    exists().where(and_(Probe.id == Sensor.probe_id, Probe.tenant_id == current_user.tenant_id)),
+                    and_(Sensor.server_id == None, Sensor.probe_id == None),
+                )
+            )
+            .first()
+        )
+
     if not incident:
         raise HTTPException(status_code=404, detail="Incident not found")
-    
+
     if incident.resolved_at:
         raise HTTPException(status_code=400, detail="Incident already resolved")
-    
+
     # Reconhecer incidente (muda status mas NÃO resolve)
     incident.status = "acknowledged"
     incident.acknowledged_at = datetime.utcnow()
