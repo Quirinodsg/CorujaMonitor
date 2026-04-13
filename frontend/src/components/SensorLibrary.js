@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import api from '../services/api';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine, BarChart, Bar, Cell } from 'recharts';
 import { sensorCategories, sensorTemplates } from '../data/sensorTemplates';
 import './Management.css';
 import './SensorGroups.css';
@@ -20,6 +22,10 @@ function SensorLibrary() {
   const [addError, setAddError] = useState('');
   const [networkDevices, setNetworkDevices] = useState([]);
   const [networkStatuses, setNetworkStatuses] = useState({});
+  const [detailSensor, setDetailSensor] = useState(null);
+  const [detailHistory, setDetailHistory] = useState([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailNetSensor, setDetailNetSensor] = useState(null); // for network devices
   
   const [newSensor, setNewSensor] = useState({
     probe_id: '',
@@ -338,15 +344,25 @@ function SensorLibrary() {
 
   const getSensorIcon = (category) => {
     const icons = {
-      snmp: '📡',
-      azure: '☁️',
-      http: '🌐',
-      storage: '💿',
-      network: '🌐',
-      application: '📦',
-      custom: '⚙️'
+      snmp: '📡', azure: '☁️', http: '🌐', storage: '💿',
+      network: '🌐', application: '📦', custom: '⚙️'
     };
     return icons[category] || '📊';
+  };
+
+  const openSensorDetail = async (sensor) => {
+    setDetailSensor(sensor);
+    setDetailHistory([]);
+    setDetailLoading(true);
+    try {
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const res = await api.get(`/metrics/?sensor_id=${sensor.id}&start_time=${since}&limit=2000`);
+      setDetailHistory(res.data || []);
+    } catch (e) {
+      console.error('Erro ao carregar histórico:', e);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   const renderSensorCard = (sensor, metric, statusColor, statusLabel, statusBg) => {
@@ -357,8 +373,9 @@ function SensorLibrary() {
         borderLeft: `4px solid ${statusColor}`,
         background: statusBg,
         position: 'relative',
-        overflow: 'hidden'
-      }}>
+        overflow: 'hidden',
+        cursor: 'pointer',
+      }} onClick={() => openSensorDetail(sensor)}>
         <div style={{
           position: 'absolute', top: 8, right: 8,
           display: 'flex', gap: 4, alignItems: 'center', zIndex: 2
@@ -1191,6 +1208,236 @@ function SensorLibrary() {
           </div>
         </div>
       )}
+
+      {/* Modal de detalhes do sensor via portal */}
+      {detailSensor && ReactDOM.createPortal(
+        <SensorDetailModal
+          sensor={detailSensor}
+          history={detailHistory}
+          loading={detailLoading}
+          onClose={() => { setDetailSensor(null); setDetailHistory([]); }}
+        />,
+        document.body
+      )}
+    </div>
+  );
+}
+
+// ── Modal Universal de Detalhes do Sensor ─────────────────────────────────────
+// Renderizado via portal no document.body para evitar problemas de z-index/overflow
+
+function SensorDetailModal({ sensor, history, loading, onClose }) {
+  const nameL = (sensor.name || '').toLowerCase();
+  const sType = sensor.sensor_type || '';
+  const isEngetron = !!(nameL.match(/engetron|nobreak|ups/) || sType === 'snmp_ups');
+  const isConflex = !!(nameL.match(/conflex|ar.condicionado|hvac/));
+  const isStorage = !!(nameL.match(/equallogic|storage|san|iscsi/) || sType === 'equallogic');
+  const isPrinter = !!(nameL.match(/impressora|printer/) || sType === 'printer');
+
+  const okCount = history.filter(m => m.status === 'ok').length;
+  const uptime7d = history.length > 0 ? ((okCount / history.length) * 100).toFixed(1) : null;
+  const outages = [];
+  let outStart = null;
+  for (const m of [...history].reverse()) {
+    if (m.status === 'critical' && !outStart) outStart = m.timestamp;
+    else if (m.status === 'ok' && outStart) { outages.push({ start: outStart, end: m.timestamp }); outStart = null; }
+  }
+  if (outStart) outages.push({ start: outStart, end: null });
+
+  const latest = history.length > 0 ? history[0] : null;
+  const latestMeta = latest?.extra_metadata || latest?.metadata || {};
+  const statusColor = latest?.status === 'ok' ? '#22C55E' : latest?.status === 'warning' ? '#F59E0B' : latest?.status === 'critical' ? '#EF4444' : '#6B7280';
+
+  let icon = '📡';
+  if (sType === 'http') icon = '🌐';
+  else if (isEngetron) icon = '⚡';
+  else if (isConflex) icon = '❄️';
+  else if (isStorage) icon = '💾';
+  else if (isPrinter) icon = '🖨️';
+  else if (nameL.match(/switch/)) icon = '🔀';
+  else if (nameL.match(/ap-|access.point|wifi/)) icon = '📶';
+
+  let chartUnit = latest?.unit || '';
+  let chartLabel = 'Valor';
+  if (sType === 'http') { chartUnit = 'ms'; chartLabel = 'Resposta (ms)'; }
+  else if (isEngetron) { chartUnit = '%'; chartLabel = 'Carga (%)'; }
+  else if (isConflex) { chartUnit = '°C'; chartLabel = 'Temperatura (°C)'; }
+  else if (isStorage) { chartUnit = '%'; chartLabel = 'Uso (%)'; }
+  else if (isPrinter) { chartUnit = '%'; chartLabel = 'Toner (%)'; }
+
+  const step = Math.max(1, Math.floor(history.length / 150));
+  const chartData = [...history].reverse().filter((_, i) => i % step === 0).map(m => ({
+    time: new Date(m.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+    value: m.value != null ? parseFloat(parseFloat(m.value).toFixed(2)) : null,
+  }));
+  const validVals = chartData.filter(d => d.value != null).map(d => d.value);
+  const avgVal = validVals.length ? validVals.reduce((a, b) => a + b, 0) / validVals.length : 0;
+
+  const dailyBars = Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(Date.now() - (6 - i) * 86400000);
+    const dm = history.filter(m => new Date(m.timestamp).toDateString() === day.toDateString());
+    const pct = dm.length > 0 ? (dm.filter(m => m.status === 'ok').length / dm.length * 100) : null;
+    return { label: day.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }), pct };
+  });
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={onClose}>
+      <div style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 780, maxHeight: '88vh', overflowY: 'auto', border: '1px solid #334155', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}
+        onClick={e => e.stopPropagation()}>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#e2e8f0' }}>{icon} {sensor.name}</div>
+            <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{sensor.config?.ip_address || sensor.config?.http?.url || ''}</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ background: statusColor + '20', color: statusColor, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>
+              {latest?.status?.toUpperCase() || 'SEM DADOS'}
+            </span>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer' }}>✕</button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Carregando histórico...</div>
+        ) : history.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Nenhum dado nos últimos 7 dias</div>
+        ) : (
+          <>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 }}>
+              {uptime7d !== null && <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: parseFloat(uptime7d) >= 99 ? '#22C55E' : parseFloat(uptime7d) >= 95 ? '#F59E0B' : '#EF4444' }}>{uptime7d}%</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Uptime 7d</div>
+              </div>}
+              {latest?.value != null && <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: statusColor }}>{parseFloat(latest.value).toFixed(1)}{chartUnit}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Atual</div>
+              </div>}
+              {outages.length > 0 && <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#EF4444' }}>{outages.length}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Quedas 7d</div>
+              </div>}
+              <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#60a5fa' }}>{history.length}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Amostras</div>
+              </div>
+            </div>
+
+            {isEngetron && Object.keys(latestMeta).length > 0 && (
+              <div style={{ background: '#0f172a', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>⚡ Status do Nobreak</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 6, fontSize: 12, color: '#e2e8f0' }}>
+                  {latestMeta['Engetron temperatura'] && <span>🌡️ Temp: <strong>{latestMeta['Engetron temperatura'].value}°C</strong></span>}
+                  {latestMeta['Engetron bateria_autonomia'] && <span>🔋 Autonomia: <strong>{latestMeta['Engetron bateria_autonomia'].value} min</strong></span>}
+                  {latestMeta['Engetron carga_max'] && <span>⚡ Carga: <strong>{latestMeta['Engetron carga_max'].value}%</strong></span>}
+                  {latestMeta['Engetron bateria_tensao'] && <span>🔌 Bat: <strong>{latestMeta['Engetron bateria_tensao'].value}V</strong></span>}
+                  {latestMeta['Engetron tensao_entrada_faseA'] && (
+                    <span style={{ gridColumn: '1/-1', color: [latestMeta['Engetron tensao_entrada_faseA'], latestMeta['Engetron tensao_entrada_faseB'], latestMeta['Engetron tensao_entrada_faseC']].some(f => f?.value < 100) ? '#EF4444' : '#22C55E' }}>
+                      📥 Entrada: <strong>{latestMeta['Engetron tensao_entrada_faseA']?.value}V · {latestMeta['Engetron tensao_entrada_faseB']?.value}V · {latestMeta['Engetron tensao_entrada_faseC']?.value}V</strong>
+                      {[latestMeta['Engetron tensao_entrada_faseA'], latestMeta['Engetron tensao_entrada_faseB'], latestMeta['Engetron tensao_entrada_faseC']].some(f => f?.value < 100) && ' ⚠️ QUEDA DE FASE'}
+                    </span>
+                  )}
+                  {latestMeta['Engetron tensao_saida_faseA'] && (
+                    <span style={{ gridColumn: '1/-1' }}>📤 Saída: <strong>{latestMeta['Engetron tensao_saida_faseA']?.value}V · {latestMeta['Engetron tensao_saida_faseB']?.value}V · {latestMeta['Engetron tensao_saida_faseC']?.value}V</strong></span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {isConflex && Object.keys(latestMeta).length > 0 && (
+              <div style={{ background: '#0f172a', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>❄️ Status do Ar-Condicionado</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 6, fontSize: 12, color: '#e2e8f0' }}>
+                  {latestMeta['Conflex temp_interna'] && <span>🌡️ Temp interna: <strong>{latestMeta['Conflex temp_interna'].value}°C</strong></span>}
+                  {latestMeta['Conflex temp_retorno_maq1'] && <span>🌡️ Retorno Maq1: <strong>{latestMeta['Conflex temp_retorno_maq1'].value}°C</strong></span>}
+                  {latestMeta['Conflex temp_retorno_maq2'] && <span>🌡️ Retorno Maq2: <strong>{latestMeta['Conflex temp_retorno_maq2'].value}°C</strong></span>}
+                  {latestMeta['Conflex maquina_1'] != null && <span style={{ color: latestMeta['Conflex maquina_1'].value ? '#22C55E' : '#EF4444' }}>🔧 Máq 1: <strong>{latestMeta['Conflex maquina_1'].value ? 'ON' : 'OFF'}</strong></span>}
+                  {latestMeta['Conflex maquina_2'] != null && <span style={{ color: latestMeta['Conflex maquina_2'].value ? '#22C55E' : '#EF4444' }}>🔧 Máq 2: <strong>{latestMeta['Conflex maquina_2'].value ? 'ON' : 'OFF'}</strong></span>}
+                  {latestMeta['Conflex alarme_temp_alta']?.value === 1 && <span style={{ color: '#EF4444', gridColumn: '1/-1' }}>⚠️ ALARME: Temperatura Alta</span>}
+                  {latestMeta['Conflex alarme_defeito']?.value === 1 && <span style={{ color: '#EF4444', gridColumn: '1/-1' }}>⚠️ ALARME: Defeito detectado</span>}
+                </div>
+              </div>
+            )}
+
+            {isStorage && Object.keys(latestMeta).length > 0 && (
+              <div style={{ background: '#0f172a', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>💾 Status do Storage</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 6, fontSize: 12, color: '#e2e8f0' }}>
+                  {latestMeta['EqualLogic storage_percent'] != null && <span>📊 Uso: <strong style={{ color: latestMeta['EqualLogic storage_percent'].value > 90 ? '#EF4444' : '#22C55E' }}>{latestMeta['EqualLogic storage_percent'].value}%</strong></span>}
+                  {latestMeta['EqualLogic storage_total'] != null && <span>💿 Total: <strong>{latestMeta['EqualLogic storage_total'].value >= 1024 ? (latestMeta['EqualLogic storage_total'].value/1024).toFixed(1)+' TB' : latestMeta['EqualLogic storage_total'].value+' GB'}</strong></span>}
+                  {latestMeta['EqualLogic storage_free'] != null && <span>💿 Livre: <strong>{latestMeta['EqualLogic storage_free'].value >= 1024 ? (latestMeta['EqualLogic storage_free'].value/1024).toFixed(1)+' TB' : latestMeta['EqualLogic storage_free'].value+' GB'}</strong></span>}
+                  {latestMeta['EqualLogic disks_total'] != null && <span>🔧 Discos: <strong>{latestMeta['EqualLogic disks_online']?.value}/{latestMeta['EqualLogic disks_total'].value}</strong></span>}
+                  {latestMeta['EqualLogic iscsi_connections'] != null && <span>🔗 iSCSI: <strong>{latestMeta['EqualLogic iscsi_connections'].value}</strong></span>}
+                </div>
+              </div>
+            )}
+
+            {isPrinter && Object.keys(latestMeta).length > 0 && (
+              <div style={{ background: '#0f172a', borderRadius: 10, padding: 14, marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>🖨️ Status da Impressora</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 6, fontSize: 12, color: '#e2e8f0' }}>
+                  {latestMeta['Printer toner'] != null && <span>🖨️ Toner: <strong style={{ color: latestMeta['Printer toner'].value <= 10 ? '#EF4444' : latestMeta['Printer toner'].value <= 20 ? '#F59E0B' : '#22C55E' }}>{latestMeta['Printer toner'].value}%</strong></span>}
+                  {latestMeta['Printer total_pages'] != null && <span>📄 Páginas: <strong>{Number(latestMeta['Printer total_pages'].value).toLocaleString('pt-BR')}</strong></span>}
+                  {latestMeta['Printer model'] && <span>📋 Modelo: <strong>{latestMeta['Printer model'].value}</strong></span>}
+                </div>
+              </div>
+            )}
+
+            {chartData.length > 1 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>{chartLabel} — últimos 7 dias</div>
+                <ResponsiveContainer width="100%" height={150}>
+                  <LineChart data={chartData} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#475569' }} interval="preserveStartEnd" />
+                    <YAxis tick={{ fontSize: 9, fill: '#475569' }} />
+                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8, fontSize: 11 }}
+                      formatter={v => [`${v}${chartUnit}`, chartLabel]} />
+                    <ReferenceLine y={avgVal} stroke="#F59E0B" strokeDasharray="4 4" />
+                    <Line type="monotone" dataKey="value" stroke={statusColor} strokeWidth={1.5} dot={false} connectNulls={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>Disponibilidade por Dia</div>
+              <div style={{ display: 'flex', gap: 4 }}>
+                {dailyBars.map((d, i) => {
+                  const c = d.pct === null ? '#334155' : d.pct >= 99 ? '#22C55E' : d.pct >= 95 ? '#F59E0B' : '#EF4444';
+                  return (
+                    <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                      <div style={{ height: 26, background: c, borderRadius: 4, marginBottom: 3, opacity: d.pct === null ? 0.3 : 1 }} title={d.pct !== null ? `${d.pct.toFixed(1)}%` : 'Sem dados'} />
+                      <div style={{ fontSize: 9, color: '#475569' }}>{d.label}</div>
+                      <div style={{ fontSize: 9, color: c, fontWeight: 600 }}>{d.pct !== null ? `${d.pct.toFixed(0)}%` : '—'}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {outages.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>🔴 Quedas ({outages.length})</div>
+                {outages.slice(0, 5).map((o, i) => {
+                  const s = new Date(o.start), e = o.end ? new Date(o.end) : new Date();
+                  const dur = Math.round((e - s) / 60000);
+                  return (
+                    <div key={i} style={{ background: '#0f172a', borderRadius: 8, padding: '6px 12px', display: 'flex', justifyContent: 'space-between', borderLeft: '3px solid #EF4444', marginBottom: 4 }}>
+                      <div style={{ fontSize: 11, color: '#e2e8f0' }}>
+                        {s.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        {o.end ? ` → ${e.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ' → Agora'}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#EF4444', fontWeight: 600 }}>{dur < 60 ? `${dur}min` : `${Math.floor(dur/60)}h ${dur%60}min`}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
