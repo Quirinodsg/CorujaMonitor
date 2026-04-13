@@ -379,6 +379,23 @@ def evaluate_all_thresholds():
                     # ── DISPATCHER: Notificações imediatas via Matriz (independente do AIOps) ──
                     dispatch_notifications_task.delay(incident.id)
 
+                    # Marcar como notificado no Redis (24h) e no banco para evitar re-notificação
+                    notif_key_new = f"notified:{incident.id}"
+                    if redis_client is not None:
+                        try:
+                            redis_client.setex(notif_key_new, 86400, "1")
+                        except Exception:
+                            pass
+                    try:
+                        ai_data = incident.ai_analysis or {}
+                        ai_data['notified_at'] = datetime.now(timezone.utc).isoformat()
+                        incident.ai_analysis = ai_data
+                        from sqlalchemy.orm.attributes import flag_modified as _fm
+                        _fm(incident, 'ai_analysis')
+                        db.commit()
+                    except Exception:
+                        db.rollback()
+
                     # Execute AIOps analysis (enriquecimento — não bloqueia notificações)
                     execute_aiops_analysis.delay(incident.id)
 
@@ -392,28 +409,54 @@ def evaluate_all_thresholds():
                         logger.info(f"⚠️ Incidente {existing_incident.id} atualizado para {severity}")
                         print(f"⚠️ Incidente {existing_incident.id} atualizado para {severity}")
 
-                    # Re-notificar incidentes abertos há mais de 30 min sem notificação recente
-                    # Isso garante que incidentes criados antes de um restart do worker
-                    # ainda gerem notificações (o dispatcher só é chamado na criação normalmente)
+                    # Re-notificar incidentes abertos SEM notificação prévia
+                    # TTL de 24h — 1 re-notificação por incidente por dia no máximo
+                    # Persiste no banco para sobreviver a restart do Redis
                     notif_key = f"notified:{existing_incident.id}"
                     already_notified = False
+
+                    # 1. Verificar Redis
                     if redis_client is not None:
                         try:
                             already_notified = bool(redis_client.exists(notif_key))
                         except Exception:
                             pass
 
+                    # 2. Fallback: verificar no ai_analysis do incidente (persiste no banco)
+                    if not already_notified:
+                        ai = existing_incident.ai_analysis or {}
+                        if ai.get('notified_at'):
+                            from datetime import timezone as _tz2
+                            notified_at_str = ai['notified_at']
+                            try:
+                                notified_at = datetime.fromisoformat(notified_at_str)
+                                if notified_at.tzinfo is None:
+                                    notified_at = notified_at.replace(tzinfo=timezone.utc)
+                                if (datetime.now(timezone.utc) - notified_at).total_seconds() < 86400:
+                                    already_notified = True
+                            except Exception:
+                                pass
+
                     if not already_notified:
                         try:
-                            # Re-notificação: apenas email e teams (sem ticket para evitar spam de chamados)
                             dispatch_renotification_task.delay(existing_incident.id)
                             logger.info(f"🔔 Re-notificando incidente aberto {existing_incident.id} (sensor {sensor.name})")
+                            # Marcar no Redis (24h)
                             if redis_client is not None:
                                 try:
-                                    # Cooldown de 30 min para re-notificação
-                                    redis_client.setex(notif_key, 1800, "1")
+                                    redis_client.setex(notif_key, 86400, "1")
                                 except Exception:
                                     pass
+                            # Marcar no banco (sobrevive a restart do Redis)
+                            try:
+                                ai = existing_incident.ai_analysis or {}
+                                ai['notified_at'] = datetime.now(timezone.utc).isoformat()
+                                existing_incident.ai_analysis = ai
+                                from sqlalchemy.orm.attributes import flag_modified
+                                flag_modified(existing_incident, 'ai_analysis')
+                                db.commit()
+                            except Exception:
+                                db.rollback()
                         except Exception as _ne:
                             logger.warning(f"Falha ao re-notificar incidente {existing_incident.id}: {_ne}")
             else:
