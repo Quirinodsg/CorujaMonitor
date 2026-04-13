@@ -25,7 +25,9 @@ function SensorLibrary() {
   const [detailSensor, setDetailSensor] = useState(null);
   const [detailHistory, setDetailHistory] = useState([]);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [detailNetSensor, setDetailNetSensor] = useState(null); // for network devices
+  const [detailNetDevice, setDetailNetDevice] = useState(null);
+  const [detailNetSensors, setDetailNetSensors] = useState([]);
+  const [detailNetHistory, setDetailNetHistory] = useState({});
   
   const [newSensor, setNewSensor] = useState({
     probe_id: '',
@@ -365,7 +367,31 @@ function SensorLibrary() {
     }
   };
 
-  const renderSensorCard = (sensor, metric, statusColor, statusLabel, statusBg) => {
+  const openNetworkDeviceDetail = async (device) => {
+    setDetailNetDevice(device);
+    setDetailNetSensors([]);
+    setDetailNetHistory({});
+    setDetailLoading(true);
+    try {
+      const sensRes = await api.get(`/sensors?server_id=${device.id}`);
+      const sensors = sensRes.data || [];
+      setDetailNetSensors(sensors);
+      const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const keySensors = sensors.filter(s => ['ping', 'cpu', 'memory', 'disk', 'uptime'].includes(s.sensor_type)).slice(0, 5);
+      const histories = {};
+      await Promise.all(keySensors.map(async s => {
+        try {
+          const r = await api.get(`/metrics/?sensor_id=${s.id}&start_time=${since}&limit=500`);
+          histories[s.id] = { sensor: s, data: r.data || [] };
+        } catch (_) {}
+      }));
+      setDetailNetHistory(histories);
+    } catch (e) {
+      console.error('Erro ao carregar detalhes do ativo:', e);
+    } finally {
+      setDetailLoading(false);
+    }
+  }; = (sensor, metric, statusColor, statusLabel, statusBg) => {
     const isHttp = sensor.sensor_type === 'http' || sensor.category === 'network';
     const isOnline = metric?.status === 'ok';
     return (
@@ -536,8 +562,9 @@ function SensorLibrary() {
                 <div key={'net-' + device.id} className="sensor-card" style={{
                   borderLeft: '4px solid ' + statusColor,
                   background: statusBg,
-                  position: 'relative'
-                }}>
+                  position: 'relative',
+                  cursor: 'pointer',
+                }} onClick={() => openNetworkDeviceDetail(device)}>
                   <div style={{ position: 'absolute', top: 8, left: 10 }}>
                     <span style={{
                       display: 'inline-flex', alignItems: 'center', gap: 4,
@@ -1219,6 +1246,19 @@ function SensorLibrary() {
         />,
         document.body
       )}
+
+      {/* Modal de detalhes do ativo de rede via portal */}
+      {detailNetDevice && ReactDOM.createPortal(
+        <NetworkDeviceModal
+          device={detailNetDevice}
+          sensors={detailNetSensors}
+          histories={detailNetHistory}
+          loading={detailLoading}
+          status={networkStatuses[detailNetDevice.id] || 'unknown'}
+          onClose={() => { setDetailNetDevice(null); setDetailNetSensors([]); setDetailNetHistory({}); }}
+        />,
+        document.body
+      )}
     </div>
   );
 }
@@ -1434,6 +1474,174 @@ function SensorDetailModal({ sensor, history, loading, onClose }) {
                   );
                 })}
               </div>
+            )}
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function NetworkDeviceModal({ device, sensors, histories, loading, status, onClose }) {
+  const dt = (device.device_type || 'other').toLowerCase();
+  const deviceIcons = { switch: '🔀', router: '📡', firewall: '🔥', access_point: '📶', ap: '📶', ups: '🔋', storage: '🧠', gateway: '📡' };
+  const icon = deviceIcons[dt] || '📦';
+  const statusColor = status === 'ok' ? '#22C55E' : status === 'warning' ? '#F59E0B' : status === 'critical' ? '#EF4444' : '#6B7280';
+  const statusLabel = status === 'ok' ? 'ONLINE' : status === 'warning' ? 'AVISO' : status === 'critical' ? 'CRÍTICO' : 'Aguardando';
+
+  // Sensor PING para uptime
+  const pingSensor = sensors.find(s => s.sensor_type === 'ping');
+  const pingHistory = pingSensor ? (histories[pingSensor.id]?.data || []) : [];
+  const pingOk = pingHistory.filter(m => m.status === 'ok').length;
+  const uptime7d = pingHistory.length > 0 ? ((pingOk / pingHistory.length) * 100).toFixed(1) : null;
+
+  // Calcular quedas do PING
+  const outages = [];
+  let outStart = null;
+  for (const m of [...pingHistory].reverse()) {
+    if (m.status === 'critical' && !outStart) outStart = m.timestamp;
+    else if (m.status === 'ok' && outStart) { outages.push({ start: outStart, end: m.timestamp }); outStart = null; }
+  }
+  if (outStart) outages.push({ start: outStart, end: null });
+
+  // Gráfico PING (latência)
+  const step = Math.max(1, Math.floor(pingHistory.length / 100));
+  const pingChart = [...pingHistory].reverse().filter((_, i) => i % step === 0).map(m => ({
+    time: new Date(m.timestamp).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }),
+    ms: m.value != null ? parseFloat(m.value.toFixed(1)) : null,
+  }));
+
+  // Disponibilidade por dia
+  const dailyBars = Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(Date.now() - (6 - i) * 86400000);
+    const dm = pingHistory.filter(m => new Date(m.timestamp).toDateString() === day.toDateString());
+    const pct = dm.length > 0 ? (dm.filter(m => m.status === 'ok').length / dm.length * 100) : null;
+    return { label: day.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }), pct };
+  });
+
+  // Outros sensores com última leitura
+  const otherSensors = sensors.filter(s => s.sensor_type !== 'ping').slice(0, 8);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+      onClick={onClose}>
+      <div style={{ background: '#1e293b', borderRadius: 16, padding: 24, width: '100%', maxWidth: 780, maxHeight: '88vh', overflowY: 'auto', border: '1px solid #334155', boxShadow: '0 25px 60px rgba(0,0,0,0.6)' }}
+        onClick={e => e.stopPropagation()}>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700, color: '#e2e8f0' }}>{icon} {device.hostname}</div>
+            <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>{device.ip_address} · {device.device_type}</div>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ background: statusColor + '20', color: statusColor, padding: '4px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700 }}>{statusLabel}</span>
+            <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#64748b', fontSize: 22, cursor: 'pointer' }}>✕</button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: 40, color: '#64748b' }}>Carregando histórico...</div>
+        ) : (
+          <>
+            {/* KPIs */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginBottom: 16 }}>
+              {uptime7d !== null && <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: parseFloat(uptime7d) >= 99 ? '#22C55E' : parseFloat(uptime7d) >= 95 ? '#F59E0B' : '#EF4444' }}>{uptime7d}%</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Uptime 7d</div>
+              </div>}
+              {outages.length > 0 && <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#EF4444' }}>{outages.length}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Quedas 7d</div>
+              </div>}
+              <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#60a5fa' }}>{sensors.length}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Sensores</div>
+              </div>
+              {pingHistory.length > 0 && <div style={{ background: '#0f172a', borderRadius: 10, padding: '10px 14px', textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 700, color: '#94a3b8' }}>{pingHistory.length}</div>
+                <div style={{ fontSize: 11, color: '#64748b', marginTop: 3 }}>Amostras</div>
+              </div>}
+            </div>
+
+            {/* Gráfico PING */}
+            {pingChart.length > 1 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>Latência PING (ms) — últimos 7 dias</div>
+                <ResponsiveContainer width="100%" height={140}>
+                  <LineChart data={pingChart} margin={{ top: 4, right: 8, left: -20, bottom: 0 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis dataKey="time" tick={{ fontSize: 9, fill: '#475569' }} interval="preserveStartEnd" />
+                    <YAxis tick={{ fontSize: 9, fill: '#475569' }} />
+                    <Tooltip contentStyle={{ background: '#0f172a', border: '1px solid #334155', borderRadius: 8, fontSize: 11 }}
+                      formatter={v => [`${v}ms`, 'Latência']} />
+                    <Line type="monotone" dataKey="ms" stroke={statusColor} strokeWidth={1.5} dot={false} connectNulls={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            )}
+
+            {/* Disponibilidade por dia */}
+            {pingHistory.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>Disponibilidade por Dia</div>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {dailyBars.map((d, i) => {
+                    const c = d.pct === null ? '#334155' : d.pct >= 99 ? '#22C55E' : d.pct >= 95 ? '#F59E0B' : '#EF4444';
+                    return (
+                      <div key={i} style={{ flex: 1, textAlign: 'center' }}>
+                        <div style={{ height: 26, background: c, borderRadius: 4, marginBottom: 3, opacity: d.pct === null ? 0.3 : 1 }} title={d.pct !== null ? `${d.pct.toFixed(1)}%` : 'Sem dados'} />
+                        <div style={{ fontSize: 9, color: '#475569' }}>{d.label}</div>
+                        <div style={{ fontSize: 9, color: c, fontWeight: 600 }}>{d.pct !== null ? `${d.pct.toFixed(0)}%` : '—'}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Outros sensores */}
+            {otherSensors.length > 0 && (
+              <div style={{ marginBottom: 14 }}>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 8 }}>Sensores do Dispositivo</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
+                  {otherSensors.map(s => {
+                    const h = histories[s.id];
+                    const last = h?.data?.[0];
+                    const sc = last?.status === 'ok' ? '#22C55E' : last?.status === 'warning' ? '#F59E0B' : last?.status === 'critical' ? '#EF4444' : '#6B7280';
+                    return (
+                      <div key={s.id} style={{ background: '#0f172a', borderRadius: 8, padding: '8px 12px', borderLeft: `3px solid ${sc}` }}>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: '#e2e8f0' }}>{s.name}</div>
+                        <div style={{ fontSize: 11, color: '#64748b' }}>{s.sensor_type}</div>
+                        {last && <div style={{ fontSize: 12, color: sc, fontWeight: 600, marginTop: 3 }}>{parseFloat(last.value).toFixed(1)} {last.unit || ''}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Quedas */}
+            {outages.length > 0 && (
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', marginBottom: 6 }}>🔴 Quedas ({outages.length})</div>
+                {outages.slice(0, 5).map((o, i) => {
+                  const s = new Date(o.start), e = o.end ? new Date(o.end) : new Date();
+                  const dur = Math.round((e - s) / 60000);
+                  return (
+                    <div key={i} style={{ background: '#0f172a', borderRadius: 8, padding: '6px 12px', display: 'flex', justifyContent: 'space-between', borderLeft: '3px solid #EF4444', marginBottom: 4 }}>
+                      <div style={{ fontSize: 11, color: '#e2e8f0' }}>
+                        {s.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                        {o.end ? ` → ${e.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}` : ' → Agora'}
+                      </div>
+                      <div style={{ fontSize: 11, color: '#EF4444', fontWeight: 600 }}>{dur < 60 ? `${dur}min` : `${Math.floor(dur/60)}h ${dur%60}min`}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            {pingHistory.length === 0 && sensors.length === 0 && (
+              <div style={{ textAlign: 'center', padding: 30, color: '#64748b' }}>Nenhum dado de monitoramento disponível para este dispositivo</div>
             )}
           </>
         )}
