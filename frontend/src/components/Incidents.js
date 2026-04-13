@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ReactDOM from 'react-dom';
 import api from '../services/api';
 import './Management.css';
 
@@ -439,30 +440,24 @@ function Incidents({ onNavigateToServer, onNavigate }) {
         </table>
       </div>
 
-      {/* Details Modal */}
-      {showDetailsModal && selectedIncident && (
-        <div className="modal-overlay" onClick={() => setShowDetailsModal(false)}>
-          <div className="modal-content modal-large" onClick={(e) => e.stopPropagation()}>
+      {/* Details Modal — via portal para garantir z-index acima de tudo */}
+      {showDetailsModal && selectedIncident && ReactDOM.createPortal(
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}
+          onClick={() => setShowDetailsModal(false)}>
+          <div style={{ background: 'var(--bg-card, #1e293b)', borderRadius: 12, width: '100%', maxWidth: 720, maxHeight: '85vh', overflowY: 'auto', border: '1px solid var(--border, #334155)', boxShadow: '0 25px 60px rgba(0,0,0,0.5)' }}
+            onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h2>🔍 Detalhes do Incidente #{selectedIncident.id}</h2>
               <button className="btn-close" onClick={() => setShowDetailsModal(false)}>×</button>
             </div>
 
             <div className="incident-details-content">
-              {/* Basic Info */}
               <div className="detail-section">
                 <h3>Informações Básicas</h3>
                 <div className="detail-grid">
                   <div className="detail-item">
                     <strong>Severidade:</strong>
-                    <span 
-                      className="severity-badge"
-                      style={{ 
-                        backgroundColor: getSeverityColor(selectedIncident.severity) + '20',
-                        color: getSeverityColor(selectedIncident.severity),
-                        marginLeft: '10px'
-                      }}
-                    >
+                    <span className="severity-badge" style={{ backgroundColor: getSeverityColor(selectedIncident.severity) + '20', color: getSeverityColor(selectedIncident.severity), marginLeft: '10px' }}>
                       {getSeverityIcon(selectedIncident.severity)} {selectedIncident.severity.toUpperCase()}
                     </span>
                   </div>
@@ -471,10 +466,10 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                     <span style={{ marginLeft: '10px' }}>{getStatusBadge(selectedIncident.status)}</span>
                   </div>
                   <div className="detail-item">
-                    <strong>Servidor:</strong> {servers[sensors[selectedIncident.sensor_id]?.server_id]?.hostname}
+                    <strong>Servidor:</strong> {servers[sensors[selectedIncident.sensor_id]?.server_id]?.hostname || '— Standalone —'}
                   </div>
                   <div className="detail-item">
-                    <strong>Sensor:</strong> {sensors[selectedIncident.sensor_id]?.name}
+                    <strong>Sensor:</strong> {sensors[selectedIncident.sensor_id]?.name || `Sensor #${selectedIncident.sensor_id}`}
                   </div>
                   <div className="detail-item">
                     <strong>Duração:</strong> ⏱️ {getDuration(selectedIncident.created_at, selectedIncident.resolved_at)}
@@ -485,13 +480,11 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                 </div>
               </div>
 
-              {/* Description */}
               <div className="detail-section">
                 <h3>Descrição</h3>
                 <p>{selectedIncident.description || 'Sem descrição'}</p>
               </div>
 
-              {/* AI Analysis */}
               {selectedIncident.root_cause && (
                 <div className="detail-section ai-section">
                   <h3>🤖 Análise da IA</h3>
@@ -499,15 +492,14 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                     <strong>Causa Raiz:</strong>
                     <p>{selectedIncident.root_cause}</p>
                   </div>
-                  {selectedIncident.ai_analysis && (
-                    <div className="ai-details">
-                      <pre>{JSON.stringify(selectedIncident.ai_analysis, null, 2)}</pre>
+                  {selectedIncident.ai_analysis?.ollama_analysis && (
+                    <div style={{ background: '#0f172a', borderRadius: 8, padding: 12, marginTop: 8, fontSize: 13, color: '#cbd5e1', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+                      {selectedIncident.ai_analysis.ollama_analysis}
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Remediation Logs */}
               {remediationLogs.length > 0 && (
                 <div className="detail-section">
                   <h3>🔧 Tentativas de Remediação</h3>
@@ -519,12 +511,8 @@ function Incidents({ onNavigateToServer, onNavigate }) {
                           <strong>{log.action_type}</strong>
                           <span className="log-time">{new Date(log.executed_at).toLocaleString('pt-BR')}</span>
                         </div>
-                        {log.action_description && (
-                          <p className="log-description">{log.action_description}</p>
-                        )}
-                        {log.error_message && (
-                          <p className="log-error">❌ {log.error_message}</p>
-                        )}
+                        {log.action_description && <p className="log-description">{log.action_description}</p>}
+                        {log.error_message && <p className="log-error">❌ {log.error_message}</p>}
                       </div>
                     ))}
                   </div>
@@ -533,23 +521,16 @@ function Incidents({ onNavigateToServer, onNavigate }) {
             </div>
 
             <div className="modal-footer">
-              <button className="btn-secondary" onClick={() => setShowDetailsModal(false)}>
-                Fechar
-              </button>
+              <button className="btn-secondary" onClick={() => setShowDetailsModal(false)}>Fechar</button>
               {selectedIncident.status === 'open' && (
-                <button 
-                  className="btn-primary" 
-                  onClick={() => {
-                    handleAcknowledge(selectedIncident);
-                    setShowDetailsModal(false);
-                  }}
-                >
+                <button className="btn-primary" onClick={() => { handleAcknowledge(selectedIncident); setShowDetailsModal(false); }}>
                   ✓ Reconhecer Incidente
                 </button>
               )}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
