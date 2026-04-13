@@ -391,7 +391,9 @@ function SensorLibrary() {
     } finally {
       setDetailLoading(false);
     }
-  }; = (sensor, metric, statusColor, statusLabel, statusBg) => {
+  };
+
+  const renderSensorCard = (sensor, metric, statusColor, statusLabel, statusBg) => {
     const isHttp = sensor.sensor_type === 'http' || sensor.category === 'network';
     const isOnline = metric?.status === 'ok';
     return (
