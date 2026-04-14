@@ -12,24 +12,40 @@
 ## 📸 Screenshots
 
 ### Dashboard Principal
-![Dashboard](docs/screenshots/Screenshot_1.png)
-> Health Score em tempo real, KPIs, sites monitorados, ativos de rede e incidentes recentes.
+![Dashboard](docs/screenshots/Dashboard.png)
+> Health Score em tempo real, KPIs de servidores e sensores, sites monitorados com latência, ativos de rede e incidentes recentes. Suporte a WebSocket para atualização em tempo real.
 
-### Modo NOC
-![NOC](docs/screenshots/Screenshot_2.png)
-> Visão wall-screen com status global, disponibilidade por empresa e rotação automática de painéis.
+### Modo NOC — Status Global
+![NOC](docs/screenshots/Noc.png)
+> Visão wall-screen com status global do sistema, disponibilidade por empresa e KPIs de servidores OK, em aviso e críticos.
+
+### Modo NOC — Painel Completo
+![NOC Completo](docs/screenshots/Noc1.png)
+> Rotação automática entre painéis: Status Global, Mapa de Calor, Incidentes Ativos, KPIs e Datacenter. Atualização a cada 10 segundos.
 
 ### Atividades da IA (AIOps)
-![AIOps](docs/screenshots/Screenshot_3.png)
-> Pipeline v3 com 5 agentes + Ollama llama3.2 gerando diagnósticos em português.
+![Atividades de IA](docs/screenshots/Atividades%20de%20IA.png)
+> Pipeline v3 com 5 agentes + Ollama llama3.2 gerando diagnósticos em português. 1247 análises, 209 auto-resoluções, 100% taxa de sucesso, 3135 minutos economizados.
 
 ### Topologia de Rede
-![Topology](docs/screenshots/Screenshot_4.png)
-> Grafo interativo com 44 nós e 104 conexões, blast radius e dependências.
+![Topologia](docs/screenshots/Topologia.png)
+> Grafo interativo com 44 nós e 104 conexões. Visualização de dependências, blast radius e status em tempo real de toda a infraestrutura.
+
+### Observabilidade
+![Observabilidade](docs/screenshots/Observabilidade.png)
+> Health Score da infraestrutura, mapa de impacto com servidores e sensores críticos, alertas inteligentes ativos.
 
 ### Hyper-V Observabilidade
-![HyperV](docs/screenshots/Screenshot_5.png)
-> 2 hosts, 32 VMs, custo mensal do datacenter e recomendações FinOps.
+![HyperV](docs/screenshots/HyperV.png)
+> 2 hosts físicos, 32 VMs (31 rodando), custo mensal R$ 50.428,70, recomendações FinOps com economia potencial de R$ 8.711,44/mês.
+
+### Serviços
+![Serviços](docs/screenshots/Serviços.png)
+> Monitoramento de serviços Windows com status, modo de inicialização e histórico de disponibilidade.
+
+### Base de Conhecimento
+![Base de Conhecimento](docs/screenshots/Base%20de%20conhecimento.png)
+> Base de conhecimento com problemas catalogados, soluções e histórico de resoluções automáticas.
 
 ---
 
