@@ -1,693 +1,600 @@
-# 🦉 Coruja Monitor
+# 🦉 Coruja Monitor v3.6 — Enterprise AIOps Platform
 
-Sistema de Monitoramento Inteligente com AIOps e Observabilidade para Infraestrutura de TI
+> **Plataforma de monitoramento inteligente de infraestrutura com IA local (Ollama), pipeline AIOps v3, escalação automática via Twilio e observabilidade completa.**
 
-[![License](https://img.shields.io/badge/license-Private-red.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
-[![React](https://img.shields.io/badge/react-18.0+-61dafb.svg)](https://reactjs.org/)
-[![FastAPI](https://img.shields.io/badge/fastapi-0.100+-009688.svg)](https://fastapi.tiangolo.com/)
-[![Version](https://img.shields.io/badge/version-3.0.0-brightgreen.svg)](https://github.com/Quirinodsg/CorujaMonitor)
-[![Tests](https://img.shields.io/badge/tests-349%20passed-success.svg)](tests/)
-[![TimescaleDB](https://img.shields.io/badge/timescaledb-2.14-orange.svg)](https://www.timescale.com/)
+![Version](https://img.shields.io/badge/version-3.6-blue)
+![Python](https://img.shields.io/badge/python-3.11+-green)
+![React](https://img.shields.io/badge/react-18-61dafb)
+![License](https://img.shields.io/badge/license-proprietary-red)
 
 ---
 
-## O que é o Coruja Monitor
+## 📸 Screenshots
 
-O **Coruja Monitor** é uma plataforma enterprise de monitoramento de infraestrutura de TI que combina coleta agentless (WMI, SNMP, ICMP, TCP, Docker, Kubernetes), observabilidade inteligente com pipeline de IA, e interface NOC em tempo real.
+### Dashboard Principal
+![Dashboard](docs/screenshots/dashboard.png)
+> Health Score em tempo real, KPIs, sites monitorados, ativos de rede e incidentes recentes.
 
-Inspirado em PRTG, Zabbix, CheckMK e Datadog — mas desenvolvido do zero para ambientes Windows/Linux com foco em facilidade de deploy e operação.
+### Modo NOC
+![NOC](docs/screenshots/noc.png)
+> Visão wall-screen com status global, disponibilidade por empresa e rotação automática de painéis.
+
+### Atividades da IA (AIOps)
+![AIOps](docs/screenshots/aiops-activities.png)
+> Pipeline v3 com 5 agentes + Ollama llama3.2 gerando diagnósticos em português.
+
+### Topologia de Rede
+![Topology](docs/screenshots/topology.png)
+> Grafo interativo com 44 nós e 104 conexões, blast radius e dependências.
+
+### Hyper-V Observabilidade
+![HyperV](docs/screenshots/hyperv.png)
+> 2 hosts, 32 VMs, custo mensal do datacenter e recomendações FinOps.
 
 ---
 
-## Índice
+## 🚀 O que há de novo na v3.6
 
-- [Novidades v3.0](#novidades-v30)
-- [Arquitetura](#arquitetura-geral)
-- [Fluxo de Dados](#fluxo-de-dados)
-- [Módulos v3](#módulos-v3)
-- [Estrutura do Projeto](#estrutura-do-projeto)
-- [Instalação](#instalação)
-- [Testes](#testes)
-- [API](#api)
-- [Tecnologias](#tecnologias)
-- [Histórico de Versões](#histórico-de-versões)
-- [Documentação](#documentação)
+### AIOps & IA
+- **Ollama llama3.2** integrado ao pipeline — análise em português de todos os incidentes críticos
+- **Pipeline v3 com 5 agentes**: AnomalyDetection → Correlation → RootCause → Decision → AutoRemediation
+- **Atividades da IA** populadas com dados reais (`ai_agent_logs`, `intelligent_alerts`)
+- **Predições de falha** com regressão linear nas métricas dos últimos 6h (117k+ amostras)
+- Janela do pipeline ampliada para **7 dias** (era 30 minutos)
+
+### Notificações & Escalação
+- **1 notificação por incidente por 24h** — controle persistido no banco (sobrevive restart do Redis)
+- **HTTP alarma após 3 falhas consecutivas** (≥3 minutos fora) — evita falsos positivos
+- **Matriz padrão corrigida**: HTTP e PING enviam apenas email/teams por padrão
+- **Botão 🔕 Parar Ligações** — bloqueia escalação por 24h
+- **Botão ✓ Reconhecer** — para todas as notificações automaticamente
+- **Botão 📣 Re-enviar** — força re-dispatch manual de todos os canais
+- **Botão 🔄 Reabrir** — reabre incidentes reconhecidos/resolvidos
+
+### Incidentes
+- **Modal de detalhes** com análise da IA (Ollama) e causa raiz
+- **Sensores standalone** (Nobreak, Ar-condicionado) aparecem corretamente em todos os filtros
+- Endpoint `POST /incidents/{id}/reopen` para reabrir via API
+- Endpoint `POST /incidents/{id}/stop-calls` para parar ligações via API
+
+### Biblioteca de Sensores
+- **Todos os cards clicáveis** com modal de histórico 7 dias
+- **Modal por tipo**: Nobreak (fases, bateria, temperatura), Ar-condicionado (máquinas, alarmes), Storage (uso/livre/discos), Impressora (toner, páginas), HTTP (uptime, latência, quedas)
+- **Ativos de rede clicáveis** com histórico de PING, latência e sensores do dispositivo
+
+### Dashboard
+- **Cards de sites HTTP clicáveis** com histórico 7 dias, gráfico de latência e quedas
+- **Busca global** com páginas do sistema (Configurações, Escalação, NOC, etc.)
+- Health Score e Observabilidade incluem sensores standalone
+
+### Observabilidade
+- **Health-summary** filtrado por tenant com sensores standalone
+- **Mapa de impacto** inclui Nobreak e Ar-condicionado como nós críticos
+- **Topologia** com blast radius usando vizinhos diretos
 
 ---
 
-## Novidades v3.0
+## 🏗️ Arquitetura
 
-A versão 3.0 transforma o Coruja Monitor de um sistema de monitoramento em uma plataforma de **observabilidade inteligente**, comparável ao Datadog e Dynatrace. Todos os módulos v2.0 continuam funcionando sem modificação.
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    CORUJA MONITOR v3.6                       │
+├─────────────┬──────────────────┬───────────────────────────┤
+│  Frontend   │    Backend API   │        Worker              │
+│  React 18   │  FastAPI + WS    │  Celery + Beat             │
+│  ~70 comps  │  60+ routers     │  Pipeline AIOps v3         │
+│  Recharts   │  PostgreSQL      │  Ollama llama3.2           │
+│  Dark Mode  │  TimescaleDB     │  Twilio (SMS/WA/Call)      │
+└─────────────┴──────────────────┴───────────────────────────┘
+         ↑                ↑                    ↑
+    Nginx Proxy      Redis Streams        Probe Windows
+    (80/443)         Cache + Locks        NSSM Service
+```
 
-| Capacidade | v2.0 | v3.0 |
+### Máquinas
+
+| Máquina | OS | Papel |
 |---|---|---|
-| Spec Central (fonte única da verdade) | ❌ tipos duplicados | ✅ `core/spec/` |
-| DAG de dependências entre sensores | ❌ | ✅ networkx, TTL 30s |
-| Topologia de rede (switch→servidor→serviço) | ❌ | ✅ grafo + blast radius |
-| Detecção de transição de estado | ❌ toda métrica = evento | ✅ só mudanças de estado |
-| Pipeline IA orquestrado | ❌ agentes isolados | ✅ 5 agentes + circuit breaker |
-| Feedback loop de IA | ❌ | ✅ retreino 24h, histórico 90 dias |
-| Supressão de alertas duplicados | ❌ | ✅ Redis TTL 5min |
-| Priorização ponderada de alertas | ❌ | ✅ score 4 fatores |
-| DSL declarativa de sensores | ❌ | ✅ Lexer+Parser+Compiler |
-| Consumer groups Redis Streams | ❌ | ✅ XREADGROUP paralelo |
-| Buffer offline de métricas | ❌ | ✅ deque 10k métricas |
-| TimescaleDB otimizado | básico | ✅ hypertable + retention 90d |
-| Health score unificado | ❌ | ✅ `/observability/health-score` |
-| WebSocket de observabilidade | ❌ | ✅ `/ws/observability` ≤5s |
-| Testes property-based (Hypothesis) | ❌ | ✅ 23 invariantes |
-| Cobertura de testes | ~30% | ✅ ≥80% módulos críticos |
-| Total de testes | 120 | **349** |
+| Kiro (dev) | Windows | Desenvolvimento |
+| SRVSONDA001 | Windows Server | Sonda — CorujaProbe via NSSM |
+| srvcmonitor001 | Linux | Servidor principal — Docker |
 
+### Stack Tecnológica
+
+| Camada | Tecnologia | Versão |
+|---|---|---|
+| Backend | FastAPI | 0.109+ |
+| Worker | Celery + Redis | 5.3 + 7 |
+| Banco | PostgreSQL + TimescaleDB | 15 + 2.14 |
+| IA Local | Ollama + llama3.2 | Latest |
+| Frontend | React + Recharts | 18 |
+| Notificações | Twilio | 8.0+ |
+| Proxy | Nginx | Alpine |
 
 ---
 
-## Arquitetura Geral
-
-```
-╔══════════════════════════════════════════════════════════════════════════════╗
-║                         CORUJA MONITOR v3.0                                ║
-║                    Plataforma de Observabilidade Inteligente                ║
-╠══════════════════════════════════════════════════════════════════════════════╣
-║                                                                              ║
-║  ┌─────────────────────────────────────────────────────────────────────┐    ║
-║  │                    CAMADA DE COLETA (Sonda)                         │    ║
-║  │                                                                     │    ║
-║  │  SRVSONDA001 (Windows Server — NSSM)                                │    ║
-║  │  C:\Program Files\CorujaMonitor\Probe                               │    ║
-║  │                                                                     │    ║
-║  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐             │    ║
-║  │  │ WMI Engine   │  │ SNMP Engine  │  │ ICMP Engine  │             │    ║
-║  │  │ (Windows)    │  │ (v1/v2c/v3)  │  │ (Ping)       │             │    ║
-║  │  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘             │    ║
-║  │         │                 │                  │                     │    ║
-║  │  ┌──────▼─────────────────▼──────────────────▼───────────────┐    │    ║
-║  │  │  DependencyEngine (DAG networkx)                           │    │    ║
-║  │  │  Se Ping falha → TCP e WMI suspensos automaticamente       │    │    ║
-║  │  └──────────────────────────────┬────────────────────────────┘    │    ║
-║  │                                 │ XADD batch 500                  │    ║
-║  └─────────────────────────────────┼─────────────────────────────────┘    ║
-║                                    │                                        ║
-║  ┌─────────────────────────────────▼─────────────────────────────────┐    ║
-║  │                    CAMADA DE STREAMING (Redis)                     │    ║
-║  │                                                                    │    ║
-║  │   metrics_stream ──── maxlen 100.000 entradas                      │    ║
-║  │   events_stream  ──── maxlen  50.000 entradas                      │    ║
-║  │   Consumer Group: coruja-consumers (XREADGROUP, at-least-once)     │    ║
-║  │   Buffer local: deque 10.000 métricas (resiliência offline)        │    ║
-║  └─────────────────────────────────┬──────────────────────────────────┘    ║
-║                                    │ XREADGROUP batch 500                   ║
-║  ┌─────────────────────────────────▼──────────────────────────────────┐    ║
-║  │                    CAMADA DE PROCESSAMENTO (Linux Docker)           │    ║
-║  │                                                                     │    ║
-║  │  core/spec/ ◄─── FONTE ÚNICA DA VERDADE                            │    ║
-║  │  ├── enums.py   (HostType, Protocol, SensorStatus, EventSeverity)  │    ║
-║  │  └── models.py  (Host, Sensor, Metric, Event, Alert, TopologyNode) │    ║
-║  │                                                                     │    ║
-║  │  ┌─────────────────────────────────────────────────────────────┐   │    ║
-║  │  │  event_processor/                                           │   │    ║
-║  │  │  ThresholdEvaluator → só transições de estado geram eventos │   │    ║
-║  │  └──────────────────────────────┬──────────────────────────────┘   │    ║
-║  │                                 │                                   │    ║
-║  │  ┌──────────────────────────────▼──────────────────────────────┐   │    ║
-║  │  │  ai_agents/ (Pipeline Orquestrado)                          │   │    ║
-║  │  │                                                             │   │    ║
-║  │  │  [1] AnomalyDetection  ──── Z-score >3σ, janela 7 dias     │   │    ║
-║  │  │       │                                                     │   │    ║
-║  │  │  [2] Correlation       ──── janela 5min, por host/grupo     │   │    ║
-║  │  │       │                                                     │   │    ║
-║  │  │  [3] RootCause         ──── TopologyGraph, nó raiz          │   │    ║
-║  │  │       │                                                     │   │    ║
-║  │  │  [4] Decision          ──── severidade + manutenção         │   │    ║
-║  │  │       │                                                     │   │    ║
-║  │  │  [5] AutoRemediation   ──── só com confiança ≥85%           │   │    ║
-║  │  │                                                             │   │    ║
-║  │  │  Circuit Breaker: >50% falhas → open 5min                   │   │    ║
-║  │  │  FeedbackLoop: retreino 24h, histórico 90 dias              │   │    ║
-║  │  └──────────────────────────────┬──────────────────────────────┘   │    ║
-║  │                                 │                                   │    ║
-║  │  ┌──────────────────────────────▼──────────────────────────────┐   │    ║
-║  │  │  alert_engine/ (Orquestração de Alertas)                    │   │    ║
-║  │  │                                                             │   │    ║
-║  │  │  DuplicateSuppressor ── Redis TTL 5min                      │   │    ║
-║  │  │       │                                                     │   │    ║
-║  │  │  EventGrouper        ── janela 5min por host                │   │    ║
-║  │  │       │                                                     │   │    ║
-║  │  │  AlertPrioritizer    ── sev×0.40 + hosts×0.30 +             │   │    ║
-║  │  │       │                  impacto×0.20 + horário×0.10        │   │    ║
-║  │  │  AlertNotifier       ── email/webhook/Teams, SLA ≤30s       │   │    ║
-║  │  │                         retry 3x backoff exponencial        │   │    ║
-║  │  └──────────────────────────────┬──────────────────────────────┘   │    ║
-║  │                                 │                                   │    ║
-║  │  ┌──────────────────────────────▼──────────────────────────────┐   │    ║
-║  │  │  PostgreSQL + TimescaleDB                                   │   │    ║
-║  │  │  metrics_ts (hypertable, retention 90d, compressão 7d)      │   │    ║
-║  │  │  ai_feedback_actions │ topology_nodes │ intelligent_alerts  │   │    ║
-║  │  └─────────────────────────────────────────────────────────────┘   │    ║
-║  └─────────────────────────────────┬───────────────────────────────────┘    ║
-║                                    │ REST + WebSocket                        ║
-║  ┌─────────────────────────────────▼───────────────────────────────────┐    ║
-║  │                    CAMADA DE APRESENTAÇÃO (React)                    │    ║
-║  │                                                                      │    ║
-║  │  ── v2 (mantidos) ────────────────────────────────────────────────  │    ║
-║  │  Dashboard │ AIOps │ NOCMode │ EventTimeline │ MetricsViewer        │    ║
-║  │  KnowledgeBase │ Incidents │ Reports │ Settings │ ...               │    ║
-║  │                                                                      │    ║
-║  │  ── v3 (novos) ────────────────────────────────────────────────────  │    ║
-║  │  ObservabilityDashboard  ── health score + mapa de impacto          │    ║
-║  │  TopologyView            ── grafo interativo SVG                    │    ║
-║  │  IntelligentAlerts       ── causa raiz + timeline                   │    ║
-║  │  AIOpsV3                 ── pipeline + feedback metrics             │    ║
-║  │  AdvancedMetrics         ── sparklines + export CSV                 │    ║
-║  │  EventsTimeline          ── agrupado por data + filtros             │    ║
-║  └──────────────────────────────────────────────────────────────────────┘    ║
-╚══════════════════════════════════════════════════════════════════════════════╝
-```
-
-
----
-
-## Fluxo de Dados
-
-```
-  SRVSONDA001 (Windows)
-       │
-       │  1. DependencyEngine verifica se sensor deve executar
-       │     (Ping falhou? → WMI suspenso em cascata)
-       │
-       ▼
-  Protocol Engine (WMI / SNMP / ICMP / TCP)
-       │
-       │  2. Coleta a métrica
-       │
-       ▼
-  Redis Stream "metrics_stream"  ←── XADD batch 500
-       │                              (buffer local 10k se Redis offline)
-       │  3. Consumer Group XREADGROUP (at-least-once delivery)
-       │
-       ▼
-  EventProcessor
-       │  4. ThresholdEvaluator avalia limites dinâmicos
-       │  5. Só gera Event se houve TRANSIÇÃO de estado
-       │     (ok→warning, warning→critical, etc.)
-       │
-       ├──► TimescaleDB metrics_ts  (batch insert ≤500)
-       │
-       └──► Redis Stream "events_stream"  ←── XADD maxlen 50k
-                 │
-                 │  6. AgentPipeline processa o evento
-                 │
-                 ▼
-           AnomalyDetection  (Z-score >3σ do baseline 7 dias)
-                 │
-                 ▼
-           Correlation       (agrupa eventos da janela 5min)
-                 │
-                 ▼
-           RootCause         (TopologyGraph → identifica nó raiz)
-                 │
-                 ▼
-           Decision          (avalia severidade, manutenção, histórico)
-                 │
-                 ▼
-           AutoRemediation   (executa se confiança ≥85%)
-                 │
-                 ▼
-           AlertEngine
-           ├── DuplicateSuppressor  (Redis TTL 5min — sem spam)
-           ├── EventGrouper         (janela 5min por host)
-           ├── AlertPrioritizer     (score ponderado 4 fatores)
-           └── AlertNotifier        (email / webhook / Teams, SLA ≤30s)
-                 │
-                 ▼
-           FeedbackLoop  ──► ai_feedback_actions (PostgreSQL)
-                 │            retreino automático a cada 24h
-                 │
-                 ▼
-           Frontend WebSocket  (atualização ≤5 segundos)
-```
-
----
-
-## Módulos v3
-
-### core/spec/ — Spec Central
-
-Fonte única da verdade. Todos os módulos importam tipos daqui — elimina duplicação e inconsistências.
-
-```
-core/spec/
-├── enums.py    HostType, Protocol, SensorStatus, EventSeverity,
-│               AlertStatus, NodeType, ProbeStatus
-└── models.py   Host, Sensor, Metric, Event, Alert,
-                TopologyNode, ProbeNode  (Pydantic v2)
-```
-
-### engine/dependency_engine.py — DAG de Dependências
-
-```
-  Ping ──► TCP Port 443
-       └─► WMI CPU
-           └─► WMI Disk
-
-  Se Ping → CRITICAL:
-    TCP Port 443 → SUSPENDED (não executa)
-    WMI CPU      → SUSPENDED
-    WMI Disk     → SUSPENDED
-```
-
-- DAG via `networkx.DiGraph`
-- Detecção de ciclo antes de cada `add_edge`
-- Cache de estado por host com TTL 30 segundos
-
-### topology_engine/ — Topologia e Impacto
-
-```
-  SW-CORE-01 (switch)
-  ├── SRVCRMPRD001 (server)
-  │   ├── CRM-API (service)
-  │   └── CRM-DB (service)
-  └── SRVCRMPRD002 (server)
-      └── CRM-WEB (service)
-
-  blast_radius("SW-CORE-01"):
-    hosts afetados:    [SRVCRMPRD001, SRVCRMPRD002]
-    serviços afetados: [CRM-API, CRM-DB, CRM-WEB]
-    total_impact: 5
-```
-
-### ai_agents/ — Pipeline de Agentes IA
-
-```
-  Evento entra no pipeline
-       │
-  ┌────▼────────────────────────────────────────────────────┐
-  │  Circuit Breaker                                        │
-  │  Estado: CLOSED (normal) / OPEN (>50% falhas → 5min)   │
-  └────┬────────────────────────────────────────────────────┘
-       │
-  [1] AnomalyDetectionAgent
-       Baseline: média + desvio padrão dos últimos 7 dias
-       Trigger:  |valor - média| > 3σ
-       │
-  [2] CorrelationAgent
-       Janela: 5 minutos
-       Agrupa: por host e por grupo topológico
-       │
-  [3] RootCauseAgent
-       Usa TopologyGraph para subir na hierarquia
-       Identifica o nó ancestral comum das falhas
-       │
-  [4] DecisionAgent
-       Avalia: severidade, janela de manutenção,
-               histórico de falsos positivos
-       │
-  [5] AutoRemediationAgent
-       Executa apenas se confiança ≥ 85%
-       Registra ação em ai_feedback_actions
-       │
-  FeedbackLoop
-       Classifica outcome: resolved_fast / resolved_slow / false_positive
-       Retreina baseline a cada 24h com histórico de 90 dias
-```
-
-### alert_engine/ — Motor de Alertas
-
-```
-  Fórmula de prioridade:
-  score = (severidade × 0.40)
-        + (hosts_afetados × 0.30)
-        + (impacto_topológico × 0.20)
-        + (horário_crítico × 0.10)
-
-  Flood protection:
-  >100 eventos/min → colapsa em 1 alerta de alta prioridade
-
-  SLA de notificação: ≤30 segundos
-  Retry: 3 tentativas com backoff exponencial
-```
-
-### sensor_dsl/ — DSL de Sensores
-
-```
-# Definição declarativa de sensor
-sensor "cpu_monitor" extends "cpu_template" {
-  protocol = "wmi"
-  interval = 60
-  warning  = 80
-  critical = 95
-}
-
-# Pipeline: Lexer → Parser → AST → Compiler → Sensor (Pydantic)
-# Suporta: herança de templates, comentários # e /* */
-```
-
-
----
-
-## Estrutura do Projeto
+## 📁 Estrutura do Projeto
 
 ```
 CorujaMonitor/
-│
-├── core/                         # v3 — Spec Central
-│   └── spec/
-│       ├── enums.py              # 7 enums (fonte única da verdade)
-│       └── models.py             # 7 modelos Pydantic
-│
-├── engine/                       # v3 — Engines
-│   └── dependency_engine.py      # DAG networkx, cache TTL 30s
-│
-├── topology_engine/              # v3 — Topologia
-│   ├── graph.py                  # TopologyGraph (add/get/ancestors)
-│   ├── impact.py                 # ImpactCalculator (blast radius)
-│   └── discovery.py              # SNMP/WMI auto-discovery
-│
-├── event_processor/              # v3 — Processador de Eventos
-│   ├── processor.py              # Idempotente, só transições
-│   └── threshold_evaluator.py    # Thresholds dinâmicos por host
-│
-├── ai_agents/                    # v3 — Pipeline IA Orquestrado
-│   ├── pipeline.py               # Orquestrador + circuit breaker
-│   ├── anomaly_detection.py      # Z-score, janela 7 dias
-│   ├── correlation.py            # Janela 5min, por host/grupo
-│   ├── root_cause.py             # TopologyGraph → nó raiz
-│   ├── decision.py               # Severidade + contexto
-│   ├── auto_remediation.py       # Confiança ≥85%
-│   ├── smart_scheduler.py        # Agendamento inteligente
-│   ├── base_agent.py             # Interface base
-│   └── feedback_loop.py          # Retreino 24h, histórico 90d
-│
-├── alert_engine/                 # v3 — Motor de Alertas
-│   ├── engine.py                 # Orquestrador principal
-│   ├── suppressor.py             # Redis TTL 5min
-│   ├── grouper.py                # Janela 5min por host
-│   ├── prioritizer.py            # Score ponderado 4 fatores
-│   └── notifier.py               # email/webhook/Teams, SLA ≤30s
-│
-├── sensor_dsl/                   # v3 — DSL de Sensores
-│   ├── lexer.py
-│   ├── parser.py
-│   ├── ast_nodes.py
-│   ├── compiler.py
-│   └── printer.py
-│
-├── api/                          # Backend FastAPI
-│   ├── main.py
-│   ├── models.py
-│   ├── database.py
-│   ├── auth.py
-│   ├── migrate_v3.py             # v3 — DDL (metrics_ts, topology_nodes, ...)
-│   ├── middleware/
-│   │   └── waf.py                # Web Application Firewall
-│   └── routers/
-│       ├── observability.py      # v3 — health-score, impact-map, WS
-│       ├── probe_manager.py      # v3 — ProbeManager distribuído
-│       ├── servers.py
-│       ├── sensors.py
-│       ├── metrics.py
-│       ├── aiops.py
-│       ├── noc.py
-│       └── ...                   # 40+ routers v2 mantidos
-│
-├── probe/                        # Sonda Windows (SRVSONDA001)
-│   ├── probe_core.py             # Núcleo da sonda
-│   ├── protocol_engines/         # v2 — Motores por protocolo
-│   │   ├── icmp_engine.py
-│   │   ├── tcp_engine.py
-│   │   ├── snmp_engine.py        # pysnmp 7.x, GetBulk
-│   │   ├── wmi_engine.py
-│   │   ├── docker_engine.py
-│   │   └── kubernetes_engine.py
-│   ├── engine/                   # v2 — Engine Core
-│   │   ├── wmi_pool.py           # Pool WMI + backoff anti-lockout AD
-│   │   ├── smart_collector.py
-│   │   ├── adaptive_monitor.py   # Intervalos 30s/60s/300s
-│   │   ├── metric_cache.py       # Redis + local, TTL por tipo
-│   │   ├── pre_check.py          # Conectividade antes de sensores pesados
-│   │   ├── scheduler.py
-│   │   ├── thread_pool.py
-│   │   ├── global_rate_limiter.py
-│   │   ├── internal_metrics.py
-│   │   └── prometheus_exporter.py # :9090
-│   ├── metrics_pipeline/         # v2/v3 — Streaming
-│   │   ├── stream_producer.py    # XADD batch + buffer 10k
-│   │   ├── stream_consumer.py    # XREADGROUP consumer groups
-│   │   └── metrics_processor.py  # Batch insert TimescaleDB ≤500
-│   ├── connection_pool/
-│   │   ├── snmp_pool.py
-│   │   └── tcp_pool.py
-│   ├── event_engine/
-│   │   ├── event_queue.py
-│   │   ├── wmi_event_listener.py
-│   │   └── kubernetes_event_listener.py
-│   └── security/
-│       ├── credential_manager.py # Fernet encryption
-│       └── vault_client.py       # HashiCorp + Azure KV
-│
-├── frontend/                     # Interface React 18
-│   └── src/components/
-│       ├── ObservabilityDashboard.js  # v3
-│       ├── TopologyView.js            # v3
-│       ├── IntelligentAlerts.js       # v3
-│       ├── AIOpsV3.js                 # v3
-│       ├── AdvancedMetrics.js         # v3
-│       ├── EventsTimeline.js          # v3
-│       ├── Dashboard.js               # v2
-│       ├── AIOps.js                   # v2
-│       ├── NOCMode.js                 # v2
-│       └── ...                        # 40+ componentes v2 mantidos
-│
-├── ai-agent/                     # Motor AIOps standalone (porta 8001)
-│   ├── anomaly_detector.py       # Isolation Forest
-│   ├── failure_predictor.py      # Regressão linear
-│   ├── event_correlator.py       # Correlação temporal
-│   └── root_cause_engine.py      # RCA com detecção de cascata
-│
-├── tests/                        # 349 testes, 0 falhas
-│   ├── test_spec_central.py      # 25 testes
-│   ├── test_dependency_engine.py # 19 testes
-│   ├── test_topology_engine.py   # 16 testes
-│   ├── test_event_processor.py   # 25 testes
-│   ├── test_ai_agents.py         # 29 testes
-│   ├── test_alert_engine.py      # 25 testes
-│   ├── test_sensor_dsl.py        # 35 testes
-│   ├── test_pbt_properties.py    # 4 testes property-based
-│   ├── test_load_simulation.py   # 3 testes de carga
-│   ├── test_regression_v2.py     # 5 testes de regressão
-│   └── test_audit_enterprise.py  # 120 testes enterprise
-│
-├── docs/                         # Documentação completa
-│   ├── v3/                       # Documentação v3.0
-│   ├── architecture/             # Arquiteturas e roadmaps
-│   ├── guides/                   # Guias de instalação
-│   ├── reference/                # Referências técnicas
-│   ├── changelog/                # Histórico detalhado por data
-│   └── README.md                 # Índice da documentação
-│
-├── installer/                    # Instaladores MSI (WiX)
-├── worker/                       # Celery tasks
-├── security/                     # Scripts de segurança
-├── docker-compose.yml
-├── .env.example
-├── CHANGELOG.md
-└── version.txt
+├── api/                    # FastAPI — 60+ routers
+│   ├── routers/
+│   │   ├── incidents.py    # CRUD + reopen + redispatch + stop-calls
+│   │   ├── escalation.py   # Escalação contínua + recursos + histórico
+│   │   ├── notifications.py # Matriz de notificação + Twilio
+│   │   ├── dashboard.py    # Overview + health-summary (com standalone)
+│   │   ├── observability.py # Health score + impact map (com standalone)
+│   │   ├── predictions.py  # Predições de falha (regressão linear)
+│   │   ├── ai_activities.py # Atividades IA (ai_agent_logs + intelligent_alerts)
+│   │   └── topology.py     # Grafo de topologia + blast radius
+│   └── models.py
+├── worker/                 # Celery tasks + escalação + notificações
+│   ├── tasks.py            # Pipeline principal + AIOps + Ollama
+│   ├── notification_dispatcher.py  # Matriz de canais + dispatch
+│   └── escalation.py       # Estado Redis + ciclos de ligação
+├── probe/                  # Sonda Windows (SRVSONDA001)
+│   ├── probe_core.py
+│   ├── collectors/         # 30 coletores (WMI, SNMP, Ping, etc.)
+│   └── parallel_engine.py
+├── frontend/src/
+│   └── components/         # ~70 componentes React
+│       ├── Dashboard.js    # Cards clicáveis + modal HTTP 7 dias
+│       ├── Incidents.js    # Reabrir + parar ligações + re-dispatch
+│       ├── SensorLibrary.js # Cards clicáveis por tipo de sensor
+│       ├── EscalationConfig.js # Escalação + alarmes pendentes
+│       ├── AIActivities.js # Atividades IA com modal detalhes
+│       └── Topbar.js       # Busca global com páginas do sistema
+├── ai_agents/              # Pipeline AIOps v3
+│   ├── pipeline_orchestrator.py
+│   ├── anomaly_detection.py
+│   ├── correlation.py
+│   ├── root_cause.py
+│   ├── decision.py
+│   └── auto_remediation.py
+├── core/spec/              # Fonte única da verdade (enums + models)
+├── alert_engine/           # Supressor, grouper, prioritizer, notifier
+├── topology_engine/        # Grafo de topologia + blast radius
+└── docker-compose.yml
 ```
-
 
 ---
 
-## Instalação
+## 🔧 Instalação e Deploy
 
 ### Pré-requisitos
 
-**Servidor Linux:**
-- Docker 20.10+ e docker-compose instalados
-- 4GB RAM mínimo (8GB recomendado)
-- Portas abertas: 3000 (frontend), 8000 (API), 8001 (AI agent), 5432 (PostgreSQL), 6379 (Redis)
+- Docker + Docker Compose v2
+- Git
+- Conta Twilio (SMS, WhatsApp, Ligações)
+- Python 3.11+ (para a sonda Windows)
 
-**Sonda Windows:**
-- Windows Server 2012 R2+
-- Python 3.11+
-- Conta de serviço com permissões WMI (`DOMAIN\monitor.user`)
-- NSSM para gerenciamento do serviço
-
-### Deploy no Servidor (Linux)
+### Deploy no Linux (srvcmonitor001)
 
 ```bash
-# 1. Clonar repositório
+# Clonar repositório
 git clone https://github.com/Quirinodsg/CorujaMonitor.git
-cd /home/administrador/CorujaMonitor
+cd CorujaMonitor
 
-# 2. Configurar variáveis de ambiente
+# Configurar variáveis de ambiente
 cp .env.example .env
 # Editar .env com suas credenciais
 
-# 3. Subir todos os serviços
-docker-compose up -d
+# Criar tabelas do AIOps (primeira vez)
+docker compose up -d postgres
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c "
+CREATE TABLE IF NOT EXISTS ai_agent_logs (
+    id SERIAL PRIMARY KEY,
+    run_id TEXT NOT NULL,
+    agent_name TEXT NOT NULL,
+    input JSONB DEFAULT '{}',
+    output JSONB DEFAULT '{}',
+    status TEXT DEFAULT 'success',
+    error TEXT,
+    timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE TABLE IF NOT EXISTS intelligent_alerts (
+    id SERIAL PRIMARY KEY,
+    run_id TEXT,
+    title TEXT,
+    severity TEXT DEFAULT 'warning',
+    status TEXT DEFAULT 'open',
+    root_cause TEXT,
+    confidence FLOAT DEFAULT 0.0,
+    recommended_actions JSONB DEFAULT '[]',
+    affected_hosts JSONB DEFAULT '[]',
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    resolved_at TIMESTAMPTZ
+);
+CREATE TABLE IF NOT EXISTS ai_feedback_actions (
+    id SERIAL PRIMARY KEY,
+    action_id TEXT,
+    run_id TEXT,
+    agent_name TEXT,
+    action_type TEXT,
+    target_host TEXT,
+    result TEXT,
+    outcome TEXT,
+    resolution_time_seconds FLOAT,
+    timestamp TIMESTAMPTZ DEFAULT NOW()
+);"
 
-# 4. Executar migração v3 (cria tabelas novas)
-docker exec coruja-api python3 migrate_v3.py
+# Baixar modelo Ollama
+docker compose up -d ollama
+docker exec -it coruja-ollama ollama pull llama3.2
 
-# 5. Verificar saúde
-docker-compose ps
-curl http://localhost:8000/health
-curl http://localhost:8000/api/v1/observability/health-score
+# Subir todos os serviços
+docker compose up -d --build
 ```
 
-### Instalar Sonda (Windows — SRVSONDA001)
-
-```powershell
-# Instalar como serviço Windows (domínio AD)
-cd "C:\Program Files\CorujaMonitor\Probe"
-.\install.bat
-
-# Verificar serviço
-Get-Service CorujaProbe
-Get-Content ".\logs\probe.log" -Tail 50
-```
-
-### Atualizar (Kiro → Linux)
+### Atualização
 
 ```bash
-# No Kiro (Windows — desenvolvimento):
-git add -A
-git commit -m "feat: descrição"
-git push origin master
-
-# No Linux:
 cd /home/administrador/CorujaMonitor
 git pull
-docker-compose up -d --build api worker frontend
+docker compose up -d --build api worker frontend
 ```
 
----
-
-## Testes
+### Comandos Operacionais
 
 ```bash
-# Todos os 349 testes
-pytest tests/ -v
+# Ver logs da API
+docker logs coruja-api -f
 
-# Com cobertura (≥80% módulos críticos)
-pytest tests/ --cov=core --cov=engine --cov=topology_engine \
-  --cov=event_processor --cov=ai_agents --cov=alert_engine \
-  --cov-report=term-missing --cov-fail-under=80
+# Ver logs do worker (AIOps, notificações, escalação)
+docker logs coruja-worker -f --tail=50
 
-# Apenas regressão v2 (garante que nada quebrou)
-pytest tests/test_regression_v2.py -v
+# Reiniciar worker (sem rebuild)
+docker compose restart worker
 
-# Property-based (Hypothesis — 23 invariantes)
-pytest tests/test_pbt_properties.py -v
+# Ver escalações ativas no Redis
+docker exec -it coruja-redis redis-cli KEYS "escalation:*"
+
+# Parar todas as ligações (emergência)
+docker exec -it coruja-redis redis-cli FLUSHDB
+
+# Reabrir incidentes reconhecidos
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c \
+  "UPDATE incidents SET status='open', acknowledged_at=NULL, acknowledged_by=NULL WHERE status='acknowledged' RETURNING id, title;"
 ```
 
-| Arquivo | Testes | Tipo |
-|---|---|---|
-| `test_spec_central.py` | 25 | Unitário |
-| `test_dependency_engine.py` | 19 | Unitário + Property |
-| `test_topology_engine.py` | 16 | Unitário + Property |
-| `test_event_processor.py` | 25 | Unitário + Property |
-| `test_ai_agents.py` | 29 | Unitário + Property |
-| `test_alert_engine.py` | 25 | Unitário + Property |
-| `test_sensor_dsl.py` | 35 | Unitário + Property |
-| `test_pbt_properties.py` | 4 | Property-based (Hypothesis) |
-| `test_load_simulation.py` | 3 | Carga (1.000 hosts × 50 sensores) |
-| `test_regression_v2.py` | 5 | Regressão v2.0 |
-| `test_audit_enterprise.py` | 120 | Auditoria Enterprise |
-| **Total** | **349** | **0 falhas** |
+---
+
+## 🤖 Pipeline AIOps v3
+
+### Fluxo de Análise
+
+```
+Incidente criado
+      ↓
+1. AnomalyDetectionAgent  — detecta padrões anômalos nas métricas
+      ↓
+2. CorrelationAgent       — correlaciona com outros incidentes
+      ↓
+3. RootCauseAgent         — identifica causa raiz
+      ↓
+4. DecisionAgent          — decide se deve alertar
+      ↓
+5. AutoRemediationAgent   — executa ações de remediação
+      ↓
+6. OllamaAnalysisAgent    — gera diagnóstico em português (llama3.2)
+      ↓
+Salva em ai_agent_logs + intelligent_alerts
+```
+
+### Configuração do Ollama
+
+```yaml
+# docker-compose.yml
+worker:
+  environment:
+    - OLLAMA_BASE_URL=http://ollama:11434
+    - AI_MODEL=llama3.2
+```
 
 ---
 
-## API
+## 📞 Escalação Contínua
 
-### Endpoints v3 (novos)
+### Fluxo de Notificação
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| GET | `/api/v1/observability/health-score` | Score 0-100 da infraestrutura |
-| GET | `/api/v1/observability/impact-map` | Servidores com alertas ativos |
-| GET | `/api/v1/alerts/intelligent` | Alertas inteligentes com filtros |
-| GET | `/api/v1/alerts/intelligent/{id}/root-cause` | Análise de causa raiz |
-| GET | `/api/v1/topology/graph` | Grafo completo `{nodes, edges}` |
-| GET | `/api/v1/topology/impact/{node_id}` | Blast radius de um nó |
-| WS  | `/api/v1/ws/observability` | Atualizações em tempo real (≤5s) |
+```
+Sensor crítico detectado
+         ↓
+Incidente criado (status: open)
+         ↓
+Notificações IMEDIATAS (1x por 24h):
+  • Email ✅
+  • Teams ✅
+  • SMS (Twilio) ✅
+  • WhatsApp (Twilio) ✅
+  • Ligação automática (Nobreak/Ar-condicionado) ✅
+         ↓
+AIOps analisa em background
+  • Preenche root_cause
+  • Gera diagnóstico Ollama
+         ↓
+Escalação contínua (se configurada):
+  • Liga a cada X minutos
+  • Até Y tentativas
+  • Modo: simultâneo ou sequencial
+```
 
-### Endpoints v2 (mantidos)
+### Controles na Interface
 
-| Método | Endpoint | Descrição |
-|---|---|---|
-| GET | `/api/v1/dashboard/summary` | Resumo do dashboard |
-| GET | `/api/v1/servers` | Lista servidores |
-| GET | `/api/v1/sensors` | Lista sensores |
-| GET | `/api/v1/metrics` | Métricas com filtros |
-| GET | `/api/v1/incidents` | Incidentes |
-| GET | `/api/v1/aiops/analysis` | Análise AIOps v2 |
-| GET | `/api/v1/noc/status` | Status NOC |
-| WS  | `/api/v1/ws/dashboard` | WebSocket dashboard v2 |
-
-Documentação interativa: `http://localhost:8000/docs`
-
----
-
-## Tecnologias
-
-| Camada | Tecnologia | Versão | Uso |
-|---|---|---|---|
-| Backend | FastAPI | 0.100+ | Framework web + WebSocket |
-| Backend | SQLAlchemy | 2.0+ | ORM |
-| Backend | Pydantic | 2.0+ | Validação e modelos |
-| Backend | Celery | 5.3+ | Tasks assíncronas |
-| Backend | Redis | 7.0+ | Streams + cache |
-| Backend | PostgreSQL | 15+ | Banco de dados |
-| Backend | TimescaleDB | 2.14 | Séries temporais (hypertable) |
-| Backend | networkx | 3.x | DAG de dependências |
-| Backend | Hypothesis | 6.x | Property-based testing |
-| AI | Ollama | Latest | IA local (llama2) |
-| AI | scikit-learn | 1.x | Isolation Forest |
-| Sonda | Python | 3.11–3.13 | Linguagem principal |
-| Sonda | pysnmp | 7.1.22 | SNMP v1/v2c/v3 + GetBulk |
-| Sonda | psutil | 5.x | Métricas internas |
-| Sonda | cryptography | 41+ | Fernet (credenciais) |
-| Frontend | React | 18.2+ | UI |
-| Frontend | Recharts | 2.8+ | Gráficos |
-| Infra | Docker Compose | 2.x | Orquestração |
-| Infra | NSSM | 2.24 | Serviço Windows |
-
----
-
-## Histórico de Versões
-
-| Versão | Data | Destaques |
-|---|---|---|
-| **3.0.0** | Mar 2026 | Observabilidade inteligente, pipeline IA, topologia, DSL, 349 testes |
-| 2.1.0 | Mar 2026 | WAF reativado, WMI pool, streaming, 120 testes |
-| 2.0.0 | Mar 2026 | Protocol engines, connection pools, adaptive monitoring, AIOps |
-| 1.0.0 | Mar 2026 | Sistema completo de monitoramento agentless |
-
-Veja [CHANGELOG.md](CHANGELOG.md) para o histórico completo.
-
----
-
-## Documentação
-
-| Documento | Descrição |
+| Botão | Ação |
 |---|---|
-| [docs/v3/ARCHITECTURE.md](docs/v3/ARCHITECTURE.md) | Arquitetura completa v3.0 com diagramas |
-| [docs/v3/ARCHITECTURE_BEFORE_AFTER.md](docs/v3/ARCHITECTURE_BEFORE_AFTER.md) | Comparativo v2 vs v3 |
-| [docs/v3/API_REFERENCE.md](docs/v3/API_REFERENCE.md) | Referência completa da API v3 |
-| [docs/v3/DEPLOYMENT.md](docs/v3/DEPLOYMENT.md) | Guia de deploy e atualização |
-| [docs/v3/TEST_SUITE.md](docs/v3/TEST_SUITE.md) | Suite de testes e invariantes |
-| [docs/README.md](docs/README.md) | Índice completo da documentação |
+| ✓ Reconhecer | Para todas as notificações por 24h |
+| 🔕 Parar Ligações | Para escalação + bloqueia por 24h |
+| 📣 Re-enviar | Força re-dispatch de todos os canais |
+| 🔄 Reabrir | Reabre incidente e limpa cooldowns |
+
+### Configuração Twilio
+
+```json
+{
+  "twilio": {
+    "account_sid": "ACxxxxxxxx",
+    "auth_token": "xxxxxxxx",
+    "from_number": "+13136314318",
+    "to_numbers": ["+5531991888803", "+5531992140128"]
+  },
+  "whatsapp": {
+    "account_sid": "ACxxxxxxxx",
+    "auth_token": "xxxxxxxx",
+    "from_number": "+14155238886",
+    "phone_numbers": ["+5531991888803"]
+  },
+  "escalation": {
+    "enabled": true,
+    "mode": "simultaneous",
+    "interval_minutes": 3,
+    "max_attempts": 10,
+    "phone_chain": [
+      {"name": "Andre", "number": "+5531991888803"},
+      {"name": "Bruno", "number": "+5531992140128"}
+    ]
+  }
+}
+```
 
 ---
 
-## Licença
+## 📊 Matriz de Notificação Padrão (v3.6)
 
-Este projeto é **privado** e proprietário. Todos os direitos reservados.
+| Sensor | Email | Teams | SMS | WhatsApp | Ligação | Ticket |
+|---|---|---|---|---|---|---|
+| ping | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| http | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| cpu/memory/disk | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| service | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| **engetron (Nobreak)** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| **conflex (Ar-cond.)** | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| snmp | ✅ | ✅ | ❌ | ❌ | ❌ | ❌ |
+
+> A matriz pode ser customizada por tenant em **Configurações → Notificações → Matriz de Notificação**
 
 ---
 
-**Coruja Monitor** — Monitoramento Inteligente para Infraestrutura de TI
+## 🖥️ Sonda Windows (CorujaProbe)
 
-*Versão 3.0.0 — Março 2026*
+### Instalação
+
+```powershell
+# Instalar como serviço NSSM
+nssm install CorujaProbe "C:\Python311\python.exe" "C:\Program Files\CorujaMonitor\Probe\probe_core.py"
+nssm set CorujaProbe AppDirectory "C:\Program Files\CorujaMonitor\Probe"
+nssm start CorujaProbe
+```
+
+### Coletores Disponíveis
+
+| Coletor | Protocolo | Descrição |
+|---|---|---|
+| WMI | WMI | CPU, Memória, Disco, Uptime, Serviços |
+| SNMP | SNMP v1/v2c/v3 | Switches, APs, Roteadores |
+| Engetron | HTTP | Nobreak UPS com fases e bateria |
+| Conflex | SNMP | Ar-condicionado com temperatura |
+| EqualLogic | SNMP | Storage Dell com uso e discos |
+| Printer | SNMP | Impressoras com toner e páginas |
+| Hyper-V | WMI | VMs, hosts, custo FinOps |
+| ICMP/Ping | ICMP | Disponibilidade de hosts |
+
+### Logs
+
+```powershell
+Get-Content "C:\Program Files\CorujaMonitor\Probe\logs\service_error.log" -Wait -Tail 50
+```
+
+---
+
+## 🗺️ Navegação do Sistema
+
+| Categoria | Páginas |
+|---|---|
+| **Monitoramento** | Dashboard, Empresas, Servidores, Sensores, Serviços |
+| **Operação** | Incidentes, Alertas Inteligentes, Escalação, Timeline, NOC |
+| **AIOps** | AIOps v3, Atividades da IA, Predições de Falha |
+| **Observabilidade** | Observabilidade, Topologia, Métricas Avançadas, Hyper-V |
+| **Sistema** | Discovery, Probe Nodes, Saúde, GMUD, Configurações |
+| **Conhecimento** | Base de Conhecimento |
+
+---
+
+## 🔍 Busca Global
+
+A barra de busca (Ctrl+K) encontra:
+- **Servidores** — por hostname ou IP
+- **Sensores** — por nome ou tipo
+- **Incidentes abertos** — por título
+- **Páginas do sistema** — Configurações, Escalação, NOC, AIOps, etc.
+
+---
+
+## 📈 Funcionalidades por Módulo
+
+### Dashboard
+- Health Score em tempo real via WebSocket
+- Cards de sites HTTP clicáveis com histórico 7 dias (uptime, latência, quedas)
+- Ativos de rede com status em tempo real
+- Seção Datacenter (Nobreak, Ar-condicionado, Storage, Impressoras)
+- Filtros por empresa e criticidade
+
+### Incidentes
+- Filtros por status e severidade
+- Botões de ação: Reconhecer, Reabrir, Re-enviar notificações, Parar ligações
+- Modal de detalhes com análise da IA e causa raiz
+- Suporte a sensores standalone (sem servidor)
+
+### Escalação
+- Cadeia de contatos com ordem de ligação
+- Modo simultâneo ou sequencial
+- Configuração ao vivo (muda durante escalação ativa)
+- Alarmes pendentes de escalação visíveis mesmo sem Redis
+
+### Biblioteca de Sensores
+- Cards clicáveis com modal de histórico 7 dias
+- Dados específicos por tipo (Nobreak, Ar, Storage, Impressora)
+- Ativos de rede com histórico de PING e sensores
+
+### AIOps v3
+- Pipeline de 5 agentes rodando a cada 5 minutos
+- Ollama llama3.2 para análise em linguagem natural
+- Logs persistidos em `ai_agent_logs`
+- Alertas inteligentes em `intelligent_alerts`
+- Modal de detalhes com análise completa
+
+### Predições de Falha
+- Regressão linear nas métricas das últimas 6 horas
+- Horizonte de 24 horas
+- Filtros por severidade (critical, warning, info)
+- 117k+ amostras persistidas em `prediction_samples`
+
+### Topologia
+- Grafo interativo com force-layout
+- Vista em lista com busca
+- Blast radius e dependências
+- Sincronização automática com servidores monitorados
+
+### Hyper-V
+- 2 hosts físicos, 32 VMs
+- CPU, Memória, Storage médio
+- Custo mensal do datacenter
+- Recomendações FinOps (economia potencial)
+- Filtros por host e status de VM
+
+---
+
+## 🔒 Segurança
+
+- Autenticação JWT com refresh token
+- MFA (TOTP) disponível
+- RBAC: admin e usuário normal
+- Isolamento por tenant (multi-empresa)
+- Credenciais WMI criptografadas no banco
+- HTTPS via Nginx + Let's Encrypt
+
+---
+
+## 📋 Variáveis de Ambiente
+
+```env
+# Banco de dados
+POSTGRES_DB=coruja_monitor
+POSTGRES_USER=coruja
+POSTGRES_PASSWORD=sua_senha
+
+# Redis
+CELERY_BROKER_URL=redis://redis:6379/0
+CELERY_RESULT_BACKEND=redis://redis:6379/0
+
+# IA
+OLLAMA_BASE_URL=http://ollama:11434
+AI_MODEL=llama3.2
+
+# JWT
+SECRET_KEY=sua_chave_secreta
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=43200
+
+# Domínio
+CORUJA_DOMAIN=coruja.techbiz.com.br
+```
+
+---
+
+## 🐛 Troubleshooting
+
+### API não sobe (502 Bad Gateway)
+```bash
+docker logs coruja-api --tail=30
+# Verificar erros de sintaxe nos routers
+```
+
+### Worker não processa tasks
+```bash
+docker logs coruja-worker --tail=30 | grep -E "ERROR|error"
+# Verificar se Redis está acessível
+docker exec -it coruja-redis redis-cli ping
+```
+
+### Ollama não responde
+```bash
+# Verificar se o modelo está baixado
+docker exec -it coruja-ollama ollama list
+# Testar
+curl http://localhost:11434/api/generate -d '{"model":"llama3.2","prompt":"teste","stream":false}'
+```
+
+### Notificações duplicadas
+```bash
+# Marcar incidentes como já notificados
+docker exec -it coruja-postgres psql -U coruja -d coruja_monitor -c \
+  "UPDATE incidents SET ai_analysis = COALESCE(ai_analysis, '{}'::jsonb) || jsonb_build_object('notified_at', NOW()::text) WHERE status IN ('open', 'acknowledged');"
+```
+
+### Parar todas as ligações (emergência)
+```bash
+docker exec -it coruja-redis redis-cli FLUSHDB
+```
+
+---
+
+## 📝 Changelog
+
+### v3.6 (Abril 2026)
+- Integração Ollama llama3.2 no pipeline AIOps
+- Notificações 1x por 24h persistidas no banco
+- HTTP alarma após 3 falhas consecutivas (≥3 min)
+- Matriz padrão corrigida (sem ticket/SMS em HTTP/PING)
+- Cards clicáveis em toda a Biblioteca de Sensores
+- Ativos de rede clicáveis com histórico de PING
+- Modal de detalhes de incidentes com análise IA
+- Busca global com páginas do sistema
+- Botões de controle de notificação nos incidentes
+- Observabilidade e health score incluem sensores standalone
+- Topologia com blast radius corrigido
+
+### v3.5 (Fevereiro 2026)
+- Enterprise Hardening
+- Pipeline AIOps v3 com 5 agentes
+- Escalação contínua via Twilio
+- Hyper-V Observabilidade com FinOps
+- Modo NOC com rotação automática
+
+### v3.0 (Janeiro 2026)
+- Arquitetura v3 com TimescaleDB
+- Coleta paralela na sonda
+- Topologia de rede
+- Base de Conhecimento
+
+---
+
+## 👥 Equipe
+
+**Desenvolvido por:** Techbiz Infraestrutura  
+**Contato:** infraestrutura@techbiz.com.br  
+**Versão:** 3.6 — Abril 2026
+
+---
+
+*Coruja Monitor — Monitoramento inteligente que nunca dorme* 🦉
