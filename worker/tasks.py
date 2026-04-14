@@ -298,6 +298,28 @@ def evaluate_all_thresholds():
                         )
                         continue
 
+                # 5c. Para HTTP: exigir 2 falhas consecutivas antes de criar incidente
+                # Evita alarme por queda momentânea de menos de 1 minuto
+                if not existing_incident and sensor.sensor_type == 'http':
+                    confirm_key = f"http_fail_confirm:{sensor.id}"
+                    if redis_client is not None:
+                        try:
+                            fail_count = redis_client.get(confirm_key)
+                            if fail_count is None:
+                                # Primeira falha — registrar e aguardar confirmação
+                                redis_client.setex(confirm_key, 180, "1")  # TTL 3 min
+                                logger.info("HTTP sensor %s: primeira falha — aguardando confirmação", sensor.id)
+                                continue
+                            elif int(fail_count) < 2:
+                                # Segunda falha — incrementar e aguardar
+                                redis_client.incr(confirm_key)
+                                redis_client.expire(confirm_key, 180)
+                                logger.info("HTTP sensor %s: segunda falha — aguardando confirmação", sensor.id)
+                                continue
+                            # Terceira+ falha — criar incidente
+                        except Exception:
+                            pass  # fail-open: se Redis indisponível, criar incidente normalmente
+
                 if not existing_incident:
                     # 6. Supressão por dependência: PING é sensor MASTER do servidor
                     # Se PING DOWN aberto → suprimir TODOS os outros sensores do mesmo server
@@ -480,6 +502,12 @@ def evaluate_all_thresholds():
                             elif _sec < 3600: _downtime = f"{_sec//60}min {_sec%60}s"
                             else: _downtime = f"{_sec//3600}h {(_sec%3600)//60}min"
                         incident.resolution_notes = f"Site voltou ao normal. URL: {_http_url}. Tempo de indisponibilidade: {_downtime or 'N/A'}"
+                        # Limpar contador de confirmação HTTP
+                        if redis_client is not None:
+                            try:
+                                redis_client.delete(f"http_fail_confirm:{sensor.id}")
+                            except Exception:
+                                pass
                     else:
                         incident.resolution_notes = "Auto-resolvido: sensor voltou ao normal"
                     db.commit()
