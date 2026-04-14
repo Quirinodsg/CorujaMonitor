@@ -12,23 +12,23 @@
 ## 📸 Screenshots
 
 ### Dashboard Principal
-![Dashboard](docs/screenshots/dashboard.png)
+![Dashboard](docs/screenshots/Screenshot_1.png)
 > Health Score em tempo real, KPIs, sites monitorados, ativos de rede e incidentes recentes.
 
 ### Modo NOC
-![NOC](docs/screenshots/noc.png)
+![NOC](docs/screenshots/Screenshot_2.png)
 > Visão wall-screen com status global, disponibilidade por empresa e rotação automática de painéis.
 
 ### Atividades da IA (AIOps)
-![AIOps](docs/screenshots/aiops-activities.png)
+![AIOps](docs/screenshots/Screenshot_3.png)
 > Pipeline v3 com 5 agentes + Ollama llama3.2 gerando diagnósticos em português.
 
 ### Topologia de Rede
-![Topology](docs/screenshots/topology.png)
+![Topology](docs/screenshots/Screenshot_4.png)
 > Grafo interativo com 44 nós e 104 conexões, blast radius e dependências.
 
 ### Hyper-V Observabilidade
-![HyperV](docs/screenshots/hyperv.png)
+![HyperV](docs/screenshots/Screenshot_5.png)
 > 2 hosts, 32 VMs, custo mensal do datacenter e recomendações FinOps.
 
 ---
