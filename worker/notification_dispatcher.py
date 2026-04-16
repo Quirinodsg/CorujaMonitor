@@ -582,10 +582,18 @@ def dispatch_renotification(incident_id: int) -> dict:
             'created_at': _fmt_dt(incident.created_at),
         }
 
-        # Re-notificação: email e teams sempre; SMS/WhatsApp/phone_call para sensores de datacenter
-        # MAS apenas se não houver bloqueio manual de escalação
+        # Re-notificação: respeitar a matriz de notificação do tenant
+        # Para sensores datacenter (conflex/engetron): usar matriz ou DEFAULT_MATRIX
+        # Nunca ignorar a configuração do tenant
         effective_st = _effective_sensor_type(sensor_type, sensor.name)
         is_datacenter = effective_st in ('conflex', 'engetron')
+
+        # Resolver canais via matriz (igual ao dispatch_notifications)
+        custom_matrix = getattr(tenant, 'notification_matrix', None)
+        all_channels = resolve_channels(sensor_type, custom_matrix, sensor.name)
+
+        # Re-notificação: email e teams sempre; outros canais apenas se na matriz E não bloqueados
+        channels_to_notify = list(all_channels & {'email', 'teams'})
 
         escalation_blocked = False
         if is_datacenter:
@@ -596,13 +604,14 @@ def dispatch_renotification(incident_id: int) -> dict:
                 _r = _redis_lib.Redis.from_url(_redis_url, socket_connect_timeout=2)
                 escalation_blocked = bool(_r.exists(f"escalation_blocked:{sensor.id}"))
             except Exception:
-                pass  # fail-open: se Redis indisponível, permite notificação
+                pass
 
-        channels_to_notify = ['email', 'teams']
         if is_datacenter and not escalation_blocked:
-            channels_to_notify += ['sms', 'whatsapp', 'phone_call']
+            # Adicionar canais extras da matriz (sms, whatsapp, phone_call) se configurados
+            extra = all_channels & {'sms', 'whatsapp', 'phone_call'}
+            channels_to_notify += list(extra)
         elif is_datacenter and escalation_blocked:
-            logger.info(f"Re-notificação incidente {incident_id}: SMS/WhatsApp/ligação bloqueados manualmente para sensor {sensor.id}")
+            logger.info(f"Re-notificação incidente {incident_id}: SMS/WhatsApp/ligação bloqueados para sensor {sensor.id}")
 
         for channel in channels_to_notify:
             try:

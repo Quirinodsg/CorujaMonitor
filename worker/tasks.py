@@ -298,6 +298,35 @@ def evaluate_all_thresholds():
                         )
                         continue
 
+                # 5b2. PING inteligente: se outros sensores do servidor estão OK
+                # (uptime, cpu, memory), é problema de rota de rede, não do servidor.
+                # Reduzir severidade para 'warning' em vez de 'critical'.
+                if not existing_incident and sensor.sensor_type == 'ping' and sensor.server_id:
+                    other_sensors_ok = db.query(Sensor).filter(
+                        Sensor.server_id == sensor.server_id,
+                        Sensor.sensor_type.in_(['uptime', 'system', 'cpu', 'memory']),
+                        Sensor.is_active == True,
+                    ).all()
+                    if other_sensors_ok:
+                        # Verificar se algum desses sensores tem métrica recente OK
+                        recent_ok = False
+                        for os_ in other_sensors_ok:
+                            last_m = db.query(Metric).filter(
+                                Metric.sensor_id == os_.id,
+                                Metric.timestamp >= now - timedelta(minutes=10),
+                            ).order_by(Metric.timestamp.desc()).first()
+                            if last_m and last_m.status in ('ok', 'warning'):
+                                recent_ok = True
+                                break
+                        if recent_ok:
+                            # Servidor está respondendo via WMI — PING é problema de rota
+                            logger.info(
+                                "PING inteligente: sensor %s — servidor tem WMI OK, "
+                                "PING falhou por problema de rota/firewall — severidade reduzida para warning",
+                                sensor.id,
+                            )
+                            severity = 'warning'  # Não critical — servidor está vivo
+
                 # 5c. Para HTTP: exigir 2 falhas consecutivas antes de criar incidente
                 # Evita alarme por queda momentânea de menos de 1 minuto
                 if not existing_incident and sensor.sensor_type == 'http':
