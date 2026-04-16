@@ -269,7 +269,7 @@ def start_escalation(
         )
         return None
 
-    # 2. Verificar se sensor já está reconhecido
+    # 2. Verificar se sensor já está reconhecido OU incidente está acknowledged
     SessionLocal, Incident, Sensor, Tenant = _import_db()
     db = SessionLocal()
     try:
@@ -279,6 +279,16 @@ def start_escalation(
                 "Sensor %d já reconhecido — não iniciando escalação", sensor_id
             )
             return None
+
+        # Verificar se o incidente associado está acknowledged ou resolvido
+        if incident_id:
+            incident = db.query(Incident).filter(Incident.id == incident_id).first()
+            if incident and incident.status in ('acknowledged', 'resolved', 'auto_resolved'):
+                logger.info(
+                    "Incidente %d está %s — não iniciando escalação para sensor %d",
+                    incident_id, incident.status, sensor_id,
+                )
+                return None
 
         # 3. Verificar cadeia de escalação não vazia
         phone_chain = alert_data.get("phone_chain", [])
