@@ -1,5 +1,5 @@
-﻿// TopologyView v2 - api relativo via Axios (sem :8000 hardcoded)
-import React, { useState, useEffect, useCallback } from 'react';
+﻿// TopologyView v3 - layout hierárquico multi-linha com zoom/pan e filtros
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import './TopologyView.css';
 import api from '../services/api';
 
@@ -53,72 +53,96 @@ const EDGE_COLOR = {
   database: '#6366f1',
   http: '#0ea5e9',
   infrastructure: '#1e293b',
+  hosts: '#6366f1',
+  network: '#334155',
 };
 
-// Layout hierárquico por camadas (layers 0→3) com agrupamento de VMs sob hosts HyperV
-function useHierarchicalLayout(nodes, edges, width = 1100, height = 600) {
-  return React.useMemo(() => {
-    if (!nodes.length) return {};
+// ── Layout hierárquico multi-linha ──────────────────────────────────────────
+// Cada layer ocupa uma ou mais linhas. Máx MAX_PER_ROW nós por linha.
+const MAX_PER_ROW = 9;
+const NODE_SPACING_X = 110;
+const ROW_HEIGHT = 110;
+const LAYER_GAP = 30;
 
-    const pos = {};
-    const PADDING_X = 80;
-    const LAYER_Y = { 0: 80, 1: 200, 2: 340, 3: 500 };
+const LAYER_CONFIG = [
+  { layer: 0, label: 'Rede',        color: '#64748b' },
+  { layer: 1, label: 'Hypervisors', color: '#6366f1' },
+  { layer: 2, label: 'Servidores',  color: '#0ea5e9' },
+  { layer: 3, label: 'Serviços',    color: '#22c55e' },
+];
 
-    // Separar VMs HyperV (têm parent_id = hv_host_*) dos demais
-    const hvVmIds = new Set(nodes.filter(n => n.type === 'vm' && n.parent_id?.startsWith('hv_host_')).map(n => n.id));
-    const hvHostIds = new Set(nodes.filter(n => n.type === 'hypervisor').map(n => n.id));
+function buildHierarchicalLayout(nodes) {
+  const pos = {};
+  const PADDING_X = 80;
+  let currentY = 60;
 
-    // Nós normais por layer (excluindo VMs HyperV — serão posicionadas sob o host)
-    const byLayer = { 0: [], 1: [], 2: [], 3: [] };
-    nodes.forEach(n => {
-      if (hvVmIds.has(n.id)) return; // VMs HyperV tratadas separadamente
-      const layer = n.layer ?? 2;
-      const key = Math.min(Math.max(layer, 0), 3);
-      byLayer[key].push(n);
-    });
+  // Separar VMs HyperV — ficam agrupadas sob o host, não no layer geral
+  const hvVmIds = new Set(
+    nodes.filter(n => n.type === 'vm' && n.parent_id?.startsWith('hv_host_')).map(n => n.id)
+  );
 
-    // Posicionar nós normais em cada layer
-    Object.entries(byLayer).forEach(([layerStr, layerNodes]) => {
-      const layer = parseInt(layerStr);
-      const y = LAYER_Y[layer] ?? 340;
-      const count = layerNodes.length;
-      if (!count) return;
-      const usableW = width - PADDING_X * 2;
-      const step = count === 1 ? 0 : usableW / (count - 1);
-      layerNodes.forEach((n, i) => {
-        pos[n.id] = {
-          x: count === 1 ? width / 2 : PADDING_X + i * step,
-          y,
-        };
+  LAYER_CONFIG.forEach(({ layer }) => {
+    const layerNodes = nodes.filter(n => (n.layer ?? 2) === layer && !hvVmIds.has(n.id));
+    if (!layerNodes.length) return;
+
+    const rows = Math.ceil(layerNodes.length / MAX_PER_ROW);
+    for (let row = 0; row < rows; row++) {
+      const rowNodes = layerNodes.slice(row * MAX_PER_ROW, (row + 1) * MAX_PER_ROW);
+      const rowW = (rowNodes.length - 1) * NODE_SPACING_X;
+      const startX = PADDING_X + Math.max(0, (MAX_PER_ROW - 1) * NODE_SPACING_X / 2 - rowW / 2);
+      rowNodes.forEach((n, i) => {
+        pos[n.id] = { x: startX + i * NODE_SPACING_X, y: currentY };
       });
-    });
+      currentY += ROW_HEIGHT;
+    }
+    currentY += LAYER_GAP;
 
-    // Posicionar VMs HyperV em arco abaixo do host pai
-    hvHostIds.forEach(hostId => {
-      const hostPos = pos[hostId];
-      if (!hostPos) return;
-      const vms = nodes.filter(n => n.parent_id === hostId && hvVmIds.has(n.id));
-      if (!vms.length) return;
-      const vmSpacing = Math.min(60, 300 / vms.length);
-      const totalW = (vms.length - 1) * vmSpacing;
-      vms.forEach((vm, i) => {
-        pos[vm.id] = {
-          x: hostPos.x - totalW / 2 + i * vmSpacing,
-          y: hostPos.y + 120,
-        };
+    // VMs HyperV: posicionar abaixo do host pai (só para layer 1 = hypervisors)
+    if (layer === 1) {
+      layerNodes.forEach(hostNode => {
+        const hostPos = pos[hostNode.id];
+        if (!hostPos) return;
+        const vms = nodes.filter(n => n.parent_id === hostNode.id && hvVmIds.has(n.id));
+        if (!vms.length) return;
+        const vmSpacing = Math.min(70, 400 / Math.max(vms.length, 1));
+        const totalW = (vms.length - 1) * vmSpacing;
+        vms.forEach((vm, i) => {
+          pos[vm.id] = {
+            x: hostPos.x - totalW / 2 + i * vmSpacing,
+            y: hostPos.y + ROW_HEIGHT,
+          };
+        });
       });
-    });
+      currentY += ROW_HEIGHT + LAYER_GAP;
+    }
+  });
 
-    // Nós sem posição (fallback)
-    nodes.forEach((n, i) => {
-      if (!pos[n.id]) {
-        pos[n.id] = { x: PADDING_X + (i % 10) * 90, y: 500 };
-      }
-    });
+  // Fallback para nós sem posição
+  nodes.forEach((n, i) => {
+    if (!pos[n.id]) pos[n.id] = { x: PADDING_X + (i % MAX_PER_ROW) * NODE_SPACING_X, y: currentY };
+  });
 
-    return pos;
-  }, [nodes, edges, width, height]);
+  return pos;
 }
+
+function computeCanvasSize(positions) {
+  const xs = Object.values(positions).map(p => p.x);
+  const ys = Object.values(positions).map(p => p.y);
+  if (!xs.length) return { w: 1100, h: 600 };
+  return {
+    w: Math.max(1100, Math.max(...xs) + 120),
+    h: Math.max(500, Math.max(...ys) + 100),
+  };
+}
+
+// ── Filtros de tipo ──────────────────────────────────────────────────────────
+const TYPE_FILTERS = [
+  { key: 'network',    label: 'Rede',       types: ['switch','router','firewall','gateway','ap'] },
+  { key: 'hypervisor', label: 'Hypervisors',types: ['hypervisor'] },
+  { key: 'vm',         label: 'VMs',        types: ['vm'] },
+  { key: 'server',     label: 'Servidores', types: ['server','host'] },
+  { key: 'service',    label: 'Serviços',   types: ['service','application'] },
+];
 
 export default function TopologyView() {
   const [graphData, setGraphData] = useState({ nodes: [], edges: [] });
@@ -129,11 +153,33 @@ export default function TopologyView() {
   const [error, setError] = useState(null);
   const [syncing, setSyncing] = useState(false);
   const [syncMsg, setSyncMsg] = useState(null);
-  const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'list'
+  const [viewMode, setViewMode] = useState('graph');
   const [listSearch, setListSearch] = useState('');
+  const [activeFilters, setActiveFilters] = useState(new Set(['network','hypervisor','vm','server','service']));
 
-  const W = 1100, H = 700;
-  const positions = useHierarchicalLayout(graphData.nodes, graphData.edges, W, H);
+  // Zoom/pan state
+  const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
+  const svgRef = useRef(null);
+  const isPanning = useRef(false);
+  const panStart = useRef({ x: 0, y: 0 });
+
+  // Filtrar nós pelos filtros ativos
+  const visibleNodes = useMemo(() => {
+    return graphData.nodes.filter(n => {
+      const t = (n.metadata?.device_type || n.type || 'server').toLowerCase();
+      return TYPE_FILTERS.some(f => activeFilters.has(f.key) && f.types.some(ft => t.includes(ft)));
+    });
+  }, [graphData.nodes, activeFilters]);
+
+  const visibleNodeIds = useMemo(() => new Set(visibleNodes.map(n => n.id)), [visibleNodes]);
+
+  const visibleEdges = useMemo(() => {
+    return graphData.edges.filter(e => visibleNodeIds.has(e.source) && visibleNodeIds.has(e.target));
+  }, [graphData.edges, visibleNodeIds]);
+
+  // Layout
+  const positions = useMemo(() => buildHierarchicalLayout(visibleNodes), [visibleNodes]);
+  const { w: W, h: H } = useMemo(() => computeCanvasSize(positions), [positions]);
 
   const loadGraph = useCallback(async () => {
     try {
@@ -193,7 +239,7 @@ export default function TopologyView() {
   const focusId = hovered?.id || selected?.id;
   if (focusId) {
     highlightedNodes.add(focusId);
-    graphData.edges.forEach((e, i) => {
+    visibleEdges.forEach((e, i) => {
       if (e.source === focusId || e.target === focusId) {
         highlightedEdges.add(i);
         highlightedNodes.add(e.source);
@@ -202,6 +248,40 @@ export default function TopologyView() {
     });
   }
   const hasHighlight = highlightedNodes.size > 0;
+
+  // Zoom/pan handlers
+  const handleWheel = useCallback((e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    setTransform(t => ({
+      ...t,
+      scale: Math.max(0.3, Math.min(3, t.scale * delta)),
+    }));
+  }, []);
+
+  const handleMouseDown = useCallback((e) => {
+    if (e.button !== 0) return;
+    isPanning.current = true;
+    panStart.current = { x: e.clientX - transform.x, y: e.clientY - transform.y };
+  }, [transform]);
+
+  const handleMouseMove = useCallback((e) => {
+    if (!isPanning.current) return;
+    setTransform(t => ({ ...t, x: e.clientX - panStart.current.x, y: e.clientY - panStart.current.y }));
+  }, []);
+
+  const handleMouseUp = useCallback(() => { isPanning.current = false; }, []);
+
+  const resetView = () => setTransform({ x: 0, y: 0, scale: 1 });
+
+  const toggleFilter = (key) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) { if (next.size > 1) next.delete(key); }
+      else next.add(key);
+      return next;
+    });
+  };
 
   if (loading) return React.createElement('div', { className: 'topo-loading' }, 'Carregando topologia...');
 
@@ -228,19 +308,33 @@ export default function TopologyView() {
           {syncing ? 'Sincronizando...' : 'Sincronizar'}
         </button>
         <div style={{ display: 'flex', gap: 4, marginLeft: 8 }}>
-          <button
-            className={`ds-btn ${viewMode === 'graph' ? 'ds-btn--primary' : 'ds-btn--ghost'}`}
-            style={{ fontSize: 12 }}
-            onClick={() => setViewMode('graph')}
-          >🕸️ Grafo</button>
-          <button
-            className={`ds-btn ${viewMode === 'list' ? 'ds-btn--primary' : 'ds-btn--ghost'}`}
-            style={{ fontSize: 12 }}
-            onClick={() => setViewMode('list')}
-          >📋 Lista</button>
+          <button className={`ds-btn ${viewMode === 'graph' ? 'ds-btn--primary' : 'ds-btn--ghost'}`} style={{ fontSize: 12 }} onClick={() => setViewMode('graph')}>🕸️ Grafo</button>
+          <button className={`ds-btn ${viewMode === 'list' ? 'ds-btn--primary' : 'ds-btn--ghost'}`} style={{ fontSize: 12 }} onClick={() => setViewMode('list')}>📋 Lista</button>
         </div>
+        {/* Filtros de tipo */}
+        {viewMode === 'graph' && (
+          <div style={{ display: 'flex', gap: 4, marginLeft: 12, flexWrap: 'wrap' }}>
+            {TYPE_FILTERS.map(f => (
+              <button key={f.key}
+                onClick={() => toggleFilter(f.key)}
+                style={{
+                  fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid',
+                  borderColor: activeFilters.has(f.key) ? '#6366f1' : '#334155',
+                  background: activeFilters.has(f.key) ? 'rgba(99,102,241,0.15)' : 'transparent',
+                  color: activeFilters.has(f.key) ? '#a5b4fc' : '#64748b',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                }}
+              >{f.label}</button>
+            ))}
+          </div>
+        )}
+        {viewMode === 'graph' && (
+          <button onClick={resetView} style={{ fontSize: 11, padding: '3px 8px', borderRadius: 6, border: '1px solid #334155', background: 'transparent', color: '#64748b', cursor: 'pointer', marginLeft: 4 }}>
+            ⟳ Reset zoom
+          </button>
+        )}
         {syncMsg && <span style={{ fontSize: '0.8rem', color: '#94a3b8', marginLeft: 8 }}>{syncMsg}</span>}
-        <span className="topo-stats">{graphData.nodes.length} nos - {graphData.edges.length} conexoes</span>
+        <span className="topo-stats">{visibleNodes.length}/{graphData.nodes.length} nós · {visibleEdges.length} conexões</span>
       </div>
 
       {viewMode === 'list' ? (
@@ -310,59 +404,96 @@ export default function TopologyView() {
         </div>
       ) : (
         <div className="topo-main">
-          <div className="topo-graph-card" style={{ overflowX: 'auto', overflowY: 'auto' }}>
-          <svg viewBox={'0 0 ' + W + ' ' + H} width={W} height={H} className="topo-svg" aria-label="Grafo de topologia" style={{ minWidth: W, display: 'block' }}>
+          <div className="topo-graph-card"
+            style={{ overflow: 'hidden', cursor: isPanning.current ? 'grabbing' : 'grab', userSelect: 'none' }}
+            onWheel={handleWheel}
+            onMouseDown={handleMouseDown}
+            onMouseMove={handleMouseMove}
+            onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
+          >
+          <svg
+            ref={svgRef}
+            viewBox={'0 0 ' + W + ' ' + H}
+            width="100%" height={Math.min(H, 620)}
+            className="topo-svg"
+            aria-label="Grafo de topologia"
+            style={{ display: 'block', minHeight: 400 }}
+          >
             <defs>
               {['dep','db','http','infra','hosts','network'].map(t => (
-                <marker key={t} id={'arrow-' + t} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
-                  <path d="M0,0 L0,7 L7,3.5 z" fill="#334155" />
+                <marker key={t} id={'arrow-' + t} markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L6,3 z" fill="#334155" opacity="0.6" />
                 </marker>
               ))}
-              {graphData.nodes.map(node => {
+              {visibleNodes.map(node => {
                 const color = STATUS_COLOR[node.status] || STATUS_COLOR.unknown;
                 return (
                   <radialGradient key={'g-' + node.id} id={'grad-' + node.id} cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor={color} stopOpacity="0.25" />
+                    <stop offset="0%" stopColor={color} stopOpacity="0.3" />
                     <stop offset="100%" stopColor={color} stopOpacity="0.05" />
                   </radialGradient>
                 );
               })}
             </defs>
 
-            {/* Layer labels */}
-            {[
-              { y: 80,  label: 'Rede (L0)',       color: '#475569' },
-              { y: 200, label: 'Hypervisors (L1)', color: '#6366f1' },
-              { y: 340, label: 'Servidores (L2)',  color: '#0ea5e9' },
-              { y: 500, label: 'Serviços (L3)',    color: '#22c55e' },
-            ].map(({ y, label, color }) => (
-              <g key={label}>
-                <line x1={20} y1={y - 30} x2={W - 20} y2={y - 30} stroke={color} strokeOpacity="0.12" strokeWidth="1" strokeDasharray="4 4" />
-                <text x={24} y={y - 16} fontSize="10" fill={color} fillOpacity="0.6" fontFamily="Inter, sans-serif" fontWeight="600" letterSpacing="0.05em">
-                  {label}
-                </text>
-              </g>
-            ))}
-            {graphData.edges.map((e, i) => {
+            <g transform={`translate(${transform.x},${transform.y}) scale(${transform.scale})`}>
+
+            {/* Layer bands */}
+            {(() => {
+              // Calcular faixas Y reais baseadas nas posições
+              const bands = {};
+              visibleNodes.forEach(n => {
+                const layer = n.layer ?? 2;
+                const p = positions[n.id];
+                if (!p) return;
+                if (!bands[layer]) bands[layer] = { minY: p.y, maxY: p.y };
+                bands[layer].minY = Math.min(bands[layer].minY, p.y);
+                bands[layer].maxY = Math.max(bands[layer].maxY, p.y);
+              });
+              return LAYER_CONFIG.map(({ layer, label, color }) => {
+                const b = bands[layer];
+                if (!b) return null;
+                const y1 = b.minY - 45;
+                const y2 = b.maxY + 45;
+                return (
+                  <g key={layer}>
+                    <rect x={10} y={y1} width={W - 20} height={y2 - y1}
+                      fill={color} fillOpacity="0.03" rx="8"
+                      stroke={color} strokeOpacity="0.08" strokeWidth="1" />
+                    <text x={20} y={y1 + 14} fontSize="9.5" fill={color} fillOpacity="0.7"
+                      fontFamily="Inter, sans-serif" fontWeight="700" letterSpacing="0.08em">
+                      {label.toUpperCase()}
+                    </text>
+                  </g>
+                );
+              });
+            })()}
+
+            {/* Edges */}
+            {visibleEdges.map((e, i) => {
               const src = positions[e.source];
               const tgt = positions[e.target];
               if (!src || !tgt) return null;
               const isHighlighted = highlightedEdges.has(i);
               const isDimmed = hasHighlight && !isHighlighted;
+              if (isDimmed) return null; // ocultar arestas não relacionadas
               const color = EDGE_COLOR[e.type] || EDGE_COLOR.dependency;
-              const mx = (src.x + tgt.x) / 2 + (tgt.y - src.y) * 0.15;
-              const my = (src.y + tgt.y) / 2 - (tgt.x - src.x) * 0.15;
+              const mx = (src.x + tgt.x) / 2 + (tgt.y - src.y) * 0.1;
+              const my = (src.y + tgt.y) / 2 - (tgt.x - src.x) * 0.1;
               return (
                 <path key={i}
-                  d={'M' + src.x + ',' + src.y + ' Q' + mx + ',' + my + ' ' + tgt.x + ',' + tgt.y}
+                  d={`M${src.x},${src.y} Q${mx},${my} ${tgt.x},${tgt.y}`}
                   fill="none" stroke={color}
-                  strokeWidth={isHighlighted ? 2.5 : 1.5}
-                  strokeOpacity={isDimmed ? 0.1 : isHighlighted ? 0.9 : 0.45}
-                  markerEnd={'url(#arrow-' + (e.type || 'dep') + ')'}
+                  strokeWidth={isHighlighted ? 2 : 1}
+                  strokeOpacity={isHighlighted ? 0.85 : 0.25}
+                  markerEnd={`url(#arrow-${e.type || 'dep'})`}
                 />
               );
             })}
-            {graphData.nodes.map(node => {
+
+            {/* Nodes */}
+            {visibleNodes.map(node => {
               const pos = positions[node.id];
               if (!pos) return null;
               const color = STATUS_COLOR[node.status] || STATUS_COLOR.unknown;
@@ -370,47 +501,53 @@ export default function TopologyView() {
               const isHovered = hovered?.id === node.id;
               const isDimmed = hasHighlight && !highlightedNodes.has(node.id);
               const isVM = node.type === 'vm';
-              const r = isSelected ? 22 : isHovered ? 20 : isVM ? 13 : 18;
+              const isHypervisor = node.type === 'hypervisor';
+              const r = isSelected ? 24 : isHovered ? 22 : isVM ? 14 : isHypervisor ? 22 : 18;
+              const iconSize = isVM ? 11 : 16;
               return (
                 <g key={node.id} className="topo-node"
                   onClick={() => handleNodeClick(node)}
                   onMouseEnter={() => setHovered(node)}
                   onMouseLeave={() => setHovered(null)}
-                  style={{ cursor: 'pointer', opacity: isDimmed ? 0.25 : 1 }}
-                  role="button" aria-label={'No: ' + node.name}
+                  style={{ cursor: 'pointer', opacity: isDimmed ? 0.15 : 1, transition: 'opacity 0.2s' }}
+                  role="button" aria-label={'Nó: ' + node.name}
                 >
                   {node.status === 'critical' && (
-                    <circle cx={pos.x} cy={pos.y} r={r + 10} fill="none" stroke="#ef4444" strokeWidth="1" strokeOpacity="0.3" className="topo-pulse" />
+                    <circle cx={pos.x} cy={pos.y} r={r + 8} fill="none" stroke="#ef4444" strokeWidth="1" strokeOpacity="0.3" className="topo-pulse" />
                   )}
                   {isSelected && (
-                    <circle cx={pos.x} cy={pos.y} r={r + 8} fill="none" stroke={color} strokeWidth="2" strokeOpacity="0.4" />
+                    <circle cx={pos.x} cy={pos.y} r={r + 6} fill="none" stroke={color} strokeWidth="2" strokeOpacity="0.5" />
                   )}
-                  <circle cx={pos.x} cy={pos.y} r={r} fill={'url(#grad-' + node.id + ')'} stroke={color} strokeWidth={isSelected ? 2.5 : 1.5} />
-                  {/* Ícone SVG do tipo de dispositivo */}
-                  <svg x={pos.x - (isVM ? 6 : 9)} y={pos.y - (isVM ? 8 : 11)} width={isVM ? 12 : 18} height={isVM ? 12 : 18} viewBox="0 0 24 24"
+                  <circle cx={pos.x} cy={pos.y} r={r} fill={`url(#grad-${node.id})`} stroke={color} strokeWidth={isSelected ? 2.5 : isHypervisor ? 2 : 1.5} />
+                  <svg x={pos.x - iconSize/2} y={pos.y - iconSize/2 - 2} width={iconSize} height={iconSize} viewBox="0 0 24 24"
                     fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
                     style={{ pointerEvents: 'none' }}>
                     <path d={getDeviceIcon(node)} />
                   </svg>
-                  {/* Badge de status */}
-                  <circle cx={pos.x + r - 4} cy={pos.y - r + 4} r={isVM ? 3 : 4.5} fill={color} stroke="#0d1117" strokeWidth="1.5" />
-                  {/* Nome do nó */}
-                  <text x={pos.x} y={pos.y + r + 11} textAnchor="middle" fontSize={isVM ? 7.5 : 9} fill={color} fontWeight="600" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
-                    {(node.name || '').substring(0, isVM ? 10 : 13)}
+                  <circle cx={pos.x + r - 4} cy={pos.y - r + 4} r={isVM ? 3 : 4} fill={color} stroke="#0d1117" strokeWidth="1.5" />
+                  <text x={pos.x} y={pos.y + r + 12} textAnchor="middle"
+                    fontSize={isVM ? 7 : isHypervisor ? 9.5 : 8.5}
+                    fill={isHypervisor ? color : '#cbd5e1'}
+                    fontWeight={isHypervisor ? '700' : '500'}
+                    fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
+                    {(node.name || '').substring(0, isVM ? 9 : 14)}
                   </text>
-                  {!isVM && (
-                    <text x={pos.x} y={pos.y + r + 21} textAnchor="middle" fontSize="7.5" fill="#475569" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
-                      {(node.name || '').toLowerCase().includes('udm') ? 'router' : (node.metadata?.device_type || node.type || 'server').toLowerCase()}
+                  {isHypervisor && node.metadata?.vm_count != null && (
+                    <text x={pos.x} y={pos.y + r + 23} textAnchor="middle" fontSize="7.5" fill="#6366f1" fillOpacity="0.8" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
+                      {node.metadata.running_vm_count ?? 0}/{node.metadata.vm_count} VMs
                     </text>
                   )}
                 </g>
               );
             })}
+            </g>
           </svg>
           <div className="topo-legend">
             {Object.entries(STATUS_COLOR).map(([s, c]) => (
               <div key={s} className="topo-legend-item"><span className="topo-legend-dot" style={{ background: c }} />{s}</div>
             ))}
+            <div className="topo-legend-sep" />
+            <div className="topo-legend-item" style={{ fontSize: 10, color: '#475569' }}>Scroll = zoom · Drag = mover</div>
           </div>
         </div>
         <div className="topo-detail">
