@@ -10,6 +10,7 @@ from typing import Optional
 import logging
 import json
 from database import get_db
+from models import HyperVHost, HyperVVM
 
 router = APIRouter(prefix="/api/v1/topology", tags=["Topology v3"])
 logger = logging.getLogger(__name__)
@@ -406,6 +407,131 @@ def _generate_app_nodes(server_ids: list, db: Session) -> tuple[list, list]:
     return app_nodes, app_edges
 
 
+# ─── HyperV nodes ────────────────────────────────────────────────────────────
+
+def _hyperv_host_status(host: HyperVHost) -> str:
+    """Converte health_score e status do host HyperV para status da topologia."""
+    if host.status in ("critical", "error"):
+        return "critical"
+    if host.status == "warning":
+        return "warning"
+    score = host.health_score or 0
+    if score >= 80:
+        return "ok"
+    if score >= 50:
+        return "warning"
+    if score > 0:
+        return "critical"
+    return "unknown"
+
+
+def _hyperv_vm_status(vm: HyperVVM) -> str:
+    """Converte state da VM para status da topologia."""
+    state = (vm.state or "").lower()
+    if state == "running":
+        cpu = vm.cpu_percent or 0
+        mem = vm.memory_percent or 0
+        if cpu > 90 or mem > 90:
+            return "critical"
+        if cpu > 75 or mem > 75:
+            return "warning"
+        return "ok"
+    if state in ("off", "stopped"):
+        return "unknown"
+    if state in ("paused", "saved"):
+        return "warning"
+    return "unknown"
+
+
+def _get_hyperv_nodes(db: Session, existing_ips: set) -> tuple[list, list]:
+    """
+    Retorna (nodes, edges) com hosts HyperV e suas VMs para injetar na topologia.
+    existing_ips: IPs já presentes como nós de servidor — evita duplicação.
+    """
+    try:
+        hosts = db.query(HyperVHost).all()
+    except Exception as e:
+        logger.warning(f"_get_hyperv_nodes: erro ao buscar hosts: {e}")
+        return [], []
+
+    nodes = []
+    edges = []
+
+    for host in hosts:
+        # Evitar duplicar se o servidor já está na topologia pelo IP
+        if host.ip_address and host.ip_address in existing_ips:
+            host_node_id = f"hv_host_{host.id}"
+            # Ainda assim adiciona as VMs vinculadas ao nó existente
+            # mas usa o node_id do servidor existente como parent
+            # Para simplificar, usa o node_id do hyperv mesmo assim
+        
+        host_node_id = f"hv_host_{host.id}"
+        host_status = _hyperv_host_status(host)
+
+        nodes.append({
+            "id": host_node_id,
+            "type": "hypervisor",
+            "name": host.hostname or host.ip_address,
+            "status": host_status,
+            "layer": 1,
+            "metadata": {
+                "device_type": "hypervisor",
+                "ip": host.ip_address,
+                "hostname": host.hostname,
+                "cpu_percent": host.cpu_percent,
+                "memory_percent": host.memory_percent,
+                "storage_percent": host.storage_percent,
+                "health_score": host.health_score,
+                "vm_count": host.vm_count,
+                "running_vm_count": host.running_vm_count,
+                "total_cpus": host.total_cpus,
+                "total_memory_gb": host.total_memory_gb,
+                "model": host.model,
+                "os_version": host.os_version,
+                "hyperv_host_id": str(host.id),
+            },
+            "parent_id": None,
+        })
+
+        # VMs do host
+        try:
+            vms = db.query(HyperVVM).filter(HyperVVM.host_id == host.id).all()
+        except Exception:
+            vms = []
+
+        for vm in vms:
+            vm_node_id = f"hv_vm_{vm.id}"
+            vm_status = _hyperv_vm_status(vm)
+
+            nodes.append({
+                "id": vm_node_id,
+                "type": "vm",
+                "name": vm.name,
+                "status": vm_status,
+                "layer": 2,
+                "metadata": {
+                    "device_type": "vm",
+                    "vm_state": vm.state,
+                    "vcpus": vm.vcpus,
+                    "memory_mb": vm.memory_mb,
+                    "cpu_percent": vm.cpu_percent,
+                    "memory_percent": vm.memory_percent,
+                    "uptime_seconds": vm.uptime_seconds,
+                    "hyperv_host_id": str(host.id),
+                    "hyperv_vm_id": str(vm.id),
+                },
+                "parent_id": host_node_id,
+            })
+
+            edges.append({
+                "source": host_node_id,
+                "target": vm_node_id,
+                "type": "hosts",
+            })
+
+    return nodes, edges
+
+
 # ─── Endpoints ───────────────────────────────────────────────────────────────
 
 @router.get("/graph")
@@ -430,6 +556,13 @@ async def get_topology_graph(db: Session = Depends(get_db)):
                 app_nodes, app_edges = _generate_app_nodes(all_server_ids, db)
                 nodes.extend(app_nodes)
                 edges.extend(app_edges)
+
+            # Adicionar nós HyperV (hosts + VMs)
+            existing_ips = {n.get("metadata", {}).get("ip", "") for n in nodes}
+            hv_nodes, hv_edges = _get_hyperv_nodes(db, existing_ips)
+            nodes.extend(hv_nodes)
+            edges.extend(hv_edges)
+
             return {"nodes": nodes, "edges": edges, "source": "topology_nodes"}
 
         # Fallback sem sync
@@ -467,6 +600,12 @@ async def get_topology_graph(db: Session = Depends(get_db)):
         app_nodes, app_edges = _generate_app_nodes(server_ids, db)
         nodes.extend(app_nodes)
         edges.extend(app_edges)
+
+        # Adicionar nós HyperV (hosts + VMs)
+        existing_ips = {n.get("metadata", {}).get("ip", "") for n in nodes}
+        hv_nodes, hv_edges = _get_hyperv_nodes(db, existing_ips)
+        nodes.extend(hv_nodes)
+        edges.extend(hv_edges)
 
         return {"nodes": nodes, "edges": edges, "source": "servers_fallback"}
 

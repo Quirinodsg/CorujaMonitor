@@ -410,6 +410,47 @@ export default function TopologyView() {
               {selected.metadata?.hostname && selected.metadata.hostname !== selected.name && (
                 <div className="topo-detail-row"><span>Hostname</span><strong>{selected.metadata.hostname}</strong></div>
               )}
+              {/* HyperV Host details */}
+              {selected.type === 'hypervisor' && selected.metadata?.health_score != null && (
+                <div className="topo-detail-row"><span>Health Score</span><strong style={{color: selected.metadata.health_score >= 80 ? '#22c55e' : selected.metadata.health_score >= 50 ? '#f59e0b' : '#ef4444'}}>{selected.metadata.health_score.toFixed(1)}%</strong></div>
+              )}
+              {selected.type === 'hypervisor' && selected.metadata?.cpu_percent != null && (
+                <div className="topo-detail-row"><span>CPU</span><strong>{selected.metadata.cpu_percent.toFixed(1)}%</strong></div>
+              )}
+              {selected.type === 'hypervisor' && selected.metadata?.memory_percent != null && (
+                <div className="topo-detail-row"><span>RAM</span><strong>{selected.metadata.memory_percent.toFixed(1)}%</strong></div>
+              )}
+              {selected.type === 'hypervisor' && selected.metadata?.storage_percent != null && (
+                <div className="topo-detail-row"><span>Storage</span><strong>{selected.metadata.storage_percent.toFixed(1)}%</strong></div>
+              )}
+              {selected.type === 'hypervisor' && selected.metadata?.vm_count != null && (
+                <div className="topo-detail-row"><span>VMs</span><strong>{selected.metadata.running_vm_count ?? 0} / {selected.metadata.vm_count} rodando</strong></div>
+              )}
+              {selected.type === 'hypervisor' && selected.metadata?.total_cpus != null && (
+                <div className="topo-detail-row"><span>CPUs</span><strong>{selected.metadata.total_cpus} cores</strong></div>
+              )}
+              {selected.type === 'hypervisor' && selected.metadata?.total_memory_gb != null && (
+                <div className="topo-detail-row"><span>RAM Total</span><strong>{selected.metadata.total_memory_gb.toFixed(0)} GB</strong></div>
+              )}
+              {selected.type === 'hypervisor' && selected.metadata?.model && (
+                <div className="topo-detail-row"><span>Modelo</span><strong>{selected.metadata.model}</strong></div>
+              )}
+              {/* HyperV VM details */}
+              {selected.type === 'vm' && selected.metadata?.vm_state && (
+                <div className="topo-detail-row"><span>Estado</span><strong style={{color: selected.metadata.vm_state === 'Running' ? '#22c55e' : '#94a3b8'}}>{selected.metadata.vm_state}</strong></div>
+              )}
+              {selected.type === 'vm' && selected.metadata?.vcpus != null && (
+                <div className="topo-detail-row"><span>vCPUs</span><strong>{selected.metadata.vcpus}</strong></div>
+              )}
+              {selected.type === 'vm' && selected.metadata?.memory_mb != null && (
+                <div className="topo-detail-row"><span>RAM</span><strong>{(selected.metadata.memory_mb / 1024).toFixed(1)} GB</strong></div>
+              )}
+              {selected.type === 'vm' && selected.metadata?.cpu_percent != null && (
+                <div className="topo-detail-row"><span>CPU</span><strong>{selected.metadata.cpu_percent.toFixed(1)}%</strong></div>
+              )}
+              {selected.type === 'vm' && selected.metadata?.memory_percent != null && (
+                <div className="topo-detail-row"><span>RAM Uso</span><strong>{selected.metadata.memory_percent.toFixed(1)}%</strong></div>
+              )}
               <div className="topo-detail-section-title">Blast Radius</div>
               <div className="topo-blast-grid">
                 <div className="topo-blast-item">
