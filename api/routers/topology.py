@@ -337,9 +337,10 @@ def _bfs(start: str, adjacency: dict) -> list:
 
 # ─── App/Service node generation ─────────────────────────────────────────────
 
-def _generate_app_nodes(server_ids: list, db: Session) -> tuple[list, list]:
+def _generate_app_nodes(server_ids: list, db: Session, server_node_id_map: dict = None) -> tuple[list, list]:
     """
     Gera nós de aplicação/serviço a partir dos sensores HTTP e service dos servidores.
+    server_node_id_map: {server_id (int) -> topology_node_id (str)} para criar edges corretas.
     Retorna (app_nodes, app_edges) para adicionar ao grafo.
     """
     if not server_ids:
@@ -381,6 +382,9 @@ def _generate_app_nodes(server_ids: list, db: Session) -> tuple[list, list]:
                 metric_status = 'unknown'
 
             node_id = f"app_{s.id}"
+            # Resolver o node_id do servidor pai no grafo
+            parent_node_id = (server_node_id_map or {}).get(s.server_id) or str(s.server_id)
+
             app_nodes.append({
                 "id": node_id,
                 "type": app_type,
@@ -393,10 +397,10 @@ def _generate_app_nodes(server_ids: list, db: Session) -> tuple[list, list]:
                     "server_id": str(s.server_id),
                     "device_type": app_type,
                 },
-                "parent_id": str(s.server_id),
+                "parent_id": parent_node_id,
             })
             app_edges.append({
-                "source": str(s.server_id),
+                "source": parent_node_id,
                 "target": node_id,
                 "type": "dependency",
             })
@@ -545,15 +549,18 @@ async def get_topology_graph(db: Session = Depends(get_db)):
             nodes, edges = _build_graph(rows, db)
             # Adicionar nós de aplicação/serviço (layer 3)
             all_server_ids = []
+            server_node_id_map = {}
             for n in nodes:
                 sid = n.get("metadata", {}).get("server_id")
                 if sid:
                     try:
-                        all_server_ids.append(int(sid))
+                        int_sid = int(sid)
+                        all_server_ids.append(int_sid)
+                        server_node_id_map[int_sid] = n["id"]
                     except Exception:
                         pass
             if all_server_ids:
-                app_nodes, app_edges = _generate_app_nodes(all_server_ids, db)
+                app_nodes, app_edges = _generate_app_nodes(all_server_ids, db, server_node_id_map)
                 nodes.extend(app_nodes)
                 edges.extend(app_edges)
 
@@ -597,7 +604,8 @@ async def get_topology_graph(db: Session = Depends(get_db)):
             edges = _fallback_chain_edges(server_nodes)
 
         # Adicionar nós de aplicação/serviço (layer 3)
-        app_nodes, app_edges = _generate_app_nodes(server_ids, db)
+        server_node_id_map = {sn["server_id"]: sn["node_id"] for sn in server_nodes}
+        app_nodes, app_edges = _generate_app_nodes(server_ids, db, server_node_id_map)
         nodes.extend(app_nodes)
         edges.extend(app_edges)
 

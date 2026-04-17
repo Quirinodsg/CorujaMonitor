@@ -174,6 +174,13 @@ export default function TopologyView() {
   const [listSearch, setListSearch] = useState('');
   const [activeFilters, setActiveFilters] = useState(new Set(['network','hypervisor','vm','server','service']));
 
+  // Partículas animadas nas arestas
+  const [particleTick, setParticleTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setParticleTick(t => (t + 1) % 100), 50);
+    return () => clearInterval(id);
+  }, []);
+
   // Zoom/pan state
   const [transform, setTransform] = useState({ x: 0, y: 0, scale: 1 });
   const svgRef = useRef(null);
@@ -266,14 +273,23 @@ export default function TopologyView() {
   }
   const hasHighlight = highlightedNodes.size > 0;
 
-  // Zoom/pan handlers
+  // Zoom/pan handlers — zoom centralizado no ponto do cursor
+  const containerRef = useRef(null);
+
   const handleWheel = useCallback((e) => {
     e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setTransform(t => ({
-      ...t,
-      scale: Math.max(0.3, Math.min(3, t.scale * delta)),
-    }));
+    const rect = containerRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
+    const delta = e.deltaY > 0 ? 0.85 : 1.18;
+    setTransform(t => {
+      const newScale = Math.max(0.25, Math.min(4, t.scale * delta));
+      // Zoom centrado no cursor: ajusta x/y para manter o ponto sob o cursor fixo
+      const newX = mouseX - (mouseX - t.x) * (newScale / t.scale);
+      const newY = mouseY - (mouseY - t.y) * (newScale / t.scale);
+      return { x: newX, y: newY, scale: newScale };
+    });
   }, []);
 
   const handleMouseDown = useCallback((e) => {
@@ -422,6 +438,7 @@ export default function TopologyView() {
       ) : (
         <div className="topo-main">
           <div className="topo-graph-card"
+            ref={containerRef}
             style={{ overflow: 'hidden', cursor: isPanning.current ? 'grabbing' : 'grab', userSelect: 'none' }}
             onWheel={handleWheel}
             onMouseDown={handleMouseDown}
@@ -508,6 +525,39 @@ export default function TopologyView() {
                   strokeWidth={isHighlighted ? 2 : 1}
                   strokeOpacity={isHighlighted ? 0.85 : 0.2}
                   markerEnd={`url(#arrow-${e.type || 'dep'})`}
+                />
+              );
+            })}
+
+            {/* Partículas animadas — percorrem as arestas principais (network/infrastructure) */}
+            {visibleEdges.map((e, i) => {
+              const src = positions[e.source];
+              const tgt = positions[e.target];
+              if (!src || !tgt) return null;
+              // Só animar arestas de infra/network entre layers diferentes (não hosts/dependency)
+              if (!['network','infrastructure','http','database'].includes(e.type)) return null;
+              const srcNode = visibleNodes.find(n => n.id === e.source);
+              const tgtNode = visibleNodes.find(n => n.id === e.target);
+              if (!srcNode || !tgtNode) return null;
+              // Só animar se layers diferentes (fluxo descendente)
+              if ((srcNode.layer ?? 2) >= (tgtNode.layer ?? 2)) return null;
+
+              const color = e.type === 'http' ? '#0ea5e9' : e.type === 'database' ? '#6366f1' : '#22c55e';
+              // Offset por aresta para não sincronizar todas
+              const offset = (i * 37) % 100;
+              const t = ((particleTick + offset) % 100) / 100;
+
+              // Ponto na curva quadrática bezier: B(t) = (1-t)²P0 + 2(1-t)tP1 + t²P2
+              const mx = (src.x + tgt.x) / 2 + (tgt.y - src.y) * 0.1;
+              const my = (src.y + tgt.y) / 2 - (tgt.x - src.x) * 0.1;
+              const px = (1-t)*(1-t)*src.x + 2*(1-t)*t*mx + t*t*tgt.x;
+              const py = (1-t)*(1-t)*src.y + 2*(1-t)*t*my + t*t*tgt.y;
+              const opacity = t < 0.1 ? t * 10 : t > 0.9 ? (1 - t) * 10 : 1;
+
+              return (
+                <circle key={`p-${i}`} cx={px} cy={py} r={2.5}
+                  fill={color} opacity={opacity * 0.9}
+                  style={{ filter: `drop-shadow(0 0 3px ${color})` }}
                 />
               );
             })}
