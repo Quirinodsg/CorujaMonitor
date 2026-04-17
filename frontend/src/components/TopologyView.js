@@ -55,66 +55,69 @@ const EDGE_COLOR = {
   infrastructure: '#1e293b',
 };
 
-function useForceLayout(nodes, edges, width = 900, height = 480) {
-  const [positions, setPositions] = React.useState({});
-  React.useEffect(() => {
-    if (!nodes.length) return;
+// Layout hierárquico por camadas (layers 0→3) com agrupamento de VMs sob hosts HyperV
+function useHierarchicalLayout(nodes, edges, width = 1100, height = 600) {
+  return React.useMemo(() => {
+    if (!nodes.length) return {};
+
     const pos = {};
-    const cx = width / 2, cy = height / 2;
-    const r = Math.min(width, height) * 0.35;
-    nodes.forEach((n, i) => {
-      const angle = (2 * Math.PI * i) / nodes.length - Math.PI / 2;
-      pos[n.id] = {
-        x: cx + r * Math.cos(angle) + (Math.random() - 0.5) * 20,
-        y: cy + r * Math.sin(angle) + (Math.random() - 0.5) * 20,
-      };
+    const PADDING_X = 80;
+    const LAYER_Y = { 0: 80, 1: 200, 2: 340, 3: 500 };
+
+    // Separar VMs HyperV (têm parent_id = hv_host_*) dos demais
+    const hvVmIds = new Set(nodes.filter(n => n.type === 'vm' && n.parent_id?.startsWith('hv_host_')).map(n => n.id));
+    const hvHostIds = new Set(nodes.filter(n => n.type === 'hypervisor').map(n => n.id));
+
+    // Nós normais por layer (excluindo VMs HyperV — serão posicionadas sob o host)
+    const byLayer = { 0: [], 1: [], 2: [], 3: [] };
+    nodes.forEach(n => {
+      if (hvVmIds.has(n.id)) return; // VMs HyperV tratadas separadamente
+      const layer = n.layer ?? 2;
+      const key = Math.min(Math.max(layer, 0), 3);
+      byLayer[key].push(n);
     });
-    const k = Math.sqrt((width * height) / Math.max(nodes.length, 1));
-    const repulse = (d) => (k * k) / Math.max(d, 1);
-    const attract = (d) => (d * d) / k;
-    let current = { ...pos };
-    for (let iter = 0; iter < 80; iter++) {
-      const disp = {};
-      nodes.forEach(n => { disp[n.id] = { x: 0, y: 0 }; });
-      for (let i = 0; i < nodes.length; i++) {
-        for (let j = i + 1; j < nodes.length; j++) {
-          const u = nodes[i].id, v = nodes[j].id;
-          const dx = current[u].x - current[v].x;
-          const dy = current[u].y - current[v].y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-          const force = repulse(dist);
-          disp[u].x += (dx / dist) * force;
-          disp[u].y += (dy / dist) * force;
-          disp[v].x -= (dx / dist) * force;
-          disp[v].y -= (dy / dist) * force;
-        }
-      }
-      edges.forEach(e => {
-        const u = e.source, v = e.target;
-        if (!current[u] || !current[v]) return;
-        const dx = current[u].x - current[v].x;
-        const dy = current[u].y - current[v].y;
-        const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
-        const force = attract(dist);
-        disp[u].x -= (dx / dist) * force;
-        disp[u].y -= (dy / dist) * force;
-        disp[v].x += (dx / dist) * force;
-        disp[v].y += (dy / dist) * force;
-      });
-      const temp = Math.max(5, 50 * (1 - iter / 80));
-      nodes.forEach(n => {
-        const d = disp[n.id];
-        const mag = Math.sqrt(d.x * d.x + d.y * d.y) || 0.01;
-        const capped = Math.min(mag, temp);
-        current[n.id] = {
-          x: Math.max(40, Math.min(width - 40, current[n.id].x + (d.x / mag) * capped)),
-          y: Math.max(40, Math.min(height - 40, current[n.id].y + (d.y / mag) * capped)),
+
+    // Posicionar nós normais em cada layer
+    Object.entries(byLayer).forEach(([layerStr, layerNodes]) => {
+      const layer = parseInt(layerStr);
+      const y = LAYER_Y[layer] ?? 340;
+      const count = layerNodes.length;
+      if (!count) return;
+      const usableW = width - PADDING_X * 2;
+      const step = count === 1 ? 0 : usableW / (count - 1);
+      layerNodes.forEach((n, i) => {
+        pos[n.id] = {
+          x: count === 1 ? width / 2 : PADDING_X + i * step,
+          y,
         };
       });
-    }
-    setPositions(current);
-  }, [nodes.length, edges.length, width, height]);
-  return positions;
+    });
+
+    // Posicionar VMs HyperV em arco abaixo do host pai
+    hvHostIds.forEach(hostId => {
+      const hostPos = pos[hostId];
+      if (!hostPos) return;
+      const vms = nodes.filter(n => n.parent_id === hostId && hvVmIds.has(n.id));
+      if (!vms.length) return;
+      const vmSpacing = Math.min(60, 300 / vms.length);
+      const totalW = (vms.length - 1) * vmSpacing;
+      vms.forEach((vm, i) => {
+        pos[vm.id] = {
+          x: hostPos.x - totalW / 2 + i * vmSpacing,
+          y: hostPos.y + 120,
+        };
+      });
+    });
+
+    // Nós sem posição (fallback)
+    nodes.forEach((n, i) => {
+      if (!pos[n.id]) {
+        pos[n.id] = { x: PADDING_X + (i % 10) * 90, y: 500 };
+      }
+    });
+
+    return pos;
+  }, [nodes, edges, width, height]);
 }
 
 export default function TopologyView() {
@@ -129,8 +132,8 @@ export default function TopologyView() {
   const [viewMode, setViewMode] = useState('graph'); // 'graph' | 'list'
   const [listSearch, setListSearch] = useState('');
 
-  const W = 900, H = 480;
-  const positions = useForceLayout(graphData.nodes, graphData.edges, W, H);
+  const W = 1100, H = 700;
+  const positions = useHierarchicalLayout(graphData.nodes, graphData.edges, W, H);
 
   const loadGraph = useCallback(async () => {
     try {
@@ -307,10 +310,10 @@ export default function TopologyView() {
         </div>
       ) : (
         <div className="topo-main">
-          <div className="topo-graph-card">
-          <svg viewBox={'0 0 ' + W + ' ' + H} className="topo-svg" aria-label="Grafo de topologia">
+          <div className="topo-graph-card" style={{ overflowX: 'auto', overflowY: 'auto' }}>
+          <svg viewBox={'0 0 ' + W + ' ' + H} width={W} height={H} className="topo-svg" aria-label="Grafo de topologia" style={{ minWidth: W, display: 'block' }}>
             <defs>
-              {['dep','db','http','infra'].map(t => (
+              {['dep','db','http','infra','hosts','network'].map(t => (
                 <marker key={t} id={'arrow-' + t} markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
                   <path d="M0,0 L0,7 L7,3.5 z" fill="#334155" />
                 </marker>
@@ -325,6 +328,21 @@ export default function TopologyView() {
                 );
               })}
             </defs>
+
+            {/* Layer labels */}
+            {[
+              { y: 80,  label: 'Rede (L0)',       color: '#475569' },
+              { y: 200, label: 'Hypervisors (L1)', color: '#6366f1' },
+              { y: 340, label: 'Servidores (L2)',  color: '#0ea5e9' },
+              { y: 500, label: 'Serviços (L3)',    color: '#22c55e' },
+            ].map(({ y, label, color }) => (
+              <g key={label}>
+                <line x1={20} y1={y - 30} x2={W - 20} y2={y - 30} stroke={color} strokeOpacity="0.12" strokeWidth="1" strokeDasharray="4 4" />
+                <text x={24} y={y - 16} fontSize="10" fill={color} fillOpacity="0.6" fontFamily="Inter, sans-serif" fontWeight="600" letterSpacing="0.05em">
+                  {label}
+                </text>
+              </g>
+            ))}
             {graphData.edges.map((e, i) => {
               const src = positions[e.source];
               const tgt = positions[e.target];
@@ -351,7 +369,8 @@ export default function TopologyView() {
               const isSelected = selected?.id === node.id;
               const isHovered = hovered?.id === node.id;
               const isDimmed = hasHighlight && !highlightedNodes.has(node.id);
-              const r = isSelected ? 26 : isHovered ? 24 : 20;
+              const isVM = node.type === 'vm';
+              const r = isSelected ? 22 : isHovered ? 20 : isVM ? 13 : 18;
               return (
                 <g key={node.id} className="topo-node"
                   onClick={() => handleNodeClick(node)}
@@ -368,20 +387,22 @@ export default function TopologyView() {
                   )}
                   <circle cx={pos.x} cy={pos.y} r={r} fill={'url(#grad-' + node.id + ')'} stroke={color} strokeWidth={isSelected ? 2.5 : 1.5} />
                   {/* Ícone SVG do tipo de dispositivo */}
-                  <svg x={pos.x - 9} y={pos.y - 11} width="18" height="18" viewBox="0 0 24 24"
+                  <svg x={pos.x - (isVM ? 6 : 9)} y={pos.y - (isVM ? 8 : 11)} width={isVM ? 12 : 18} height={isVM ? 12 : 18} viewBox="0 0 24 24"
                     fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"
                     style={{ pointerEvents: 'none' }}>
                     <path d={getDeviceIcon(node)} />
                   </svg>
                   {/* Badge de status */}
-                  <circle cx={pos.x + r - 5} cy={pos.y - r + 5} r="4.5" fill={color} stroke="#0d1117" strokeWidth="1.5" />
+                  <circle cx={pos.x + r - 4} cy={pos.y - r + 4} r={isVM ? 3 : 4.5} fill={color} stroke="#0d1117" strokeWidth="1.5" />
                   {/* Nome do nó */}
-                  <text x={pos.x} y={pos.y + r + 12} textAnchor="middle" fontSize="9" fill={color} fontWeight="600" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
-                    {(node.name || '').substring(0, 13)}
+                  <text x={pos.x} y={pos.y + r + 11} textAnchor="middle" fontSize={isVM ? 7.5 : 9} fill={color} fontWeight="600" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
+                    {(node.name || '').substring(0, isVM ? 10 : 13)}
                   </text>
-                  <text x={pos.x} y={pos.y + r + 22} textAnchor="middle" fontSize="7.5" fill="#475569" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
-                    {(node.name || '').toLowerCase().includes('udm') ? 'router' : (node.metadata?.device_type || node.type || 'server').toLowerCase()}
-                  </text>
+                  {!isVM && (
+                    <text x={pos.x} y={pos.y + r + 21} textAnchor="middle" fontSize="7.5" fill="#475569" fontFamily="Inter, sans-serif" style={{ pointerEvents: 'none' }}>
+                      {(node.name || '').toLowerCase().includes('udm') ? 'router' : (node.metadata?.device_type || node.type || 'server').toLowerCase()}
+                    </text>
+                  )}
                 </g>
               );
             })}
