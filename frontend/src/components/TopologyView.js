@@ -58,28 +58,37 @@ const EDGE_COLOR = {
 };
 
 // ── Layout hierárquico multi-linha ──────────────────────────────────────────
-// Cada layer ocupa uma ou mais linhas. Máx MAX_PER_ROW nós por linha.
-const MAX_PER_ROW = 9;
-const NODE_SPACING_X = 110;
-const ROW_HEIGHT = 110;
-const LAYER_GAP = 30;
+const MAX_PER_ROW = 8;
+const NODE_SPACING_X = 130;  // espaço entre nós na mesma linha
+const VM_SPACING_X = 80;     // espaço entre VMs (menores)
+const ROW_HEIGHT = 120;
+const LAYER_GAP = 50;
+const PADDING_X = 120;       // margem lateral para não cortar labels
 
 const LAYER_CONFIG = [
-  { layer: 0, label: 'Rede',        color: '#64748b' },
-  { layer: 1, label: 'Hypervisors', color: '#6366f1' },
-  { layer: 2, label: 'Servidores',  color: '#0ea5e9' },
-  { layer: 3, label: 'Serviços',    color: '#22c55e' },
+  { layer: 0, label: 'REDE',        color: '#64748b' },
+  { layer: 1, label: 'HYPERVISORS', color: '#6366f1' },
+  { layer: 2, label: 'SERVIDORES',  color: '#0ea5e9' },
+  { layer: 3, label: 'SERVIÇOS',    color: '#22c55e' },
 ];
 
 function buildHierarchicalLayout(nodes) {
   const pos = {};
-  const PADDING_X = 80;
-  let currentY = 60;
+  let currentY = 80;
 
-  // Separar VMs HyperV — ficam agrupadas sob o host, não no layer geral
+  // Separar VMs HyperV — ficam agrupadas sob o host
   const hvVmIds = new Set(
     nodes.filter(n => n.type === 'vm' && n.parent_id?.startsWith('hv_host_')).map(n => n.id)
   );
+
+  // Calcular largura total necessária para centralizar
+  const maxLayerNodes = Math.max(
+    ...LAYER_CONFIG.map(({ layer }) =>
+      Math.min(MAX_PER_ROW, nodes.filter(n => (n.layer ?? 2) === layer && !hvVmIds.has(n.id)).length)
+    ), 1
+  );
+  const canvasW = PADDING_X * 2 + (maxLayerNodes - 1) * NODE_SPACING_X;
+  const centerX = canvasW / 2;
 
   LAYER_CONFIG.forEach(({ layer }) => {
     const layerNodes = nodes.filter(n => (n.layer ?? 2) === layer && !hvVmIds.has(n.id));
@@ -88,50 +97,58 @@ function buildHierarchicalLayout(nodes) {
     const rows = Math.ceil(layerNodes.length / MAX_PER_ROW);
     for (let row = 0; row < rows; row++) {
       const rowNodes = layerNodes.slice(row * MAX_PER_ROW, (row + 1) * MAX_PER_ROW);
-      const rowW = (rowNodes.length - 1) * NODE_SPACING_X;
-      const startX = PADDING_X + Math.max(0, (MAX_PER_ROW - 1) * NODE_SPACING_X / 2 - rowW / 2);
+      const rowTotalW = (rowNodes.length - 1) * NODE_SPACING_X;
+      const rowStartX = centerX - rowTotalW / 2;
       rowNodes.forEach((n, i) => {
-        pos[n.id] = { x: startX + i * NODE_SPACING_X, y: currentY };
+        pos[n.id] = { x: rowStartX + i * NODE_SPACING_X, y: currentY };
       });
       currentY += ROW_HEIGHT;
     }
     currentY += LAYER_GAP;
 
-    // VMs HyperV: posicionar abaixo do host pai (só para layer 1 = hypervisors)
+    // VMs HyperV: posicionar em grid abaixo do host pai
     if (layer === 1) {
+      const VM_MAX_PER_ROW = 8;
       layerNodes.forEach(hostNode => {
         const hostPos = pos[hostNode.id];
         if (!hostPos) return;
         const vms = nodes.filter(n => n.parent_id === hostNode.id && hvVmIds.has(n.id));
         if (!vms.length) return;
-        const vmSpacing = Math.min(70, 400 / Math.max(vms.length, 1));
-        const totalW = (vms.length - 1) * vmSpacing;
-        vms.forEach((vm, i) => {
-          pos[vm.id] = {
-            x: hostPos.x - totalW / 2 + i * vmSpacing,
-            y: hostPos.y + ROW_HEIGHT,
-          };
-        });
+
+        const vmRows = Math.ceil(vms.length / VM_MAX_PER_ROW);
+        let vmY = hostPos.y + ROW_HEIGHT - 10;
+        for (let vrow = 0; vrow < vmRows; vrow++) {
+          const rowVms = vms.slice(vrow * VM_MAX_PER_ROW, (vrow + 1) * VM_MAX_PER_ROW);
+          const rowW = (rowVms.length - 1) * VM_SPACING_X;
+          const rowStartX = hostPos.x - rowW / 2;
+          rowVms.forEach((vm, i) => {
+            pos[vm.id] = { x: rowStartX + i * VM_SPACING_X, y: vmY };
+          });
+          vmY += 85;
+        }
+        // Avançar currentY se as VMs ultrapassarem
+        const vmBottom = hostPos.y + ROW_HEIGHT - 10 + vmRows * 85;
+        if (vmBottom > currentY) currentY = vmBottom + LAYER_GAP;
       });
-      currentY += ROW_HEIGHT + LAYER_GAP;
+      currentY += LAYER_GAP;
     }
   });
 
   // Fallback para nós sem posição
   nodes.forEach((n, i) => {
-    if (!pos[n.id]) pos[n.id] = { x: PADDING_X + (i % MAX_PER_ROW) * NODE_SPACING_X, y: currentY };
+    if (!pos[n.id]) pos[n.id] = { x: centerX + (i % MAX_PER_ROW - MAX_PER_ROW/2) * NODE_SPACING_X, y: currentY };
   });
 
-  return pos;
+  return { pos, canvasW };
 }
 
-function computeCanvasSize(positions) {
-  const xs = Object.values(positions).map(p => p.x);
-  const ys = Object.values(positions).map(p => p.y);
-  if (!xs.length) return { w: 1100, h: 600 };
+function computeCanvasSize(pos, canvasW) {
+  const xs = Object.values(pos).map(p => p.x);
+  const ys = Object.values(pos).map(p => p.y);
+  if (!xs.length) return { w: 1200, h: 600 };
   return {
-    w: Math.max(1100, Math.max(...xs) + 120),
-    h: Math.max(500, Math.max(...ys) + 100),
+    w: Math.max(canvasW, Math.max(...xs) + PADDING_X),
+    h: Math.max(500, Math.max(...ys) + 120),
   };
 }
 
@@ -178,8 +195,8 @@ export default function TopologyView() {
   }, [graphData.edges, visibleNodeIds]);
 
   // Layout
-  const positions = useMemo(() => buildHierarchicalLayout(visibleNodes), [visibleNodes]);
-  const { w: W, h: H } = useMemo(() => computeCanvasSize(positions), [positions]);
+  const { pos: positions, canvasW } = useMemo(() => buildHierarchicalLayout(visibleNodes), [visibleNodes]);
+  const { w: W, h: H } = useMemo(() => computeCanvasSize(positions, canvasW), [positions, canvasW]);
 
   const loadGraph = useCallback(async () => {
     try {
@@ -414,8 +431,8 @@ export default function TopologyView() {
           >
           <svg
             ref={svgRef}
-            viewBox={'0 0 ' + W + ' ' + H}
-            width="100%" height={Math.min(H, 620)}
+            viewBox={`0 0 ${W} ${H}`}
+            width="100%" height={Math.min(H, 680)}
             className="topo-svg"
             aria-label="Grafo de topologia"
             style={{ display: 'block', minHeight: 400 }}
@@ -477,7 +494,10 @@ export default function TopologyView() {
               if (!src || !tgt) return null;
               const isHighlighted = highlightedEdges.has(i);
               const isDimmed = hasHighlight && !isHighlighted;
-              if (isDimmed) return null; // ocultar arestas não relacionadas
+              // Arestas hosts (hypervisor→VM) só aparecem no hover
+              const isHostsEdge = e.type === 'hosts';
+              if (isHostsEdge && !isHighlighted) return null;
+              if (isDimmed) return null;
               const color = EDGE_COLOR[e.type] || EDGE_COLOR.dependency;
               const mx = (src.x + tgt.x) / 2 + (tgt.y - src.y) * 0.1;
               const my = (src.y + tgt.y) / 2 - (tgt.x - src.x) * 0.1;
@@ -486,7 +506,7 @@ export default function TopologyView() {
                   d={`M${src.x},${src.y} Q${mx},${my} ${tgt.x},${tgt.y}`}
                   fill="none" stroke={color}
                   strokeWidth={isHighlighted ? 2 : 1}
-                  strokeOpacity={isHighlighted ? 0.85 : 0.25}
+                  strokeOpacity={isHighlighted ? 0.85 : 0.2}
                   markerEnd={`url(#arrow-${e.type || 'dep'})`}
                 />
               );
