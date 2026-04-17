@@ -243,6 +243,96 @@ def dispatch_notifications(incident_id: int) -> dict:
             'created_at': _fmt_dt(incident.created_at),
         }
 
+        # ── Enriquecer com histórico de métricas (últimas 2h) ──────────────────
+        try:
+            from models import Metric
+            from datetime import timedelta
+            now_utc = __import__('datetime').datetime.now(__import__('datetime').timezone.utc)
+            recent_metrics = db.query(Metric).filter(
+                Metric.sensor_id == sensor.id,
+                Metric.timestamp >= now_utc - timedelta(hours=2)
+            ).order_by(Metric.timestamp.asc()).all()
+
+            if recent_metrics:
+                values = [m.value for m in recent_metrics if m.value is not None]
+                current_val = values[-1] if values else None
+                max_val = max(values) if values else None
+                avg_val = sum(values) / len(values) if values else None
+
+                # Calcular há quanto tempo está acima do threshold
+                threshold = sensor.threshold_critical or sensor.threshold_warning or 90
+                above_since = None
+                for m in reversed(recent_metrics):
+                    if m.value is not None and m.value >= threshold:
+                        above_since = m.timestamp
+                    else:
+                        break
+
+                duration_str = 'N/A'
+                if above_since:
+                    delta = now_utc - (above_since.replace(tzinfo=__import__('datetime').timezone.utc) if above_since.tzinfo is None else above_since)
+                    total_min = int(delta.total_seconds() / 60)
+                    if total_min >= 60:
+                        duration_str = f"{total_min // 60}h {total_min % 60}min"
+                    else:
+                        duration_str = f"{total_min} minutos"
+
+                # Sparkline ASCII simples (últimos 12 pontos)
+                spark_vals = values[-12:] if len(values) >= 12 else values
+                spark_chars = '▁▂▃▄▅▆▇█'
+                if spark_vals:
+                    mn, mx2 = min(spark_vals), max(spark_vals)
+                    rng = mx2 - mn or 1
+                    sparkline = ''.join(spark_chars[min(7, int((v - mn) / rng * 7))] for v in spark_vals)
+                else:
+                    sparkline = ''
+
+                incident_data.update({
+                    'current_value': f"{current_val:.1f}%" if current_val is not None else 'N/A',
+                    'max_value_2h': f"{max_val:.1f}%" if max_val is not None else 'N/A',
+                    'avg_value_2h': f"{avg_val:.1f}%" if avg_val is not None else 'N/A',
+                    'duration_above_threshold': duration_str,
+                    'sparkline': sparkline,
+                    'metrics_count': len(recent_metrics),
+                    'threshold_critical': f"{sensor.threshold_critical}%" if sensor.threshold_critical else 'N/A',
+                    'threshold_warning': f"{sensor.threshold_warning}%" if sensor.threshold_warning else 'N/A',
+                })
+        except Exception as _e:
+            logger.warning(f"Erro ao enriquecer métricas no email: {_e}")
+
+        # ── Enriquecer com análise Ollama (se disponível) ──────────────────────
+        try:
+            ai_analysis = incident.ai_analysis or {}
+            ollama = ai_analysis.get('ollama_analysis', {})
+            incident_data['ai_analysis'] = ollama.get('analysis', '')
+            incident_data['ai_model'] = ollama.get('model', 'llama3.2')
+            incident_data['root_cause'] = incident.root_cause or ''
+
+            # Se não tem análise ainda, tentar gerar agora (síncrono, timeout curto)
+            if not incident_data['ai_analysis'] and sensor_type in ('cpu', 'memory', 'disk'):
+                try:
+                    import httpx as _httpx, os as _os, json as _json
+                    ollama_url = _os.environ.get("OLLAMA_BASE_URL", "http://ollama:11434")
+                    current_v = incident_data.get('current_value', 'N/A')
+                    dur = incident_data.get('duration_above_threshold', 'N/A')
+                    prompt = (
+                        f"Servidor {display_server} com {sensor_type.upper()} em {current_v} "
+                        f"há {dur}. Threshold crítico: {incident_data.get('threshold_critical','N/A')}. "
+                        f"Em 3 tópicos curtos: 1) Diagnóstico 2) Causas prováveis 3) Ação imediata. "
+                        f"Seja direto e técnico em português."
+                    )
+                    with _httpx.Client(timeout=20.0) as _client:
+                        _resp = _client.post(
+                            f"{ollama_url}/api/generate",
+                            json={"model": _os.environ.get("AI_MODEL", "llama3.2"), "prompt": prompt, "stream": False}
+                        )
+                        if _resp.status_code == 200:
+                            incident_data['ai_analysis'] = _resp.json().get("response", "").strip()
+                except Exception as _ai_e:
+                    logger.warning(f"Ollama inline falhou: {_ai_e}")
+        except Exception as _e:
+            logger.warning(f"Erro ao enriquecer AI no email: {_e}")
+
         # 5. Para cada canal: try/except isolado
         for channel in channels:
             try:

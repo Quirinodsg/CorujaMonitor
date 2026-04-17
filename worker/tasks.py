@@ -1556,42 +1556,116 @@ Coruja Monitor - Sistema de Monitoramento
         
         # HTML version
         severity_color = '#dc3545' if incident_data.get('severity') == 'critical' else '#ffc107'
-        html_body = f"""
+        severity_label = 'CRÍTICO' if incident_data.get('severity') == 'critical' else 'AVISO'
+        severity_icon = '🔴' if incident_data.get('severity') == 'critical' else '🟡'
+
+        ai_section = ''
+        if incident_data.get('ai_analysis'):
+            ai_text = incident_data['ai_analysis'].replace('\n', '<br>')
+            ai_section = f"""
+      <div style="background:#1a1a2e;border-left:4px solid #6366f1;padding:16px 20px;margin:16px 0;border-radius:0 8px 8px 0;">
+        <div style="color:#a5b4fc;font-size:11px;font-weight:700;letter-spacing:0.08em;margin-bottom:8px;">🧠 ANÁLISE IA — {incident_data.get('ai_model','llama3.2').upper()}</div>
+        <div style="color:#e2e8f0;font-size:13px;line-height:1.7;">{ai_text}</div>
+      </div>"""
+
+        metrics_section = ''
+        if incident_data.get('current_value'):
+            sparkline = incident_data.get('sparkline', '')
+            spark_html = f'<div style="font-family:monospace;font-size:18px;color:{severity_color};letter-spacing:2px;margin:8px 0;">{sparkline}</div>' if sparkline else ''
+            metrics_section = f"""
+      <div style="background:#0f172a;border:1px solid #1e293b;border-radius:8px;padding:16px 20px;margin:16px 0;">
+        <div style="color:#64748b;font-size:11px;font-weight:700;letter-spacing:0.08em;margin-bottom:12px;">📊 HISTÓRICO — ÚLTIMAS 2 HORAS</div>
+        {spark_html}
+        <table style="width:100%;border-collapse:collapse;">
+          <tr>
+            <td style="padding:6px 0;color:#94a3b8;font-size:12px;">Valor atual</td>
+            <td style="padding:6px 0;color:{severity_color};font-size:14px;font-weight:700;text-align:right;">{incident_data.get('current_value','N/A')}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#94a3b8;font-size:12px;">Máximo (2h)</td>
+            <td style="padding:6px 0;color:#e2e8f0;font-size:13px;text-align:right;">{incident_data.get('max_value_2h','N/A')}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#94a3b8;font-size:12px;">Média (2h)</td>
+            <td style="padding:6px 0;color:#e2e8f0;font-size:13px;text-align:right;">{incident_data.get('avg_value_2h','N/A')}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#94a3b8;font-size:12px;">Tempo acima do threshold</td>
+            <td style="padding:6px 0;color:#f59e0b;font-size:13px;font-weight:600;text-align:right;">{incident_data.get('duration_above_threshold','N/A')}</td>
+          </tr>
+          <tr>
+            <td style="padding:6px 0;color:#94a3b8;font-size:12px;">Threshold crítico</td>
+            <td style="padding:6px 0;color:#ef4444;font-size:13px;text-align:right;">{incident_data.get('threshold_critical','N/A')}</td>
+          </tr>
+        </table>
+      </div>"""
+
+        html_body = f"""<!DOCTYPE html>
 <html>
-  <head>
-    <style>
-      body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-      .header {{ background-color: {severity_color}; color: white; padding: 20px; text-align: center; }}
-      .content {{ padding: 20px; background-color: #f4f4f4; }}
-      .alert-box {{ background-color: white; border-left: 4px solid {severity_color}; padding: 15px; margin: 20px 0; }}
-      .details {{ background-color: #ecf0f1; padding: 15px; margin: 10px 0; border-radius: 5px; }}
-      .footer {{ text-align: center; padding: 20px; color: #7f8c8d; font-size: 12px; }}
-    </style>
-  </head>
-  <body>
-    <div class="header">
-      <h1>🚨 Novo Incidente Detectado</h1>
-    </div>
-    <div class="content">
-      <div class="alert-box">
-        <h2>{incident_data.get('title', 'Alerta do Coruja Monitor')}</h2>
-        <p><strong>Severidade:</strong> {incident_data.get('severity', 'N/A').upper()}</p>
-      </div>
-      <div class="details">
-        <p><strong>Servidor:</strong> {incident_data.get('server_hostname', 'N/A')}</p>
-        <p><strong>Sensor:</strong> {incident_data.get('sensor_name', 'N/A')}</p>
-        <p><strong>Tipo:</strong> {incident_data.get('sensor_type', 'N/A')}</p>
-        <p><strong>Descrição:</strong> {incident_data.get('description', 'N/A')}</p>
-        <p><strong>Data/Hora:</strong> {incident_data.get('created_at', 'N/A')}</p>
-      </div>
-    </div>
-    <div class="footer">
-      <p>Este é um e-mail automático do Coruja Monitor. Não responda a este e-mail.</p>
-      <p>© 2026 Coruja Monitor - Sistema de Monitoramento</p>
-    </div>
-  </body>
-</html>
-"""
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#0d1117;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#0d1117;padding:24px 0;">
+    <tr><td align="center">
+      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+        <!-- Header -->
+        <tr><td style="background:{severity_color};border-radius:12px 12px 0 0;padding:24px 32px;text-align:center;">
+          <div style="font-size:28px;margin-bottom:8px;">{severity_icon}</div>
+          <div style="color:white;font-size:20px;font-weight:700;letter-spacing:0.02em;">Novo Incidente Detectado</div>
+          <div style="color:rgba(255,255,255,0.85);font-size:13px;margin-top:4px;">{severity_label} · {incident_data.get('created_at','')}</div>
+        </td></tr>
+
+        <!-- Body -->
+        <tr><td style="background:#111827;padding:28px 32px;border-radius:0 0 12px 12px;">
+
+          <!-- Title -->
+          <div style="border-left:4px solid {severity_color};padding:12px 16px;margin-bottom:20px;background:#1e293b;border-radius:0 8px 8px 0;">
+            <div style="color:#e2e8f0;font-size:17px;font-weight:700;">{incident_data.get('title','Alerta')}</div>
+            <div style="color:#94a3b8;font-size:12px;margin-top:4px;">Incidente #{incident_data.get('incident_id','')}</div>
+          </div>
+
+          <!-- Info grid -->
+          <table style="width:100%;border-collapse:collapse;background:#0f172a;border-radius:8px;overflow:hidden;margin-bottom:16px;">
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:10px 16px;color:#64748b;font-size:12px;width:40%;">Servidor</td>
+              <td style="padding:10px 16px;color:#e2e8f0;font-size:13px;font-weight:600;">{incident_data.get('server_hostname','N/A')}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:10px 16px;color:#64748b;font-size:12px;">Sensor</td>
+              <td style="padding:10px 16px;color:#e2e8f0;font-size:13px;">{incident_data.get('sensor_name','N/A')}</td>
+            </tr>
+            <tr style="border-bottom:1px solid #1e293b;">
+              <td style="padding:10px 16px;color:#64748b;font-size:12px;">Tipo</td>
+              <td style="padding:10px 16px;color:#e2e8f0;font-size:13px;">{incident_data.get('sensor_type','N/A')}</td>
+            </tr>
+            <tr>
+              <td style="padding:10px 16px;color:#64748b;font-size:12px;">Descrição</td>
+              <td style="padding:10px 16px;color:#e2e8f0;font-size:13px;">{incident_data.get('description','N/A')}</td>
+            </tr>
+          </table>
+
+          {metrics_section}
+          {ai_section}
+
+          <!-- Footer link -->
+          <div style="text-align:center;margin-top:24px;">
+            <a href="https://coruja.techbiz.com.br" style="background:{severity_color};color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;">
+              Ver no Coruja Monitor →
+            </a>
+          </div>
+
+        </td></tr>
+
+        <!-- Footer -->
+        <tr><td style="padding:20px 32px;text-align:center;">
+          <div style="color:#374151;font-size:11px;">Coruja Monitor · Alerta automático · Não responda este email</div>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>"""
         
         # Attach both versions
         part1 = MIMEText(text_body, 'plain')
